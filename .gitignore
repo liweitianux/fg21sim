@@ -1,0 +1,15 @@
+*~
+*.swp
+*.un~
+*_bak
+
+# emacs tmp files
+.#*
+
+# python
+*.pyc
+**/__pycache__
+
+# C/C++
+*.o
+
