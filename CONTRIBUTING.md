@@ -6,8 +6,8 @@ Issues
 The GitHub Issues is used to track the development progress, issues,
 bugs, feature requests.
 
-However, the installation and usage related problems should NOT go to
-the Issues, and the Wiki (TODO) or mailing lists (TODO) can be adopted
+However, the installation and usage related problems *should not* go to
+the Issues, while the Wiki (TODO) or mailing lists (TODO) should be adopted
 for those purposes.
 
 
@@ -86,17 +86,19 @@ Code Guidelines
 ### Python
 
 Adhere to the [PEP 8](https://www.python.org/dev/peps/pep-0008) code style
-and also take a look at this
-[code style](http://docs.python-guide.org/en/latest/writing/style/) from
-[The Hitchhiker's Guide to Python](http://docs.python-guide.org/).
+(also a [much prettier version of PEP 8](http://pep8.org)).
+And the [code style](http://docs.python-guide.org/en/latest/writing/style/) from
+[The Hitchhiker's Guide to Python](http://docs.python-guide.org/) is worth
+reading.
 
-It is strongly recommended to check the code with [``flake8``](https://gitlab.com/pycqa/flake8) which wraps ``pep8``, ``pyflakes``, and other checkers together.
+It is strongly recommended to check the code with [``flake8``](https://gitlab.com/pycqa/flake8),
+which wraps ``pep8``, ``pyflakes``, and other checkers together.
 So make sure it is installed before carrying on.
 
 * Vim users:
 
   1. Recommend to install the [``spf13-vim``](https://github.com/spf13/spf13-vim)
-     configuration distribution, which already integrates the great
+     configuration distribution, which already integrates the nice
      [``syntastic``](https://github.com/scrooloose/syntastic) syntax checking
      plugin;
 
