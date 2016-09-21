@@ -32,4 +32,4 @@ Unless otherwise declared:
 - Third-party codes and products used are distributed under their own licenses.
 
 .. _`MIT license`: https://opensource.org/licenses/mit-license.php
-.. _`Creative Commons Attribution 3.0 license`: https://creativecommons.org/licenses/by/3.0/us/deed.en_US;
+.. _`Creative Commons Attribution 3.0 license`: https://creativecommons.org/licenses/by/3.0/us/deed.en_US
