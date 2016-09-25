@@ -1,2 +1,5 @@
 nose
 sphinx
+numpy
+astropy
+healpy
