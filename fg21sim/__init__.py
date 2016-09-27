@@ -11,9 +11,8 @@ __version__ = "0.0.1"
 __author__ = "Weitian LI"
 __license__ = "MIT"
 __copyright__ = "Copyright (c) 2016 Weitian LI"
+__url__ = "https://github.com/liweitianux/fg21sim"
 
-
-from .core import hmm
 
 # Set default logging handle to avoid "No handler found" warnings.
 import logging
