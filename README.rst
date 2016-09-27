@@ -6,7 +6,7 @@ This repository is at its very early stage and under heavy development,
 do *NOT* use at the moment!
 
 **NOTE:**
-Only Python 3 (>= 3.5) is supported!
+Only Python 3 (>= 3.4) is supported!
 
 This repository provides the tools to simulate the currently *most realistic*
 (to our knowledge) low-frequency radio foregrounds, which can be further
