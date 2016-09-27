@@ -1,29 +1,22 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-import re
 
 from setuptools import setup, find_packages
 
+import fg21sim as pkg
 
-with open('fg21sim/__init__.py') as f:
-    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-                        f.read(), re.MULTILINE).group(1)
-
-with open('README.rst') as f:
-    readme = f.read()
-
-with open('LICENSE') as f:
-    license = f.read()
 
 setup(
-    name='fg21sim',
-    version=version,
-    description='Realistic Foregrounds Simulation for EoR 21cm Signal Detection',
-    long_description=readme,
-    author='Weitian LI',
-    author_email='liweitianux@live.com',
-    url='https://github.com/liweitianux/fg21sim',
-    license=license,
-    packages=find_packages(exclude=('tests', 'docs'))
+    name=pkg.__pkgname__,
+    version=pkg.__version__,
+    description=pkg.__description__,
+    long_description=open("README.rst").read(),
+    author=pkg.__author__,
+    author_email=pkg.__author_email__,
+    url=pkg.__url__,
+    license=pkg.__license__,
+    packages=find_packages(exclude=("tests", "docs")),
+    scripts=[
+        "bin/healpix2hpx",
+        "bin/hpx2healpix",
+    ],
 )
