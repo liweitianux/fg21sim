@@ -84,7 +84,13 @@ class ConfigManager:
     @property
     def logging(self):
         """Get and prepare the logging configurations for
-        `logging.basicConfig()`
+        ``logging.basicConfig()`` to initialize the logging module.
+
+        NOTE
+        ----
+        ``basicConfig()`` will automatically create a ``Formatter`` with
+        the giving ``format`` and ``datefmt`` for each handlers if necessary,
+        and then adding the handlers to the "root" logger.
         """
         from logging import FileHandler, StreamHandler
         conf = self.get("logging")
