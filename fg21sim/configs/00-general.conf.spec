@@ -20,7 +20,7 @@
 level = option("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", default="INFO")
 
 # Set the format of displayed messages
-format = string(default="%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
+format = string(default="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 # Set the date/time format in messages (default: ISO8601)
 datefmt = string(default="%Y-%m-%dT%H:%M:%S")
