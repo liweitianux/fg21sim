@@ -61,11 +61,16 @@ def healpix2hpx(data, header=None, append_history=None, append_comment=None):
         hp_data, hp_header = hp.read_map(data, nest=False, h=True,
                                          verbose=False)
         hp_header = fits.header.Header(hp_header)
+        logger.info("Read HEALPix data from file or HDU")
     else:
         hp_data, hp_header = np.asarray(data), fits.header.Header(header)
+        logger.info("Read HEALPix data from array and header")
+    logger.info("HEALPix index ordering: %s" % hp_header["ORDERING"])
     if hp_header["ORDERING"] != "RING":
         raise ValueError("only 'RING' ordering currently supported")
-    nside = hp.npix2nside(len(hp_data))
+    npix = len(hp_data)
+    nside = hp.npix2nside(npix)
+    logger.info("HEALPix data: Npix=%d, Nside=%d" % (npix, nside))
     if nside != hp_header["NSIDE"]:
         raise ValueError("HEALPix data Nside does not match the header")
     hp_data = np.concatenate([hp_data, [np.nan]])
@@ -103,20 +108,24 @@ def hpx2healpix(data, header=None, append_history=None, append_comment=None):
     if isinstance(data, str):
         hpx_hdu = fits.open(data)[0]
         hpx_data, hpx_header = hpx_hdu.data, hpx_hdu.header
+        logger.info("Read HPX image from file")
     elif isinstance(data, fits.PrimaryHDU):
         hpx_data, hpx_header = data.data, data.header
+        logger.info("Read HPX image from HDU")
     else:
         hpx_data, hpx_header = np.asarray(data), fits.header.Header(header)
+        logger.info("Read HPX image from array and header")
+    logger.info("HPX coordinate system: ({0}, {1})".format(
+        hpx_header["CTYPE1"], hpx_header["CTYPE2"]))
     if ((hpx_header["CTYPE1"], hpx_header["CTYPE2"]) !=
             ("GLON-HPX", "GLAT-HPX")):
-        logger.debug("Input coordinate system: ({0}, {1})".format(
-            hpx_header["CTYPE1"], hpx_header["CTYPE2"]))
         raise ValueError("only Galactic 'HPX' projection currently supported")
     # calculate Nside
     nside = round(hpx_header["NAXIS1"] / 5)
     nside2 = round(90 / np.sqrt(2) / hpx_header["CDELT2"])
     if nside != nside2:
         raise ValueError("Cannot determine the Nside value")
+    logger.info("Determined HEALPix Nside=%d" % nside)
     #
     npix = hp.nside2npix(nside)
     hpx_idx = _calc_hpx_indices(nside).flatten()
@@ -150,7 +159,7 @@ def _calc_hpx_indices(nside):
     ----
     * The indices are 0-based;
     * Currently only HEALPix RING ordering supported;
-    * The null/empty elements in the HPX projection are filled with '-1'.
+    * The null/empty elements in the HPX projection are filled with "-1".
     """
     # number of horizontal/vertical facet
     nfacet = 5
@@ -166,6 +175,7 @@ def _calc_hpx_indices(nside):
     #
     shape = (nfacet*nside, nfacet*nside)
     indices = -np.ones(shape).astype(np.int)
+    logger.info("HPX indices matrix shape: {0}".format(shape))
     #
     # Loop vertically facet-by-facet
     for jfacet in range(nfacet):
@@ -285,6 +295,7 @@ def _make_hpx_header(header, append_history=None, append_comment=None):
                         "[deg] Galactic latitude at the reference point")
     header["PV2_1"] = (4, "HPX H parameter (longitude)")
     header["PV2_2"] = (3, "HPX K parameter (latitude)")
+    logger.info("Made HPX FITS header")
     #
     header["DATE"] = (
         datetime.now(timezone.utc).astimezone().isoformat(),
@@ -301,9 +312,11 @@ def _make_hpx_header(header, append_history=None, append_comment=None):
         header.add_comment(comment)
     #
     if append_history is not None:
+        logger.info("HPX FITS header: append history")
         for history in append_history:
             header.add_history(history)
-    if append_history is not None:
+    if append_comment is not None:
+        logger.info("HPX FITS header: append comments")
         for comment in append_comment:
             header.add_comment(comment)
     return header
@@ -323,6 +336,7 @@ def _make_healpix_header(header, nside,
     header["NPIX"] = (npix, "Total number of pixels")
     header["FIRSTPIX"] = (0, "First pixel # (0 based)")
     header["LASTPIX"] = (npix-1, "Last pixel # (0 based)")
+    logger.info("Made HEALPix FITS header")
     #
     header["DATE"] = (
         datetime.now(timezone.utc).astimezone().isoformat(),
@@ -330,9 +344,11 @@ def _make_healpix_header(header, nside,
     )
     #
     if append_history is not None:
+        logger.info("HEALPix FITS header: append history")
         for history in append_history:
             header.add_history(history)
-    if append_history is not None:
+    if append_comment is not None:
+        logger.info("HEALPix FITS header: append comments")
         for comment in append_comment:
             header.add_comment(comment)
     return header
