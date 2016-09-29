@@ -39,8 +39,11 @@ def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
     filemode = "a"
     #
     if dict_config:
+        # XXX:
+        # "basicConfig()" does NOT accept paramter "filemode" if the
+        # corresponding parameter "filename" NOT specified.
+        filemode = dict_config.pop("filemode", filemode)
         logging.basicConfig(**dict_config)
-        filemode = dict_config["filemode"]
     #
     root_logger = logging.getLogger()
     #
