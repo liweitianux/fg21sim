@@ -2,3 +2,4 @@
 # MIT license
 
 from .healpix import healpix2hpx, hpx2healpix
+from .logging import setup_logging
