@@ -33,7 +33,7 @@ from astropy.io import fits
 from .. import logging
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def healpix2hpx(data, header=None, append_history=None, append_comment=None):
