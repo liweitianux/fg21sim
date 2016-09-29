@@ -123,6 +123,17 @@ So make sure it is installed before carrying on.
      and you're ready to go.
 
 
+Documentation Guidelines
+------------------------------
+
+### Python
+
+Please adhere to the [NumPy/SciPy Documentation Guide](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt),
+thus the [``Sphinx``](http://www.sphinx-doc.org/) tool can be used to create the documentation at ease.
+
+There is also an [Example NumPy Style Python Docstrings](http://www.sphinx-doc.org/en/stable/ext/example_numpy.html) for a quick reference.
+
+
 License
 -------
 By contributing your code, you agree to license your contribution under
