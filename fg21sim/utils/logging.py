@@ -54,6 +54,9 @@ def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
         # the handlers to the "root" logger.
         logging.basicConfig(**dict_config)
     #
+    # Configured logging has at least one handler with configured formatter.
+    # Keep the existing formatter to keep the configured format styles.
+    formatter = root_logger.handlers[0].formatter
     if level is not None:
         level_int = getattr(logging, level.upper(), None)
         if not isinstance(level_int, int):
@@ -73,6 +76,7 @@ def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
         else:
             # add new ``StreamHandler``
             handler = StreamHandler(getattr(sys, stream))
+            handler.setFormatter(formatter)
             root_logger.addHandler(handler)
     else:
         raise ValueError("invalid stream: %s" % stream)
@@ -89,4 +93,5 @@ def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
         else:
             # add new ``FileHandler``
             handler = FileHandler(logfile, mode=filemode)
+            handler.setFormatter(formatter)
             root_logger.addHandler(handler)
