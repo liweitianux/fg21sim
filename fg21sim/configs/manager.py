@@ -12,11 +12,15 @@ Configuration manager.
 import os
 import sys
 from glob import glob
-from errors import ConfigError
 import logging
 
 from configobj import ConfigObj, ConfigObjError, flatten_errors
 from validate import Validator
+
+
+class ConfigError(Exception):
+    """Could not parse user configurations"""
+    pass
 
 
 CONFIGS_PATH = os.path.dirname(__file__)
@@ -32,14 +36,16 @@ class ConfigManager:
         spec = "\n".join([open(f).read() for f in configs_spec]).split("\n")
         self._configspec = ConfigObj(spec, interpolation=False,
                                      list_values=False, _inspec=True)
-        configs_default = ConfigObj(configspec=self._configspec)
+        configs_default = ConfigObj(interpolation=False,
+                                    configspec=self._configspec)
         self._config = self.validate(configs_default)
         if configs:
             for config in configs:
                 self.read_config(config)
 
     def read_config(self, config):
-        newconfig = ConfigObj(config, configspec=self._configspec)
+        newconfig = ConfigObj(config, interpolation=False,
+                              configspec=self._configspec)
         newconfig = self.validate(newconfig)
         self._config.merge(newconfig)
 
