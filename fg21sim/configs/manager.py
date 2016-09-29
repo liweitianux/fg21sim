@@ -94,13 +94,15 @@ class ConfigManager:
         if stream:
             handlers.append(StreamHandler(getattr(sys, stream)))
         logfile = conf["filename"]
+        filemode = conf["filemode"]
         if logfile:
-            handlers.append(FileHandler(logfile, mode=conf["filemode"]))
+            handlers.append(FileHandler(logfile, mode=filemode))
         #
         logconf = {
             "level": getattr(logging, conf["level"]),
             "format": conf["format"],
             "datefmt": conf["datefmt"],
+            "filemode": filemode,
             "handlers": handlers,
         }
         return logconf
