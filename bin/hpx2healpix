@@ -11,12 +11,14 @@ i.e., the reverse of `healpix2hpx.py`.
 import os
 import sys
 import argparse
+import logging
 
 import numpy as np
 from astropy.io import fits
 
 import fg21sim
-from fg21sim.utils import hpx2healpix
+from fg21sim.configs import configs
+from fg21sim.utils import hpx2healpix, setup_logging
 
 
 # Reference:
@@ -39,16 +41,36 @@ def main():
                         help="overwrite the existing output file")
     parser.add_argument("-F", "--float", action="store_true",
                         help="use float (single precision) instead of double")
+    parser.add_argument("-l", "--log", dest="loglevel", default=None,
+                        help="log level (valid values: "
+                        "DEBUG, INFO, WARNING, ERROR, CRITICAL)")
+    parser.add_argument("-L", "--logfile", default=None,
+                        help="filename where to save the log messages")
+    parser.add_argument("-Q", "--quiet", action="store_true",
+                        help="be quiet so do not log messages to screen")
     args = parser.parse_args()
 
+    if args.quiet:
+        log_stream = ""
+    else:
+        log_stream = None
+
     tool = os.path.basename(sys.argv[0])
+    pkgname = fg21sim.__pkgname__
+
+    setup_logging(dict_config=configs.logging,
+                  level=args.loglevel,
+                  stream=log_stream,
+                  logfile=args.logfile)
+    logger = logging.getLogger(tool)
+    logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
     history = [
         "TOOL: {0}".format(tool),
         "PARAM: {0}".format(" ".join(sys.argv[1:])),
     ]
     comments = [
-        'Tool "{0}" is part of the "{1}" package'.format(tool,
-                                                         fg21sim.__title__),
+        'Tool "{0}" is part of the "{1}" package'.format(tool, pkgname),
         'distributed under {0} license.'.format(fg21sim.__license__),
         'See also {0}'.format(fg21sim.__url__)
     ]
@@ -57,12 +79,14 @@ def main():
                                      append_history=history,
                                      append_comment=comments)
     if args.float:
+        logger.info("HEALPix data: use single-precision float numbers")
         hp_data = hp_data.astype(np.float32)
     hdu = fits.BinTableHDU.from_columns([
         fits.Column(name="I", array=hp_data,
                     format=FITS_COLUMN_FORMATS.get(hp_data.dtype))
     ], header=hp_header)
     hdu.writeto(args.outfile, clobber=args.clobber, checksum=True)
+    logger.info("HEALPix data write to FITS file: %s" % args.outfile)
 
 
 if __name__ == "__main__":

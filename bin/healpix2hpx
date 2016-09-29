@@ -11,12 +11,14 @@ Reorganize the sky map in HEALPix table format into image in HPX projection.
 import os
 import sys
 import argparse
+import logging
 
 import numpy as np
 from astropy.io import fits
 
 import fg21sim
-from fg21sim.utils import healpix2hpx
+from fg21sim.configs import configs
+from fg21sim.utils import healpix2hpx, setup_logging
 
 
 def main():
@@ -28,16 +30,36 @@ def main():
                         help="overwrite the existing output file")
     parser.add_argument("-F", "--float", action="store_true",
                         help="use float (single precision) instead of double")
+    parser.add_argument("-l", "--log", dest="loglevel", default=None,
+                        help="log level (valid values: "
+                        "DEBUG, INFO, WARNING, ERROR, CRITICAL)")
+    parser.add_argument("-L", "--logfile", default=None,
+                        help="filename where to save the log messages")
+    parser.add_argument("-Q", "--quiet", action="store_true",
+                        help="be quiet so do not log messages to screen")
     args = parser.parse_args()
 
+    if args.quiet:
+        log_stream = ""
+    else:
+        log_stream = None
+
     tool = os.path.basename(sys.argv[0])
+    pkgname = fg21sim.__pkgname__
+
+    setup_logging(dict_config=configs.logging,
+                  level=args.loglevel,
+                  stream=log_stream,
+                  logfile=args.logfile)
+    logger = logging.getLogger(tool)
+    logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
     history = [
         "TOOL: {0}".format(tool),
         "PARAM: {0}".format(" ".join(sys.argv[1:])),
     ]
     comments = [
-        'Tool "{0}" is part of the "{1}" package'.format(tool,
-                                                         fg21sim.__title__),
+        'Tool "{0}" is part of the "{1}" package'.format(tool, pkgname),
         'distributed under {0} license.'.format(fg21sim.__license__),
         'See also {0}'.format(fg21sim.__url__)
     ]
@@ -46,9 +68,11 @@ def main():
                                        append_history=history,
                                        append_comment=comments)
     if args.float:
+        logger.info("HPX FITS images: use single-precision float numbers")
         hpx_data = hpx_data.astype(np.float32)
     hdu = fits.PrimaryHDU(data=hpx_data, header=hpx_header)
     hdu.writeto(args.outfile, clobber=args.clobber, checksum=True)
+    logger.info("HPX FITS images write to: %s" % args.outfile)
 
 
 if __name__ == "__main__":
