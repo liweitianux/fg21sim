@@ -10,7 +10,7 @@ import logging
 from logging import FileHandler, StreamHandler
 
 
-def setup_logging(dict_config=None, stream=None, logfile=None):
+def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
     """Setup the logging.
     This will override the logging configurations in the config file
     if specified (e.g., by command line arguments).
@@ -19,6 +19,8 @@ def setup_logging(dict_config=None, stream=None, logfile=None):
     ----------
     dict_config : dict
         Dict of logging configurations specified in the config file.
+    level : string;
+        Override the existing log level
     stream : string; "stderr", "stdout", or ""
         This controls where the log messages go to.
         If not None, then override the old ``StreamHandler`` settings;
@@ -35,12 +37,22 @@ def setup_logging(dict_config=None, stream=None, logfile=None):
     """
     # default file open mode for logging to file
     filemode = "a"
+    #
     if dict_config:
         logging.basicConfig(**dict_config)
         filemode = dict_config["filemode"]
     #
     root_logger = logging.getLogger()
-    if stream in ["", "stderr", "stdout"]:
+    #
+    if level is not None:
+        level_int = getattr(logging, level.upper(), None)
+        if not isinstance(level_int, int):
+            raise ValueError("invalid log level: %s" % level)
+        root_logger.setLevel(level_int)
+    #
+    if stream is None:
+        pass
+    elif stream in ["", "stderr", "stdout"]:
         for handler in root_logger.handlers:
             if isinstance(handler, StreamHandler):
                 # remove old ``StreamHandler``
