@@ -10,8 +10,10 @@ Configuration manager.
 """
 
 import os
+import sys
 from glob import glob
 from errors import ConfigError
+import logging
 
 from configobj import ConfigObj, ConfigObjError, flatten_errors
 from validate import Validator
@@ -30,7 +32,6 @@ class ConfigManager:
         spec = "\n".join([open(f).read() for f in configs_spec]).split("\n")
         self._configspec = ConfigObj(spec, interpolation=False,
                                      list_values=False, _inspec=True)
-        self._validator = Validator()
         configs_default = ConfigObj(configspec=self._configspec)
         self._config = self.validate(configs_default)
         if configs:
@@ -43,8 +44,9 @@ class ConfigManager:
         self._config.merge(newconfig)
 
     def validate(self, config):
+        validator = Validator()
         try:
-            results = config.validate(self._validator, preserve_errors=True)
+            results = config.validate(validator, preserve_errors=True)
         except ConfigObjError as e:
             raise ConfigError(e.message)
         if not results:
@@ -72,3 +74,27 @@ class ConfigManager:
 
     def set(self, key, value):
         self._config[key] = value
+
+    @property
+    def logging(self):
+        """Get and prepare the logging configurations for
+        `logging.basicConfig()`
+        """
+        from logging import FileHandler, StreamHandler
+        conf = self.get("logging")
+        # logging handlers
+        handlers = []
+        stream = conf["stream"]
+        if stream:
+            handlers.append(StreamHandler(getattr(sys, stream)))
+        logfile = conf["filename"]
+        if logfile:
+            handlers.append(FileHandler(logfile, mode=conf["filemode"]))
+        #
+        logconf = {
+            "level": getattr(logging, conf["level"]),
+            "format": conf["format"],
+            "datefmt": conf["datefmt"],
+            "handlers": handlers,
+        }
+        return logconf
