@@ -29,8 +29,13 @@ CONFIGS_PATH = os.path.dirname(__file__)
 class ConfigManager:
     """Manager the configurations"""
     def __init__(self, configs=None):
-        """
-        :param configs: (optional) list of user configs to load
+        """Initialize the ConfigManager object with default configurations.
+        If user configs are given, they are also validated and get merged.
+
+        Parameters
+        ----------
+        configs: list (of config files)
+            (optional) list of user config files to be merged
         """
         configs_spec = sorted(glob(os.path.join(CONFIGS_PATH, "*.conf.spec")))
         spec = "\n".join([open(f).read() for f in configs_spec]).split("\n")
@@ -44,12 +49,25 @@ class ConfigManager:
                 self.read_config(config)
 
     def read_config(self, config):
+        """Read, validate and merge the input config.
+
+        Parameters
+        ----------
+        config : str, list of str
+            Input config to be validated and merged.
+            This parameter can be the filename of the config file, or a list
+            contains the lines of the configs.
+        """
         newconfig = ConfigObj(config, interpolation=False,
                               configspec=self._configspec)
         newconfig = self.validate(newconfig)
         self._config.merge(newconfig)
 
     def validate(self, config):
+        """Validate the config against the specification using a default
+        validator.  The validated config values are returned if success,
+        otherwise, the ``ConfigError`` raised with details.
+        """
         validator = Validator()
         try:
             results = config.validate(validator, preserve_errors=True)
@@ -72,6 +90,7 @@ class ConfigManager:
         return config
 
     def get(self, key, fallback=None):
+        """Get config value by key."""
         if key in self._config:
             value = self._config[key]
         else:
