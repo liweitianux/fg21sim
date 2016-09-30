@@ -52,6 +52,7 @@ setup(
         "numpy",
         "astropy",
         "healpy",
+        "configobj",
     ],
     tests_require=["pytest"],
 )
