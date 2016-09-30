@@ -6,6 +6,7 @@
 #
 
 import os
+import sys
 
 from setuptools import setup, find_packages
 
@@ -14,6 +15,11 @@ import fg21sim as pkg
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
+# Check the minimal Python version
+if sys.version_info < (3, 4):
+    sys.exit("Sorry, Python >= 3.4 is required...")
 
 
 setup(
