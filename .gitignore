@@ -6,6 +6,7 @@
 # Emacs tmp files
 .#*
 
+venv/
 build/
 dist/
 
