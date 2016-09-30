@@ -43,7 +43,7 @@ class ConfigManager:
                                      list_values=False, _inspec=True)
         configs_default = ConfigObj(interpolation=False,
                                     configspec=self._configspec)
-        self._config = self.validate(configs_default)
+        self._config = self._validate(configs_default)
         if configs:
             for config in configs:
                 self.read_config(config)
@@ -60,10 +60,10 @@ class ConfigManager:
         """
         newconfig = ConfigObj(config, interpolation=False,
                               configspec=self._configspec)
-        newconfig = self.validate(newconfig)
+        newconfig = self._validate(newconfig)
         self._config.merge(newconfig)
 
-    def validate(self, config):
+    def _validate(self, config):
         """Validate the config against the specification using a default
         validator.  The validated config values are returned if success,
         otherwise, the ``ConfigError`` raised with details.
@@ -74,18 +74,18 @@ class ConfigManager:
         except ConfigObjError as e:
             raise ConfigError(e.message)
         if not results:
-            error_msg = ''
+            error_msg = ""
             for (section_list, key, res) in flatten_errors(config, results):
                 if key is not None:
                     if res is False:
                         msg = 'key "%s" in section "%s" is missing.'
-                        msg = msg % (key, ', '.join(section_list))
+                        msg = msg % (key, ", ".join(section_list))
                     else:
                         msg = 'key "%s" in section "%s" failed validation: %s'
-                        msg = msg % (key, ', '.join(section_list), res)
+                        msg = msg % (key, ", ".join(section_list), res)
                 else:
-                    msg = 'section "%s" is missing' % '.'.join(section_list)
-                error_msg += msg + '\n'
+                    msg = 'section "%s" is missing' % ".".join(section_list)
+                error_msg += msg + "\n"
             raise ConfigError(error_msg)
         return config
 
