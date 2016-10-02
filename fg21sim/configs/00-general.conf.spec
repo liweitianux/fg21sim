@@ -6,6 +6,8 @@
 # This file contains the general configurations, which control the general
 # behaviors, or will be used in other configuration sections.
 
+
+# Configurations for initialization/reconfiguration of the `logging` module
 [logging]
 # DEBUG:    Detailed information, typically of interest only when diagnosing
 #           problems.
@@ -22,13 +24,15 @@ level = option("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", default="INFO")
 # Set the format of displayed messages
 format = string(default="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
-# Set the date/time format in messages (default: ISO8601)
+# Set the date/time format in messages
 datefmt = string(default="%Y-%m-%dT%H:%M:%S")
 
 # Set the logging filename (will create a `FileHandler`)
+# If set to "" (empty string), then the `FileHandler` will be disabled.
 filename = string(default="")
-# Set the mode to open the above logging file
+# Set the mode to open the above logging file (default: "append" mode)
 filemode = option("w", "a", default="a")
 
 # Set the stream used to initialize the `StreamHandler`
+# If set to "" (empty string), then the `StreamHandler` will be disabled.
 stream = option("stderr", "stdout", "", default="stderr")
