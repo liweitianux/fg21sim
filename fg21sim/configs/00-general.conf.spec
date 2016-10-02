@@ -7,6 +7,72 @@
 # behaviors, or will be used in other configuration sections.
 
 
+# Common/general configurations for the simulation
+[common]
+# HEALPix N_side value, i.e., pixel resolution
+# NOTE: also update "lmax" below.
+nside = int(min=1, default=512)
+
+# Range of multipole monents (l) of the angular power spectrum.
+# The power spectrum will be cut off to a constant for multipole l < lmin.
+# Generally, lmax = 3 * nside - 1
+lmin = int(min=0, default=10)
+lmax = int(min=1, default=1535)
+
+# Directory contains the input data, e.g., component templates
+# NOTE: This config is mandatory and should be provided by the user.
+data_dir = string(default="")
+
+# List of foreground components to be simulated:
+# + galactic/synchrotron:
+#       Diffuse Galactic synchrotron emission (unpolarized)
+components = force_list(default=list("galactic/synchrotron"))
+
+
+# Frequencies specification of the simulation products
+[frequency]
+# Unit of the frequency value
+unit = option("MHz", default="MHz")
+
+# How to specify the frequencies
+# + custom: directly specify the frequency values
+# + calc: calculate the frequency values using following configs
+type = option("custom", "calc", default="custom")
+
+# The frequency values to be simulated if above "type" is "custom".
+frequencies = force_list(default=float_list(120.0))
+
+
+# Configuration for output products
+[output]
+# Unit of the sky map pixel value
+unit = option("K", default="K")
+
+# Filetype used to store the products (default: fits)
+filetype = option("fits", default="fits")
+
+# Filename pattern (without extension) for the output products, which will
+# be finally formatted using `str.format()`.
+filename_pattern = string(default="{prefix}_{frequency:.1f}")
+
+# Whether combine all components and output
+combine = boolean(default=True)
+# Prefix for the combined files
+combine_prefix = string(default="fg")
+# Output directory to place the combined products
+# NOTE: This config is mandatory and should be provided by the user
+#       if above "combine=True".
+output_dir = string(default="")
+
+
+# Cosmological parameters
+[cosmology]
+# Hubble constant at z=0 [ km/s/Mpc ]
+H0 = float(default=71.0)
+# Density of non-relativistic matter in units of the critical density at z=0
+OmegaM0 = 0.27
+
+
 # Configurations for initialization/reconfiguration of the `logging` module
 [logging]
 # DEBUG:    Detailed information, typically of interest only when diagnosing
