@@ -91,14 +91,7 @@ class ConfigManager:
 
     def get(self, key, fallback=None):
         """Get config value by key."""
-        if key in self._config:
-            value = self._config[key]
-        else:
-            value = fallback
-        return value
-
-    def set(self, key, value):
-        self._config[key] = value
+        return self._config.get(key, fallback)
 
     @property
     def logging(self):
