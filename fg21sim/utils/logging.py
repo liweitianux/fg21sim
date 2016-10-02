@@ -48,6 +48,7 @@ def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
         # Clear existing handlers, otherwise further "basicConfig" calls
         # will be ignored
         for handler in root_logger.handlers:
+            handler.close()
             root_logger.removeHandler(handler)
         # Initialize/reconfigure the logging, which will automatically
         # create a ``Formatter`` for handlers if necessary, and adding
@@ -69,6 +70,7 @@ def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
         for handler in root_logger.handlers:
             if isinstance(handler, StreamHandler):
                 # remove old ``StreamHandler``
+                handler.close()
                 root_logger.removeHandler(handler)
         if stream == "":
             # disable ``StreamHandler``
@@ -86,6 +88,7 @@ def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
             if isinstance(handler, FileHandler):
                 filemode = handler.mode
                 # remove old ``FileHandler``
+                handler.close()
                 root_logger.removeHandler(handler)
         if logfile == "":
             # disable ``FileHandler``
