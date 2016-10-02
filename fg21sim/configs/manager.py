@@ -13,6 +13,7 @@ import os
 import sys
 from glob import glob
 import logging
+from functools import reduce
 
 from configobj import ConfigObj, ConfigObjError, flatten_errors
 from validate import Validator
@@ -92,6 +93,30 @@ class ConfigManager:
     def get(self, key, fallback=None):
         """Get config value by key."""
         return self._config.get(key, fallback)
+
+    def getn(self, keys, sep="/"):
+        """Get the config value from the nested dictionary configs using
+        a list of keys or a "sep"-separated keys strings.
+
+        Parameters
+        ----------
+        keys : str / list[str]
+            List of keys or a string separated by a specific character
+            (e.g., "/") to specify the item in the `self._config`, which
+            is a nested dictionary.
+            e.g., `["section1", "key2"]`, `"section1/key2"`
+        sep : str (len=1)
+            If the above "keys" is a string, then this parameter specify
+            the character used to separate the multi-level keys.
+
+        References
+        ----------
+        - Stackoverflow: Checking a Dictionary using a dot notation string
+          https://stackoverflow.com/q/12414821/4856091
+        """
+        if isinstance(keys, str):
+            keys = keys.split(sep)
+        return reduce(dict.get, keys, self._config)
 
     @property
     def logging(self):
