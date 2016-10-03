@@ -30,4 +30,4 @@
   # Whether save this component to disk
   save = boolean(default=True)
   # Output directory to save the simulated results
-  output_dir = string(default="")
+  output_dir = string(default=None)

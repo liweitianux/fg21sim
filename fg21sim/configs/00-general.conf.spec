@@ -23,7 +23,7 @@ lmax = int(min=1, default=1535)
 
 # Directory contains the input data, e.g., component templates
 # NOTE: This config is mandatory and should be provided by the user.
-data_dir = string(default="")
+data_dir = string(default=None)
 
 # List of foreground components to be simulated:
 # + galactic/synchrotron:
@@ -37,12 +37,20 @@ components = force_list(default=list("galactic/synchrotron"))
 unit = option("MHz", default="MHz")
 
 # How to specify the frequencies
-# + custom: directly specify the frequency values
-# + calc: calculate the frequency values using following configs
+# + custom:
+#       directly specify the frequency values using the "frequencies" config
+# + calc:
+#       calculate the frequency values by "start", "stop", and "step"
 type = option("custom", "calc", default="custom")
 
 # The frequency values to be simulated if above "type" is "custom".
 frequencies = force_list(default=float_list(120.0))
+
+# Parameters to calculate the frequencies
+# start and stop frequency value (both inclusive)
+start = float(default=None)
+stop = float(default=None)
+step = float(default=None)
 
 
 # Configuration for output products
@@ -70,7 +78,7 @@ combine_prefix = string(default="fg")
 # Output directory to place the combined products
 # NOTE: This config is mandatory and should be provided by the user
 #       if above "combine=True".
-output_dir = string(default="")
+output_dir = string(default=None)
 
 
 # Cosmological parameters
@@ -78,7 +86,7 @@ output_dir = string(default="")
 # Hubble constant at z=0 [ km/s/Mpc ]
 H0 = float(default=71.0)
 # Density of non-relativistic matter in units of the critical density at z=0
-OmegaM0 = 0.27
+OmegaM0 = float(default=0.27)
 
 
 # Configurations for initialization/reconfiguration of the `logging` module
