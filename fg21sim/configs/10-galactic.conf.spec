@@ -14,10 +14,13 @@
   # The template map for the simulation.
   # This config specify the relative path to the template from "data_dir".
   template = string(default=None)
-  # The frequency of the template map
+  # The frequency of the template map (same unit as in [frequency] section)
   template_freq = float(default=None)
   # The unit of the template map pixel
   template_unit = string(default=None)
+
+  # Spectral index map
+  indexmap = string(default=None)
 
   # Whether add fluctuations on the small scales
   add_smallscales = boolean(default=True)

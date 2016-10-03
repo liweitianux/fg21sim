@@ -12,6 +12,8 @@
 # HEALPix N_side value, i.e., pixel resolution
 # NOTE: also update "lmax" below.
 nside = int(min=1, default=512)
+# HEALPix ordering scheme
+ordering = option("RING", "NESTED", default="RING")
 
 # Range of multipole monents (l) of the angular power spectrum.
 # The power spectrum will be cut off to a constant for multipole l < lmin.
@@ -48,12 +50,18 @@ frequencies = force_list(default=float_list(120.0))
 # Unit of the sky map pixel value
 unit = option("K", default="K")
 
+# Use single-precision float instead of double (also save spaces)
+use_float = boolean(default=True)
+
 # Filetype used to store the products (default: fits)
 filetype = option("fits", default="fits")
 
 # Filename pattern (without extension) for the output products, which will
 # be finally formatted using `str.format()`.
 filename_pattern = string(default="{prefix}_{frequency:.1f}")
+
+# Overwrite existing files
+clobber = boolean(default=False)
 
 # Whether combine all components and output
 combine = boolean(default=True)
