@@ -8,8 +8,8 @@ do *NOT* use at the moment!
 **NOTE:**
 Only Python 3 (>= 3.4) is supported!
 
-This repository provides the tools to simulate the currently *most realistic*
-(to our knowledge) low-frequency radio foregrounds, which can be further
+This package provides the tools to simulate the *realistic*
+low-frequency radio foregrounds, which can be further
 used to test various foreground removal or separation methods, for the
 purpose of successfully detecting the 21cm cosmological signal arising
 from the netrual hydrogen (HI) of epoch of reionization (EoR).
