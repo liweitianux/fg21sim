@@ -18,10 +18,7 @@ from functools import reduce
 from configobj import ConfigObj, ConfigObjError, flatten_errors
 from validate import Validator
 
-
-class ConfigError(Exception):
-    """Could not parse user configurations"""
-    pass
+from ..errors import ConfigError
 
 
 CONFIGS_PATH = os.path.dirname(__file__)
