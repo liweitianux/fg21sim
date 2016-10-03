@@ -42,8 +42,9 @@ def main():
     parser.add_argument("-F", "--float", action="store_true",
                         help="use float (single precision) instead of double")
     parser.add_argument("-l", "--log", dest="loglevel", default=None,
-                        help="log level (valid values: "
-                        "DEBUG, INFO, WARNING, ERROR, CRITICAL)")
+                        choices=["DEBUG", "INFO", "WARNING",
+                                 "ERROR", "CRITICAL"],
+                        help="set the log level")
     parser.add_argument("-L", "--logfile", default=None,
                         help="filename where to save the log messages")
     parser.add_argument("-Q", "--quiet", action="store_true",
