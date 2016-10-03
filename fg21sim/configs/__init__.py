@@ -2,5 +2,6 @@
 # MIT license
 
 from .manager import ConfigManager
+from .validate import validate_configs
 
 configs = ConfigManager()
