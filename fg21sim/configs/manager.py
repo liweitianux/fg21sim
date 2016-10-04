@@ -71,7 +71,7 @@ class ConfigManager:
             results = config.validate(validator, preserve_errors=True)
         except ConfigObjError as e:
             raise ConfigError(e.message)
-        if not results:
+        if results is not True:
             error_msg = ""
             for (section_list, key, res) in flatten_errors(config, results):
                 if key is not None:
