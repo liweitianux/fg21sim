@@ -147,6 +147,27 @@ class ConfigManager:
             keys = keys.split(sep)
         return reduce(dict.get, keys, self._config)
 
+    def get_path(self, keys):
+        """Return the absolute path of the file/directory specified by the
+        config keys.
+
+        NOTE
+        ----
+        - The "~" (tilde) inside path is expanded to the user home directory.
+        - The relative path (with respect to the user configuration file)
+          is converted to absolute path if `self.userconfig` presents.
+        """
+        path = os.path.expanduser(self.getn(keys))
+        if not os.path.isabs(path):
+            # relative path
+            if hasattr(self, "userconfig"):
+                path = os.path.join(os.path.dirname(self.userconfig), path)
+            else:
+                # cannot convert to the absolute path
+                print("WARNING: cannot convert to the absolute path!",
+                      file=sys.stderr)
+        return path
+
     @property
     def frequencies(self):
         """Get (calculate if necessary) )the frequencies at which to
