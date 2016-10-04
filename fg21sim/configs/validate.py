@@ -11,57 +11,79 @@ a config item against its context,
 Therefore, they are very different to the checker function of `Validator`.
 """
 
+import os
+
 from ..errors import ConfigError
 
 
 def _check_missing(configs, keys):
-    """Check whether the mandatory config is provided by the user."""
+    """Check whether the required config is provided by the user."""
+    results = {}
     if isinstance(keys, str):
         keys = [keys, ]
     for key in keys:
         if not configs.getn(key):
-            raise ConfigError('Required config "%s" missing value' % key)
-    return True
+            results[key] = "Value required but missing"
+    return results
 
 
-def check_common(configs):
-    """Check the "[common]" section of the configurations."""
-    _check_missing(configs, "common/data_dir")
-    return True
+def _check_existence(configs, keys):
+    """Check whether the file/directory corresponding to the config exists."""
+    if isinstance(keys, str):
+        keys = [keys, ]
+    results = {}
+    for key in keys:
+        res = _check_missing(configs, key)
+        if res == {}:
+            # Both "key" and "dir_key" are valid
+            path = configs.get_path(key)
+            if not os.path.exists(path):
+                res[key] = 'File/directory not exist: "%s"' % path
+        results.update(res)
+    return results
 
 
 def check_frequency(configs):
     """Check the "[frequency]" section of the configurations."""
+    results = {}
     if configs.getn("frequency/type") == "custom":
-        _check_missing(configs, "frequency/frequencies")
+        results.update(_check_missing(configs, "frequency/frequencies"))
     elif configs.getn("frequency/type") == "calc":
-        _check_missing(configs, ["frequency/start",
-                                 "frequency/stop",
-                                 "frequency/step"])
-    return True
+        results.update(
+            _check_missing(configs, ["frequency/start",
+                                     "frequency/stop",
+                                     "frequency/step"])
+        )
+    return results
 
 
 def check_output(configs):
     """Check the "[output]" section of the configurations."""
+    results = {}
     if configs.getn("output/combine"):
-        _check_missing(configs, "output/output_dir")
-    return True
+        results.update(_check_missing(configs, "output/output_dir"))
+    return results
 
 
 def check_galactic_synchrotron(configs):
     """Check the "[galactic][synchrotron]" section of the configurations."""
-    _check_missing(configs, ["galactic/synchrotron/template",
-                             "galactic/synchrotron/template_freq",
-                             "galactic/synchrotron/template_unit",
-                             "galactic/synchrotron/indexmap"])
+    results = {}
+    results.update(
+        _check_missing(configs, ["galactic/synchrotron/template_freq",
+                                 "galactic/synchrotron/template_unit"])
+    )
+    results.update(
+        _check_existence(configs, ["galactic/synchrotron/template",
+                                   "galactic/synchrotron/indexmap"])
+    )
     if configs.getn("galactic/synchrotron/save"):
-        _check_missing(configs, "galactic/synchrotron/output_dir")
-    return True
+        results.update(_check_missing(configs,
+                                      "galactic/synchrotron/output_dir"))
+    return results
 
 
 # Available checkers to validate the configurations
 _CHECKERS = [
-    check_common,
     check_frequency,
     check_output,
     check_galactic_synchrotron,
@@ -95,6 +117,13 @@ def validate_configs(configs, checkers=_CHECKERS):
         If any configuration failed the check, a `ConfigError` with
         details will be raised.
     """
+    results = {}
     for checker in checkers:
-        checker(configs)
-    return True
+        results.update(checker(configs))
+    #
+    if results == {}:
+        return True
+    else:
+        err_msg = "\n".join(['Config "{key}": {msg}'.format(key=key, msg=msg)
+                             for key, msg in results.items()])
+        raise ConfigError(err_msg)
