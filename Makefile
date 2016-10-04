@@ -20,7 +20,7 @@ default:
 	@echo "  + devbuild"
 	@echo "        (build and) install the package to the virtualenv"
 	@echo "  + test"
-	@echo "        run the test cases"
+	@echo "        run the tests"
 
 # Create virtualenv and install/update the dependencies
 venv: ${VENV}/bin/activate
@@ -33,6 +33,6 @@ ${VENV}/bin/activate: requirements.txt
 devbuild: venv
 	./${VENV}/bin/python3 setup.py install
 
-# Run the test cases
+# Run the tests
 test: devbuild
-	./${VENV}/bin/python3 tests/runtests.py
+	./${VENV}/bin/python3 setup.py test

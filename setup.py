@@ -1,16 +1,41 @@
 #!/usr/bin/env python3
 #
+# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# MIT license
+#
 # References:
 # [1] Python Packaging User Guide
 #     https://packaging.python.org/
+# [2] pytest - Good Integration Practices
+#     http://doc.pytest.org/en/latest/goodpractices.html
 #
 
 import os
 import sys
 
 from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 
 import fg21sim as pkg
+
+
+class PyTest(TestCommand):
+    user_options = [("pytest-args=", "a", "Arguments to pass to pytest")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = []
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        # import here, cause outside the eggs aren't loaded
+        import pytest
+        errno = pytest.main(self.pytest_args)
+        sys.exit(errno)
 
 
 def read(fname):
@@ -56,4 +81,5 @@ setup(
         "configobj",
     ],
     tests_require=["pytest"],
+    cmdclass={"test": PyTest},
 )
