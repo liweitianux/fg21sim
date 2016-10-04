@@ -3,6 +3,8 @@
 #
 # Makefile for "fg21sim"
 #
+# Credit: http://blog.bottlepy.org/2012/07/16/virtualenv-and-makefiles.html
+#
 
 # The name (also the directory) of the virtualenv
 VENV ?= "venv"
@@ -24,7 +26,7 @@ default:
 venv: ${VENV}/bin/activate
 ${VENV}/bin/activate: requirements.txt
 	test -d "${VENV}" || virtualenv --python=python3 ${VENV}
-	./${VENV}/bin/pip3 install -r requirements.txt
+	./${VENV}/bin/pip3 install --upgrade -r requirements.txt
 	touch ${VENV}/bin/activate
 
 # Install this package to the virtualenv
