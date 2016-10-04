@@ -45,6 +45,7 @@ setup(
     ],
     packages=find_packages(exclude=["docs", "tests"]),
     scripts=[
+        "bin/fg21sim",
         "bin/healpix2hpx",
         "bin/hpx2healpix",
     ],

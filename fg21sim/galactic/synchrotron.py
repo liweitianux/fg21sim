@@ -6,12 +6,16 @@ Diffuse Galactic synchrotron emission (unpolarized) simulations.
 """
 
 import os
+import logging
 from datetime import datetime, timezone
 
 import numpy as np
 from astropy.io import fits
 import astropy.units as au
 import healpy as hp
+
+
+logger = logging.getLogger(__name__)
 
 
 class Synchrotron:
@@ -40,20 +44,21 @@ class Synchrotron:
 
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes."""
-        self.template_path = self.configs.getn(
+        self.template_path = self.configs.get_path(
             "galactic/synchrotron/template")
         self.template_freq = self.configs.getn(
             "galactic/synchrotron/template_freq")
         self.template_unit = au.Unit(
             self.configs.getn("galactic/synchrotron/template_unit"))
-        self.indexmap_path = self.configs.getn(
+        self.indexmap_path = self.configs.get_path(
             "galactic/synchrotron/indexmap")
         self.smallscales = self.configs.getn(
             "galactic/synchrotron/add_smallscales")
         # output
         self.prefix = self.configs.getn("galactic/synchrotron/prefix")
         self.save = self.configs.getn("galactic/synchrotron/save")
-        self.output_dir = self.configs.getn("galactic/synchrotron/output_dir")
+        self.output_dir = self.configs.get_path(
+            "galactic/synchrotron/output_dir")
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.use_float = self.configs.getn("output/use_float")
         self.clobber = self.configs.getn("output/clobber")
@@ -63,6 +68,8 @@ class Synchrotron:
         self.lmax = self.configs.getn("common/lmax")
         # unit of the frequency
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
+        #
+        logger.info("Loaded and setup configurations")
 
     def _load_template(self):
         """Load the template map"""
@@ -71,6 +78,8 @@ class Synchrotron:
         self.template_header = fits.header.Header(header)
         self.template_nside = self.template_header["NSIDE"]
         self.template_ordering = self.template_header["ORDERING"]
+        logger.info("Loaded template map from {0} (Nside={1})".format(
+            self.template_path, self.template_nside))
 
     def _load_indexmap(self):
         """Load the spectral index map"""
@@ -79,6 +88,8 @@ class Synchrotron:
         self.indexmap_header = fits.header.Header(header)
         self.indexmap_nside = self.indexmap_header["NSIDE"]
         self.indexmap_ordering = self.indexmap_header["ORDERING"]
+        logger.info("Loaded spectral index map from {0} (Nside={1})".format(
+            self.indexmap_path, self.indexmap_nside))
 
     def _process_template(self):
         """Upgrade/downgrade the template to have the same Nside as
@@ -88,6 +99,8 @@ class Synchrotron:
         else:
             # upgrade/downgrade the resolution
             self.hpmap = hp.ud_grade(self.template, nside_out=self.nside)
+            logger.info("Upgrade/downgrade template map from Nside "
+                        "{0} to {1}".format(self.template_nside, self.nside))
 
     def _process_indexmap(self):
         """Upgrade/downgrade the spectral index map to have the same
@@ -97,6 +110,8 @@ class Synchrotron:
         else:
             # upgrade/downgrade the resolution
             self.hpmap_index = hp.ud_grade(self.indexmap, nside_out=self.nside)
+            logger.info("Upgrade/downgrade spectral index map from Nside "
+                        "{0} to {1}".format(self.indexmap_nside, self.nside))
 
     def _add_smallscales(self):
         """Add fluctuations on small scales to the template map.
@@ -128,11 +143,12 @@ class Synchrotron:
                        1.0 - np.exp(-ell[ell_idx]**2 * sigma_temp**2))
         cl[ell < self.lmin] = cl[self.lmin]
         # generate a realization of the Gaussian random field
-        gss = hp.synfast(cls=cl, nside=self.nside)
+        gss = hp.synfast(cls=cl, nside=self.nside, new=True)
         # whiten the Gaussian random field
         gss = (gss - gss.mean()) / gss.std()
         self.hpmap_smallscales = alpha * gss * self.hpmap**beta
         self.hpmap += self.hpmap_smallscales
+        logger.info("Added small-scale fluctuations")
 
     def _transform_frequency(self, frequency):
         """Transform the template map to the requested frequency,
@@ -149,6 +165,7 @@ class Synchrotron:
         header = fits.Header()
         header["COMP"] = ("Galactic synchrotron (unpolarized)",
                           "Emission component")
+        header["CREATOR"] = (__name__, "File creator")
         # TODO:
         history = []
         comments = []
@@ -157,6 +174,7 @@ class Synchrotron:
         for cmt in comments:
             header.add_comment(cmt)
         self.header = header
+        logger.info("Created FITS header")
 
     def output(self, hpmap, frequency):
         """Write the simulated synchrotron map to disk with proper
@@ -167,8 +185,13 @@ class Synchrotron:
             np.dtype("float64"): "D",
         }
         #
+        if not os.path.exists(self.output_dir):
+            os.mkdir(self.output_dir)
+            logger.info("Created output dir: {0}".format(self.output_dir))
+        #
         filename = self.filename_pattern.format(prefix=self.prefix,
                                                 frequency=frequency)
+        filename += ".fits"
         filepath = os.path.join(self.output_dir, filename)
         if not hasattr(self, "header"):
             self._make_header()
@@ -185,6 +208,7 @@ class Synchrotron:
                         format=FITS_COLUMN_FORMATS.get(hpmap.dtype))
         ], header=header)
         hdu.writeto(filepath, clobber=self.clobber, checksum=True)
+        logger.info("Write simulated map to file: {0}".format(filepath))
 
     def simulate(self, frequencies):
         """Simulate the synchrotron map at the specified frequencies."""
@@ -196,6 +220,8 @@ class Synchrotron:
         #
         hpmaps = []
         for f in np.array(frequencies, ndmin=1):
+            logger.info("Simulating synchrotron map at {0} ({1}) ...".format(
+                f, self.freq_unit))
             hpmap_f = self._transform_frequency(f)
             hpmaps.append(hpmap_f)
             if self.save:

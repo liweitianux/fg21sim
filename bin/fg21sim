@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+# -*- mode: python -*-
+#
+# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# MIT license
+
+"""
+Simulate the low-frequency radio foregrounds for the 21cm EoR signal.
+"""
+
+import os
+import sys
+import argparse
+import logging
+
+import numpy as np
+
+from fg21sim.configs import configs, validate_configs
+from fg21sim.utils import setup_logging
+from fg21sim.galactic import Synchrotron as GalacticSynchrotron
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Simulate the radio foregrounds for 21cm EoR signal")
+    parser.add_argument("config", help="user configuration file")
+    parser.add_argument("-l", "--log", dest="loglevel", default=None,
+                        choices=["DEBUG", "INFO", "WARNING",
+                                 "ERROR", "CRITICAL"],
+                        help="set the log level")
+    parser.add_argument("-L", "--logfile", default=None,
+                        help="filename where to save the log messages")
+    parser.add_argument("-Q", "--quiet", action="store_true",
+                        help="be quiet so do not log messages to screen")
+    args = parser.parse_args()
+
+    configs.read_userconfig(args.config)
+    validate_configs(configs)
+
+    if args.quiet:
+        log_stream = ""
+    else:
+        log_stream = None
+
+    setup_logging(dict_config=configs.logging,
+                  level=args.loglevel,
+                  stream=log_stream,
+                  logfile=args.logfile)
+    tool = os.path.basename(sys.argv[0])
+    logger = logging.getLogger(tool)
+    logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
+    frequencies = np.array(configs.frequencies, ndmin=1)
+    freq_unit = configs.getn("frequency/unit")
+    logger.info("Simulation frequencies: "
+                "{min:.2f} - {max:.2f} {unit} (#{num:d})".format(
+                    min=frequencies.min(), max=frequencies.max(),
+                    num=len(frequencies), unit=freq_unit))
+
+    logger.info("Simulating the Galactic synchrotron foreground ...")
+    gsynchrotron = GalacticSynchrotron(configs)
+    map_gsync = gsynchrotron.simulate(frequencies)
+    logger.info("Done simulate Galactic synchrotron foreground!")
+
+
+if __name__ == "__main__":
+    main()
