@@ -128,13 +128,13 @@ class ConfigManager:
         """Get config value by key."""
         return self._config.get(key, fallback)
 
-    def getn(self, keys, sep="/"):
+    def getn(self, key, sep="/"):
         """Get the config value from the nested dictionary configs using
         a list of keys or a "sep"-separated keys strings.
 
         Parameters
         ----------
-        keys : str / list[str]
+        key : str / list[str]
             List of keys or a string separated by a specific character
             (e.g., "/") to specify the item in the `self._config`, which
             is a nested dictionary.
@@ -148,13 +148,19 @@ class ConfigManager:
         - Stackoverflow: Checking a Dictionary using a dot notation string
           https://stackoverflow.com/q/12414821/4856091
         """
-        if isinstance(keys, str):
-            keys = keys.split(sep)
-        return reduce(dict.get, keys, self._config)
+        if isinstance(key, str):
+            key = key.split(sep)
+        return reduce(dict.get, key, self._config)
 
-    def get_path(self, keys):
+    def get_path(self, key):
         """Return the absolute path of the file/directory specified by the
         config keys.
+
+        Parameters
+        ----------
+        key : str
+            "/"-separated string specifying the config name of the
+            file/directory
 
         NOTE
         ----
@@ -162,7 +168,7 @@ class ConfigManager:
         - The relative path (with respect to the user configuration file)
           is converted to absolute path if `self.userconfig` presents.
         """
-        path = os.path.expanduser(self.getn(keys))
+        path = os.path.expanduser(self.getn(key))
         if not os.path.isabs(path):
             # relative path
             if hasattr(self, "userconfig"):
@@ -170,7 +176,7 @@ class ConfigManager:
             else:
                 # cannot convert to the absolute path
                 logger.warning("Cannot convert to absolute path: %s" % path)
-        return path
+        return os.path.normpath(path)
 
     @property
     def frequencies(self):

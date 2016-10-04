@@ -11,15 +11,15 @@
 [common]
 # HEALPix N_side value, i.e., pixel resolution
 # NOTE: also update "lmax" below.
-nside = int(min=1, default=512)
+nside = integer(min=1, default=512)
 # HEALPix ordering scheme
 ordering = option("RING", "NESTED", default="RING")
 
 # Range of multipole monents (l) of the angular power spectrum.
 # The power spectrum will be cut off to a constant for multipole l < lmin.
 # Generally, lmax = 3 * nside - 1
-lmin = int(min=0, default=10)
-lmax = int(min=1, default=1535)
+lmin = integer(min=0, default=10)
+lmax = integer(min=1, default=1535)
 
 # Directory contains the input data, e.g., component templates
 # NOTE: This config is mandatory and should be provided by the user.
@@ -44,7 +44,7 @@ unit = option("MHz", default="MHz")
 type = option("custom", "calc", default="custom")
 
 # The frequency values to be simulated if above "type" is "custom".
-frequencies = force_list(default=float_list(120.0))
+frequencies = float_list(default=list())
 
 # Parameters to calculate the frequencies
 # start and stop frequency value (both inclusive)
