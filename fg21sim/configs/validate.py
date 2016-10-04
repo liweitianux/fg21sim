@@ -3,6 +3,12 @@
 
 """
 Custom validations for the configurations.
+
+NOTE
+----
+These checker functions check the configurations as a whole, and may check
+a config item against its context,
+Therefore, they are very different to the checker function of `Validator`.
 """
 
 from ..errors import ConfigError
@@ -14,7 +20,7 @@ def _check_missing(configs, keys):
         keys = [keys, ]
     for key in keys:
         if not configs.getn(key):
-            raise ConfigError('config "%s" missing' % key)
+            raise ConfigError('Required config "%s" missing value' % key)
     return True
 
 
