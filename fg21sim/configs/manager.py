@@ -51,15 +51,47 @@ class ConfigManager:
 
         Parameters
         ----------
-        config : str, list of str
+        config : str, list[str]
             Input config to be validated and merged.
             This parameter can be the filename of the config file, or a list
             contains the lines of the configs.
         """
-        newconfig = ConfigObj(config, interpolation=False,
-                              configspec=self._configspec)
+        try:
+            newconfig = ConfigObj(config, interpolation=False,
+                                  configspec=self._configspec)
+        except ConfigObjError as e:
+            raise ConfigError(e)
         newconfig = self._validate(newconfig)
         self._config.merge(newconfig)
+
+    def read_userconfig(self, userconfig):
+        """Read user configuration file, validate, and merge into the
+        default configurations.
+
+        Parameters
+        ----------
+        userconfig : filename
+            Filename/path to the user configuration file.
+
+        NOTE
+        ----
+        The user configuration file can be loaded *only once*,
+        or *only one* user configuration file supported.
+        Since the *path* of the user configuration file is recorded,
+        and thus allow the use of *relative path* of some input files
+        (e.g., galactic/synchrotron/template) within the configurations.
+        """
+        if hasattr(self, "userconfig"):
+            raise ConfigError('User configuration already loaded from "%s"' %
+                              self.userconfig)
+        #
+        try:
+            config = open(userconfig).read().split("\n")
+        except IOError:
+            raise ConfigError('Cannot read config from "%s"' % userconfig)
+        #
+        self.read_config(config)
+        self.userconfig = os.path.abspath(userconfig)
 
     def _validate(self, config):
         """Validate the config against the specification using a default
