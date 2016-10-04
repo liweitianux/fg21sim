@@ -12,7 +12,6 @@
   # Synchrotron emission component (unpolarized)
   [[synchrotron]]
   # The template map for the simulation.
-  # This config specify the relative path to the template from "data_dir".
   template = string(default=None)
   # The frequency of the template map (same unit as in [frequency] section)
   template_freq = float(default=None)

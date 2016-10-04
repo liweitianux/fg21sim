@@ -40,15 +40,14 @@ class Synchrotron:
 
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes."""
-        data_dir = self.configs.getn("common/data_dir")
-        self.template_path = os.path.join(
-            data_dir, self.configs.getn("galactic/synchrotron/template"))
+        self.template_path = self.configs.getn(
+            "galactic/synchrotron/template")
         self.template_freq = self.configs.getn(
             "galactic/synchrotron/template_freq")
         self.template_unit = au.Unit(
             self.configs.getn("galactic/synchrotron/template_unit"))
-        self.indexmap_path = os.path.join(
-            data_dir, self.configs.getn("galactic/synchrotron/indexmap"))
+        self.indexmap_path = self.configs.getn(
+            "galactic/synchrotron/indexmap")
         self.smallscales = self.configs.getn(
             "galactic/synchrotron/add_smallscales")
         # output

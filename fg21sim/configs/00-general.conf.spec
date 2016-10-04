@@ -21,10 +21,6 @@ ordering = option("RING", "NESTED", default="RING")
 lmin = integer(min=0, default=10)
 lmax = integer(min=1, default=1535)
 
-# Directory contains the input data, e.g., component templates
-# NOTE: This config is mandatory and should be provided by the user.
-data_dir = string(default=None)
-
 # List of foreground components to be simulated:
 # + galactic/synchrotron:
 #       Diffuse Galactic synchrotron emission (unpolarized)
