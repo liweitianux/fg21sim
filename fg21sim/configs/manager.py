@@ -22,6 +22,7 @@ from ..errors import ConfigError
 
 
 CONFIGS_PATH = os.path.dirname(__file__)
+logger = logging.getLogger(__name__)
 
 
 class ConfigManager:
@@ -42,6 +43,8 @@ class ConfigManager:
         configs_default = ConfigObj(interpolation=False,
                                     configspec=self._configspec)
         self._config = self._validate(configs_default)
+        logger.info("Loaded default configs with specification: {0}".format(
+            ", ".join(configs_spec)))
         if configs:
             for config in configs:
                 self.read_config(config)
@@ -63,6 +66,7 @@ class ConfigManager:
             raise ConfigError(e)
         newconfig = self._validate(newconfig)
         self._config.merge(newconfig)
+        logger.info("Loaded additional config: {0}".format(config))
 
     def read_userconfig(self, userconfig):
         """Read user configuration file, validate, and merge into the
@@ -92,6 +96,7 @@ class ConfigManager:
         #
         self.read_config(config)
         self.userconfig = os.path.abspath(userconfig)
+        logger.info("Loaded user config: {0}".format(userconfig))
 
     def _validate(self, config):
         """Validate the config against the specification using a default
@@ -164,8 +169,7 @@ class ConfigManager:
                 path = os.path.join(os.path.dirname(self.userconfig), path)
             else:
                 # cannot convert to the absolute path
-                print("WARNING: cannot convert to the absolute path!",
-                      file=sys.stderr)
+                logger.warning("Cannot convert to absolute path: %s" % path)
         return path
 
     @property
