@@ -116,6 +116,22 @@ class ConfigManager:
         return reduce(dict.get, keys, self._config)
 
     @property
+    def frequencies(self):
+        """Get (calculate if necessary) )the frequencies at which to
+        carry out the simulations.
+        """
+        if self.getn("frequency/type") == "custom":
+            frequencies = self.getn("frequency/frequencies")
+        else:
+            # calculate the frequency values
+            start = self.getn("frequency/start")
+            stop = self.getn("frequency/stop")
+            step = self.getn("frequency/step")
+            num = int((stop - start) / step + 1)
+            frequencies = [start + step*i for i in range(num)]
+        return frequencies
+
+    @property
     def logging(self):
         """Get and prepare the logging configurations for
         ``logging.basicConfig()`` to initialize the logging module.
