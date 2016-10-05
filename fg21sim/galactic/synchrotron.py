@@ -14,6 +14,8 @@ from astropy.io import fits
 import astropy.units as au
 import healpy as hp
 
+from ..utils import write_fits_healpix
+
 
 logger = logging.getLogger(__name__)
 
@@ -203,11 +205,8 @@ class Synchrotron:
         )
         if self.use_float:
             hpmap = hpmap.astype(np.float32)
-        hdu = fits.BinTableHDU.from_columns([
-            fits.Column(name="I", array=hpmap,
-                        format=FITS_COLUMN_FORMATS.get(hpmap.dtype))
-        ], header=header)
-        hdu.writeto(filepath, clobber=self.clobber, checksum=True)
+        write_fits_healpix(filepath, hpmap, header=header,
+                           clobber=self.clobber)
         logger.info("Write simulated map to file: {0}".format(filepath))
 
     def simulate(self, frequencies):

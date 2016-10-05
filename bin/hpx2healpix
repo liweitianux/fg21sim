@@ -18,18 +18,7 @@ from astropy.io import fits
 
 import fg21sim
 from fg21sim.configs import configs
-from fg21sim.utils import hpx2healpix, setup_logging
-
-
-# Reference:
-# http://docs.astropy.org/en/stable/io/fits/usage/table.html#column-creation
-FITS_COLUMN_FORMATS = {
-    np.dtype("int16"): "I",
-    np.dtype("int32"): "J",
-    np.dtype("int64"): "K",
-    np.dtype("float32"): "E",
-    np.dtype("float64"): "D",
-}
+from fg21sim.utils import hpx2healpix, write_fits_healpix, setup_logging
 
 
 def main():
@@ -82,11 +71,8 @@ def main():
     if args.float:
         logger.info("HEALPix data: use single-precision float numbers")
         hp_data = hp_data.astype(np.float32)
-    hdu = fits.BinTableHDU.from_columns([
-        fits.Column(name="I", array=hp_data,
-                    format=FITS_COLUMN_FORMATS.get(hp_data.dtype))
-    ], header=hp_header)
-    hdu.writeto(args.outfile, clobber=args.clobber, checksum=True)
+    write_fits_healpix(args.outfile, hpmap=hp_data, header=hp_header,
+                       clobber=args.clobber)
     logger.info("HEALPix data write to FITS file: %s" % args.outfile)
 
 
