@@ -13,9 +13,6 @@ import sys
 import argparse
 import logging
 
-import numpy as np
-from astropy.io import fits
-
 import fg21sim
 from fg21sim.configs import configs
 from fg21sim.utils import hpx2healpix, write_fits_healpix, setup_logging
@@ -28,8 +25,6 @@ def main():
     parser.add_argument("outfile", help="output HEALPix data file")
     parser.add_argument("-C", "--clobber", action="store_true",
                         help="overwrite the existing output file")
-    parser.add_argument("-F", "--float", action="store_true",
-                        help="use float (single precision) instead of double")
     parser.add_argument("-l", "--log", dest="loglevel", default=None,
                         choices=["DEBUG", "INFO", "WARNING",
                                  "ERROR", "CRITICAL"],
@@ -68,9 +63,6 @@ def main():
     hp_data, hp_header = hpx2healpix(args.infile,
                                      append_history=history,
                                      append_comment=comments)
-    if args.float:
-        logger.info("HEALPix data: use single-precision float numbers")
-        hp_data = hp_data.astype(np.float32)
     write_fits_healpix(args.outfile, hpmap=hp_data, header=hp_header,
                        clobber=args.clobber)
     logger.info("HEALPix data write to FITS file: %s" % args.outfile)

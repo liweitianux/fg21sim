@@ -53,8 +53,10 @@ def read_fits_healpix(filename):
     if isinstance(filename, fits.BinTableHDU):
         hdu = filename
     else:
-        hdu = fits.open(filename)[0]
-    dtype = hdu.data.dtype
+        # Read the first extended table
+        hdu = fits.open(filename)[1]
+    # Hack to ignore the dtype byteorder, use native endianness
+    dtype = np.dtype(hdu.data.field(0).dtype.type)
     header = hdu.header
     data = hp.read_map(hdu, nest=False, verbose=False)
     return (data.astype(dtype), header)
@@ -94,9 +96,12 @@ def write_fits_healpix(filename, hpmap, header=None, clobber=False):
     - This function (currently) only implement the very basic feature of
       the `healpy.write_map()`.
     """
-    hpmap = np.array(hpmap)
+    hpmap = np.asarray(hpmap)
     if hpmap.ndim != 1:
         raise ValueError("Invalid HEALPix data: only support 1D array")
+    # Hack to ignore the dtype byteorder, use native endianness
+    dtype = np.dtype(hpmap.dtype.type)
+    hpmap = hpmap.astype(dtype)
     #
     npix = hpmap.size
     nside = int((npix / 12) ** 0.5)
@@ -120,13 +125,11 @@ def write_fits_healpix(filename, hpmap, header=None, clobber=False):
     #
     hdr["EXTNAME"] = ("HEALPIX", "Name of the binary table extension")
     hdr["CREATOR"] = (__name__, "File creator")
-    hdr["DATE"] = (
-        datetime.now(timezone.utc).astimezone().isoformat(),
-        "File creation date"
-    )
+    hdr["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
+                   "File creation date")
     # merge user-provided header
     if header is not None:
-        hdr.update(fits.Header(header))
+        hdr.extend(fits.Header(header))
     #
     hdu = fits.BinTableHDU.from_columns([
         fits.Column(name="I", array=hpmap, format=colfmt)

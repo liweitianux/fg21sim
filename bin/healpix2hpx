@@ -28,8 +28,6 @@ def main():
     parser.add_argument("outfile", help="output FITS image in HPX projection")
     parser.add_argument("-C", "--clobber", action="store_true",
                         help="overwrite the existing output file")
-    parser.add_argument("-F", "--float", action="store_true",
-                        help="use float (single precision) instead of double")
     parser.add_argument("-l", "--log", dest="loglevel", default=None,
                         choices=["DEBUG", "INFO", "WARNING",
                                  "ERROR", "CRITICAL"],
@@ -68,9 +66,6 @@ def main():
     hpx_data, hpx_header = healpix2hpx(args.infile,
                                        append_history=history,
                                        append_comment=comments)
-    if args.float:
-        logger.info("HPX FITS images: use single-precision float numbers")
-        hpx_data = hpx_data.astype(np.float32)
     hdu = fits.PrimaryHDU(data=hpx_data, header=hpx_header)
     hdu.writeto(args.outfile, clobber=args.clobber, checksum=True)
     logger.info("HPX FITS images write to: %s" % args.outfile)

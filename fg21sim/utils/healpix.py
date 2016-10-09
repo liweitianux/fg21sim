@@ -64,6 +64,8 @@ def healpix2hpx(data, header=None, append_history=None, append_comment=None):
     else:
         hp_data, hp_header = np.asarray(data), fits.header.Header(header)
         logger.info("Read HEALPix data from array and header")
+    dtype = hp_data.dtype
+    logger.info("HEALPix dtype: {0}".format(dtype))
     logger.info("HEALPix index ordering: %s" % hp_header["ORDERING"])
     if hp_header["ORDERING"] != "RING":
         raise ValueError("only 'RING' ordering currently supported")
@@ -72,7 +74,7 @@ def healpix2hpx(data, header=None, append_history=None, append_comment=None):
     logger.info("HEALPix data: Npix=%d, Nside=%d" % (npix, nside))
     if nside != hp_header["NSIDE"]:
         raise ValueError("HEALPix data Nside does not match the header")
-    hp_data = np.concatenate([hp_data, [np.nan]])
+    hp_data = np.append(hp_data, np.nan).astype(dtype)
     hpx_idx = _calc_hpx_indices(nside)
     # fix indices of "-1" to set empty pixels with above appended "nan"
     hpx_idx[hpx_idx == -1] = len(hp_data) - 1
@@ -80,7 +82,7 @@ def healpix2hpx(data, header=None, append_history=None, append_comment=None):
     hpx_header = _make_hpx_header(hp_header,
                                   append_history=append_history,
                                   append_comment=append_comment)
-    return (hpx_data, hpx_header)
+    return (hpx_data.astype(hp_data.dtype), hpx_header)
 
 
 def hpx2healpix(data, header=None, append_history=None, append_comment=None):
@@ -114,6 +116,7 @@ def hpx2healpix(data, header=None, append_history=None, append_comment=None):
     else:
         hpx_data, hpx_header = np.asarray(data), fits.header.Header(header)
         logger.info("Read HPX image from array and header")
+    logger.info("HPX image dtype: {0}".format(hpx_data.dtype))
     logger.info("HPX coordinate system: ({0}, {1})".format(
         hpx_header["CTYPE1"], hpx_header["CTYPE2"]))
     if ((hpx_header["CTYPE1"], hpx_header["CTYPE2"]) !=
@@ -136,7 +139,7 @@ def hpx2healpix(data, header=None, append_history=None, append_comment=None):
     hp_header = _make_healpix_header(hpx_header, nside=nside,
                                      append_history=append_history,
                                      append_comment=append_comment)
-    return (hp_data, hp_header)
+    return (hp_data.astype(hpx_data.dtype), hp_header)
 
 
 def _calc_hpx_indices(nside):
