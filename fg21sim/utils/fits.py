@@ -28,12 +28,14 @@ FITS_COLUMN_FORMATS = {
 
 
 def read_fits_healpix(filename):
-    """Read the HEALPix map from a FITS file to 1D array in *RING* ordering.
+    """Read the HEALPix map from a FITS file or a HDU to 1D array
+    in *RING* ordering.
 
     Parameters
     ----------
-    filename : str
-        Filename of the HEALPix FITS file
+    filename : str or `~astropy.io.fits.BinTableHDU`
+        Filename of the HEALPix FITS file,
+        or an `~astropy.io.fits.BinTableHDU` instance.
 
     Returns
     -------
@@ -48,7 +50,10 @@ def read_fits_healpix(filename):
     data array to its original value as in FITS file, as well as return
     FITS header as `~astropy.io.fits.Header` instance.
     """
-    hdu = fits.open(filename)[0]
+    if isinstance(filename, fits.BinTableHDU):
+        hdu = filename
+    else:
+        hdu = fits.open(filename)[0]
     dtype = hdu.data.dtype
     header = hdu.header
     data = hp.read_map(hdu, nest=False, verbose=False)
