@@ -31,6 +31,8 @@ import numpy as np
 import healpy as hp
 from astropy.io import fits
 
+from . import read_fits_healpix
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +59,7 @@ def healpix2hpx(data, header=None, append_history=None, append_comment=None):
     (hpx_data, hpx_header) : (2D numpy array, astropy.io.fits header)
     """
     if isinstance(data, str) or isinstance(data, fits.BinTableHDU):
-        hp_data, hp_header = hp.read_map(data, nest=False, h=True,
-                                         verbose=False)
-        hp_header = fits.header.Header(hp_header)
+        hp_data, hp_header = read_fits_healpix(data)
         logger.info("Read HEALPix data from file or HDU")
     else:
         hp_data, hp_header = np.asarray(data), fits.header.Header(header)

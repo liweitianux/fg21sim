@@ -14,7 +14,7 @@ from astropy.io import fits
 import astropy.units as au
 import healpy as hp
 
-from ..utils import write_fits_healpix
+from ..utils import read_fits_healpix, write_fits_healpix
 
 
 logger = logging.getLogger(__name__)
@@ -75,9 +75,8 @@ class Synchrotron:
 
     def _load_template(self):
         """Load the template map"""
-        self.template, header = hp.read_map(self.template_path,
-                                            nest=False, h=True, verbose=False)
-        self.template_header = fits.header.Header(header)
+        self.template, header = read_fits_healpix(self.template_path)
+        self.template_header = header
         self.template_nside = self.template_header["NSIDE"]
         self.template_ordering = self.template_header["ORDERING"]
         logger.info("Loaded template map from {0} (Nside={1})".format(
@@ -85,9 +84,8 @@ class Synchrotron:
 
     def _load_indexmap(self):
         """Load the spectral index map"""
-        self.indexmap, header = hp.read_map(self.indexmap_path,
-                                            nest=False, h=True, verbose=False)
-        self.indexmap_header = fits.header.Header(header)
+        self.indexmap, header = read_fits_healpix(self.indexmap_path)
+        self.indexmap_header = header
         self.indexmap_nside = self.indexmap_header["NSIDE"]
         self.indexmap_ordering = self.indexmap_header["ORDERING"]
         logger.info("Loaded spectral index map from {0} (Nside={1})".format(
@@ -182,11 +180,6 @@ class Synchrotron:
         """Write the simulated synchrotron map to disk with proper
         header keywords and history.
         """
-        FITS_COLUMN_FORMATS = {
-            np.dtype("float32"): "E",
-            np.dtype("float64"): "D",
-        }
-        #
         if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
             logger.info("Created output dir: {0}".format(self.output_dir))
