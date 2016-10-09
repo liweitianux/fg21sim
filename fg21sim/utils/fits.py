@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 from astropy.io import fits
+import healpy as hp
 
 
 # Reference:
@@ -24,6 +25,34 @@ FITS_COLUMN_FORMATS = {
     np.dtype("complex64"):  "C",
     np.dtype("complex128"): "M",
 }
+
+
+def read_fits_healpix(filename):
+    """Read the HEALPix map from a FITS file to 1D array in *RING* ordering.
+
+    Parameters
+    ----------
+    filename : str
+        Filename of the HEALPix FITS file
+
+    Returns
+    -------
+    data : 1D `~numpy.ndarray`
+        HEALPix data in *RING* ordering
+    header : `~astropy.io.fits.Header`
+        Header of the input FITS file
+
+    NOTE
+    ----
+    This function wraps on `healpy.read_map()`, but set the data type of
+    data array to its original value as in FITS file, as well as return
+    FITS header as `~astropy.io.fits.Header` instance.
+    """
+    hdu = fits.open(filename)[0]
+    dtype = hdu.data.dtype
+    header = hdu.header
+    data = hp.read_map(hdu, nest=False, verbose=False)
+    return (data.astype(dtype), header)
 
 
 def write_fits_healpix(filename, hpmap, header=None, clobber=False):
