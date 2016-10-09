@@ -25,12 +25,11 @@ hpx2healpix:
 
 
 from datetime import datetime, timezone
+import logging
 
 import numpy as np
 import healpy as hp
 from astropy.io import fits
-
-from .. import logging
 
 
 logger = logging.getLogger(__name__)
@@ -297,10 +296,8 @@ def _make_hpx_header(header, append_history=None, append_comment=None):
     header["PV2_2"] = (3, "HPX K parameter (latitude)")
     logger.info("Made HPX FITS header")
     #
-    header["DATE"] = (
-        datetime.now(timezone.utc).astimezone().isoformat(),
-        "File creation date"
-    )
+    header["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
+                      "File creation date")
     comments = [
         'The HPX coordinate system is an reorganization of the HEALPix',
         'data without regridding or interpolation, which is described in',
@@ -338,10 +335,8 @@ def _make_healpix_header(header, nside,
     header["LASTPIX"] = (npix-1, "Last pixel # (0 based)")
     logger.info("Made HEALPix FITS header")
     #
-    header["DATE"] = (
-        datetime.now(timezone.utc).astimezone().isoformat(),
-        "File creation date"
-    )
+    header["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
+                      "File creation date")
     #
     if append_history is not None:
         logger.info("HEALPix FITS header: append history")
