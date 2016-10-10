@@ -178,6 +178,7 @@ def _calc_hpx_indices(nside):
     shape = (nfacet*nside, nfacet*nside)
     indices = -np.ones(shape).astype(np.int)
     logger.info("HPX indices matrix shape: {0}".format(shape))
+    logger.info("Calculating the HPX indices ... (may take a while ...)")
     #
     # Loop vertically facet-by-facet
     for jfacet in range(nfacet):
