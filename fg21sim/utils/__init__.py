@@ -3,4 +3,5 @@
 
 from .fits import read_fits_healpix, write_fits_healpix
 from .healpix import healpix2hpx, hpx2healpix
+from .reproject import zea2healpix
 from .logging import setup_logging
