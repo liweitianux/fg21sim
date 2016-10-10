@@ -239,7 +239,8 @@ def zea2healpix(img1, img2, nside, order=1, inpaint=False,
     Returns
     -------
     hp_data : 1D `~numpy.ndarray`
-        Reprojected HEALPix data
+        Reprojected HEALPix data;
+        The missing pixels have value NaN if `inpaint=False`.
     hp_header : `~astropy.io.fits.Header`
         FITS header for the reprojected HEALPix data
     hp_mask : 1D `~numpy.ndarray`
@@ -285,10 +286,11 @@ def zea2healpix(img1, img2, nside, order=1, inpaint=False,
     hp_data2 = _image_to_healpix(zea_img2, zea_wcs2, nside=nside, order=order,
                                  hemisphere=zea_hemisphere2.upper())
     # Merge the two HEALPix data
-    hp_mask = ((~np.isnan(hp_data1)).astype(np.int) +
-               (~np.isnan(hp_data2)).astype(np.int))
-    hp_data1[np.isnan(hp_data1)] = 0.0
-    hp_data2[np.isnan(hp_data2)] = 0.0
+    hp_nan1 = np.isnan(hp_data1)
+    hp_nan2 = np.isnan(hp_data2)
+    hp_mask = (~hp_nan1).astype(np.int) + (~hp_nan2).astype(np.int)
+    hp_data1[hp_nan1] = 0.0
+    hp_data2[hp_nan2] = 0.0
     hp_data = hp_data1 + hp_data2
     logger.info("Done reprojection and merge two hemispheres")
     # Duplicate pixels and missing pixels
@@ -300,6 +302,8 @@ def zea2healpix(img1, img2, nside, order=1, inpaint=False,
         logger.info("Averaged the duplicate pixel(s)")
     pix_missing = (hp_mask == 0)
     if pix_missing.sum() > 0:
+        # Reset the missing pixels to NaN's
+        hp_data[pix_missing] = np.nan
         logger.warning("Reprojected HEALPix data has %d missing pixel(s)" %
                        pix_missing.sum())
         if inpaint:
