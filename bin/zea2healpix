@@ -37,6 +37,8 @@ def main():
     parser.add_argument("-O", "--interp-order", dest="interp_order",
                         type=int, default=1,
                         help="interpolation order (integer, 0-5; default: 1)")
+    parser.add_argument("-I", "--inpaint", action="store_true",
+                        help="inpaint the missing pixels if present")
     parser.add_argument("-C", "--clobber", action="store_true",
                         help="overwrite the existing output file")
     parser.add_argument("-l", "--log", dest="loglevel", default=None,
@@ -77,6 +79,7 @@ def main():
     hp_data, hp_header, __ = zea2healpix(args.infile1, args.infile2,
                                          nside=args.nside,
                                          order=args.interp_order,
+                                         inpaint=args.inpaint,
                                          append_history=history,
                                          append_comment=comments)
     write_fits_healpix(args.outfile, hpmap=hp_data, header=hp_header,

@@ -170,6 +170,52 @@ def _image_to_healpix(image, wcs, nside, order=1, hemisphere=None):
     return hpdata
 
 
+def _inpaint_healpix(data, ipix):
+    """Inpaint the missing pixels in the HEALPix map.
+
+    The missing pixels are filled with the averages of corresponding
+    8 neighboring pixels.
+    The other missing pixels within the 8 neighboring pixels are also excluded
+    when calculating the averages.
+
+    Parameters
+    ----------
+    data : 1D `~numpy.ndarray`
+        HEALPix data array in *RING* ordering
+    ipix : 1D `~numpy.ndarray`
+        Array specifying the missing pixels in the HEALPix map.
+        This can be either an integer array of missing pixel indices
+        in *RING* ordering, or be an boolean array of same length with `True`
+        indicating the missing pixels.
+
+    Returns
+    -------
+    inpainted : 1D `~numpy.ndarray`
+        Inpainted HEALPix data array
+    """
+    logger.info("Inpaint the HEALPix map for missing pixels ...")
+    if (ipix.dtype == np.bool) and (ipix.shape == data.shape):
+        ipix = np.where(ipix)[0]
+    nside = hp.npix2nside(data.size)
+    inpainted = data.copy()
+    inpainted[ipix] = np.nan
+    logger.info("Get the 8 neighbors for each HEALPix missing pixel")
+    ipix_neighbors = hp.get_all_neighbours(nside, ipix)
+    neighbors = inpainted[ipix_neighbors]
+    # Warn the pixels with >4 NaN's within their 8 neighbors
+    neighbors_nan = np.sum(np.isnan(neighbors), axis=0)
+    ipix_warning = ipix[neighbors_nan > 4]
+    if len(ipix_warning) > 0:
+        logger.warning("These pixels whose 8 neighbors have >4 NaN's: "
+                       "%s" % (", ".join(np.char.mod("%d", ipix_warning))))
+    #
+    logger.info("Calculate the averages of neighbors (exclude NaN's)")
+    averages = np.nanmean(neighbors, axis=0)
+    inpainted[ipix] = averages
+    logger.info("Done inpaint %d missing pixels" % len(ipix))
+    return inpainted
+
+
 def zea2healpix(img1, img2, nside, order=1, inpaint=False,
                 append_history=None, append_comment=None):
     """Reproject the maps in ZEA (zenithal/azimuthal equal area) projection
@@ -215,7 +261,8 @@ def zea2healpix(img1, img2, nside, order=1, inpaint=False,
       full-sky HEALPix map.  Duplicate/overlapping pixels are warned.
     - The combined full-sky HEALPix map may still have some missing pixels,
       which is also warned.
-      TODO: inpaint the missing pixels by interpolation
+      If `inpaint=True`, then these missing pixels are filled with the
+      averages of their 8 neighboring pixels (exclude NaN's).
     """
     if isinstance(img1, str):
         img1 = fits.open(img1)[0]
@@ -250,12 +297,13 @@ def zea2healpix(img1, img2, nside, order=1, inpaint=False,
         logger.warning("Reprojected HEALPix data has %d duplicate pixel(s)" %
                        pix_dup.sum())
         hp_data[pix_dup] /= 2.0
-        logger.warning("Averaged the duplicate pixel(s)")
+        logger.info("Averaged the duplicate pixel(s)")
     pix_missing = (hp_mask == 0)
     if pix_missing.sum() > 0:
         logger.warning("Reprojected HEALPix data has %d missing pixel(s)" %
                        pix_missing.sum())
-        # XXX/TODO: inpaint
+        if inpaint:
+            hp_data = _inpaint_healpix(hp_data, pix_missing)
     # HEALPix FITS header
     header = zea_hdr1.copy(strip=True)
     keys = ["CTYPE1", "CTYPE2", "CRPIX1", "CRPIX2", "CRVAL1", "CRVAL2",
