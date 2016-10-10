@@ -73,6 +73,7 @@ setup(
         "bin/fg21sim",
         "bin/healpix2hpx",
         "bin/hpx2healpix",
+        "bin/zea2healpix",
     ],
     install_requires=[
         "numpy",
