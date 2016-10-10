@@ -196,6 +196,14 @@ def zea2healpix(img1, img2, nside, order=1, inpaint=False,
         Reprojected HEALPix data
     hp_header : `~astropy.io.fits.Header`
         FITS header for the reprojected HEALPix data
+    hp_mask : 1D `~numpy.ndarray`
+        Array of same shape as the above `hp_data` indicating the status of
+        each pixel of the output array.
+        Values of "0" indicate the missing pixels (i.e., there is no
+        transformation to the input images); values of "1" indicate the output
+        pixel maps to one and only one of the input images; values of "2"
+        indicate the duplicate/overlapping pixels that map to both of the two
+        input images.
 
     NOTE
     ----
@@ -230,18 +238,18 @@ def zea2healpix(img1, img2, nside, order=1, inpaint=False,
     hp_data2 = _image_to_healpix(zea_img2, zea_wcs2, nside=nside, order=order,
                                  hemisphere=zea_hemisphere2.upper())
     # Merge the two HEALPix data
-    hp_footprint1 = (~np.isnan(hp_data1)).astype(np.int)
-    hp_footprint2 = (~np.isnan(hp_data2)).astype(np.int)
+    hp_mask = ((~np.isnan(hp_data1)).astype(np.int) +
+               (~np.isnan(hp_data2)).astype(np.int))
     hp_data1[np.isnan(hp_data1)] = 0.0
     hp_data2[np.isnan(hp_data2)] = 0.0
     hp_data = hp_data1 + hp_data2
     logger.info("Done reprojection and merge two hemispheres")
     # Duplicated pixels and missing pixels
-    pix_dup = (hp_footprint1 + hp_footprint2) == 2
+    pix_dup = (hp_mask == 2)
     if pix_dup.sum() > 0:
         logger.warning("Reprojected HEALPix data has %d duplicated pixel(s)" %
                        pix_dup.sum())
-    pix_missing = (hp_footprint1 + hp_footprint2) == 0
+    pix_missing = (hp_mask == 0)
     if pix_missing.sum() > 0:
         logger.warning("Reprojected HEALPix data has %d missing pixel(s)" %
                        pix_missing.sum())
@@ -258,4 +266,4 @@ def zea2healpix(img1, img2, nside, order=1, inpaint=False,
                                      append_history=append_history,
                                      append_comment=append_comment)
     logger.info("Made HEALPix FITS header")
-    return (hp_data, hp_header)
+    return (hp_data, hp_header, hp_mask)

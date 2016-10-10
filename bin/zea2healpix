@@ -74,11 +74,11 @@ def main():
         'See also {0}'.format(fg21sim.__url__)
     ]
 
-    hp_data, hp_header = zea2healpix(args.infile1, args.infile2,
-                                     nside=args.nside,
-                                     order=args.interp_order,
-                                     append_history=history,
-                                     append_comment=comments)
+    hp_data, hp_header, __ = zea2healpix(args.infile1, args.infile2,
+                                         nside=args.nside,
+                                         order=args.interp_order,
+                                         append_history=history,
+                                         append_comment=comments)
     write_fits_healpix(args.outfile, hpmap=hp_data, header=hp_header,
                        clobber=args.clobber)
     logger.info("HEALPix data write to FITS file: %s" % args.outfile)
