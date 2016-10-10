@@ -11,7 +11,7 @@
 [common]
 # HEALPix N_side value, i.e., pixel resolution
 # NOTE: also update "lmax" below.
-nside = integer(min=1, default=512)
+nside = integer(min=1, default=1024)
 # HEALPix ordering scheme
 ordering = option("RING", "NESTED", default="RING")
 
@@ -19,7 +19,7 @@ ordering = option("RING", "NESTED", default="RING")
 # The power spectrum will be cut off to a constant for multipole l < lmin.
 # Generally, lmax = 3 * nside - 1
 lmin = integer(min=0, default=10)
-lmax = integer(min=1, default=1535)
+lmax = integer(min=1, default=3071)
 
 # List of foreground components to be simulated:
 # + galactic/synchrotron:
