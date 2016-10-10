@@ -244,11 +244,13 @@ def zea2healpix(img1, img2, nside, order=1, inpaint=False,
     hp_data2[np.isnan(hp_data2)] = 0.0
     hp_data = hp_data1 + hp_data2
     logger.info("Done reprojection and merge two hemispheres")
-    # Duplicated pixels and missing pixels
+    # Duplicate pixels and missing pixels
     pix_dup = (hp_mask == 2)
     if pix_dup.sum() > 0:
-        logger.warning("Reprojected HEALPix data has %d duplicated pixel(s)" %
+        logger.warning("Reprojected HEALPix data has %d duplicate pixel(s)" %
                        pix_dup.sum())
+        hp_data[pix_dup] /= 2.0
+        logger.warning("Averaged the duplicate pixel(s)")
     pix_missing = (hp_mask == 0)
     if pix_missing.sum() > 0:
         logger.warning("Reprojected HEALPix data has %d missing pixel(s)" %
