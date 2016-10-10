@@ -5,6 +5,10 @@
 #
 # This file contains the general configurations, which control the general
 # behaviors, or will be used in other configuration sections.
+#
+# NOTE:
+# The input templates for simulations should be HEALPix full-sky maps.
+#
 
 
 [galactic]
