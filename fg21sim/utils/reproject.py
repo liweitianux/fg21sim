@@ -3,6 +3,10 @@
 
 """
 FITS WCS (world coordinate system) reprojection utilities.
+
+zea2healpix:
+    Reproject the maps in ZEA (zenithal/azimuthal equal area) projection
+    to Galactic frame and organize in HEALPix format.
 """
 
 import logging
@@ -59,6 +63,15 @@ def _convert_wcs(lon_in, lat_in, frame_in, frame_out):
         lat_out_unit = au.Unit(frame_out.wcs.cunit[1])
     else:
         coordframe_out, lon_out_unit, lat_out_unit = frame_out
+    #
+    logger.info("Convert coordinates from {0} to {1}".format(coordframe_in,
+                                                             coordframe_out))
+    logger.info("Input coordinates units: "
+                "{0} (longitude), {1} (latitude)".format(lon_in_unit,
+                                                         lat_in_unit))
+    logger.info("Output coordinates units: "
+                "{0} (longitude), {1} (latitude)".format(lon_out_unit,
+                                                         lat_out_unit))
     #
     data = UnitSphericalRepresentation(lon_in*lon_in_unit, lat_in*lat_in_unit)
     coords_in = coordframe_in.realize_frame(data)
@@ -117,29 +130,37 @@ def _image_to_healpix(image, wcs, nside, order=1, hemisphere=None):
     #
     npix = hp.nside2npix(nside)
     hpidx = np.arange(npix).astype(np.int)
+    logger.info("Output HEALPix: Nside={0}, Npixel={1}".format(nside, npix))
     # Calculate the longitude and latitude in frame of output HEALPix
+    logger.info("Calculate the longitudes and latitudes on the HEALPix grid")
     theta, phi = hp.pix2ang(nside, hpidx, nest=False)
     lon_hp = np.degrees(phi)
     lat_hp = 90.0 - np.degrees(theta)
     # Convert between the celestial coordinate systems
     coordsys_hp = Galactic()
+    logger.info("Output HEALPix uses frame: {0}".format(coordsys_hp))
     frame_hp = (coordsys_hp, au.deg, au.deg)
     lon_in, lat_in = _convert_wcs(lon_hp, lat_hp, frame_hp, wcs)
     # Filter the pixels on the specified hemisphere
     if hemisphere is None:
         mask = np.ones(lat_in.shape).astype(np.bool)
+        logger.info("NO hemisphere constraint specified")
     elif hemisphere.upper() in ["N", "NORTH", "NORTHERN"]:
         # northern hemisphere (include the equator)
         mask = lat_in >= 0.0
+        logger.info("Only process the NORTHERN hemisphere (include EQUATOR")
     else:
         # southern hemisphere
         mask = lat_in < 0.0
+        logger.info("Only process the SOUTHERN hemisphere (EXCLUDE equator")
     lon_in = lon_in[mask]
     lat_in = lat_in[mask]
     # Look up pixels in the input coordinate system
-    # NOTE: note the order of returns: (Y, X)
+    # XXX/NOTE: note the order of returns: (Y, X)
     yi, xi = wcs.wcs_world2pix(lon_in, lat_in, 0)
     # Interpolate to obtain the HEALPix data from the input image
+    logger.info("Calculate the HEALPix data by interpolating on input image")
+    logger.info("Interpolation order: {0}".format(order))
     data = map_coordinates(image, [xi, yi], order=order,
                            mode="constant", cval=np.nan)
     # Make the HEALPix array with above hemisphere mask considered
