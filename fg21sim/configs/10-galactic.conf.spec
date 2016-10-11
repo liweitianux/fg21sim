@@ -34,3 +34,22 @@
   save = boolean(default=True)
   # Output directory to save the simulated results
   output_dir = string(default=None)
+
+  # free-free bremsstrahlung emission component
+  [[freefree]]
+  # The H{\alpha} map used as the free-free emission template
+  halphamap = string(default=None)
+  # The unit of the H{\alpha} template (e.g., "Rayleigh")
+  halphamap_unit = string(default=None)
+
+  # The 100-{\mu}m dust map used for dust absorption correction
+  dustmap = string(default=None)
+  # The unit of the above dust map (e.g., "MJy/sr")
+  dustmap_unit = string(default=None)
+
+  # Filename prefix for this component
+  prefix = string(default="gfree")
+  # Whether save this component to disk
+  save = boolean(default=True)
+  # Output directory to save the simulated results
+  output_dir = string(default=None)

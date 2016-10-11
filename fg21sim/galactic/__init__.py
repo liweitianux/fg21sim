@@ -2,3 +2,4 @@
 # MIT license
 
 from .synchrotron import Synchrotron
+from .freefree import FreeFree
