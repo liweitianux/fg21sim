@@ -129,16 +129,37 @@ class FreeFree:
         """Correct the H{\alpha} map for dust absorption using the
         100-{\mu}m dust map.
 
-        References: [Dickinson2003], Eq.(3)
+        References: [Dickinson2003]: Eq.(1, 3); Sec.(2.5)
         """
         if hasattr(self, "dust_corrected") and self.dust_corrected:
             return
         #
+        logger.info("Correct H[alpha] map for dust absorption")
         # Effective dust fraction in the LoS actually absorbing Halpha
         f_dust = 0.33
+        logger.info("Effective dust fraction: {0}".format(f_dust))
+        # NOTE:
+        # Mask the regions where the true Halpha absorption is uncertain.
+        # When the dust absorption goes rather large, the true Halpha
+        # absorption can not well determined.
+        # Therefore, the regions where the calculated Halpha absorption
+        # greater than 1.0 mag are masked out.
+        halpha_abs_th = 1.0  # Halpha absorption threshold, unit: [ mag ]
+        # Corresponding dust absorption threshold, unit: [ MJy / sr ]
+        dust_abs_th = halpha_abs_th / 0.0462 / f_dust
+        logger.info("Dust absorption mask threshold: " +
+                    "{0:.1f} MJy/sr ".format(dust_abs_th) +
+                    "<-> H[alpha] absorption threshold: " +
+                    "{0:.1f} mag".format(halpha_abs_th))
+        mask = (self.dustmap > dust_abs_th)
+        self.dustmap[mask] = np.nan
+        fp_mask = 100 * mask.sum() / self.dustmap.size
+        logger.warning("Dust map masked fraction: {0:.1f}%".format(fp_mask))
+        #
         halphamap_corr = self.halphamap * 10**(self.dustmap * 0.0185 * f_dust)
         self.halphamap = halphamap_corr
         self.dust_corrected = True
+        logger.info("Done dust absorption correction")
 
     def _calc_ratio_a(self, Te, nu_GHz):
         """Calculate the ratio factor a(T, nu), which will be used to
@@ -159,11 +180,13 @@ class FreeFree:
 
         NOTE: [Dickinson2003], Eq.(11) may wrongly have the "10^3" term.
         """
+        # Correct for dust absorption first
+        self._correct_dust_absorption()
         # Assumed electron temperature [ K ]
         Te = 7000.0
         T4 = Te / 1e4
         nu = frequency * self.freq_unit.to(au.GHz)  # frequency [ GHz ]
-        ratio_a = self._calc_ratio_a(T4, nu)
+        ratio_a = self._calc_ratio_a(Te, nu)
         # NOTE: ignored the "10^3" term in the referred equation
         ratio_mK_R = (8.396 * ratio_a * nu**(-2.1) *
                       T4**0.667 * 10**(0.029/T4) * (1+0.08))
@@ -218,8 +241,6 @@ class FreeFree:
 
     def simulate(self, frequencies):
         """Simulate the free-free map at the specified frequencies."""
-        self._correct_dust_absorption()
-        #
         hpmaps = []
         for f in np.array(frequencies, ndmin=1):
             logger.info("Simulating free-free map at {0} ({1}) ...".format(
