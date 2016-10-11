@@ -2,7 +2,16 @@
 # MIT license
 
 """
-FITS utilities.
+FITS utilities
+--------------
+
+read_fits_healpix:
+    Read the HEALPix map from a FITS file or a BinTableHDU to 1D array
+    in *RING* ordering.
+
+write_fits_healpix:
+    Write the HEALPix map to a FITS file with proper header as well
+    as the user-provided header.
 """
 
 from datetime import datetime, timezone
@@ -12,6 +21,7 @@ from astropy.io import fits
 import healpy as hp
 
 
+# Column formats for FITS binary table
 # Reference:
 # http://docs.astropy.org/en/stable/io/fits/usage/table.html#column-creation
 FITS_COLUMN_FORMATS = {
@@ -28,7 +38,7 @@ FITS_COLUMN_FORMATS = {
 
 
 def read_fits_healpix(filename):
-    """Read the HEALPix map from a FITS file or a HDU to 1D array
+    """Read the HEALPix map from a FITS file or a BinTableHDU to 1D array
     in *RING* ordering.
 
     Parameters
@@ -40,7 +50,7 @@ def read_fits_healpix(filename):
     Returns
     -------
     data : 1D `~numpy.ndarray`
-        HEALPix data in *RING* ordering
+        HEALPix data in *RING* ordering with same dtype as input
     header : `~astropy.io.fits.Header`
         Header of the input FITS file
 

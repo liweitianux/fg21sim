@@ -12,7 +12,8 @@
 #     http://www.atnf.csiro.au/people/mcalabre/WCS/
 
 """
-HEALPix utilities:
+HEALPix utilities
+-----------------
 
 healpix2hpx:
   reorganize the HEALPix data (1D array as FITS table) into 2D FITS image
@@ -43,20 +44,24 @@ def healpix2hpx(data, header=None, append_history=None, append_comment=None):
 
     Parameters
     ----------
-    data : str or BinTableHDU or 1D array
-      (1) filename of the HEALPix file;
-      (2) BinTableHDU containing the HEALPix data and header
-      (3) 1D array containing the HEALPix data
-    header : astropy.io.fits header
-      header of the HEALPix FITS file;
-    append_history : string list
-      append the provided history to the output FITS header
-    append_comment : string list
-      append the provided comment to the output FITS header
+    data : str, `~astropy.io.fits.BinTableHDU`, or 1D `~numpy.ndarray`
+        The input HEALPix map to be converted to the HPX image.
+        (1) filename of the HEALPix file;
+        (2) BinTableHDU containing the HEALPix data and header
+        (3) 1D array containing the HEALPix data
+    header : `~astropy.io.fits.Header`, optional
+        Header of the HEALPix FITS file
+    append_history : list[str]
+        Append the provided history to the output FITS header
+    append_comment : list[str]
+        Append the provided comment to the output FITS header
 
     Returns
     -------
-    (hpx_data, hpx_header) : (2D numpy array, astropy.io.fits header)
+    hpx_data : 2D `~numpy.ndarray`
+        The reorganized HPX image
+    hpx_header : `~astropy.io.fits.Header`
+        FITS header for the HPX image
     """
     if isinstance(data, str) or isinstance(data, fits.BinTableHDU):
         hp_data, hp_header = read_fits_healpix(data)
@@ -91,20 +96,24 @@ def hpx2healpix(data, header=None, append_history=None, append_comment=None):
 
     Parameters
     ----------
-    data : str or PrimaryHDU or 2D array
-      (1) filename of the HPX file;
-      (2) PrimaryHDU containing the HPX image and header
-      (3) 2D array containing the HPX image
-    header : astropy.io.fits header
-      header of the HPX FITS file;
-    append_history : string list
-      append the provided history to the output FITS header
-    append_comment : string list
-      append the provided comment to the output FITS header
+    data : str, `~astropy.io.fits.PrimaryHDU`, or 2D `~numpy.ndarray`
+        The input HPX image to be converted to the HEALPix data.
+        (1) filename of the HPX file;
+        (2) PrimaryHDU containing the HPX image and header
+        (3) 2D array containing the HPX image
+    header : `~astropy.io.fits.Header`, optional
+        Header of the HPX FITS image
+    append_history : list[str]
+        Append the provided history to the output FITS header
+    append_comment : list[str]
+        Append the provided comment to the output FITS header
 
     Returns
     -------
-    (hp_data, hp_header) : (1D numpy array, astropy.io.fits header)
+    hp_data : 1D `~numpy.ndarray`
+        HEALPix data reorganized from the input HPX image
+    hp_header : `~astropy.io.fits.Header`
+        FITS header for the HEALPix data
     """
     if isinstance(data, str):
         hpx_hdu = fits.open(data)[0]
@@ -148,14 +157,15 @@ def _calc_hpx_indices(nside):
     Parameters
     ----------
     nside : int
-      Nside of the input/output HEALPix data
+        Nside of the input/output HEALPix data
 
     Returns
     -------
-    indices : 2D numpy array (int)
-      same size as the input/output HPX FITS image, with elements tracking
-      the indices of the HPX pixel in the HEALPix 1D array, and elements
-      with value "-1" indicating a null/empty HPX pixel.
+    indices : 2D integer `~numpy.ndarray`
+        2D integer array of same size as the input/output HPX FITS image,
+        with elements tracking the indices of the HPX pixels in the
+        HEALPix 1D array, while elements with value "-1" indicating
+        null/empty HPX pixels.
 
     NOTE
     ----
@@ -269,8 +279,7 @@ def _calc_hpx_row_idx(nside, facet, jmap):
 
 
 def _make_hpx_header(header, append_history=None, append_comment=None):
-    """Make the FITS header for the HPX image.
-    """
+    """Make the FITS header for the HPX image."""
     header = header.copy(strip=True)
     nside = header["NSIDE"]
     # set pixel transformation parameters
@@ -325,8 +334,7 @@ def _make_hpx_header(header, append_history=None, append_comment=None):
 
 def _make_healpix_header(header, nside,
                          append_history=None, append_comment=None):
-    """Make the FITS header for the HEALPix data.
-    """
+    """Make the FITS header for the HEALPix data."""
     header = header.copy(strip=True)
     # set HEALPix parameters
     header["PIXTYPE"] = ("HEALPIX", "HEALPix pixelization")
