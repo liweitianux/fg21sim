@@ -38,17 +38,17 @@ from . import read_fits_healpix
 logger = logging.getLogger(__name__)
 
 
-def healpix2hpx(data, header=None, append_history=None, append_comment=None):
+def healpix2hpx(data, append_history=None, append_comment=None):
     """Reorganize the HEALPix data (1D array as FITS table) into 2D FITS
     image in HPX coordinate system.
 
     Parameters
     ----------
-    data : str, `~astropy.io.fits.BinTableHDU`, or 1D `~numpy.ndarray`
-        The input HEALPix map to be converted to the HPX image.
-        (1) filename of the HEALPix file;
-        (2) BinTableHDU containing the HEALPix data and header
-        (3) 1D array containing the HEALPix data
+    data : str or `~astropy.io.fits.BinTableHDU`
+        The input HEALPix map to be converted to the HPX image,
+        which can be either the filename of the HEALPix FITS file,
+        or be a `~astropy.io.fits.BinTableHDU` instance containing
+        the HEALPix data as well as its header.
     header : `~astropy.io.fits.Header`, optional
         Header of the HEALPix FITS file
     append_history : list[str]
@@ -63,25 +63,15 @@ def healpix2hpx(data, header=None, append_history=None, append_comment=None):
     hpx_header : `~astropy.io.fits.Header`
         FITS header for the HPX image
     """
-    if isinstance(data, str) or isinstance(data, fits.BinTableHDU):
-        hp_data, hp_header = read_fits_healpix(data)
-        logger.info("Read HEALPix data from file or HDU")
-    else:
-        hp_data, hp_header = np.asarray(data), fits.header.Header(header)
-        logger.info("Read HEALPix data from array and header")
+    hp_data, hp_header = read_fits_healpix(data)
     dtype = hp_data.dtype
-    logger.info("HEALPix dtype: {0}".format(dtype))
-    logger.info("HEALPix index ordering: %s" % hp_header["ORDERING"])
-    if hp_header["ORDERING"] != "RING":
-        raise ValueError("only 'RING' ordering currently supported")
     npix = len(hp_data)
     nside = hp.npix2nside(npix)
-    logger.info("HEALPix data: Npix=%d, Nside=%d" % (npix, nside))
-    if nside != hp_header["NSIDE"]:
-        raise ValueError("HEALPix data Nside does not match the header")
+    logger.info("Loaded HEALPix data: dtype={0}, Npixel={1}, Nside={2}".format(
+        dtype, npix, nside))
     hp_data = np.append(hp_data, np.nan).astype(dtype)
     hpx_idx = _calc_hpx_indices(nside)
-    # fix indices of "-1" to set empty pixels with above appended "nan"
+    # Fix indices of "-1" to set empty pixels with above appended NaN
     hpx_idx[hpx_idx == -1] = len(hp_data) - 1
     hpx_data = hp_data[hpx_idx]
     hpx_header = _make_hpx_header(hp_header,
@@ -90,19 +80,17 @@ def healpix2hpx(data, header=None, append_history=None, append_comment=None):
     return (hpx_data.astype(hp_data.dtype), hpx_header)
 
 
-def hpx2healpix(data, header=None, append_history=None, append_comment=None):
+def hpx2healpix(data, append_history=None, append_comment=None):
     """Revert the reorganization and turn the 2D image in HPX format
     back into HEALPix data as 1D array.
 
     Parameters
     ----------
-    data : str, `~astropy.io.fits.PrimaryHDU`, or 2D `~numpy.ndarray`
-        The input HPX image to be converted to the HEALPix data.
-        (1) filename of the HPX file;
-        (2) PrimaryHDU containing the HPX image and header
-        (3) 2D array containing the HPX image
-    header : `~astropy.io.fits.Header`, optional
-        Header of the HPX FITS image
+    data : str or `~astropy.io.fits.PrimaryHDU`
+        The input HPX image to be converted to the HEALPix data,
+        which can be either the filename of the HPX FITS image,
+        or be a `~astropy.io.fits.PrimaryHDU` instance containing
+        the HPX image as well as its header.
     append_history : list[str]
         Append the provided history to the output FITS header
     append_comment : list[str]
@@ -118,20 +106,17 @@ def hpx2healpix(data, header=None, append_history=None, append_comment=None):
     if isinstance(data, str):
         hpx_hdu = fits.open(data)[0]
         hpx_data, hpx_header = hpx_hdu.data, hpx_hdu.header
-        logger.info("Read HPX image from file")
-    elif isinstance(data, fits.PrimaryHDU):
-        hpx_data, hpx_header = data.data, data.header
-        logger.info("Read HPX image from HDU")
+        logger.info("Read HPX image from FITS file: %s" % data)
     else:
-        hpx_data, hpx_header = np.asarray(data), fits.header.Header(header)
-        logger.info("Read HPX image from array and header")
+        hpx_data, hpx_header = data.data, data.header
+        logger.info("Read HPX image from PrimaryHDU")
     logger.info("HPX image dtype: {0}".format(hpx_data.dtype))
     logger.info("HPX coordinate system: ({0}, {1})".format(
         hpx_header["CTYPE1"], hpx_header["CTYPE2"]))
     if ((hpx_header["CTYPE1"], hpx_header["CTYPE2"]) !=
             ("GLON-HPX", "GLAT-HPX")):
         raise ValueError("only Galactic 'HPX' projection currently supported")
-    # calculate Nside
+    # Calculate Nside
     nside = round(hpx_header["NAXIS1"] / 5)
     nside2 = round(90 / np.sqrt(2) / hpx_header["CDELT2"])
     if nside != nside2:
