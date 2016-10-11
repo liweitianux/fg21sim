@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class Synchrotron:
-    """Simulate the diffuse Galactic synchrotron emission based on an
+    """
+    Simulate the diffuse Galactic synchrotron emission based on an
     existing template.
 
     Parameters
@@ -75,7 +76,8 @@ class Synchrotron:
 
     def _load_template(self):
         """Load the template map, and upgrade/downgrade the resolution
-        to match the output Nside."""
+        to match the output Nside.
+        """
         self.template, self.template_header = read_fits_healpix(
             self.template_path)
         template_nside = self.template_header["NSIDE"]
@@ -89,7 +91,8 @@ class Synchrotron:
 
     def _load_indexmap(self):
         """Load the spectral index map, and upgrade/downgrade the resolution
-        to match the output Nside."""
+        to match the output Nside.
+        """
         self.indexmap, self.indexmap_header = read_fits_healpix(
             self.indexmap_path)
         indexmap_nside = self.indexmap_header["NSIDE"]

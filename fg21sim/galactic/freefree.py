@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class FreeFree:
-    """Simulate the diffuse Galactic free-free emission.
+    """
+    Simulate the diffuse Galactic free-free emission.
 
     The [Dickinson2003] method is followed to derive the free-free template.
     The H\alpha survey map [Finkbeiner2003] is first corrected for dust
@@ -91,7 +92,8 @@ class FreeFree:
 
     def _load_halphamap(self):
         """Load the H{\alpha} map, and upgrade/downgrade the resolution
-        to match the output Nside."""
+        to match the output Nside.
+        """
         self.halphamap, self.halphamap_header = read_fits_healpix(
             self.halphamap_path)
         halphamap_nside = self.halphamap_header["NSIDE"]
@@ -109,7 +111,8 @@ class FreeFree:
 
     def _load_dustmap(self):
         """Load the dust map, and upgrade/downgrade the resolution
-        to match the output Nside."""
+        to match the output Nside.
+        """
         self.dustmap, self.dustmap_header = read_fits_healpix(
             self.dustmap_path)
         dustmap_nside = self.dustmap_header["NSIDE"]
