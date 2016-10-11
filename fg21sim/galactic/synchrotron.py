@@ -74,44 +74,32 @@ class Synchrotron:
         logger.info("Loaded and setup configurations")
 
     def _load_template(self):
-        """Load the template map"""
-        self.template, header = read_fits_healpix(self.template_path)
-        self.template_header = header
-        self.template_nside = self.template_header["NSIDE"]
-        self.template_ordering = self.template_header["ORDERING"]
+        """Load the template map, and upgrade/downgrade the resolution
+        to match the output Nside."""
+        self.template, self.template_header = read_fits_healpix(
+            self.template_path)
+        template_nside = self.template_header["NSIDE"]
         logger.info("Loaded template map from {0} (Nside={1})".format(
-            self.template_path, self.template_nside))
+            self.template_path, template_nside))
+        # Upgrade/downgrade resolution
+        if template_nside != self.nside:
+            self.template = hp.ud_grade(self.template, nside_out=self.nside)
+            logger.info("Upgrade/downgrade template map from Nside "
+                        "{0} to {1}".format(template_nside, self.nside))
 
     def _load_indexmap(self):
-        """Load the spectral index map"""
-        self.indexmap, header = read_fits_healpix(self.indexmap_path)
-        self.indexmap_header = header
-        self.indexmap_nside = self.indexmap_header["NSIDE"]
-        self.indexmap_ordering = self.indexmap_header["ORDERING"]
+        """Load the spectral index map, and upgrade/downgrade the resolution
+        to match the output Nside."""
+        self.indexmap, self.indexmap_header = read_fits_healpix(
+            self.indexmap_path)
+        indexmap_nside = self.indexmap_header["NSIDE"]
         logger.info("Loaded spectral index map from {0} (Nside={1})".format(
-            self.indexmap_path, self.indexmap_nside))
-
-    def _process_template(self):
-        """Upgrade/downgrade the template to have the same Nside as
-        requested by the output."""
-        if self.nside == self.template_nside:
-            self.hpmap = self.template.copy()
-        else:
-            # upgrade/downgrade the resolution
-            self.hpmap = hp.ud_grade(self.template, nside_out=self.nside)
-            logger.info("Upgrade/downgrade template map from Nside "
-                        "{0} to {1}".format(self.template_nside, self.nside))
-
-    def _process_indexmap(self):
-        """Upgrade/downgrade the spectral index map to have the same
-        Nside as requested by the output."""
-        if self.nside == self.indexmap_nside:
-            self.hpmap_index = self.indexmap.copy()
-        else:
-            # upgrade/downgrade the resolution
-            self.hpmap_index = hp.ud_grade(self.indexmap, nside_out=self.nside)
+            self.indexmap_path, indexmap_nside))
+        # Upgrade/downgrade resolution
+        if indexmap_nside != self.nside:
+            self.indexmap = hp.ud_grade(self.indexmap, nside_out=self.nside)
             logger.info("Upgrade/downgrade spectral index map from Nside "
-                        "{0} to {1}".format(self.indexmap_nside, self.nside))
+                        "{0} to {1}".format(indexmap_nside, self.nside))
 
     def _add_smallscales(self):
         """Add fluctuations on small scales to the template map.
@@ -127,12 +115,12 @@ class Synchrotron:
             "An improved source-subtracted and destriped 408-MHz all-sky map"
             Sec. 4.2: Small-scale fluctuations
         """
-        if not self.smallscales:
+        if (not self.smallscales) or (hasattr(self, "hpmap_smallscales")):
             return
         # To add small scale fluctuations
         # model: Remazeilles15
         gamma = -2.703  # index of the power spectrum between l [30, 90]
-        sigma_temp = 56  # original beam resolution of the template [ arcmin ]
+        sigma_tp = 56  # original beam resolution of the template [ arcmin ]
         alpha = 0.0599
         beta = 0.782
         # angular power spectrum of the Gaussian random field
@@ -140,22 +128,22 @@ class Synchrotron:
         cl = np.zeros(ell.shape)
         ell_idx = ell >= self.lmin
         cl[ell_idx] = (ell[ell_idx] ** gamma *
-                       1.0 - np.exp(-ell[ell_idx]**2 * sigma_temp**2))
+                       1.0 - np.exp(-ell[ell_idx]**2 * sigma_tp**2))
         cl[ell < self.lmin] = cl[self.lmin]
         # generate a realization of the Gaussian random field
         gss = hp.synfast(cls=cl, nside=self.nside, new=True)
         # whiten the Gaussian random field
         gss = (gss - gss.mean()) / gss.std()
-        self.hpmap_smallscales = alpha * gss * self.hpmap**beta
-        self.hpmap += self.hpmap_smallscales
+        self.hpmap_smallscales = alpha * gss * self.template**beta
+        self.template += self.hpmap_smallscales
         logger.info("Added small-scale fluctuations")
 
     def _transform_frequency(self, frequency):
         """Transform the template map to the requested frequency,
         according to the spectral model and using an spectral index map.
         """
-        hpmap_f = (self.hpmap *
-                   (frequency / self.template_freq) ** self.hpmap_index)
+        hpmap_f = (self.template *
+                   (frequency / self.template_freq) ** self.indexmap)
         return hpmap_f
 
     def _make_header(self):
@@ -204,11 +192,7 @@ class Synchrotron:
 
     def simulate(self, frequencies):
         """Simulate the synchrotron map at the specified frequencies."""
-        if not hasattr(self, "hpmap"):
-            self._process_template()
-            self._add_smallscales()
-        if not hasattr(self, "hpmap_index"):
-            self._process_indexmap()
+        self._add_smallscales()
         #
         hpmaps = []
         for f in np.array(frequencies, ndmin=1):
