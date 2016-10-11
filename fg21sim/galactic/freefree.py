@@ -83,6 +83,10 @@ class FreeFree:
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.use_float = self.configs.getn("output/use_float")
         self.clobber = self.configs.getn("output/clobber")
+        #
+        self.nside = self.configs.getn("common/nside")
+        self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
+        #
         logger.info("Loaded and set up configurations")
 
     def _load_halphamap(self):
