@@ -5,19 +5,22 @@
 A class to calculate the brightness temperature of point sources is
 defined, based on the works of Wang et al. and Willman et al.
 
-[1] Wang J, Xu H, Gu J, et al. How to Identify and Separate Bright Galaxy
-    Clusters from the Low-frequency Radio Sky?[J]. Astrophysical Journal, 2010,
-    723(1):620-633.
-
-[2]  Wilman R J, Miller L, Jarvis M J, et al.
-    A semi-empirical simulation of the extragalactic radio continuum sky for
-    next generation radio telescopes[J]. Monthly Notices of the Royal
-    Astronomical Society, 2008, 388(3):1335–1348.
-
+[1] Wang J et al.,
+    "How to Identify and Separate Bright Galaxy Clusters from the
+    Low-frequency Radio Sky?",
+    2010,ApJ,723,620-633.
+    http://adsabs.harvard.edu/abs/2010ApJ.723.620W
+[2] Wilman et al.,
+    "A semi-empirical simulation of the extragalactic radio continuum
+    sky for next generation radio telescopes",
+    2008,MNRAS,388,1335-1348,
+    http://adsabs.harvard.edu/abs/2008MNRAS.389.1335W
 """
-import numpy as np
 
-# Defination of class
+import numpy as np
+import astropy.constants as ac
+import astropy.units as au
+
 class Flux:
     """
     To calculate the flux and surface brightness of the point sources
@@ -33,7 +36,7 @@ class Flux:
         |:---------:|:----:|
         |    SF     |  1   |
         |    SB     |  2   |
-        |  RQ AGN	|  3   |
+        |  RQ AGN   |  3   |
         |   FRI     |  4   |
         |   FRII    |  5   |
 
@@ -47,37 +50,36 @@ class Flux:
         should be inputed.
     """
 
-    def __init__(self, freq=150, ClassType=1):
-        # Frequency
+    def __init__(self, freq=150, class_type=1):
         self.freq = freq
-        # ClassType = ClassType
-        self.ClassType = ClassType
+        self.class_type = class_type
 
     def gen_spec(self):
-        # generate the spectrum
-        # Use IF-THEN to replace SWITCH-CASE
-        # reference flux at 151MHz, see Willman et al's work
+        """ Generate the spectrum """
+        # Init
+        freq_ref = 151e6
+        # Todo
         self.I_151 = 10**(np.random.uniform(-4, -3))
         # Clac flux
-        if self.ClassType == 1:
-            spec = (self.freq / 151e6)**(-0.7) * self.I_151
-        elif self.ClassType == 2:
-            spec = (self.freq / 151e6)**(-0.7) * self.I_151
-        elif self.ClassType == 3:
-            spec = (self.freq / 151e6)**(-0.7) * self.I_151
-        elif self.ClassType == 4:
-            spec_lobe = (self.freq / 151e6)**-0.75 * self.I_151
-            a0 = (np.log10(self.I_151) - 0.7 * np.log10(151e6) +
-                0.29 * np.log10(151e6) * np.log10(151e6))
+        if self.class_type == 1:
+            spec = (self.freq / freq_ref)**(-0.7) * self.I_151
+        elif self.class_type == 2:
+            spec = (self.freq / freq_ref)**(-0.7) * self.I_151
+        elif self.class_type == 3:
+            spec = (self.freq / freq_ref)**(-0.7) * self.I_151
+        elif self.class_type == 4:
+            spec_lobe = (self.freq / freq_ref)**-0.75 * self.I_151
+            a0 = (np.log10(self.I_151) - 0.7 * np.log10(freq_ref) +
+                0.29 * np.log10(freq_ref) * np.log10(freq_ref))
             lgs = (a0 + 0.7 * np.log10(self.freq) - 0.29 *
                 np.log10(self.freq) * np.log10(self.freq))
             spec_core = 10**lgs
             spec = np.array([spec_core, spec_lobe])
-        elif self.ClassType == 5:
-            spec_lobe = (self.freq / 151e6)**-0.75 * self.I_151
-            spec_hotspot = (self.freq / 151e6)**-0.75 * self.I_151
-            a0 = (np.log10(self.I_151) - 0.7 * np.log10(151e6) +
-                0.29 * np.log10(151e6) * np.log10(151e6))
+        elif self.class_type == 5:
+            spec_lobe = (self.freq / freq_ref)**-0.75 * self.I_151
+            spec_hotspot = (self.freq / freq_ref)**-0.75 * self.I_151
+            a0 = (np.log10(self.I_151) - 0.7 * np.log10(freq_ref) +
+                0.29 * np.log10(freq_ref) * np.log10(freq_ref))
             lgs = (a0 + 0.7 * np.log10(self.freq) - 0.29 *
                 np.log10(self.freq) * np.log10(self.freq))
             spec_core = 10**lgs
@@ -87,17 +89,16 @@ class Flux:
 
     # calc_Tb
     def calc_Tb(self, area):
+        """ Calculate average surface brightness of the point source"""
         # light speed
-        c = 2.99792458e8
+        c = ac.c.cgs.value
         # ?
-        kb = 1.38e-23
+        kb = ac.k_B.cgs.value
         # flux in Jy
-        flux_in_Jy = self.gen_spec()
+        flux = self.gen_spec()
         Omegab = area  # [sr]
 
-        Sb = flux_in_Jy * 1e-26 / Omegab
+        Sb = (flux * au.Jy).to(au.Unit("J/m2")) / Omegab
         flux_pixel = Sb / 2 / self.freq / self.freq * c * c / kb
 
-        return flux_pixel
-
-
+        return flux_pixel.value
