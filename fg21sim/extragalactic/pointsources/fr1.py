@@ -6,7 +6,6 @@ import astropy.units as au
 from .psparams import PixelParams
 from .base import BasePointSource
 
-# Defination of Faranoff-RileyI AGN
 class FRI(BasePointSource):
     """
     Generate Faranoff-Riley I (FRI) AGN
@@ -19,10 +18,10 @@ class FRI(BasePointSource):
         The minor half axis of the lobe
     lobe_ang: float
         The rotation angle of the lobe from LOS
-
     """
+
     def __init__(self,configs):
-        BasePointSource.__init__(self, configs)
+        super().__init__(configs)
         self.columns.extend(
             ['lobe_maj (rad)', 'lobe_min (rad)', 'lobe_ang (deg)'])
         self.nCols += 3
@@ -31,7 +30,7 @@ class FRI(BasePointSource):
     def _get_configs(self):
         """ Load the configs and set the corresponding class attributes"""
         # point sources amount
-        self.NumPS = self.configs.getn("extragalactic/pointsource/Num_fr1")
+        self.NumPS = self.configs.getn("extragalactic/pointsource/num_fr1")
         # prefix
         self.prefix = self.configs.getn(
             "extragalactic/pointsource/prefix_fr1")
@@ -58,7 +57,6 @@ class FRI(BasePointSource):
     def gen_single_ps(self):
         """
         Generate single point source, and return its data as a list.
-
         """
         # Redshift
         self.z = np.random.uniform(0, 20)
@@ -81,5 +79,4 @@ class FRI(BasePointSource):
 
         ps_list.extend(lobe)
 
-        ps_list = np.array(ps_list)
         return ps_list
