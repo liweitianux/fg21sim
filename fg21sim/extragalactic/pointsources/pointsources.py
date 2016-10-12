@@ -1,38 +1,10 @@
 # Copyright (c) 2016 Zhixian MA <zxma_sjtu@qq.com>
 # MIT license
 
-"""
-This class namely pointsource is designed to generate PS catelogues,
-read csv format PS lists, calculate the flux and surface brightness
-of the sources at different frequencies, and then ouput hpmaps
-
-Modules
--------
-Basic modules: numpy, pandas, os,sys, healpy
-Custom designed modules: psparams,starforming,starbursting,radioquied,
-fr1,fr2,flux
-
-Functions
----------
-read_csv: read the csv format files, judge the PS type and
-transformed to be iterable numpy.ndarray.
-
-calc_flux: calculate the flux and surface brightness of the PS.
-
-draw_elp: processing on the elliptical and circular core or lobes.
-
-draw_cir: processing on the circular star forming or bursting galaxies
-
-draw_ps: generate hpmap with respect the imput PS catelogue
-"""
-
-# Modules
 import numpy as np
 import astropy.units as au
 import healpy as hp
 import pandas as pd
-# from fg21sim.utils import write_fits_healpix
-# Custom designed modules
 from .flux import Flux
 from .starforming import StarForming
 from .starbursting import StarBursting
@@ -40,8 +12,26 @@ from .radioquiet import RadioQuiet
 from .fr1 import FRI
 from .fr2 import FRII
 
-
 class PointSources:
+    """
+    This class namely pointsource is designed to generate PS catelogues,
+    read csv format PS lists, calculate the flux and surface brightness
+    of the sources at different frequencies, and then ouput hpmaps
+
+    functions
+    ---------
+    read_csv: read the csv format files, judge the PS type and
+              transformed to be iterable numpy.ndarray.
+
+    calc_flux: calculate the flux and surface brightness of the PS.
+
+    draw_elp: processing on the elliptical and circular core or lobes.
+
+    draw_cir: processing on the circular star forming or bursting
+              galaxies
+
+    draw_ps: generate hpmap with respect the imput PS catelogue
+"""
 
     def __init__(self, configs):
         self.configs = configs
@@ -99,7 +89,7 @@ class PointSources:
                 fold_name = fold_name + str_split[i] + '/'
         # Split and judge point source type
         class_list = ['SF', 'SB', 'RQ', 'FRI', 'FRII']
-        class_name = file_name.split('_')[0]
+        class_name = file_name.split('.')[0]
         class_type = class_list.index(class_name) + 1
         # Read csv
         ps_data = pd.read_csv(fold_name + '/' + file_name)
