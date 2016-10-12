@@ -6,14 +6,13 @@ import astropy.units as au
 from .psparams import PixelParams
 from .base import BasePointSource
 
-# Defination of starbursting
 class StarBursting(BasePointSource):
     """
     Generate star forming point sources, inheritate from PointSource class.
     """
     # Init
     def __init__(self, configs):
-        BasePointSource.__init__(self, configs)
+        super().__init__(configs)
         self.columns.append('radius (rad)')
         self.nCols += 1
         self._get_configs()
@@ -21,7 +20,7 @@ class StarBursting(BasePointSource):
     def _get_configs(self):
         """ Load the configs and set the corresponding class attributes"""
         # point sources amount
-        self.NumPS = self.configs.getn("extragalactic/pointsource/Num_sb")
+        self.NumPS = self.configs.getn("extragalactic/pointsource/num_sb")
         # prefix
         self.prefix = self.configs.getn(
             "extragalactic/pointsource/prefix_sb")
@@ -51,7 +50,7 @@ class StarBursting(BasePointSource):
         self.theta = np.random.uniform(0,np.pi)/np.pi * 180 * au.deg
         self.phi = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
 
-        ps_list = np.array([self.z, self.dA.value, self.theta.value,
-            self.phi.value, self.area.value, self.radius.value])
+        ps_list = [self.z, self.dA.value, self.theta.value,
+            self.phi.value, self.area.value, self.radius.value]
 
         return ps_list
