@@ -14,25 +14,26 @@ Point sources types
 
 References
 ----------
-[1] Wilman R J, Miller L, Jarvis M J, et al.
-    A semi-empirical simulation of the extragalactic radio continuum sky for
-    next generation radio telescopes[J]. Monthly Notices of the Royal
-    Astronomical Society, 2008, 388(3):1335–1348.
-[2] Jelic, V., Zaroubi S., Labropoulos. P, et al. Foreground simulations for
-    the LOFAR-Epoch of Reionization Experiment [J]. Monthly Notices of the Royal
-    Astronomical Society, 2008, 389(3):1319-1335.
+[1] Wilman et al.,
+    ""A semi-empirical simulation of the extragalactic radio continuum
+    sky for next generation radio telescopes",
+    2008,MNRAS,388,1335-1348
+    http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
+[2] Jelic et al.,
+    "Foreground simulations for the LOFAR-Epoch of Reionization
+    Experiment",
+    2008,MNRAS,389,1319-1335
+    http://adsabs.harvard.edu/abs/2008MNRAS.389.1319W
 """
 
 import os
 import numpy as np
 import healpy as hp
-import time
 from pandas import DataFrame
 import astropy.units as au
 from .psparams import PixelParams
 
 
-# Defination of the base class
 class BasePointSource:
     """
     The basic class of point sources
@@ -68,15 +69,12 @@ class BasePointSource:
         """
         # common
         self.nside = self.configs.getn("common/nside")
-        # prefix
-        # self.prefix = self.configs.getn("extragalctic/pointsource/prefix")
         # save flag
         self.save = self.configs.getn("extragalactic/pointsource/save")
         # Output_dir
-        self.foldname = self.configs.getn(
-        "extragalactic/pointsource/output_dir")
-        # Number of point sources
-        # NumPS = self.configs.getn("extragalactic/pointsource/Num_PS")
+        self.output_dir = self.configs.getn(
+                            "extragalactic/pointsource/output_dir")
+
 
     def gen_single_ps(self):
         """
@@ -94,8 +92,9 @@ class BasePointSource:
         npix = hp.nside2npix(self.nside)
         self.area = 4*np.pi/npix * au.sr
 
-        ps_list = np.array(
-            [self.z, self.dA.value, self.theta.value, self.phi.value, self.area.value])
+        ps_list = [self.z, self.dA.value, self.theta.value,
+                   self.phi.value, self.area.value]
+
         return ps_list
 
     def save_as_csv(self):
@@ -112,15 +111,15 @@ class BasePointSource:
                              index=list(range(self.NumPS)))
 
         # Save to csv
-        if os.path.exists(self.foldname) == False:
-            os.mkdir(self.foldname)
+        if os.path.exists(self.output_dir) == False:
+            os.mkdir(self.output_dir)
 
-        file_name = self.prefix +'_'+str(self.NumPS) + '_' + \
-            time.strftime('%Y%m%d_%H%M%S') + '.csv'
+        pattern = "{prefix}.csv"
+        file_name = pattern.format(prefix = self.prefix)
 
         # save to csv
         if self.save:
-            file_name = self.foldname + '/' + file_name
+            file_name = os.path.join(self.output_dir, file_name)
             ps_frame.to_csv(file_name)
 
         return ps_frame,file_name
