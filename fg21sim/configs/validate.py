@@ -82,11 +82,29 @@ def check_galactic_synchrotron(configs):
     return results
 
 
+def check_galactic_freefree(configs):
+    """Check the "[galactic][freefree]" section of the configurations."""
+    results = {}
+    results.update(
+        _check_missing(configs, ["galactic/freefree/halphamap_unit",
+                                 "galactic/freefree/dustmap_unit"])
+    )
+    results.update(
+        _check_existence(configs, ["galactic/freefree/halphamap",
+                                   "galactic/freefree/dustmap"])
+    )
+    if configs.getn("galactic/freefree/save"):
+        results.update(_check_missing(configs,
+                                      "galactic/freefree/output_dir"))
+    return results
+
+
 # Available checkers to validate the configurations
 _CHECKERS = [
     check_frequency,
     check_output,
     check_galactic_synchrotron,
+    check_galactic_freefree,
 ]
 
 
