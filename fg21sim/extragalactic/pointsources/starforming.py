@@ -6,7 +6,6 @@ import astropy.units as au
 from .psparams import PixelParams
 from .base import BasePointSource
 
-# Defination of starforming
 class StarForming(BasePointSource):
     """
     Generate star forming point sources, inheritate from PointSource class.
@@ -20,7 +19,7 @@ class StarForming(BasePointSource):
     def _get_configs(self):
         """ Load the configs and set the corresponding class attributes"""
         # point sources amount
-        self.NumPS = self.configs.getn("extragalactic/pointsource/Num_sf")
+        self.NumPS = self.configs.getn("extragalactic/pointsource/num_sf")
         # Luminosity at 1.4GHz
         self.lumo_1400 = self.configs.getn(
             "extragalactic/pointsource/lumo_1400")
@@ -51,9 +50,8 @@ class StarForming(BasePointSource):
         self.theta = np.random.uniform(0,np.pi)/np.pi * 180 * au.deg
         self.phi = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
 
-        ps_list = np.array(
-            [self.z, self.dA.value, self.theta.value,
-             self.phi.value, self.area.value, self.radius.value])
+        ps_list = [self.z, self.dA.value, self.theta.value,
+             self.phi.value, self.area.value, self.radius.value]
 
         return ps_list
 
