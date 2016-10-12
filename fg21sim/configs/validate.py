@@ -67,35 +67,39 @@ def check_output(configs):
 
 def check_galactic_synchrotron(configs):
     """Check the "[galactic][synchrotron]" section of the configurations."""
+    comp = "galactic/synchrotron"
+    comp_enabled = configs.getn("common/components")
     results = {}
-    results.update(
-        _check_missing(configs, ["galactic/synchrotron/template_freq",
-                                 "galactic/synchrotron/template_unit"])
-    )
-    results.update(
-        _check_existence(configs, ["galactic/synchrotron/template",
-                                   "galactic/synchrotron/indexmap"])
-    )
-    if configs.getn("galactic/synchrotron/save"):
-        results.update(_check_missing(configs,
-                                      "galactic/synchrotron/output_dir"))
+    if comp in comp_enabled:
+        # Only validate the configs if this component is enabled
+        results.update(
+            _check_missing(configs, [comp+"/template_freq",
+                                     comp+"/template_unit"])
+        )
+        results.update(
+            _check_existence(configs, [comp+"/template", comp+"/indexmap"])
+        )
+        if configs.getn(comp+"/save"):
+            results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 
 
 def check_galactic_freefree(configs):
     """Check the "[galactic][freefree]" section of the configurations."""
+    comp = "galactic/freefree"
+    comp_enabled = configs.getn("common/components")
     results = {}
-    results.update(
-        _check_missing(configs, ["galactic/freefree/halphamap_unit",
-                                 "galactic/freefree/dustmap_unit"])
-    )
-    results.update(
-        _check_existence(configs, ["galactic/freefree/halphamap",
-                                   "galactic/freefree/dustmap"])
-    )
-    if configs.getn("galactic/freefree/save"):
-        results.update(_check_missing(configs,
-                                      "galactic/freefree/output_dir"))
+    if comp in comp_enabled:
+        # Only validate the configs if this component is enabled
+        results.update(
+            _check_missing(configs, [comp+"/halphamap_unit",
+                                     comp+"/dustmap_unit"])
+        )
+        results.update(
+            _check_existence(configs, [comp+"/halphamap", comp+"/dustmap"])
+        )
+        if configs.getn(comp+"/save"):
+            results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 
 
