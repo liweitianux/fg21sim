@@ -12,8 +12,7 @@ References
      FlatLambdaCDM.html#astropy.cosmology.FlatLambdaCDM}
 """
 
-# astropy related modules
-import astropy.units as au    # units for astronomy physics
+import astropy.units as au
 from astropy.cosmology import FlatLambdaCDM
 
 
