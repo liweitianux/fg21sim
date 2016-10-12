@@ -6,7 +6,6 @@ import astropy.units as au
 from .base import BasePointSource
 from .psparams import PixelParams
 
-# Defination of Faranoff-RileyI AGN
 class FRII(BasePointSource):
     """
     Generate Faranoff-Riley II (FRII) AGN
@@ -19,10 +18,9 @@ class FRII(BasePointSource):
         The minor half axis of the lobe
     lobe_ang: float
         The rotation angle of the lobe from LOS
-
     """
     def __init__(self,configs):
-        BasePointSource.__init__(self, configs)
+        super().__init__(configs)
         self.columns.extend(
             ['lobe_maj (rad)', 'lobe_min (rad)', 'lobe_ang (deg)'])
         self.nCols += 3
@@ -31,7 +29,7 @@ class FRII(BasePointSource):
     def _get_configs(self):
         """ Load the configs and set the corresponding class attributes"""
         # point sources amount
-        self.NumPS = self.configs.getn("extragalactic/pointsource/Num_fr2")
+        self.NumPS = self.configs.getn("extragalactic/pointsource/num_fr2")
         # prefix
         self.prefix = self.configs.getn(
             "extragalactic/pointsource/prefix_fr2")
@@ -77,10 +75,8 @@ class FRII(BasePointSource):
         # Area
         self.area = np.pi * self.lobe_maj * self.lobe_min
 
-
         ps_list = [self.z, self.dA.value, self.theta.value,
             self.phi.value, self.area.value]
         ps_list.extend(lobe)
 
-        ps_list = np.array(ps_list)
         return ps_list
