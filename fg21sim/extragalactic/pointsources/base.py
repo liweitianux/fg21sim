@@ -17,13 +17,15 @@ References
 [1] Wilman et al.,
     "A semi-empirical simulation of the extragalactic radio continuum
     sky for next generation radio telescopes",
-    2008,MNRAS,388,1335-1348.,
-    http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W.
+    2008, MNRAS, 388, 1335-1348.,
+    http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
 [2] Jelic et al.,
     "Foreground simulations for the LOFAR-Epoch of Reionization
     Experiment",
-    2008,MNRAS,389,1319-1335.,
-    http://adsabs.harvard.edu/abs/2008MNRAS.389.1319W.
+    2008, MNRAS, 389, 1319-1335.,
+    http://adsabs.harvard.edu/abs/2008MNRAS.389.1319W
+[3] Spherical uniform distribution
+    https://www.jasondavies.com/maps/random-points/
 """
 import os
 import numpy as np
@@ -112,15 +114,15 @@ class BasePointSource:
                              index=list(range(self.num_ps)))
 
         # Save to csv
-        if os.path.exists(self.output_dir) == False:
+        if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
 
         pattern = "{prefix}.csv"
-        file_name = pattern.format(prefix = self.prefix)
+        filename = pattern.format(prefix = self.prefix)
 
         # save to csv
         if self.save:
-            file_name = os.path.join(self.output_dir, file_name)
-            ps_frame.to_csv(file_name)
+            file_name = os.path.join(self.output_dir, filename)
+            ps_frame.to_csv(filename)
 
-        return ps_frame,file_name
+        return ps_frame, file_name
