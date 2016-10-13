@@ -2,9 +2,9 @@
 # MIT license
 
 import os
+
 import numpy as np
 import pandas as pd
-
 import astropy.units as au
 import healpy as hp
 
@@ -14,6 +14,7 @@ from .starbursting import StarBursting
 from .radioquiet import RadioQuiet
 from .fr1 import FRI
 from .fr2 import FRII
+
 
 class PointSources:
     """
@@ -75,33 +76,31 @@ class PointSources:
         """
         Read csv format point source files,judge its class
         type according to its name.
-        For example, 'PS_Num_YYYYMMDD_HHMMSS.csv'
-        Split it by '_'
 
         Parameters
         ----------
         filepath: str
-            Name of the file.
+            Path of the file.
         """
         # Split to folder name and file name
         filename = os.path.basename(filepath)
         # Split and judge point source type
         class_list = ['SF', 'SB', 'RQ', 'FRI', 'FRII']
         class_name = filename.split('.')[0]
-        class_type = class_list.index(class_name) + 1
+        ps_type = class_list.index(class_name) + 1
         # Read csv
         ps_data = pd.read_csv(filepath)
 
-        return class_type, ps_data
+        return ps_type, ps_data
 
 
-    def calc_flux(self,class_type, freq, ps_data):
+    def calc_flux(self, ps_type, freq, ps_data):
         """
         Calculate the flux and surface brightness of the point source.
 
         Parameters
         ----------
-        class_type: int
+        ps_type: int
             Type of point source
         freq: float
             frequency
@@ -109,10 +108,10 @@ class PointSources:
             Data of the point sources
         """
         # init flux
-        ps_flux = Flux(freq, class_type)
+        ps_flux = Flux(freq, ps_type)
         # ps_flux_list
         num_ps = ps_data.shape[0]
-        if class_type <= 3:
+        if ps_type <= 3:
             ps_flux_list = np.zeros((num_ps,))
             # Iteratively calculate flux
             for i in range(num_ps):
@@ -154,7 +153,7 @@ class PointSources:
 
         return hpmap
 
-    def draw_cir(self, ps_data, class_type, freq):
+    def draw_cir(self, ps_data, ps_type, freq):
         """
         Designed to draw the circular  star forming  and star bursting ps.
 
@@ -164,7 +163,7 @@ class PointSources:
             number of sub pixel in a cell of the healpix structure
         ps_data: pandas.core.frame.DataFrame
             Data of the point sources
-        class_type: int
+        ps_type: int
             Class type of the point soruces
         freq: float
             frequency
@@ -173,7 +172,7 @@ class PointSources:
         npix = hp.nside2npix(self.nside)
         hpmap = np.zeros((npix,))
         # Gen flux list
-        ps_flux_list = self.calc_flux(class_type, freq, ps_data)
+        ps_flux_list = self.calc_flux(ps_type, freq, ps_data)
         #  Iteratively draw the ps
         num_ps = ps_data.shape[0]
         for i in range(num_ps):
@@ -206,7 +205,7 @@ class PointSources:
 
         return hpmap
 
-    def draw_lobe(self, ps_data, class_type, freq):
+    def draw_lobe(self, ps_data, ps_type, freq):
         """
         Designed to draw the elliptical lobes of FRI and FRII
 
@@ -215,7 +214,7 @@ class PointSources:
         nside: int and dyadic
         ps_data: pandas.core.frame.DataFrame
             Data of the point sources
-        class_type: int
+        ps_type: int
             Class type of the point soruces
         freq: float
             frequency
@@ -225,7 +224,7 @@ class PointSources:
         hpmap = np.zeros((npix,))
         num_ps = ps_data.shape[0]
         # Gen flux list
-        ps_flux_list = self.calc_flux(class_type, freq, ps_data)
+        ps_flux_list = self.calc_flux(ps_type, freq, ps_data)
         ps_lobe = ps_flux_list[:, 1]
         # Iteratively draw ps
         for i in range(num_ps):
@@ -278,7 +277,7 @@ class PointSources:
                         elif y_r < 0:
                             y_r += 2 * np.pi
                         pix_tmp = hp.ang2pix(
-                            self.nside, x_r,y_r )
+                            self.nside, x_r, y_r )
                         hpmap[pix_tmp] += ps_lobe[i]
 
             # Lobe2
@@ -344,19 +343,19 @@ class PointSources:
 
         # load csv
         for filepath in self.files:
-            class_type, ps_data = self.read_csv(filepath)
+            ps_type, ps_data = self.read_csv(filepath)
 
             # get hpmaps
-            if class_type == 1 or class_type == 2:
+            if ps_type == 1 or ps_type == 2:
                 for i in range(num_freq):
-                    hpmaps[:,i] = self.draw_cir(ps_data, class_type,
+                    hpmaps[:, i] = self.draw_cir(ps_data, ps_type,
                                              self.freq[i])
-            elif class_type == 3:
+            elif ps_type == 3:
                 for i in range(num_freq):
-                    hpmaps[:,i] = self.draw_rq(ps_data, self.freq[i])
+                    hpmaps[:, i] = self.draw_rq(ps_data, self.freq[i])
             else:
                 for i in range(num_freq):
-                    hpmaps[:,i] = self.draw_lobe(ps_data, class_type,
+                    hpmaps[:, i] = self.draw_lobe(ps_data, ps_type,
                                            self.freq[i])
 
         return hpmaps
