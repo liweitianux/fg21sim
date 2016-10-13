@@ -3,6 +3,7 @@
 
 """
 Basic parameters to be used in point sources simulation.
+
 References
 ------------
 [1] Angular diameter distance,
