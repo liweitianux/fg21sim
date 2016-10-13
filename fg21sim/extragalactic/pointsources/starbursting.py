@@ -2,13 +2,14 @@
 # MIT license
 
 import numpy as np
-
 import astropy.units as au
 
 from .psparams import PixelParams
 from .base import BasePointSource
 
+
 class StarBursting(BasePointSource):
+
     """
     Generate star forming point sources, inheritate from PointSource class.
     """
@@ -20,7 +21,7 @@ class StarBursting(BasePointSource):
         self._get_configs()
 
     def _get_configs(self):
-        """ Load the configs and set the corresponding class attributes"""
+        """Load the configs and set the corresponding class attributes"""
         # point sources amount
         self.num_ps = self.configs.getn("extragalactic/pointsource/num_sb")
         # prefix
@@ -38,7 +39,6 @@ class StarBursting(BasePointSource):
     def gen_single_ps(self):
         """
         Generate single point source, and return its data as a list.
-
         """
         # Redshift
         self.z = np.random.uniform(0, 20)
@@ -54,6 +54,6 @@ class StarBursting(BasePointSource):
         self.phi = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
 
         ps_list = [self.z, self.dA.value, self.theta.value,
-            self.phi.value, self.area.value, self.radius.value]
+                   self.phi.value, self.area.value, self.radius.value]
 
         return ps_list
