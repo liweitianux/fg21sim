@@ -2,11 +2,11 @@
 # MIT license
 
 import numpy as np
-
 import astropy.units as au
 
 from .psparams import PixelParams
 from .base import BasePointSource
+
 
 class FRI(BasePointSource):
     """
@@ -19,7 +19,7 @@ class FRI(BasePointSource):
     lobe_min: float
         The minor half axis of the lobe
     lobe_ang: float
-        The rotation angle of the lobe from LOS
+        The rotation angle of the lobe with respect to line of sight
     """
 
     def __init__(self,configs):
@@ -30,7 +30,7 @@ class FRI(BasePointSource):
         self._get_configs()
 
     def _get_configs(self):
-        """ Load the configs and set the corresponding class attributes"""
+        """Load the configs and set the corresponding class attributes"""
         # point sources amount
         self.num_ps = self.configs.getn("extragalactic/pointsource/num_fr1")
         # prefix
@@ -38,10 +38,6 @@ class FRI(BasePointSource):
             "extragalactic/pointsource/prefix_fr1")
 
     def gen_lobe(self):
-        """
-        According to Wang's work, the linear scale at redshift z
-        obeys to U(0,D0(1+z)^(-1.4))
-        """
         D0 = 1 * au.Mpc
         self.lobe_maj = 0.5 * np.random.uniform(
             0, D0.value * (1 + self.z)**(-1.4)) * au.Mpc
@@ -78,7 +74,7 @@ class FRI(BasePointSource):
         self.area = np.pi * self.lobe_maj * self.lobe_min
 
         ps_list = [self.z, self.dA.value, self.theta.value,
-            self.phi.value, self.area.value]
+                   self.phi.value, self.area.value]
 
         ps_list.extend(lobe)
 
