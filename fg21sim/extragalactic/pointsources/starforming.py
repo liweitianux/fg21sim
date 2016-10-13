@@ -2,7 +2,9 @@
 # MIT license
 
 import numpy as np
+
 import astropy.units as au
+
 from .psparams import PixelParams
 from .base import BasePointSource
 
@@ -13,13 +15,13 @@ class StarForming(BasePointSource):
     def __init__(self, configs):
         super().__init__(configs)
         self.columns.append('radius (rad)')
-        self.nCols += 1
+        self.nCols = len(self.columns)
         self._get_configs()
 
     def _get_configs(self):
         """ Load the configs and set the corresponding class attributes"""
         # point sources amount
-        self.NumPS = self.configs.getn("extragalactic/pointsource/num_sf")
+        self.num_ps = self.configs.getn("extragalactic/pointsource/num_sf")
         # Luminosity at 1.4GHz
         self.lumo_1400 = self.configs.getn(
             "extragalactic/pointsource/lumo_1400")
@@ -28,8 +30,8 @@ class StarForming(BasePointSource):
             "extragalactic/pointsource/prefix_sf")
 
     def get_radius(self):
-        Temp = (0.22 * np.log10(self.lumo_1400)
-                - np.log10(1 + self.z) - 3.32)
+        Temp = (0.22 * np.log10(self.lumo_1400) - 
+                np.log10(1 + self.z) - 3.32)
         self.radius = 10 ** Temp / 2 * au.Mpc
 
         return self.radius
@@ -47,11 +49,11 @@ class StarForming(BasePointSource):
         # Area
         self.area = np.pi * self.radius**2  #[sr] ?
         # Position
-        self.theta = np.random.uniform(0,np.pi)/np.pi * 180 * au.deg
+        x = np.random.uniform(0,1)
+        self.theta = np.arccos(x)/np.pi * 180 * au.deg
         self.phi = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
 
         ps_list = [self.z, self.dA.value, self.theta.value,
              self.phi.value, self.area.value, self.radius.value]
 
         return ps_list
-
