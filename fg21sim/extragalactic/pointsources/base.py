@@ -15,24 +15,24 @@ Point sources types
 References
 ----------
 [1] Wilman et al.,
-    ""A semi-empirical simulation of the extragalactic radio continuum
+    "A semi-empirical simulation of the extragalactic radio continuum
     sky for next generation radio telescopes",
-    2008,MNRAS,388,1335-1348
-    http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
+    2008,MNRAS,388,1335-1348.,
+    http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W.
 [2] Jelic et al.,
     "Foreground simulations for the LOFAR-Epoch of Reionization
     Experiment",
-    2008,MNRAS,389,1319-1335
-    http://adsabs.harvard.edu/abs/2008MNRAS.389.1319W
+    2008,MNRAS,389,1319-1335.,
+    http://adsabs.harvard.edu/abs/2008MNRAS.389.1319W.
 """
-
 import os
 import numpy as np
-import healpy as hp
 from pandas import DataFrame
-import astropy.units as au
-from .psparams import PixelParams
 
+import healpy as hp
+import astropy.units as au
+
+from .psparams import PixelParams
 
 class BasePointSource:
     """
@@ -86,7 +86,8 @@ class BasePointSource:
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
         # Position
-        self.theta = np.random.uniform(0,np.pi)/np.pi * 180 * au.deg
+        x = np.random.uniform(0,1)
+        self.theta = np.arccos(x)/np.pi * 180 * au.deg
         self.phi = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
         # Area
         npix = hp.nside2npix(self.nside)
@@ -99,16 +100,16 @@ class BasePointSource:
 
     def save_as_csv(self):
         """
-        Generate NumPS of point sources and save them into a csv file.
+        Generate num_ps of point sources and save them into a csv file.
         """
         # Init
-        ps_table = np.zeros((self.NumPS, self.nCols))
-        for x in range(self.NumPS):
+        ps_table = np.zeros((self.num_ps, self.nCols))
+        for x in range(self.num_ps):
             ps_table[x, :] = self.gen_single_ps()
 
         # Transform into Dataframe
         ps_frame = DataFrame(ps_table, columns=self.columns,
-                             index=list(range(self.NumPS)))
+                             index=list(range(self.num_ps)))
 
         # Save to csv
         if os.path.exists(self.output_dir) == False:
