@@ -1,4 +1,4 @@
-#Configurations for "fg21sim"
+# Configurations for "fg21sim"
 # -*- mode: conf -*-
 #
 # Syntax: `ConfigObj`, https://github.com/DiffSK/configobj
@@ -36,4 +36,4 @@
     output_dir = string(default="PS_tables")
 
     # Special parameters
-    lumo_1400 = float(default = 0.0)
+    lumo_1400 = float(default=0.0)
