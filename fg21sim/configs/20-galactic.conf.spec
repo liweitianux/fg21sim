@@ -3,10 +3,8 @@
 #
 # Syntax: `ConfigObj`, https://github.com/DiffSK/configobj
 #
-# This file contains the general configurations, which control the 
-# general behaviors, or will be used in other configuration sections.
-
-
+# This file contains the point source configurations, which control the 
+# amount of point sources of each types, and the output staffs. 
 
 [extragalactic]
 
