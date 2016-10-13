@@ -8,13 +8,13 @@ defined, based on the works of Wang et al. and Willman et al.
 [1] Wang J et al.,
     "How to Identify and Separate Bright Galaxy Clusters from the
     Low-frequency Radio Sky?",
-    2010,ApJ,723,620-633.
-    http://adsabs.harvard.edu/abs/2010ApJ.723.620W
+    2010,ApJ,723,620-633.,
+    http://adsabs.harvard.edu/abs/2010ApJ...723..620W.
 [2] Wilman et al.,
     "A semi-empirical simulation of the extragalactic radio continuum
     sky for next generation radio telescopes",
-    2008,MNRAS,388,1335-1348,
-    http://adsabs.harvard.edu/abs/2008MNRAS.389.1335W
+    2008,MNRAS,388,1335-1348.,
+    http://adsabs.harvard.edu/abs/2008MNRAS.389.1335W.
 """
 
 import numpy as np
@@ -99,6 +99,6 @@ class Flux:
         Omegab = area  # [sr]
 
         Sb = (flux * au.Jy).to(au.Unit("J/m2")) / Omegab
-        flux_pixel = Sb / 2 / self.freq / self.freq * c * c / kb
+        flux_pixel = (0.5*Sb) /(self.freq **2) * (c**2) / kb
 
         return flux_pixel.value
