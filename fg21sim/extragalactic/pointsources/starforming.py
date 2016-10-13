@@ -2,11 +2,11 @@
 # MIT license
 
 import numpy as np
-
 import astropy.units as au
 
 from .psparams import PixelParams
 from .base import BasePointSource
+
 
 class StarForming(BasePointSource):
     """
@@ -30,7 +30,7 @@ class StarForming(BasePointSource):
             "extragalactic/pointsource/prefix_sf")
 
     def get_radius(self):
-        Temp = (0.22 * np.log10(self.lumo_1400) - 
+        Temp = (0.22 * np.log10(self.lumo_1400) -
                 np.log10(1 + self.z) - 3.32)
         self.radius = 10 ** Temp / 2 * au.Mpc
 
