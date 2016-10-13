@@ -1,10 +1,13 @@
 # Copyright (c) 2016 Zhixian MA <zxma_sjtu@qq.com>
 # MIT license
 
+import os
 import numpy as np
+import pandas as pd
+
 import astropy.units as au
 import healpy as hp
-import pandas as pd
+
 from .flux import Flux
 from .starforming import StarForming
 from .starbursting import StarBursting
@@ -20,17 +23,21 @@ class PointSources:
 
     functions
     ---------
-    read_csv: read the csv format files, judge the PS type and
-              transformed to be iterable numpy.ndarray.
+    read_csv
+        read the csv format files, judge the PS type and
+        transformed to be iterable numpy.ndarray.
 
-    calc_flux: calculate the flux and surface brightness of the PS.
+    calc_flux
+        calculate the flux and surface brightness of the PS.
 
-    draw_elp: processing on the elliptical and circular core or lobes.
+    draw_elp
+        processing on the elliptical and circular core or lobes.
 
-    draw_cir: processing on the circular star forming or bursting
-              galaxies
+    draw_cir
+        processing on the circular star forming or bursting galaxies
 
-    draw_ps: generate hpmap with respect the imput PS catelogue
+    draw_ps
+        generate hpmap with respect the imput PS catelogue
 """
 
     def __init__(self, configs):
@@ -64,7 +71,7 @@ class PointSources:
             self.files.append(fr1.save_as_csv()[1])
             self.files.append(fr2.save_as_csv()[1])
 
-    def read_csv(self,file_name):
+    def read_csv(self,filepath):
         """
         Read csv format point source files,judge its class
         type according to its name.
@@ -73,28 +80,20 @@ class PointSources:
 
         Parameters
         ----------
-        file_name: str
+        filepath: str
             Name of the file.
-
-         """
+        """
         # Split to folder name and file name
-        str_split = file_name.split('/')
-        if len(str_split) == 1:
-            file_name = str_split
-            fold_name = "./"
-        else:
-            file_name = str_split[-1]
-            fold_name = ''
-            for i in range(len(str_split) - 1):
-                fold_name = fold_name + str_split[i] + '/'
+        filename = os.path.basename(filepath)
         # Split and judge point source type
         class_list = ['SF', 'SB', 'RQ', 'FRI', 'FRII']
-        class_name = file_name.split('.')[0]
+        class_name = filename.split('.')[0]
         class_type = class_list.index(class_name) + 1
         # Read csv
-        ps_data = pd.read_csv(fold_name + '/' + file_name)
+        ps_data = pd.read_csv(filepath)
 
         return class_type, ps_data
+
 
     def calc_flux(self,class_type, freq, ps_data):
         """
@@ -112,17 +111,17 @@ class PointSources:
         # init flux
         ps_flux = Flux(freq, class_type)
         # ps_flux_list
-        NumPS = ps_data.shape[0]
+        num_ps = ps_data.shape[0]
         if class_type <= 3:
-            ps_flux_list = np.zeros((NumPS,))
+            ps_flux_list = np.zeros((num_ps,))
             # Iteratively calculate flux
-            for i in range(NumPS):
+            for i in range(num_ps):
                 ps_area = ps_data['Area (sr)'][i]
                 ps_flux_list[i] = ps_flux.calc_Tb(ps_area)
         else:
-            ps_flux_list = np.zeros((NumPS, 2))
+            ps_flux_list = np.zeros((num_ps, 2))
             # Iteratively calculate flux
-            for i in range(NumPS):
+            for i in range(num_ps):
                 ps_area = ps_data['Area (sr)'][i]
                 ps_flux_list[i, :] = ps_flux.calc_Tb(ps_area)[0:2]
 
@@ -147,8 +146,9 @@ class PointSources:
         # Gen flux list
         ps_flux_list = self.calc_flux(3, freq, ps_data)
         # Angle to pix
-        pix = hp.ang2pix(self.nside, ps_data['Theta (deg)'] /
-                         180 * np.pi, ps_data['Phi (deg)'] / 180 * np.pi)
+        theta = ps_data['Theta (deg)'] / 180 * np.pi
+        phi = ps_data['Phi (deg)'] / 180 * np.pi
+        pix = hp.ang2pix(self.nside, theta, phi)
         # Gen hpmap
         hpmap[pix] += ps_flux_list
 
@@ -175,8 +175,8 @@ class PointSources:
         # Gen flux list
         ps_flux_list = self.calc_flux(class_type, freq, ps_data)
         #  Iteratively draw the ps
-        NumPS = ps_data.shape[0]
-        for i in range(NumPS):
+        num_ps = ps_data.shape[0]
+        for i in range(num_ps):
             # grid
             ps_radius = ps_data['radius (rad)'][i]  # radius[rad]
             theta = ps_data['Theta (deg)'][i] * au.deg   # theta
@@ -190,10 +190,18 @@ class PointSources:
             for p in range(len(x)):
                 for q in range(len(y)):
                     if np.sqrt(x[p].value**2 + y[q].value**2) <= ps_radius:
-                        x_ang = x[p].to(au.deg) + theta
-                        y_ang = y[q].to(au.deg) + phi
+                        x_ang = (x[p].to(au.deg) + theta).value / 180 * np.pi
+                        y_ang = (y[q].to(au.deg) + phi).value / 180 * np.pi
+                        if x_ang > np.pi:
+                            x_ang -= np.pi
+                        elif x_ang < 0:
+                            x_ang += np.pi
+                        if y_ang > 2 * np.pi:
+                            y_ang -= 2 * np.pi
+                        elif y_ang < 0:
+                            y_ang += 2 * np.pi
                         pix_tmp = hp.ang2pix(
-                            self.nside, x_ang.value / 180 * np.pi, y_ang.value / 180 * np.pi)
+                            self.nside, x_ang, y_ang)
                         hpmap[pix_tmp] += ps_flux_list[i]
 
         return hpmap
@@ -211,17 +219,16 @@ class PointSources:
             Class type of the point soruces
         freq: float
             frequency
-
         """
         # Init
         npix = hp.nside2npix(self.nside)
         hpmap = np.zeros((npix,))
-        NumPS = ps_data.shape[0]
+        num_ps = ps_data.shape[0]
         # Gen flux list
         ps_flux_list = self.calc_flux(class_type, freq, ps_data)
         ps_lobe = ps_flux_list[:, 1]
         # Iteratively draw ps
-        for i in range(NumPS):
+        for i in range(num_ps):
             # Parameters
             theta = ps_data['Theta (deg)'][i] * au.deg
             phi = ps_data['Phi (deg)'][i] * au.deg
@@ -255,13 +262,23 @@ class PointSources:
                         # rotation
                         x_ang = (x[p] * au.rad).to(au.deg)
                         y_ang = (y[q] * au.rad).to(au.deg)
-                        x_r = x_ang * np.cos(lobe_ang) - \
-                            y_ang * np.sin(lobe_ang)
-                        y_r = x_ang * np.sin(lobe_ang) + \
-                            y_ang * np.cos(lobe_ang)
+                        x_r = ((x_ang * np.cos(lobe_ang) -
+                               y_ang * np.sin(lobe_ang) +
+                               lobe1_theta).value / 180 * np.pi)
+                        y_r = ((x_ang * np.sin(lobe_ang) +
+                               y_ang * np.cos(lobe_ang) +
+                               lobe1_phi).value / 180 * np.pi)
                         # Judge and Fill
+                        if x_r > np.pi:
+                            x_r -= np.pi
+                        elif x_r < 0:
+                            x_r += np.pi
+                        if y_r > 2 * np.pi:
+                            y_r -= 2 * np.pi
+                        elif y_r < 0:
+                            y_r += 2 * np.pi
                         pix_tmp = hp.ang2pix(
-                            self.nside, (theta + x_r).value / 180 * np.pi, (phi + y_r).value / 180 * np.pi)
+                            self.nside, x_r,y_r )
                         hpmap[pix_tmp] += ps_lobe[i]
 
             # Lobe2
@@ -290,13 +307,22 @@ class PointSources:
                         # rotation
                         x_ang = (x[p] * au.rad).to(au.deg)
                         y_ang = (y[q] * au.rad).to(au.deg)
-                        x_r = x_ang * np.cos(lobe_ang + np.pi) - \
-                            y_ang * np.sin(lobe_ang + np.pi)
-                        y_r = x_ang * np.sin(lobe_ang + np.pi) + \
-                            y_ang * np.cos(lobe_ang + np.pi)
+                        x_r = ((x_ang * np.cos(lobe_ang + np.pi) -
+                               y_ang * np.sin(lobe_ang + np.pi) +
+                               lobe2_theta).value / 180 * np.pi)
+                        y_r = ((x_ang * np.sin(lobe_ang + np.pi) +
+                               y_ang * np.cos(lobe_ang + np.pi) +
+                               lobe2_phi).value / 180 * np.pi)
                         # Judge and Fill
-                        pix_tmp = hp.ang2pix(self.nside, (lobe2_theta + x_r).value / 180 *
-                            np.pi, (lobe2_phi + y_r).value / 180 * np.pi)
+                        if x_r > np.pi:
+                            x_r -= np.pi
+                        elif x_r < 0:
+                            x_r += np.pi
+                        if y_r > 2 * np.pi:
+                            y_r -= 2 * np.pi
+                        elif y_r < 0:
+                            y_r += 2 * np.pi
+                        pix_tmp = hp.ang2pix(self.nside, x_r,y_r)
                         hpmap[pix_tmp] += ps_lobe[i]
             # Core
             pix_tmp = hp.ang2pix(self.nside, ps_data['Theta (deg)'] / 180 *
@@ -311,15 +337,14 @@ class PointSources:
         Read csv ps list file, and generate the healpix structure vector
         with the respect frequency.
         """
-
         # Init
         num_freq = len(self.freq)
         npix = hp.nside2npix(self.nside)
         hpmaps = np.zeros((npix,num_freq))
 
         # load csv
-        for file_name in self.files:
-            class_type, ps_data = self.read_csv(file_name)
+        for filepath in self.files:
+            class_type, ps_data = self.read_csv(filepath)
 
             # get hpmaps
             if class_type == 1 or class_type == 2:
