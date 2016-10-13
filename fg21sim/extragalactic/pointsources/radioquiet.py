@@ -10,8 +10,9 @@ class RadioQuiet(BasePointSource):
 
     def _get_configs(self):
         """ Load the configs and set the corresponding class attributes"""
+
         # point sources amount
-        self.NumPS = self.configs.getn("extragalactic/pointsource/num_rq")
+        self.num_ps = self.configs.getn("extragalactic/pointsource/num_rq")
         # prefix
         self.prefix = self.configs.getn(
             "extragalactic/pointsource/prefix_rq")
