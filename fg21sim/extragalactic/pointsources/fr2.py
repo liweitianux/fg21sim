@@ -2,7 +2,9 @@
 # MIT license
 
 import numpy as np
+
 import astropy.units as au
+
 from .base import BasePointSource
 from .psparams import PixelParams
 
@@ -23,13 +25,13 @@ class FRII(BasePointSource):
         super().__init__(configs)
         self.columns.extend(
             ['lobe_maj (rad)', 'lobe_min (rad)', 'lobe_ang (deg)'])
-        self.nCols += 3
+        self.nCols = len(self.columns)
         self._get_configs()
 
     def _get_configs(self):
         """ Load the configs and set the corresponding class attributes"""
         # point sources amount
-        self.NumPS = self.configs.getn("extragalactic/pointsource/num_fr2")
+        self.num_ps = self.configs.getn("extragalactic/pointsource/num_fr2")
         # prefix
         self.prefix = self.configs.getn(
             "extragalactic/pointsource/prefix_fr2")
@@ -66,7 +68,8 @@ class FRII(BasePointSource):
         self.dA = self.param.dA
 
         # Position
-        self.theta = np.random.uniform(0,np.pi)/np.pi * 180 * au.deg
+        x = np.random.uniform(0,1)
+        self.theta = np.arccos(x)/np.pi * 180 * au.deg
         self.phi = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
 
         # lobe
