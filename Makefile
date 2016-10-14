@@ -21,6 +21,8 @@ default:
 	@echo "        (build and) install the package to the virtualenv"
 	@echo "  + test"
 	@echo "        run the tests"
+	@echo "  + print-<VARIABLE>"
+	@echo "        print the value of variable <VARIABLE>"
 
 # Create virtualenv and install/update the dependencies
 venv: ${VENV}/bin/activate
@@ -36,3 +38,8 @@ devbuild: venv
 # Run the tests
 test: devbuild
 	./${VENV}/bin/python3 setup.py test
+
+
+# One liner to get the value of any makefile variable
+# Credit: http://blog.jgc.org/2015/04/the-one-line-you-should-add-to-every.html
+print-%: ; @echo $*=$($*)
