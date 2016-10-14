@@ -9,7 +9,7 @@
 [extragalactic]
 
     # Extragalactic point sources
-    [[pointsource]]
+    [[pointsources]]
     # Number of each type of point source
     # Star forming
     num_sf = integer(default=100)
