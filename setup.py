@@ -77,6 +77,7 @@ setup(
     ],
     install_requires=[
         "numpy",
+        "scipy",
         "astropy",
         "healpy",
         "configobj",
