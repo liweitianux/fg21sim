@@ -20,6 +20,14 @@ class FRI(BasePointSource):
         The minor half axis of the lobe
     lobe_ang: float
         The rotation angle of the lobe with respect to line of sight
+
+    Reference
+    ----------
+    [1] Wang J et al.,
+    "How to Identify and Separate Bright Galaxy Clusters from the
+    Low-frequency Radio Sky?",
+    2010, ApJ, 723, 620-633.
+    http://adsabs.harvard.edu/abs/2010ApJ...723..620W
     """
 
     def __init__(self,configs):
