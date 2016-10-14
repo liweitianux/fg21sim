@@ -17,19 +17,20 @@ References
 [1] Wilman et al.,
     "A semi-empirical simulation of the extragalactic radio continuum
     sky for next generation radio telescopes",
-    2008, MNRAS, 388, 1335-1348.,
+    2008, MNRAS, 388, 1335-1348.
     http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
 [2] Jelic et al.,
     "Foreground simulations for the LOFAR-Epoch of Reionization
     Experiment",
-    2008, MNRAS, 389, 1319-1335.,
+    2008, MNRAS, 389, 1319-1335.
     http://adsabs.harvard.edu/abs/2008MNRAS.389.1319W
 [3] Spherical uniform distribution
     https://www.jasondavies.com/maps/random-points/
 """
 import os
+
 import numpy as np
-from pandas import DataFrame
+import pandas as pd
 
 import healpy as hp
 import astropy.units as au
@@ -110,7 +111,7 @@ class BasePointSource:
             ps_table[x, :] = self.gen_single_ps()
 
         # Transform into Dataframe
-        ps_frame = DataFrame(ps_table, columns=self.columns,
+        ps_frame = pd.DataFrame(ps_table, columns=self.columns,
                              index=list(range(self.num_ps)))
 
         # Save to csv
