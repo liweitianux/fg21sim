@@ -7,7 +7,7 @@
 #
 
 # The name (also the directory) of the virtualenv
-VENV ?= "venv"
+VENV ?= venv
 
 
 default:
@@ -27,7 +27,7 @@ default:
 # Create virtualenv and install/update the dependencies
 venv: ${VENV}/bin/activate
 ${VENV}/bin/activate: requirements.txt
-	test -d "${VENV}" || virtualenv --python=python3 ${VENV}
+	test -d ./${VENV} || virtualenv --python=python3 ${VENV}
 	./${VENV}/bin/pip3 install --upgrade -r requirements.txt
 	touch ${VENV}/bin/activate
 
