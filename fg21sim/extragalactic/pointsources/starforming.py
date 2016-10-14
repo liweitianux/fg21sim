@@ -21,13 +21,13 @@ class StarForming(BasePointSource):
     def _get_configs(self):
         """ Load the configs and set the corresponding class attributes"""
         # point sources amount
-        self.num_ps = self.configs.getn("extragalactic/pointsource/num_sf")
+        self.num_ps = self.configs.getn("extragalactic/pointsources/num_sf")
         # Luminosity at 1.4GHz
         self.lumo_1400 = self.configs.getn(
-            "extragalactic/pointsource/lumo_1400")
+            "extragalactic/pointsources/lumo_1400")
         # prefix
         self.prefix = self.configs.getn(
-            "extragalactic/pointsource/prefix_sf")
+            "extragalactic/pointsources/prefix_sf")
 
     def get_radius(self):
         Temp = (0.22 * np.log10(self.lumo_1400) -
