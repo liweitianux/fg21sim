@@ -37,6 +37,9 @@ class ConfigManager:
             (optional) list of user config files to be merged
         """
         configs_spec = sorted(glob(os.path.join(CONFIGS_PATH, "*.conf.spec")))
+        if os.environ.get("DEBUG_FG21SIM"):
+            print("Found config specifications: %s" % ", ".join(configs_spec),
+                  file=sys.stderr)
         spec = "\n".join([open(f).read() for f in configs_spec]).split("\n")
         self._configspec = ConfigObj(spec, interpolation=False,
                                      list_values=False, _inspec=True)
