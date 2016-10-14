@@ -20,6 +20,14 @@ class FRII(BasePointSource):
         The minor half axis of the lobe
     lobe_ang: float
         The rotation angle of the lobe correspoind to line of sight
+
+    Reference
+    ----------
+    [1] Wang J et al.,
+    "How to Identify and Separate Bright Galaxy Clusters from the
+    Low-frequency Radio Sky?",
+    2010, ApJ, 723, 620-633.
+    http://adsabs.harvard.edu/abs/2010ApJ...723..620W
     """
     def __init__(self,configs):
         super().__init__(configs)
@@ -37,7 +45,7 @@ class FRII(BasePointSource):
             "extragalactic/pointsource/prefix_fr2")
 
     def gen_lobe(self):
-        D0 = 1
+        D0 = 1 * au.Mpc 
         self.lobe_maj = (0.5 *
                          np.random.uniform(0,D0 * (1 + self.z)**(-1.4)) * au.Mpc)
         self.lobe_min = self.lobe_maj * np.random.uniform(0.2, 1) * au.Mpc
