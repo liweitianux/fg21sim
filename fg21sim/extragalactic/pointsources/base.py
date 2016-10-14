@@ -73,10 +73,10 @@ class BasePointSource:
         # common
         self.nside = self.configs.getn("common/nside")
         # save flag
-        self.save = self.configs.getn("extragalactic/pointsource/save")
+        self.save = self.configs.getn("extragalactic/pointsources/save")
         # Output_dir
         self.output_dir = self.configs.getn(
-                            "extragalactic/pointsource/output_dir")
+                            "extragalactic/pointsources/output_dir")
 
 
     def gen_single_ps(self):
