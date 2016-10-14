@@ -53,7 +53,7 @@ class PointSources:
         # frequencies
         self.freq = self.configs.getn("frequency/frequencies")
         # save flag
-        self.save = self.configs.getn("extragalactic/pointsource/save")
+        self.save = self.configs.getn("extragalactic/pointsources/save")
 
     def gen_catelogue(self):
         """Generate the catelogues"""
