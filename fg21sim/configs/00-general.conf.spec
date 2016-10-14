@@ -62,9 +62,9 @@ filetype = option("fits", default="fits")
 
 # Filename pattern (without extension) for the output products, which will
 # be finally formatted using `str.format()`.
-filename_pattern = string(default="{prefix}_{frequency:.1f}")
+filename_pattern = string(default="{prefix}_{frequency:05.1f}")
 
-# Overwrite existing files
+# Whether overwrite existing files
 clobber = boolean(default=False)
 
 # Whether combine all components and output
