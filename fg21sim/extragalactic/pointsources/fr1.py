@@ -40,10 +40,10 @@ class FRI(BasePointSource):
     def _get_configs(self):
         """Load the configs and set the corresponding class attributes"""
         # point sources amount
-        self.num_ps = self.configs.getn("extragalactic/pointsource/num_fr1")
+        self.num_ps = self.configs.getn("extragalactic/pointsources/num_fr1")
         # prefix
         self.prefix = self.configs.getn(
-            "extragalactic/pointsource/prefix_fr1")
+            "extragalactic/pointsources/prefix_fr1")
 
     def gen_lobe(self):
         D0 = 1 * au.Mpc
