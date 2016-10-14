@@ -34,7 +34,7 @@ class PointSources:
     draw_elp
         processing on the elliptical and circular core or lobes.
 
-    draw_cir
+    draw_circle
         processing on the circular star forming or bursting galaxies
 
     draw_ps
@@ -153,7 +153,7 @@ class PointSources:
 
         return hpmap
 
-    def draw_cir(self, ps_data, ps_type, freq):
+    def draw_circle(self, ps_data, ps_type, freq):
         """
         Designed to draw the circular  star forming  and star bursting ps.
 
@@ -348,7 +348,7 @@ class PointSources:
             # get hpmaps
             if ps_type == 1 or ps_type == 2:
                 for i in range(num_freq):
-                    hpmaps[:, i] = self.draw_cir(ps_data, ps_type,
+                    hpmaps[:, i] = self.draw_circle(ps_data, ps_type,
                                              self.freq[i])
             elif ps_type == 3:
                 for i in range(num_freq):
