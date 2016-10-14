@@ -8,12 +8,12 @@ defined, based on the works of Wang et al. and Willman et al.
 [1] Wang J et al.,
     "How to Identify and Separate Bright Galaxy Clusters from the
     Low-frequency Radio Sky?",
-    2010, ApJ, 723, 620-633.,
+    2010, ApJ, 723, 620-633.
     http://adsabs.harvard.edu/abs/2010ApJ...723..620W
 [2] Wilman et al.,
     "A semi-empirical simulation of the extragalactic radio continuum
     sky for next generation radio telescopes",
-    2008, MNRAS, 388, 1335-1348.,
+    2008, MNRAS, 388, 1335-1348.
     http://adsabs.harvard.edu/abs/2008MNRAS.389.1335W
 """
 
@@ -60,7 +60,7 @@ class Flux:
         """Generate the spectrum """
         # Init
         freq_ref = 151e6
-        # Todo
+        # Refer to Wang et al,'s work listed above.
         self.I_151 = 10**(np.random.uniform(-4, -3))
         # Clac flux
         if self.ps_type == 1:
@@ -101,6 +101,6 @@ class Flux:
         Omegab = area  # [sr]
 
         Sb = (flux * au.Jy).to(au.Unit("J/m2")) / Omegab
-        Tb =  Sb /(2*self.freq**2*kB/c**2)
+        Tb =  Sb/(2*self.freq**2*kB/c**2)
 
         return Tb.value
