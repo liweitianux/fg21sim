@@ -69,6 +69,7 @@ setup(
         "Topic :: Scientific/Engineering :: Astronomy",
     ],
     packages=find_packages(exclude=["docs", "tests"]),
+    include_package_data=True,
     scripts=[
         "bin/fg21sim",
         "bin/healpix2hpx",
