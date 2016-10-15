@@ -3,3 +3,5 @@ scipy
 astropy
 healpy
 configobj
+beautifulsoup4
+requests

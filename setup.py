@@ -75,6 +75,7 @@ setup(
         "bin/healpix2hpx",
         "bin/hpx2healpix",
         "bin/zea2healpix",
+        "bin/fg21sim-download-snr-data",
     ],
     install_requires=[
         "numpy",
@@ -82,6 +83,8 @@ setup(
         "astropy",
         "healpy",
         "configobj",
+        "beautifulsoup4",
+        "requests",
     ],
     tests_require=["pytest"],
     cmdclass={"test": PyTest},
