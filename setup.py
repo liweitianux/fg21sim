@@ -80,6 +80,7 @@ setup(
     install_requires=[
         "numpy",
         "scipy",
+        "pandas",
         "astropy",
         "healpy",
         "configobj",
