@@ -11,9 +11,9 @@ Configuration manager.
 
 import os
 import sys
-from glob import glob
 import logging
 from functools import reduce
+import pkg_resources
 
 from configobj import ConfigObj, ConfigObjError, flatten_errors
 from validate import Validator
@@ -21,8 +21,23 @@ from validate import Validator
 from ..errors import ConfigError
 
 
-CONFIGS_PATH = os.path.dirname(__file__)
 logger = logging.getLogger(__name__)
+
+
+def _get_configspec():
+    """Found and read all the configuration specifications"""
+    files = sorted(pkg_resources.resource_listdir(__name__, ""))
+    specfiles = filter(lambda fn: fn.endswith(".conf.spec"), files)
+    if os.environ.get("DEBUG_FG21SIM"):
+        print("DEBUG: Found config specifications: %s" % ", ".join(specfiles),
+              file=sys.stderr)
+    # NOTE:
+    # `resource_string()` returns the resource in *binary/bytes* string
+    configspec = "\n".join([
+        pkg_resources.resource_string(__name__, fn).decode("utf-8")
+        for fn in specfiles
+    ]).split("\n")
+    return configspec
 
 
 class ConfigManager:
@@ -36,18 +51,12 @@ class ConfigManager:
         configs: list (of config files)
             (optional) list of user config files to be merged
         """
-        configs_spec = sorted(glob(os.path.join(CONFIGS_PATH, "*.conf.spec")))
-        if os.environ.get("DEBUG_FG21SIM"):
-            print("Found config specifications: %s" % ", ".join(configs_spec),
-                  file=sys.stderr)
-        spec = "\n".join([open(f).read() for f in configs_spec]).split("\n")
-        self._configspec = ConfigObj(spec, interpolation=False,
+        configspec = _get_configspec()
+        self._configspec = ConfigObj(configspec, interpolation=False,
                                      list_values=False, _inspec=True)
         configs_default = ConfigObj(interpolation=False,
                                     configspec=self._configspec)
         self._config = self._validate(configs_default)
-        logger.info("Loaded default configs with specification: {0}".format(
-            ", ".join(configs_spec)))
         if configs:
             for config in configs:
                 self.read_config(config)
