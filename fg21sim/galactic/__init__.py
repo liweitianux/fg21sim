@@ -3,3 +3,4 @@
 
 from .synchrotron import Synchrotron
 from .freefree import FreeFree
+from .snr import SuperNovaRemnants
