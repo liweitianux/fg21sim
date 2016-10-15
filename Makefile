@@ -28,7 +28,7 @@ default:
 venv: ${VENV}/bin/activate
 ${VENV}/bin/activate: requirements.txt
 	test -d ./${VENV} || virtualenv --python=python3 ${VENV}
-	./${VENV}/bin/pip3 install --upgrade -r requirements.txt
+	./${VENV}/bin/pip3 install -r requirements.txt
 	touch ${VENV}/bin/activate
 
 # Install this package to the virtualenv
