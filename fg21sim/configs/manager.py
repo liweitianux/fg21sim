@@ -174,19 +174,40 @@ class ConfigManager:
             "/"-separated string specifying the config name of the
             file/directory
 
+        Returns
+        -------
+        path : str
+            The absolute path (if user configuration loaded) or relative
+            path specified by the input key, or `None` if specified config
+            is `None`.
+
+        Raises
+        ------
+        ValueError:
+            If the value of the specified config is not string.
+
         NOTE
         ----
         - The "~" (tilde) inside path is expanded to the user home directory.
         - The relative path (with respect to the user configuration file)
           is converted to absolute path if `self.userconfig` presents.
         """
-        path = os.path.expanduser(self.getn(key))
+        value = self.getn(key)
+        if value is None:
+            logger.warning("Specified config '%s' is None or not exist" % key)
+            return None
+        if not isinstance(value, str):
+            msg = "Specified config '%s' is non-string: %s" % (key, value)
+            logger.error(msg)
+            raise ValueError(msg)
+        #
+        path = os.path.expanduser(value)
         if not os.path.isabs(path):
-            # relative path
+            # Got relative path, try to convert to the absolute path
             if hasattr(self, "userconfig"):
+                # User configuration loaded
                 path = os.path.join(os.path.dirname(self.userconfig), path)
             else:
-                # cannot convert to the absolute path
                 logger.warning("Cannot convert to absolute path: %s" % path)
         return os.path.normpath(path)
 
