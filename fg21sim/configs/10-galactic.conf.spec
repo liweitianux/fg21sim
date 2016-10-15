@@ -35,7 +35,7 @@
   # Output directory to save the simulated results
   output_dir = string(default=None)
 
-  # free-free bremsstrahlung emission component
+  # Free-free bremsstrahlung emission component
   [[freefree]]
   # The H{\alpha} map used as the free-free emission template
   halphamap = string(default=None)
@@ -49,6 +49,24 @@
 
   # Filename prefix for this component
   prefix = string(default="gfree")
+  # Whether save this component to disk
+  save = boolean(default=True)
+  # Output directory to save the simulated results
+  output_dir = string(default=None)
+
+  # Supernova remnants emission
+  [[snr]]
+  # The Galactic SNRs catalog data (CSV file)
+  catalog = string(default=None)
+  # Output the effective/inuse SNRs catalog data (CSV file)
+  catalog_outfile = string(default=None)
+
+  # Resolution (unit: arcmin) for simulating each SNR, which are finally
+  # mapped to the HEALPix map of Nside specified in "[common]" section.
+  resolution = float(default=1.0)
+
+  # Filename prefix for this component
+  prefix = string(default="gsnr")
   # Whether save this component to disk
   save = boolean(default=True)
   # Output directory to save the simulated results
