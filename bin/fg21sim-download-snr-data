@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+#
+# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# MIT license
+
+"""
+Retrieve the Galactic SNRs catalog data by parsing the web by /D. A. Green/:
+
+    http://www.mrao.cam.ac.uk/surveys/snrs/
+    http://www.mrao.cam.ac.uk/surveys/snrs/snrs.data.html
+
+and save the data in CSV format.
+"""
+
+
+import os
+import sys
+import argparse
+import logging
+import csv
+
+from fg21sim.configs import configs
+from fg21sim.utils import setup_logging
+from fg21sim.data import retrieve_snr_data_green, SNRDataGreen
+
+
+# Web page to the Galactic SNRs catalog summary
+SNR_DATA_URL = "http://www.mrao.cam.ac.uk/surveys/snrs/snrs.data.html"
+
+
+def main():
+    outfile_default = "GalacticSNRs_Green2014.csv"
+
+    parser = argparse.ArgumentParser(
+        description="Retrieve Galactic SNRs catalog data")
+    parser.add_argument("outfile", nargs="?", default=outfile_default,
+                        help="output CSV file to save the catalog data " +
+                        "(default: %s)" % outfile_default)
+    parser.add_argument("-U", "--url", default=SNR_DATA_URL,
+                        help="URL to Green's SNRs catalog summary page " +
+                        "or a local HTML file (default: %s)" % SNR_DATA_URL)
+    parser.add_argument("-C", "--clobber", action="store_true",
+                        help="overwrite the existing output file")
+    parser.add_argument("-l", "--log", dest="loglevel", default=None,
+                        choices=["DEBUG", "INFO", "WARNING",
+                                 "ERROR", "CRITICAL"],
+                        help="set the log level")
+    parser.add_argument("-L", "--logfile", default=None,
+                        help="filename where to save the log messages")
+    parser.add_argument("-Q", "--quiet", action="store_true",
+                        help="be quiet so do not log messages to screen")
+    args = parser.parse_args()
+
+    if args.quiet:
+        log_stream = ""
+    else:
+        log_stream = None
+
+    tool = os.path.basename(sys.argv[0])
+
+    setup_logging(dict_config=configs.logging,
+                  level=args.loglevel,
+                  stream=log_stream,
+                  logfile=args.logfile)
+    logger = logging.getLogger(tool)
+    logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
+    if os.path.exists(args.outfile) and (not args.clobber):
+        raise IOError("output file already exists: %s" % args.outfile)
+
+    snrdata_str = retrieve_snr_data_green(args.url)
+    snrdata = SNRDataGreen(snrdata_str[0])
+    header = list(snrdata.data_flat.keys())
+    with open(args.outfile, "w") as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(header)
+        for i, dstr in enumerate(snrdata_str):
+            logger.info("Parse data string #{0:03d}: '{1}'".format(i+1, dstr))
+            snrdata = SNRDataGreen(dstr)
+            values = list(snrdata.data_flat.values())
+            csvwriter.writerow(values)
+    logger.info("Galactic SNRs catalog data write to: %s" % args.outfile)
+
+
+if __name__ == "__main__":
+    main()
