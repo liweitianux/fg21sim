@@ -8,6 +8,7 @@ Grid utilities.
 
 import numpy as np
 from scipy import ndimage
+import healpy as hp
 
 from .draw import ellipse
 
@@ -97,7 +98,7 @@ def make_grid_ellipse(center, size, resolution, rotation=None):
         The array with elements representing the latitudes of each grid
         pixel.
         Also, the latitudes are fixed to be in the valid range [-90, 90].
-    grid : 2D float `~numpy.ndarray`
+    gridmap : 2D float `~numpy.ndarray`
         The array containing the specified ellipse, where the pixels
         corresponding to the ellipse with positive values, while other pixels
         are zeros.
@@ -118,12 +119,13 @@ def make_grid_ellipse(center, size, resolution, rotation=None):
     r0, c0 = np.floor(np.array(shape) / 2.0).astype(np.int)
     r_radius, c_radius = np.ceil(0.5*np.array(size)/resolution).astype(np.int)
     rr, cc = ellipse(r0, c0, r_radius, c_radius, shape=shape)
-    grid = np.zeros(shape)
-    grid[rr, cc] = 1.0
+    gridmap = np.zeros(shape)
+    gridmap[rr, cc] = 1.0
     if rotation is not None:
         # Rotate the ellipse
-        grid = ndimage.rotate(grid, angle=rotation, order=1, reshape=False)
-    return (lon, lat, grid)
+        gridmap = ndimage.rotate(gridmap, angle=rotation, order=1,
+                                 reshape=False)
+    return (lon, lat, gridmap)
 
 
 def map_grid_to_healpix(grid, nside):
@@ -141,17 +143,35 @@ def map_grid_to_healpix(grid, nside):
 
     Returns
     -------
-    hpmap : 1D `~numpy.ndarray`
-        Mapped HEALPix map in *RING* ordering.
+    indexes : 1D `~numpy.ndarray`
+        The indexes of the effective HEALPix pixels that are mapped from
+        the input coordinate grid.  The indexes are in RING ordering.
+    values : 1D `~numpy.ndarray`
+        The values of each output HEALPix pixels with respect the above
+        indexes.
 
     NOTE
     ----
     Generally, the input coordinate grid has higher resolution than the
-    output HEALPix map, so down-sampling is performed.
+    output HEALPix map, so down-sampling is performed by averaging the
+    pixels that map to the same HEALPix pixel.
     However, note that the total flux is *NOT PRESERVED* for the mapping
     (or reprojection) procedure.
 
     XXX/TODO:
     - Implement the flux-preserving algorithm (reference ???)
     """
-    raise NotImplementedError("TODO")
+    lon, lat, gridmap = grid
+    phi = np.radians(lon)
+    theta = np.radians(90.0 - lat)
+    ipix = hp.ang2pix(nside, theta, phi, nest=False)
+    # Get the corresponding input grid pixels for each HEALPix pixel
+    indexes, counts = np.unique(ipix, return_counts=True)
+    shape = (len(indexes), max(counts))
+    datamap = np.zeros(shape) * np.nan
+    # TODO: how to avoid this explicit loop ??
+    for i, idx in enumerate(indexes):
+        pixels = gridmap[ipix == idx]
+        datamap[i, :len(pixels)] = pixels
+    values = np.nanmean(datamap, axis=1)
+    return (indexes, values)
