@@ -113,10 +113,21 @@ class SuperNovaRemnants:
         if self.catalog_outfile is None:
             logger.warning("Catalog output file not set, so do NOT save.")
             return
+        # Create directory if necessary
+        dirname = os.path.dirname(self.catalog_outfile)
+        if os.path.exists(dirname):
+            os.mkdir(dirname)
+            logger.info("Created directory: {0}".format(dirname))
         # Save catalog data
         colnames = ["name", "glon", "glat", "ra", "dec",
                     "size_major", "size_minor", "flux",
                     "specindex", "rotation"]
+        if os.path.exists(self.catalog_outfile):
+            if self.clobber:
+                os.remove(self.catalog_outfile)
+            else:
+                raise OSError("Output file already exists: {0}".format(
+                    self.catalog_outfile))
         self.catalog.to_csv(self.catalog_outfile, columns=colnames,
                             header=True, index=False)
         logger.info("Save SNRs catalog in use to: %s" % self.catalog_outfile)
