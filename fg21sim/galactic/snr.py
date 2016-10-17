@@ -62,6 +62,7 @@ class SuperNovaRemnants:
     def __init__(self, configs):
         self.configs = configs
         self._set_configs()
+        self._load_catalog()
 
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes."""
@@ -133,20 +134,24 @@ class SuperNovaRemnants:
         ----
         The objects with uncertain data are currently kept.
         """
+        if hasattr(self, "catalog_filtered") and self.catalog_filtered:
+            return
+        #
         cond1 = pd.isnull(self.catalog["size_major"])
         cond2 = pd.isnull(self.catalog["size_minor"])
         cond3 = pd.isnull(self.catalog["flux"])
         cond4 = pd.isnull(self.catalog["specindex"])
         cond_keep = ~(cond1 | cond2 | cond3 | cond4)
         n_total = len(cond_keep)
-        n_delete = cond_keep.sum()
+        n_remain = cond_keep.sum()
+        n_delete = n_total - n_remain
         n_delete_p = n_delete / n_total * 100
-        n_remain = n_total - n_delete
         self.catalog = self.catalog[cond_keep]
         # Drop the index
         self.catalog.reset_index(drop=True, inplace=True)
+        self.catalog_filtered = True
         logger.info("SNRs catalog: filtered out " +
-                    "{0:d} ({1:.1f}) objects".format(n_delete, n_delete_p))
+                    "{0:d} ({1:.1f}%) objects".format(n_delete, n_delete_p))
         logger.info("SNRs catalog: remaining {0} objects".format(n_remain))
 
     def _add_random_rotation(self):
@@ -158,6 +163,9 @@ class SuperNovaRemnants:
         The rotation happens on the spherical surface, i.e., not with respect
         to the line of sight, but to the Galactic frame coordinate axes.
         """
+        if "rotation" in self.catalog.columns:
+            return
+        #
         num = len(self.catalog)
         angles = np.random.uniform(low=0.0, high=360.0, size=num)
         rotation = pd.Series(data=angles, name="rotation")
@@ -236,8 +244,8 @@ class SuperNovaRemnants:
             name = row.name
             logger.info("Simulate HEALPix template for SNR: {0}".format(name))
             center = (row.glon, row.glat)
-            size = ((row.size_major * au.units["size"]).to(au.deg).value,
-                    (row.size_minor * au.units["size"]).to(au.deg).value)
+            size = ((row.size_major * self.units["size"]).to(au.deg).value,
+                    (row.size_minor * self.units["size"]).to(au.deg).value)
             rotation = row.rotation
             grid = make_grid_ellipse(center, size, resolution, rotation)
             hpidx, hpval = map_grid_to_healpix(grid, self.nside)
@@ -303,6 +311,11 @@ class SuperNovaRemnants:
         --------
         `self._simulate_template()` for more detailed description.
         """
+        # Filter the catalog first
+        self._filter_catalog()
+        # Assign a random rotation angle for each SNR
+        self._add_random_rotation()
+        #
         hpmap_f = np.zeros(hp.nside2npix(self.nside))
         for row in self.catalog.itertuples():
             hpidx, hpval = self._simulate_single(row, frequency)
@@ -332,16 +345,18 @@ class SuperNovaRemnants:
             hpmaps.append(hpmap_f)
             if self.save:
                 self.output(hpmap_f, f)
+        # Also save the catalog in use.
+        self._save_catalog_inuse()
         return hpmaps
 
-    def _make_filename(self, **kwargs):
+    def _make_filepath(self, **kwargs):
         """Make the path of output file according to the filename pattern
         and output directory loaded from configurations.
         """
         data = {
             "prefix": self.prefix,
         }
-        data.extend(kwargs)
+        data.update(kwargs)
         filename = self.filename_pattern.format(**data)
         filetype = self.configs.getn("output/filetype")
         if filetype == "fits":
