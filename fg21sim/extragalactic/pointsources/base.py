@@ -72,6 +72,8 @@ class BasePointSource:
         """
         # common
         self.nside = self.configs.getn("common/nside")
+        # frequencies
+        self.freq = self.configs.getn("frequency/frequencies")
         # save flag
         self.save = self.configs.getn("extragalactic/pointsources/save")
         # Output_dir
@@ -101,7 +103,7 @@ class BasePointSource:
 
         return ps_list
 
-    def save_as_csv(self):
+    def gen_catelog(self):
         """
         Generate num_ps of point sources and save them into a csv file.
         """
@@ -111,10 +113,12 @@ class BasePointSource:
             ps_table[x, :] = self.gen_single_ps()
 
         # Transform into Dataframe
-        ps_frame = pd.DataFrame(ps_table, columns=self.columns,
+        self.ps_catelog = pd.DataFrame(ps_table, columns=self.columns,
                              index=list(range(self.num_ps)))
 
-        # Save to csv
+
+    def save_as_csv(self):
+        """Save the catelog"""
         if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
 
@@ -124,6 +128,6 @@ class BasePointSource:
         # save to csv
         if self.save:
             file_name = os.path.join(self.output_dir, filename)
-            ps_frame.to_csv(filename)
+            self.ps_catelog.to_csv(filename)
 
-        return ps_frame, file_name
+        return file_name
