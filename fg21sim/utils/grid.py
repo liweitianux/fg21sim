@@ -147,7 +147,7 @@ def map_grid_to_healpix(grid, nside):
         The indexes of the effective HEALPix pixels that are mapped from
         the input coordinate grid.  The indexes are in RING ordering.
     values : 1D `~numpy.ndarray`
-        The values of each output HEALPix pixels with respect the above
+        The values of each output HEALPix pixel with respect the above
         indexes.
 
     NOTE

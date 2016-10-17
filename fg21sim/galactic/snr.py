@@ -16,6 +16,8 @@ import healpy as hp
 import pandas as pd
 
 from ..utils import write_fits_healpix
+from ..utils.convert import Fnu_to_Tb
+from ..utils.grid import make_grid_ellipse, map_grid_to_healpix
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +27,15 @@ class SuperNovaRemnants:
     """
     Simulate the Galactic supernova remnants emission.
 
-    ???
+    The simulation is based on the Galactic SNRs catalog maintained by
+    *D. A. Green* [GreenSNRDataWeb]_, which contains 294 SNRs (2014-May).
+    However, some SNRs have incomplete data which are excluded, while
+    some SNRs with uncertain properties are currently kept.
+
+    Every SNR is simulated as an *ellipse* of *uniform brightness* on
+    a local coordinate grid with relatively higher resolution compared
+    to the output HEALPix map, which is then mapped to the output HEALPix
+    map by down-sampling.
 
     Parameters
     ----------
@@ -102,8 +112,13 @@ class SuperNovaRemnants:
         if self.catalog_outfile is None:
             logger.warning("Catalog output file not set, so do NOT save.")
             return
-        # TODO/XXX
-        pass
+        # Save catalog data
+        colnames = ["name", "glon", "glat", "ra", "dec",
+                    "size_major", "size_minor", "flux",
+                    "specindex", "rotation"]
+        self.catalog.to_csv(self.catalog_outfile, columns=colnames,
+                            header=True, index=False)
+        logger.info("Save SNRs catalog in use to: %s" % self.catalog_outfile)
 
     def _filter_catalog(self):
         """Filter the catalog data to remove the objects with incomplete
@@ -128,8 +143,8 @@ class SuperNovaRemnants:
         n_delete_p = n_delete / n_total * 100
         n_remain = n_total - n_delete
         self.catalog = self.catalog[cond_keep]
-        # Reset index
-        self.catalog.reset_index(inplace=True)
+        # Drop the index
+        self.catalog.reset_index(drop=True, inplace=True)
         logger.info("SNRs catalog: filtered out " +
                     "{0:d} ({1:.1f}) objects".format(n_delete, n_delete_p))
         logger.info("SNRs catalog: remaining {0} objects".format(n_remain))
@@ -147,22 +162,26 @@ class SuperNovaRemnants:
         angles = np.random.uniform(low=0.0, high=360.0, size=num)
         rotation = pd.Series(data=angles, name="rotation")
         self.catalog["rotation"] = rotation
+        self.units["rotation"] = au.deg
         logger.info("Added random rotation angles as the 'rotation' column")
 
-    def _calc_Tb(self, flux, specindex, frequency):
+    def _calc_Tb(self, flux, specindex, frequency, size):
         """Calculate the brightness temperature at requested frequency
         by assuming a power-law spectral shape.
 
         Parameters
         ----------
         flux : float
-            The flux density (unit: [ Jy ]) at the reference frequency
-            (`self.catalog_flux_freq`).
+            The flux density (unit: `self.units["flux"]`) at the reference
+            frequency (i.e., `self.catalog_flux_freq`).
         specindex : float
             The spectral index of the power-law spectrum
         frequency : float
-            The frequency (unit: [ MHz ]) where the brightness temperature
-            requested.
+            The frequency (unit: `self.freq_unit`) where the brightness
+            temperature requested.
+        size : 2-float tuple
+            The (major, minor) axes of the SNR (unit: `self.units["size"]`).
+            The order of major and minor can be arbitrary.
 
         Returns
         -------
@@ -177,12 +196,143 @@ class SuperNovaRemnants:
         be calculated by extrapolating the spectrum, then convert the flux
         density to derive the brightness temperature.
         """
-        pass
+        freq = frequency * self.freq_unit
+        flux = flux * self.units["flux"]
+        Fnu = flux * (freq / self.catalog_flux_freq).value ** (-specindex)
+        omega = size[0]*self.units["size"] * size[1]*self.units["size"]
+        Tb = Fnu_to_Tb(Fnu, omega, freq)
+        return Tb.value
+
+    def _simulate_templates(self):
+        """Simulate the template (HEALPix) images for each SNR, and cache
+        these templates within the class.
+
+        The template images/maps have values of (or approximate) ones for
+        these effective pixels, excluding the pixels corresponding to the
+        edges of original rotated ellipse, which may have values of
+        significantly less than 1 due to the rotation.
+
+        Therefore, simulating the HEALPix map of one SNR at a requested
+        frequency is simply multiplying the cached template image by the
+        calculated brightness temperature (Tb) at that frequency.
+
+        Furthermore, the total HEALPix map of all SNRs are straightforward
+        additions of all the maps of each SNR.
+
+        Attributes
+        ----------
+        templates : dict
+            A dictionary containing the simulated templates for each SNR.
+            The dictionary keys are the names (`self.catalog["name"]`)
+            of the SNRs, and the values are `(hpidx, hpval)` tuples with
+            `hpidx` the indexes of effective HEALPix pixels (RING ordering)
+            and `hpval` the values of the corresponding pixels.
+            e.g.,
+            ``{ name1: (hpidx1, hpval1), name2: (hpidx2, hpval2), ... }``
+        """
+        templates = {}
+        resolution = self.resolution.to(au.deg).value
+        for row in self.catalog.itertuples():
+            name = row.name
+            logger.info("Simulate HEALPix template for SNR: {0}".format(name))
+            center = (row.glon, row.glat)
+            size = ((row.size_major * au.units["size"]).to(au.deg).value,
+                    (row.size_minor * au.units["size"]).to(au.deg).value)
+            rotation = row.rotation
+            grid = make_grid_ellipse(center, size, resolution, rotation)
+            hpidx, hpval = map_grid_to_healpix(grid, self.nside)
+            templates[name] = (hpidx, hpval)
+        logger.info("Done simulate {0} SNR templates".format(len(templates)))
+        self.templates = templates
+
+    def _simulate_single(self, data, frequency):
+        """Simulate one single SNR at the specified frequency.
+
+        Parameters
+        ----------
+        data : namedtuple
+            The data of the SNR to be simulated, given in a `namedtuple`
+            object, from which can get the required properties by
+            `data.key`.
+            e.g., elements of `self.catalog.itertuples()`
+        frequency : float
+            The simulation frequency (unit: `self.freq_unit`).
+
+        Returns
+        -------
+        hpidx : 1D `~numpy.ndarray`
+            The indexes (in RING ordering) of the effective HEALPix
+            pixels for the SNR.
+        hpval : 1D `~numpy.ndarray`
+            The values (i.e., brightness temperature) of each HEALPix
+            pixel with respect the above indexes.
+
+        See Also
+        --------
+        `self._simulate_template()` for more detailed description.
+        """
+        if not hasattr(self, "templates"):
+            self._simulate_templates()
+        #
+        name = data.name
+        hpidx, hpval = self.templates[name]
+        # Calculate the brightness temperature
+        flux = data.flux
+        specindex = data.specindex
+        size = (data.size_major, data.size_minor)
+        Tb = self._calc_Tb(flux, specindex, frequency, size)
+        # Multiply the brightness temperature to the template map
+        hpval = hpval * Tb
+        return (hpidx, hpval)
 
     def _simulate_frequency(self, frequency):
-        """Simulate the Galactic SNRs emission map at the specified frequency.
+        """Simulate the emission (HEALPix) map of all Galactic SNRs at
+        the specified frequency.
+
+        Parameters
+        ----------
+        frequency : float
+            The simulation frequency (unit: `self.freq_unit`).
+
+        Returns
+        -------
+        hpmap_f : 1D `~numpy.ndarray`
+            HEALPix map data in RING ordering
+
+        See Also
+        --------
+        `self._simulate_template()` for more detailed description.
         """
-        pass
+        hpmap_f = np.zeros(hp.nside2npix(self.nside))
+        for row in self.catalog.itertuples():
+            hpidx, hpval = self._simulate_single(row, frequency)
+            hpmap_f[hpidx] += hpval
+        return hpmap_f
+
+    def simulate(self, frequencies):
+        """Simulate the emission (HEALPix) maps of all Galactic SNRs for
+        every specified frequency.
+
+        Parameters
+        ----------
+        frequency : list[float]
+            List of frequencies (unit: `self.freq_unit`) where the
+            simulation performed.
+
+        Returns
+        -------
+        hpmaps : list[1D `~numpy.ndarray`]
+            List of HEALPix maps (in RING ordering) at each frequency.
+        """
+        hpmaps = []
+        for f in np.array(frequencies, ndmin=1):
+            logger.info("Simulating Galactic SNRs emission map "
+                        "at {0} ({1}) ...".format(f, self.freq_unit))
+            hpmap_f = self._simulate_frequency(f)
+            hpmaps.append(hpmap_f)
+            if self.save:
+                self.output(hpmap_f, f)
+        return hpmaps
 
     def _make_filename(self, **kwargs):
         """Make the path of output file according to the filename pattern
@@ -208,6 +358,7 @@ class SuperNovaRemnants:
         header = fits.Header()
         header["COMP"] = ("Galactic supernova remnants (SNRs)",
                           "Emission component")
+        header["UNIT"] = ("Kelvin", "Map unit")
         header["CREATOR"] = (__name__, "File creator")
         # TODO:
         history = []
@@ -241,15 +392,3 @@ class SuperNovaRemnants:
         write_fits_healpix(filepath, hpmap, header=header,
                            clobber=self.clobber)
         logger.info("Write simulated map to file: {0}".format(filepath))
-
-    def simulate(self, frequencies):
-        """Simulate the free-free map at the specified frequencies."""
-        hpmaps = []
-        for f in np.array(frequencies, ndmin=1):
-            logger.info("Simulating free-free map at {0} ({1}) ...".format(
-                f, self.freq_unit))
-            hpmap_f = self._simulate_frequency(f)
-            hpmaps.append(hpmap_f)
-            if self.save:
-                self.output(hpmap_f, f)
-        return hpmaps
