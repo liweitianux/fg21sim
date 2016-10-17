@@ -115,7 +115,7 @@ class SuperNovaRemnants:
             return
         # Create directory if necessary
         dirname = os.path.dirname(self.catalog_outfile)
-        if os.path.exists(dirname):
+        if not os.path.exists(dirname):
             os.mkdir(dirname)
             logger.info("Created directory: {0}".format(dirname))
         # Save catalog data
