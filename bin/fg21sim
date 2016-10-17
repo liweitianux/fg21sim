@@ -37,6 +37,9 @@ def main():
     args = parser.parse_args()
 
     configs.read_userconfig(args.config)
+    if os.environ.get("DEBUG_FG21SIM"):
+        print("DEBUG: Current configurations:", configs._config,
+              sep="\n", file=sys.stderr)
     validate_configs(configs)
 
     if args.quiet:
