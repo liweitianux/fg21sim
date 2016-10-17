@@ -12,6 +12,7 @@ Configuration manager.
 import os
 import sys
 import logging
+from logging import FileHandler, StreamHandler
 from functools import reduce
 import pkg_resources
 
@@ -265,8 +266,11 @@ class ConfigManager:
         giving ``format`` and ``datefmt`` for each handlers if necessary,
         and then adding the handlers to the "root" logger.
         """
-        from logging import FileHandler, StreamHandler
         conf = self.get("logging")
+        level = conf["level"]
+        if os.environ.get("DEBUG_FG21SIM"):
+            print("DEBUG: Force 'DEBUG' logging level", file=sys.stderr)
+            level = "DEBUG"
         # logging handlers
         handlers = []
         stream = conf["stream"]
@@ -278,7 +282,7 @@ class ConfigManager:
             handlers.append(FileHandler(logfile, mode=filemode))
         #
         logconf = {
-            "level": getattr(logging, conf["level"]),
+            "level": getattr(logging, level),
             "format": conf["format"],
             "datefmt": conf["datefmt"],
             "filemode": filemode,

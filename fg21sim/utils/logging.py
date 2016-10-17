@@ -5,6 +5,7 @@
 Logging utilities.
 """
 
+import os
 import sys
 import logging
 from logging import FileHandler, StreamHandler
@@ -56,6 +57,9 @@ def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
         # the handlers to the "root" logger.
         logging.basicConfig(**dict_config)
     #
+    if os.environ.get("DEBUG_FG21SIM"):
+        print("DEBUG: Force 'DEBUG' logging level", file=sys.stderr)
+        level = "DEBUG"
     if level is not None:
         level_int = getattr(logging, level.upper(), None)
         if not isinstance(level_int, int):
