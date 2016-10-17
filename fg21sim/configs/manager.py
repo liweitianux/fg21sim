@@ -49,8 +49,12 @@ class ConfigManager:
 
     Parameters
     ----------
-    configs: list[str], optional
-        List of user config files to be merged
+    userconfig: str, optional
+        Filename/path to the user configuration file.
+        If provided, the user configurations is also loaded, validated, and
+        merged into the configurations data.
+        The user configuration can also be later loaded by
+        ``self.read_userconfig()``.
 
     Attributes
     ----------
@@ -67,9 +71,10 @@ class ConfigManager:
           configs specifying the input templates or data files, therefore
           allow the use of relative path for those configs.
     """
-    def __init__(self, configs=None):
-        """Initialize with the bundled default configurations and
-        specifications.
+    def __init__(self, userconfig=None):
+        """Load the bundled default configurations and specifications.
+        If the ``userconfig`` provided, the user configurations is also
+        loaded, validated, and merged.
         """
         configspec = _get_configspec()
         self._configspec = ConfigObj(configspec, interpolation=False,
@@ -77,9 +82,8 @@ class ConfigManager:
         configs_default = ConfigObj(interpolation=False,
                                     configspec=self._configspec)
         self._config = self._validate(configs_default)
-        if configs:
-            for config in configs:
-                self.read_config(config)
+        if userconfig:
+            self.read_userconfig(userconfig)
 
     def read_config(self, config):
         """Read, validate and merge the input config.
@@ -106,7 +110,7 @@ class ConfigManager:
 
         Parameters
         ----------
-        userconfig : filename
+        userconfig : str
             Filename/path to the user configuration file.
 
         NOTE
@@ -181,6 +185,8 @@ class ConfigManager:
         - Stackoverflow: Checking a Dictionary using a dot notation string
           https://stackoverflow.com/q/12414821/4856091
         """
+        if len(sep) != 1:
+            raise ValueError("Invalid parameter 'sep': %s" % sep)
         if isinstance(key, str):
             key = key.split(sep)
         return reduce(dict.get, key, self._config)
