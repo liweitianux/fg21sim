@@ -33,12 +33,18 @@
 
 
 """
-Generic drawers (i.e., painters) that draw some commonly used shapes.
+Generic drawers (a.k.a. painters) that draw some commonly used shapes.
+
 
 DISCLAIMER
 ----------
 The following functions are taken from project [scikit-image]_, which are
-licensed under the *Modified BSD* license.
+licensed under the *Modified BSD* license:
+
+- ``_ellipse_in_shape()``
+- ``ellipse()``
+- ``circle()``
+
 
 Credits
 -------
