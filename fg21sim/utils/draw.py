@@ -37,7 +37,7 @@ Generic drawers (i.e., painters) that draw some commonly used shapes.
 
 DISCLAIMER
 ----------
-The following functions are taken from project [scikit-image], which are
+The following functions are taken from project [scikit-image]_, which are
 licensed under the *Modified BSD* license.
 
 Credits

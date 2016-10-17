@@ -24,9 +24,9 @@ class FreeFree:
     """
     Simulate the diffuse Galactic free-free emission.
 
-    The [Dickinson2003] method is followed to derive the free-free template.
-    The H\alpha survey map [Finkbeiner2003] is first corrected for dust
-    absorption using the infrared 100-\mu{}m dust map [Schlegel1998],
+    The [Dickinson2003]_ method is followed to derive the free-free template.
+    The H\alpha survey map [Finkbeiner2003]_ is first corrected for dust
+    absorption using the infrared 100-\mu{}m dust map [Schlegel1998]_,
     and then converted to free-free emission map (brightness temperature).
 
     Parameters
