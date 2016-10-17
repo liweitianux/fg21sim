@@ -1,0 +1,24 @@
+# General things to ignore
+*~
+*.swp
+*.un~
+*_bak
+# Emacs tmp files
+.#*
+
+venv/
+build/
+dist/
+
+# Python
+*.py[cod]
+**/__pycache__
+*.egg
+*.egg-info/
+
+# IPython
+**/.ipynb_checkpoints
+
+# C/C++
+*.o
+*.so
