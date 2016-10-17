@@ -24,7 +24,11 @@ lmax = integer(min=1, default=3071)
 # List of foreground components to be simulated:
 # + galactic/synchrotron:
 #       Diffuse Galactic synchrotron emission (unpolarized)
-components = force_list(default=list("galactic/synchrotron"))
+# + galactic/freefree:
+#       Diffuse Galactic free-free emission
+# + galactic/snr:
+#       Galactic supernova remnants emission
+components = force_list(default=list("galactic/synchrotron", "galactic/freefree", "galactic/snr"))
 
 
 # Frequencies specification of the simulation products
