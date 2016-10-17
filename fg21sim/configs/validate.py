@@ -103,12 +103,28 @@ def check_galactic_freefree(configs):
     return results
 
 
+def check_galactic_snr(configs):
+    """Check the "[galactic][snr]" section of the configurations."""
+    comp = "galactic/snr"
+    comp_enabled = configs.getn("common/components")
+    results = {}
+    if comp in comp_enabled:
+        # Only validate the configs if this component is enabled
+        results.update(
+            _check_existence(configs, comp+"/catalog")
+        )
+        if configs.getn(comp+"/save"):
+            results.update(_check_missing(configs, comp+"/output_dir"))
+    return results
+
+
 # Available checkers to validate the configurations
 _CHECKERS = [
     check_frequency,
     check_output,
     check_galactic_synchrotron,
     check_galactic_freefree,
+    check_galactic_snr,
 ]
 
 
