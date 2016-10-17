@@ -41,15 +41,35 @@ def _get_configspec():
 
 
 class ConfigManager:
-    """Manager the configurations"""
-    def __init__(self, configs=None):
-        """Initialize the ConfigManager object with default configurations.
-        If user configs are given, they are also validated and get merged.
+    """Manage the default configurations with specifications, as well as
+    the user configurations.
 
-        Parameters
-        ----------
-        configs: list (of config files)
-            (optional) list of user config files to be merged
+    Both the default configurations and user configurations are validated
+    against the bundled specifications.
+
+    Parameters
+    ----------
+    configs: list[str], optional
+        List of user config files to be merged
+
+    Attributes
+    ----------
+    _config : `~configobj.ConfigObj`
+        The current effective configurations.
+    _configspec : `~configobj.ConfigObj`
+        The configuration specifications bundled with this package.
+    userconfig : str
+        The filename and path to the user-provided configurations.
+        NOTE:
+        - This attribute only presents after loading the user configuration
+          by ``self.read_userconfig()``;
+        - This attribute is used to determine the absolute path of the
+          configs specifying the input templates or data files, therefore
+          allow the use of relative path for those configs.
+    """
+    def __init__(self, configs=None):
+        """Initialize with the bundled default configurations and
+        specifications.
         """
         configspec = _get_configspec()
         self._configspec = ConfigObj(configspec, interpolation=False,
@@ -66,7 +86,7 @@ class ConfigManager:
 
         Parameters
         ----------
-        config : str, list[str]
+        config : str, or list[str]
             Input config to be validated and merged.
             This parameter can be the filename of the config file, or a list
             contains the lines of the configs.
@@ -91,11 +111,11 @@ class ConfigManager:
 
         NOTE
         ----
-        The user configuration file can be loaded *only once*,
-        or *only one* user configuration file supported.
-        Since the *path* of the user configuration file is recorded,
-        and thus allow the use of *relative path* of some input files
-        (e.g., galactic/synchrotron/template) within the configurations.
+        The user configuration file can be loaded *only once*, i.e.,
+        *only one* user configuration file supported.
+        Since the *path* of the user configuration file is recorded, and
+        thus allow the use of *relative path* of some input files (e.g.,
+        "galactic/synchrotron/template") within the configurations.
         """
         if hasattr(self, "userconfig"):
             raise ConfigError('User configuration already loaded from "%s"' %
@@ -108,7 +128,7 @@ class ConfigManager:
         #
         self.read_config(config)
         self.userconfig = os.path.abspath(userconfig)
-        logger.info("Loaded user config: {0}".format(userconfig))
+        logger.info("Loaded user config: {0}".format(self.userconfig))
 
     def _validate(self, config):
         """Validate the config against the specification using a default
@@ -146,14 +166,15 @@ class ConfigManager:
 
         Parameters
         ----------
-        key : str / list[str]
+        key : str, or list[str]
             List of keys or a string separated by a specific character
-            (e.g., "/") to specify the item in the `self._config`, which
+            (e.g., "/") to specify the item in the ``self._config``, which
             is a nested dictionary.
-            e.g., `["section1", "key2"]`, `"section1/key2"`
-        sep : str (len=1)
+            e.g., ``["section1", "key2"]``, ``"section1/key2"``
+        sep : str (len=1), optional
             If the above "keys" is a string, then this parameter specify
             the character used to separate the multi-level keys.
+            This parameter should be a string of length 1 (i.e., a character).
 
         References
         ----------
@@ -178,8 +199,8 @@ class ConfigManager:
         -------
         path : str
             The absolute path (if user configuration loaded) or relative
-            path specified by the input key, or `None` if specified config
-            is `None`.
+            path specified by the input key, or ``None`` if specified
+            config is ``None``.
 
         Raises
         ------
@@ -234,8 +255,8 @@ class ConfigManager:
 
         NOTE
         ----
-        ``basicConfig()`` will automatically create a ``Formatter`` with
-        the giving ``format`` and ``datefmt`` for each handlers if necessary,
+        ``basicConfig()`` will automatically create a ``Formatter`` with the
+        giving ``format`` and ``datefmt`` for each handlers if necessary,
         and then adding the handlers to the "root" logger.
         """
         from logging import FileHandler, StreamHandler
