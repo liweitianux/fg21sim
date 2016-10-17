@@ -149,6 +149,20 @@ class Synchrotron:
                    (frequency / self.template_freq) ** self.indexmap)
         return hpmap_f
 
+    def simulate(self, frequencies):
+        """Simulate the synchrotron map at the specified frequencies."""
+        self._add_smallscales()
+        #
+        hpmaps = []
+        for f in np.array(frequencies, ndmin=1):
+            logger.info("Simulating synchrotron map at {0} ({1}) ...".format(
+                f, self.freq_unit))
+            hpmap_f = self._transform_frequency(f)
+            hpmaps.append(hpmap_f)
+            if self.save:
+                self.output(hpmap_f, f)
+        return hpmaps
+
     def _make_header(self):
         """Make the header with detail information (e.g., parameters and
         history) for the simulated products.
@@ -156,6 +170,7 @@ class Synchrotron:
         header = fits.Header()
         header["COMP"] = ("Galactic synchrotron (unpolarized)",
                           "Emission component")
+        header["UNIT"] = ("Kelvin", "Map unit")
         header["CREATOR"] = (__name__, "File creator")
         # TODO:
         history = []
@@ -192,17 +207,3 @@ class Synchrotron:
         write_fits_healpix(filepath, hpmap, header=header,
                            clobber=self.clobber)
         logger.info("Write simulated map to file: {0}".format(filepath))
-
-    def simulate(self, frequencies):
-        """Simulate the synchrotron map at the specified frequencies."""
-        self._add_smallscales()
-        #
-        hpmaps = []
-        for f in np.array(frequencies, ndmin=1):
-            logger.info("Simulating synchrotron map at {0} ({1}) ...".format(
-                f, self.freq_unit))
-            hpmap_f = self._transform_frequency(f)
-            hpmaps.append(hpmap_f)
-            if self.save:
-                self.output(hpmap_f, f)
-        return hpmaps

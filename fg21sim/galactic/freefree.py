@@ -198,6 +198,18 @@ class FreeFree:
         hpmap_f = self.halphamap * ratio_K_R
         return hpmap_f
 
+    def simulate(self, frequencies):
+        """Simulate the free-free map at the specified frequencies."""
+        hpmaps = []
+        for f in np.array(frequencies, ndmin=1):
+            logger.info("Simulating free-free map at {0} ({1}) ...".format(
+                f, self.freq_unit))
+            hpmap_f = self._simulate_frequency(f)
+            hpmaps.append(hpmap_f)
+            if self.save:
+                self.output(hpmap_f, f)
+        return hpmaps
+
     def _make_header(self):
         """Make the header with detail information (e.g., parameters and
         history) for the simulated products.
@@ -205,6 +217,7 @@ class FreeFree:
         header = fits.Header()
         header["COMP"] = ("Galactic free-free emission",
                           "Emission component")
+        header["UNIT"] = ("Kelvin", "Map unit")
         header["CREATOR"] = (__name__, "File creator")
         # TODO:
         history = []
@@ -241,15 +254,3 @@ class FreeFree:
         write_fits_healpix(filepath, hpmap, header=header,
                            clobber=self.clobber)
         logger.info("Write simulated map to file: {0}".format(filepath))
-
-    def simulate(self, frequencies):
-        """Simulate the free-free map at the specified frequencies."""
-        hpmaps = []
-        for f in np.array(frequencies, ndmin=1):
-            logger.info("Simulating free-free map at {0} ({1}) ...".format(
-                f, self.freq_unit))
-            hpmap_f = self._simulate_frequency(f)
-            hpmaps.append(hpmap_f)
-            if self.save:
-                self.output(hpmap_f, f)
-        return hpmaps
