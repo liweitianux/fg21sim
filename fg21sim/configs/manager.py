@@ -28,7 +28,10 @@ logger = logging.getLogger(__name__)
 def _get_configspec():
     """Found and read all the configuration specifications"""
     files = sorted(pkg_resources.resource_listdir(__name__, ""))
-    specfiles = filter(lambda fn: fn.endswith(".conf.spec"), files)
+    # NOTE:
+    # Explicit convert the filter results to a list, since the returned
+    # iterator can ONLY be used ONCE.
+    specfiles = list(filter(lambda fn: fn.endswith(".conf.spec"), files))
     if os.environ.get("DEBUG_FG21SIM"):
         print("DEBUG: Found config specifications: %s" % ", ".join(specfiles),
               file=sys.stderr)
