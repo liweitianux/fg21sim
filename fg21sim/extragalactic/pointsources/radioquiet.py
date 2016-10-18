@@ -65,9 +65,9 @@ class RadioQuiet(BasePointSource):
         # Gen flux list
         ps_flux_list = self.calc_flux(freq)
         # Angle to pix
-        theta = self.ps_catelog['Theta (deg)'] / 180 * np.pi
-        phi = self.ps_catelog['Phi (deg)'] / 180 * np.pi
-        pix = hp.ang2pix(self.nside, theta, phi)
+        lat = (self.ps_catelog['Lat (deg)'] + 90) / 180 * np.pi
+        lon = self.ps_catelog['Lon (deg)'] / 180 * np.pi
+        pix = hp.ang2pix(self.nside, lat, lon)
         # Gen hpmap
         hpmap[pix] += ps_flux_list
 
