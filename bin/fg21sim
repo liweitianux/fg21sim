@@ -13,13 +13,9 @@ import sys
 import argparse
 import logging
 
-import numpy as np
-
+from fg21sim import Foregrounds
 from fg21sim.configs import configs, validate_configs
 from fg21sim.utils import setup_logging
-from fg21sim.galactic import Synchrotron as GalacticSynchrotron
-from fg21sim.galactic import FreeFree as GalacticFreeFree
-from fg21sim.galactic import SuperNovaRemnants as GalacticSNR
 
 
 def main():
@@ -55,45 +51,10 @@ def main():
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
-    frequencies = np.array(configs.frequencies, ndmin=1)
-    freq_unit = configs.getn("frequency/unit")
-    logger.info("Simulation frequencies: "
-                "{min:.2f} - {max:.2f} {unit} (#{num:d})".format(
-                    min=frequencies.min(), max=frequencies.max(),
-                    num=len(frequencies), unit=freq_unit))
-
-    # XXX/TODO: move the supported components and id's to a module/file
-    fg_components = configs.getn("common/components")
-    logger.info("Enabled simulation components: {0}".format(
-        ", ".join(fg_components)))
-    fg_maps = {}
-
-    # Galactic synchrotron
-    id_gsync = "galactic/synchrotron"
-    if id_gsync in fg_components:
-        logger.info("Simulating the Galactic synchrotron foreground ...")
-        gsynchrotron = GalacticSynchrotron(configs)
-        hpmap_gsync = gsynchrotron.simulate(frequencies)
-        logger.info("Done simulate Galactic synchrotron foreground!")
-        fg_maps[id_gsync] = hpmap_gsync
-
-    # Galactic free-free
-    id_gfree = "galactic/freefree"
-    if id_gfree in fg_components:
-        logger.info("Simulating the Galactic free-free foreground ...")
-        gfreefree = GalacticFreeFree(configs)
-        hpmap_gfree = gfreefree.simulate(frequencies)
-        logger.info("Done simulate Galactic free-free foreground!")
-        fg_maps[id_gfree] = hpmap_gfree
-
-    # Galactic supernova remnants
-    id_gsnr = "galactic/snr"
-    if id_gsnr in fg_components:
-        logger.info("Simulating the Galactic supernova remnants emission ...")
-        gsnr = GalacticSNR(configs)
-        hpmap_gsnr = gsnr.simulate(frequencies)
-        logger.info("Done simulate Galactic supernova remnants foreground!")
-        fg_maps[id_gsnr] = hpmap_gsnr
+    fg = Foregrounds(configs)
+    fg.preprocess()
+    fg.simulate()
+    fg.postprocess()
 
 
 if __name__ == "__main__":
