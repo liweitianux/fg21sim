@@ -70,7 +70,7 @@ class FreeFree:
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes."""
         comp = "galactic/freefree"
-        self.halphamap_path = self.configs.get_path(comp+"halphamap")
+        self.halphamap_path = self.configs.get_path(comp+"/halphamap")
         self.halphamap_unit = au.Unit(
             self.configs.getn(comp+"/halphamap_unit"))
         self.dustmap_path = self.configs.get_path(comp+"/dustmap")

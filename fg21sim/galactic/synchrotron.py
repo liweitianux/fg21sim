@@ -48,7 +48,7 @@ class Synchrotron:
 
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes."""
-        comp = "galactic/freefree"
+        comp = "galactic/synchrotron"
         self.template_path = self.configs.get_path(comp+"/template")
         self.template_freq = self.configs.getn(comp+"/template_freq")
         self.template_unit = au.Unit(
