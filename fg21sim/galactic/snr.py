@@ -59,10 +59,12 @@ class SuperNovaRemnants:
        A Catalogue of Galactic Supernova Remnants
        http://www.mrao.cam.ac.uk/surveys/snrs/
     """
+    # Component name
+    name = "Galactic supernova remnants"
+
     def __init__(self, configs):
         self.configs = configs
         self._set_configs()
-        self._load_catalog()
 
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes."""
@@ -145,9 +147,6 @@ class SuperNovaRemnants:
         ----
         The objects with uncertain data are currently kept.
         """
-        if hasattr(self, "catalog_filtered") and self.catalog_filtered:
-            return
-        #
         cond1 = pd.isnull(self.catalog["size_major"])
         cond2 = pd.isnull(self.catalog["size_minor"])
         cond3 = pd.isnull(self.catalog["flux"])
@@ -167,16 +166,13 @@ class SuperNovaRemnants:
 
     def _add_random_rotation(self):
         """Add random rotation angles for each SNR as column "rotation"
-        within the `catalog` data frame.
+        within the catalog data frame.
 
         The rotation angles are uniformly distributed within [0, 360).
 
         The rotation happens on the spherical surface, i.e., not with respect
         to the line of sight, but to the Galactic frame coordinate axes.
         """
-        if "rotation" in self.catalog.columns:
-            return
-        #
         num = len(self.catalog)
         angles = np.random.uniform(low=0.0, high=360.0, size=num)
         rotation = pd.Series(data=angles, name="rotation")
@@ -270,9 +266,9 @@ class SuperNovaRemnants:
         Parameters
         ----------
         data : namedtuple
-            The data of the SNR to be simulated, given in a `namedtuple`
+            The data of the SNR to be simulated, given in a ``namedtuple``
             object, from which can get the required properties by
-            `data.key`.
+            ``data.key``.
             e.g., elements of `self.catalog.itertuples()`
         frequency : float
             The simulation frequency (unit: `self.freq_unit`).
@@ -290,9 +286,6 @@ class SuperNovaRemnants:
         --------
         `self._simulate_template()` for more detailed description.
         """
-        if not hasattr(self, "templates"):
-            self._simulate_templates()
-        #
         name = data.name
         hpidx, hpval = self.templates[name]
         # Calculate the brightness temperature
@@ -300,65 +293,8 @@ class SuperNovaRemnants:
         specindex = data.specindex
         size = (data.size_major, data.size_minor)
         Tb = self._calc_Tb(flux, specindex, frequency, size)
-        # Multiply the brightness temperature to the template map
         hpval = hpval * Tb
         return (hpidx, hpval)
-
-    def _simulate_frequency(self, frequency):
-        """Simulate the emission (HEALPix) map of all Galactic SNRs at
-        the specified frequency.
-
-        Parameters
-        ----------
-        frequency : float
-            The simulation frequency (unit: `self.freq_unit`).
-
-        Returns
-        -------
-        hpmap_f : 1D `~numpy.ndarray`
-            HEALPix map data in RING ordering
-
-        See Also
-        --------
-        `self._simulate_template()` for more detailed description.
-        """
-        # Filter the catalog first
-        self._filter_catalog()
-        # Assign a random rotation angle for each SNR
-        self._add_random_rotation()
-        #
-        hpmap_f = np.zeros(hp.nside2npix(self.nside))
-        for row in self.catalog.itertuples():
-            hpidx, hpval = self._simulate_single(row, frequency)
-            hpmap_f[hpidx] += hpval
-        return hpmap_f
-
-    def simulate(self, frequencies):
-        """Simulate the emission (HEALPix) maps of all Galactic SNRs for
-        every specified frequency.
-
-        Parameters
-        ----------
-        frequency : list[float]
-            List of frequencies (unit: `self.freq_unit`) where the
-            simulation performed.
-
-        Returns
-        -------
-        hpmaps : list[1D `~numpy.ndarray`]
-            List of HEALPix maps (in RING ordering) at each frequency.
-        """
-        hpmaps = []
-        for f in np.array(frequencies, ndmin=1):
-            logger.info("Simulating Galactic SNRs emission map "
-                        "at {0} ({1}) ...".format(f, self.freq_unit))
-            hpmap_f = self._simulate_frequency(f)
-            hpmaps.append(hpmap_f)
-            if self.save:
-                self.output(hpmap_f, f)
-        # Also save the catalog in use.
-        self._save_catalog_inuse()
-        return hpmaps
 
     def _make_filepath(self, **kwargs):
         """Make the path of output file according to the filename pattern
@@ -418,3 +354,83 @@ class SuperNovaRemnants:
         write_fits_healpix(filepath, hpmap, header=header,
                            clobber=self.clobber)
         logger.info("Write simulated map to file: {0}".format(filepath))
+
+    def preprocess(self):
+        """Perform the preparation procedures for the final simulations.
+
+        Attributes
+        ----------
+        _preprocessed : bool
+            This attribute presents and is ``True`` after the preparation
+            procedures are performed, which indicates that it is ready to
+            do the final simulations.
+        """
+        if hasattr(self, "_preprocessed") and self._preprocessed:
+            return
+        #
+        logger.info("{name}: preprocessing ...".format(name=self.name))
+        self._load_catalog()
+        self._filter_catalog()
+        self._add_random_rotation()
+        # Simulate the template maps for each SNR
+        self._simulate_templates()
+        #
+        self._preprocessed = True
+
+    def simulate_frequency(self, frequency):
+        """Simulate the emission (HEALPix) map of all Galactic SNRs at
+        the specified frequency.
+
+        Parameters
+        ----------
+        frequency : float
+            The simulation frequency (unit: `self.freq_unit`).
+
+        Returns
+        -------
+        hpmap_f : 1D `~numpy.ndarray`
+            HEALPix map data in RING ordering
+
+        See Also
+        --------
+        `self._simulate_template()` for more detailed description.
+        """
+        self.preprocess()
+        #
+        logger.info("Simulating {name} map at {freq} ({unit}) ...".format(
+            name=self.name, freq=frequency, unit=self.freq_unit))
+        hpmap_f = np.zeros(hp.nside2npix(self.nside))
+        for row in self.catalog.itertuples():
+            hpidx, hpval = self._simulate_single(row, frequency)
+            hpmap_f[hpidx] += hpval
+        #
+        if self.save:
+            self.output(hpmap_f, frequency)
+        return hpmap_f
+
+    def simulate(self, frequencies):
+        """Simulate the emission (HEALPix) maps of all Galactic SNRs for
+        every specified frequency.
+
+        Parameters
+        ----------
+        frequency : list[float]
+            List of frequencies (unit: `self.freq_unit`) where the
+            simulation performed.
+
+        Returns
+        -------
+        hpmaps : list[1D `~numpy.ndarray`]
+            List of HEALPix maps (in RING ordering) at each frequency.
+        """
+        hpmaps = []
+        for f in np.array(frequencies, ndmin=1):
+            hpmap_f = self.simulate_frequency(f)
+            hpmaps.append(hpmap_f)
+        return hpmaps
+
+    def postprocess(self):
+        """Perform the post-simulation operations before the end."""
+        logger.info("{name}: postprocessing ...".format(name=self.name))
+        # Save the catalog actually used in the simulation
+        self._save_catalog_inuse()
