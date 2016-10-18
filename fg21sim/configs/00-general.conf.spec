@@ -9,11 +9,9 @@
 
 # Common/general configurations for the simulation
 [common]
-# HEALPix N_side value, i.e., pixel resolution
+# HEALPix Nside value, i.e., pixel resolution
 # NOTE: also update "lmax" below.
 nside = integer(min=1, default=1024)
-# HEALPix ordering scheme
-ordering = option("RING", "NESTED", default="RING")
 
 # Range of multipole monents (l) of the angular power spectrum.
 # The power spectrum will be cut off to a constant for multipole l < lmin.
