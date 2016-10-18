@@ -60,31 +60,29 @@ class FreeFree:
        1998, ApJ, 500, 525,
        http://adsabs.harvard.edu/abs/1998ApJ...500..525S
     """
+    # Component name
+    name = "Galactic free-free"
+
     def __init__(self, configs):
         self.configs = configs
         self._set_configs()
-        self._load_halphamap()
-        self._load_dustmap()
 
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes."""
-        self.halphamap_path = self.configs.get_path(
-            "galactic/freefree/halphamap")
+        comp = "galactic/freefree"
+        self.halphamap_path = self.configs.get_path(comp+"halphamap")
         self.halphamap_unit = au.Unit(
-            self.configs.getn("galactic/freefree/halphamap_unit"))
-        self.dustmap_path = self.configs.get_path(
-            "galactic/freefree/dustmap")
+            self.configs.getn(comp+"/halphamap_unit"))
+        self.dustmap_path = self.configs.get_path(comp+"/dustmap")
         self.dustmap_unit = au.Unit(
-            self.configs.getn("galactic/freefree/dustmap_unit"))
-        # output
-        self.prefix = self.configs.getn("galactic/freefree/prefix")
-        self.save = self.configs.getn("galactic/freefree/save")
-        self.output_dir = self.configs.get_path(
-            "galactic/freefree/output_dir")
+            self.configs.getn(comp+"/dustmap_unit"))
+        self.prefix = self.configs.getn(comp+"/prefix")
+        self.save = self.configs.getn(comp+"/save")
+        self.output_dir = self.configs.get_path(comp+"/output_dir")
+        #
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.use_float = self.configs.getn("output/use_float")
         self.clobber = self.configs.getn("output/clobber")
-        #
         self.nside = self.configs.getn("common/nside")
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
         #
@@ -134,7 +132,7 @@ class FreeFree:
 
         References: [Dickinson2003]: Eq.(1, 3); Sec.(2.5)
         """
-        if hasattr(self, "dust_corrected") and self.dust_corrected:
+        if hasattr(self, "_dust_corrected") and self._dust_corrected:
             return
         #
         logger.info("Correct H[alpha] map for dust absorption")
@@ -161,7 +159,7 @@ class FreeFree:
         #
         halphamap_corr = self.halphamap * 10**(self.dustmap * 0.0185 * f_dust)
         self.halphamap = halphamap_corr
-        self.dust_corrected = True
+        self._dust_corrected = True
         logger.info("Done dust absorption correction")
 
     def _calc_ratio_a(self, Te, nu_GHz):
@@ -176,39 +174,22 @@ class FreeFree:
         a = term1 * term2
         return a
 
-    def _simulate_frequency(self, frequency):
-        """Simulate the free-free map at the specified frequency.
-
-        References: [Dickinson2003], Eq.(11)
-
-        NOTE: [Dickinson2003], Eq.(11) may wrongly have the "10^3" term.
+    def _make_filepath(self, **kwargs):
+        """Make the path of output file according to the filename pattern
+        and output directory loaded from configurations.
         """
-        # Correct for dust absorption first
-        self._correct_dust_absorption()
-        # Assumed electron temperature [ K ]
-        Te = 7000.0
-        T4 = Te / 1e4
-        nu = frequency * self.freq_unit.to(au.GHz)  # frequency [ GHz ]
-        ratio_a = self._calc_ratio_a(Te, nu)
-        # NOTE: ignored the "10^3" term in the referred equation
-        ratio_mK_R = (8.396 * ratio_a * nu**(-2.1) *
-                      T4**0.667 * 10**(0.029/T4) * (1+0.08))
-        # Use "Kelvin" as the brightness temperature unit
-        ratio_K_R = ratio_mK_R * au.mK.to(au.K)
-        hpmap_f = self.halphamap * ratio_K_R
-        return hpmap_f
-
-    def simulate(self, frequencies):
-        """Simulate the free-free map at the specified frequencies."""
-        hpmaps = []
-        for f in np.array(frequencies, ndmin=1):
-            logger.info("Simulating free-free map at {0} ({1}) ...".format(
-                f, self.freq_unit))
-            hpmap_f = self._simulate_frequency(f)
-            hpmaps.append(hpmap_f)
-            if self.save:
-                self.output(hpmap_f, f)
-        return hpmaps
+        data = {
+            "prefix": self.prefix,
+        }
+        data.update(kwargs)
+        filename = self.filename_pattern.format(**data)
+        filetype = self.configs.getn("output/filetype")
+        if filetype == "fits":
+            filename += ".fits"
+        else:
+            raise NotImplementedError("unsupported filetype: %s" % filetype)
+        filepath = os.path.join(self.output_dir, filename)
+        return filepath
 
     def _make_header(self):
         """Make the header with detail information (e.g., parameters and
@@ -237,10 +218,7 @@ class FreeFree:
             os.mkdir(self.output_dir)
             logger.info("Created output dir: {0}".format(self.output_dir))
         #
-        filename = self.filename_pattern.format(prefix=self.prefix,
-                                                frequency=frequency)
-        filename += ".fits"
-        filepath = os.path.join(self.output_dir, filename)
+        filepath = self._make_filepath(frequency=frequency)
         if not hasattr(self, "header"):
             self._make_header()
         header = self.header.copy()
@@ -254,3 +232,63 @@ class FreeFree:
         write_fits_healpix(filepath, hpmap, header=header,
                            clobber=self.clobber)
         logger.info("Write simulated map to file: {0}".format(filepath))
+
+    def preprocess(self):
+        """Perform the preparation procedures for the final simulations.
+
+        Attributes
+        ----------
+        _preprocessed : bool
+            This attribute presents and is ``True`` after the preparation
+            procedures are performed, which indicates that it is ready to
+            do the final simulations.
+        """
+        if hasattr(self, "_preprocessed") and self._preprocessed:
+            return
+        #
+        logger.info("{name}: preprocessing ...".format(name=self.name))
+        self._load_halphamap()
+        self._load_dustmap()
+        # Correct for dust absorption
+        self._correct_dust_absorption()
+        #
+        self._preprocessed = True
+
+    def simulate_frequency(self, frequency):
+        """Simulate the free-free map at the specified frequency.
+
+        References: [Dickinson2003], Eq.(11)
+
+        NOTE: [Dickinson2003], Eq.(11) may wrongly have the "10^3" term.
+        """
+        self.preprocess()
+        #
+        logger.info("Simulating {name} map at {freq} ({unit}) ...".format(
+            name=self.name, freq=frequency, unit=self.freq_unit))
+        # Assumed electron temperature [ K ]
+        Te = 7000.0
+        T4 = Te / 1e4
+        nu = frequency * self.freq_unit.to(au.GHz)  # frequency [ GHz ]
+        ratio_a = self._calc_ratio_a(Te, nu)
+        # NOTE: ignored the "10^3" term in the referred equation
+        ratio_mK_R = (8.396 * ratio_a * nu**(-2.1) *
+                      T4**0.667 * 10**(0.029/T4) * (1+0.08))
+        # Use "Kelvin" as the brightness temperature unit
+        ratio_K_R = ratio_mK_R * au.mK.to(au.K)
+        hpmap_f = self.halphamap * ratio_K_R
+        #
+        if self.save:
+            self.output(hpmap_f, frequency)
+        return hpmap_f
+
+    def simulate(self, frequencies):
+        """Simulate the free-free map at every specified frequency."""
+        hpmaps = []
+        for f in np.array(frequencies, ndmin=1):
+            hpmap_f = self.simulate_frequency(f)
+            hpmaps.append(hpmap_f)
+        return hpmaps
+
+    def postprocess(self):
+        """Perform the post-simulation operations before the end."""
+        pass
