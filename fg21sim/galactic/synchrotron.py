@@ -39,37 +39,32 @@ class Synchrotron:
     ----------
     ???
     """
+    # Component name
+    name = "Galactic free-free"
+
     def __init__(self, configs):
         self.configs = configs
         self._set_configs()
-        self._load_template()
-        self._load_indexmap()
 
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes."""
-        self.template_path = self.configs.get_path(
-            "galactic/synchrotron/template")
-        self.template_freq = self.configs.getn(
-            "galactic/synchrotron/template_freq")
+        comp = "galactic/freefree"
+        self.template_path = self.configs.get_path(comp+"/template")
+        self.template_freq = self.configs.getn(comp+"/template_freq")
         self.template_unit = au.Unit(
-            self.configs.getn("galactic/synchrotron/template_unit"))
-        self.indexmap_path = self.configs.get_path(
-            "galactic/synchrotron/indexmap")
-        self.smallscales = self.configs.getn(
-            "galactic/synchrotron/add_smallscales")
+            self.configs.getn(comp+"/template_unit"))
+        self.indexmap_path = self.configs.get_path(comp+"/indexmap")
+        self.smallscales = self.configs.getn(comp+"/add_smallscales")
+        self.prefix = self.configs.getn(comp+"/prefix")
+        self.save = self.configs.getn(comp+"/save")
+        self.output_dir = self.configs.get_path(comp+"/output_dir")
         # output
-        self.prefix = self.configs.getn("galactic/synchrotron/prefix")
-        self.save = self.configs.getn("galactic/synchrotron/save")
-        self.output_dir = self.configs.get_path(
-            "galactic/synchrotron/output_dir")
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.use_float = self.configs.getn("output/use_float")
         self.clobber = self.configs.getn("output/clobber")
-        # common
         self.nside = self.configs.getn("common/nside")
         self.lmin = self.configs.getn("common/lmin")
         self.lmax = self.configs.getn("common/lmax")
-        # unit of the frequency
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
         #
         logger.info("Loaded and setup configurations")
@@ -141,27 +136,22 @@ class Synchrotron:
         self.template += self.hpmap_smallscales
         logger.info("Added small-scale fluctuations")
 
-    def _transform_frequency(self, frequency):
-        """Transform the template map to the requested frequency,
-        according to the spectral model and using an spectral index map.
+    def _make_filepath(self, **kwargs):
+        """Make the path of output file according to the filename pattern
+        and output directory loaded from configurations.
         """
-        hpmap_f = (self.template *
-                   (frequency / self.template_freq) ** self.indexmap)
-        return hpmap_f
-
-    def simulate(self, frequencies):
-        """Simulate the synchrotron map at the specified frequencies."""
-        self._add_smallscales()
-        #
-        hpmaps = []
-        for f in np.array(frequencies, ndmin=1):
-            logger.info("Simulating synchrotron map at {0} ({1}) ...".format(
-                f, self.freq_unit))
-            hpmap_f = self._transform_frequency(f)
-            hpmaps.append(hpmap_f)
-            if self.save:
-                self.output(hpmap_f, f)
-        return hpmaps
+        data = {
+            "prefix": self.prefix,
+        }
+        data.update(kwargs)
+        filename = self.filename_pattern.format(**data)
+        filetype = self.configs.getn("output/filetype")
+        if filetype == "fits":
+            filename += ".fits"
+        else:
+            raise NotImplementedError("unsupported filetype: %s" % filetype)
+        filepath = os.path.join(self.output_dir, filename)
+        return filepath
 
     def _make_header(self):
         """Make the header with detail information (e.g., parameters and
@@ -190,10 +180,7 @@ class Synchrotron:
             os.mkdir(self.output_dir)
             logger.info("Created output dir: {0}".format(self.output_dir))
         #
-        filename = self.filename_pattern.format(prefix=self.prefix,
-                                                frequency=frequency)
-        filename += ".fits"
-        filepath = os.path.join(self.output_dir, filename)
+        filepath = self._make_filepath(frequency=frequency)
         if not hasattr(self, "header"):
             self._make_header()
         header = self.header.copy()
@@ -207,3 +194,50 @@ class Synchrotron:
         write_fits_healpix(filepath, hpmap, header=header,
                            clobber=self.clobber)
         logger.info("Write simulated map to file: {0}".format(filepath))
+
+    def preprocess(self):
+        """Perform the preparation procedures for the final simulations.
+
+        Attributes
+        ----------
+        _preprocessed : bool
+            This attribute presents and is ``True`` after the preparation
+            procedures are performed, which indicates that it is ready to
+            do the final simulations.
+        """
+        if hasattr(self, "_preprocessed") and self._preprocessed:
+            return
+        #
+        logger.info("{name}: preprocessing ...".format(name=self.name))
+        self._load_template()
+        self._load_indexmap()
+        self._add_smallscales()
+        #
+        self._preprocessed = True
+
+    def simulate_frequency(self, frequency):
+        """Transform the template map to the requested frequency,
+        according to the spectral model and using an spectral index map.
+        """
+        self.preprocess()
+        #
+        logger.info("Simulating {name} map at {freq} ({unit}) ...".format(
+            name=self.name, freq=frequency, unit=self.freq_unit))
+        hpmap_f = (self.template *
+                   (frequency / self.template_freq) ** self.indexmap)
+        #
+        if self.save:
+            self.output(hpmap_f, frequency)
+        return hpmap_f
+
+    def simulate(self, frequencies):
+        """Simulate the synchrotron map at the specified frequencies."""
+        hpmaps = []
+        for f in np.array(frequencies, ndmin=1):
+            hpmap_f = self.simulate_frequency(f)
+            hpmaps.append(hpmap_f)
+        return hpmaps
+
+    def postprocess(self):
+        """Perform the post-simulation operations before the end."""
+        pass
