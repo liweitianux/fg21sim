@@ -48,9 +48,9 @@ class BasePointSource:
     dA: au.Mpc;
         Angular diameter distance, which is calculated according to the cosmology
         constants. In this work, it is calculated by module basic_params
-    theta: au.rad;
+    lat: au.deg;
         The colatitude angle in the spherical coordinate system
-    phi: au.rad;
+    lon: au.deg;
         The longtitude angle in the spherical coordinate system
     area: au.sr;
         Area of the point sources, sr = rad^2
@@ -61,8 +61,8 @@ class BasePointSource:
         # configures
         self.configs = configs
         # PS_list information
-        self.columns = ['z', 'dA (Mpc)', 'Theta (deg)',
-                        'Phi (deg)', 'Area (sr)']
+        self.columns = ['z', 'dA (Mpc)', 'Lat (deg)',
+                        'Lon (deg)', 'Area (sr)']
         self.nCols = len(self.columns)
         self._get_base_configs()
 
@@ -92,14 +92,14 @@ class BasePointSource:
         self.dA = self.param.dA
         # Position
         x = np.random.uniform(0,1)
-        self.theta = np.arccos(x)/np.pi * 180 * au.deg
-        self.phi = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
+        self.lat = (np.arccos(2*x-1)/np.pi * 180 - 90) * au.deg
+        self.lon = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
         # Area
         npix = hp.nside2npix(self.nside)
         self.area = 4*np.pi/npix * au.sr
 
-        ps_list = [self.z, self.dA.value, self.theta.value,
-                   self.phi.value, self.area.value]
+        ps_list = [self.z, self.dA.value, self.lat.value,
+                   self.lon.value, self.area.value]
 
         return ps_list
 
@@ -128,6 +128,6 @@ class BasePointSource:
         # save to csv
         if self.save:
             file_name = os.path.join(self.output_dir, filename)
-            self.ps_catelog.to_csv(filename)
+            self.ps_catelog.to_csv(file_name)
 
         return file_name
