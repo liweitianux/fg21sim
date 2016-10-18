@@ -8,7 +8,7 @@ import astropy.units as au
 from .psparams import PixelParams
 from .base import BasePointSource
 from .flux import Flux
-
+from fg21sim.utils import grid
 
 class StarBursting(BasePointSource):
 
@@ -52,11 +52,11 @@ class StarBursting(BasePointSource):
         self.area = np.pi * self.radius**2 #[sr]
         # Position
         x = np.random.uniform(0,1)
-        self.theta = np.arccos(x)/np.pi * 180 * au.deg
-        self.phi = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
+        self.lat = np.arccos(x)/np.pi * 180 * au.deg
+        self.lon = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
 
-        ps_list = [self.z, self.dA.value, self.theta.value,
-                   self.phi.value, self.area.value, self.radius.value]
+        ps_list = [self.z, self.dA.value, self.lat.value,
+                   self.lon.value, self.area.value, self.radius.value]
 
         return ps_list
 
@@ -95,8 +95,6 @@ class StarBursting(BasePointSource):
             number of sub pixel in a cell of the healpix structure
         self.ps_catelog: pandas.core.frame.DataFrame
             Data of the point sources
-        ps_type: int
-            Class type of the point soruces
         freq: float
             frequency
         """
@@ -107,33 +105,19 @@ class StarBursting(BasePointSource):
         ps_flux_list = self.calc_flux(freq)
         #  Iteratively draw the ps
         num_ps = self.ps_catelog.shape[0]
+        resolution = 1
         for i in range(num_ps):
             # grid
-            ps_radius = self.ps_catelog['radius (rad)'][i]  # radius[rad]
-            theta = self.ps_catelog['Theta (deg)'][i] * au.deg   # theta
-            phi = self.ps_catelog['Phi (deg)'][i] * au.deg  # phi
+            ps_radius = self.ps_catelog['radius (rad)'][i] * au.rad  
+            ps_radius = ps_radius.to(au.deg).value # radius[rad]
+            c_lat = self.ps_catelog['Lat (deg)'][i] # core_lat [au.deg]
+            c_lon = self.ps_catelog['Lon (deg)'][i] # core_lon [au.deg]
             # Fill with circle
-            step = ps_radius / 10  # Should be fixed
-            # x and y are the differencial rad to the core point at the theta and
-            # phi directions.
-            x = np.arange(-ps_radius, ps_radius + step, step) * au.rad
-            y = np.arange(- ps_radius,  ps_radius + step, step) * au.rad
-            for p in range(len(x)):
-                for q in range(len(y)):
-                    if np.sqrt(x[p].value**2 + y[q].value**2) <= ps_radius:
-                        x_ang = (x[p].to(au.deg) + theta).value / 180 * np.pi
-                        y_ang = (y[q].to(au.deg) + phi).value / 180 * np.pi
-                        if x_ang > np.pi:
-                            x_ang -= np.pi
-                        elif x_ang < 0:
-                            x_ang += np.pi
-                        if y_ang > 2 * np.pi:
-                            y_ang -= 2 * np.pi
-                        elif y_ang < 0:
-                            y_ang += 2 * np.pi
-                        pix_tmp = hp.ang2pix(
-                            self.nside, x_ang, y_ang)
-                        hpmap[pix_tmp] += ps_flux_list[i]
+            lon,lat,gridmap = grid.make_grid_ellipse(
+                (c_lon,c_lat),(2*ps_radius,2*ps_radius),resolution)
+            indices,values = grid.map_grid_to_healpix(
+                (lon,lat,gridmap),self.nside)
+            hpmap[indices] += ps_flux_list[i]
 
         return hpmap
 
