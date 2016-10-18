@@ -125,8 +125,9 @@ class Foregrounds:
         history) for the simulated products.
         """
         header = fits.Header()
-        header["COMP"] = (", ".join(self.components_id),
-                          "Emission components")
+        header["COMP"] = ("Combined foreground",
+                          "Emission component")
+        header.add_comment("COMPONENTS: " + ", ".join(self.components_id))
         header["UNIT"] = ("Kelvin", "Map unit")
         header["CREATOR"] = (__name__, "File creator")
         # TODO:
