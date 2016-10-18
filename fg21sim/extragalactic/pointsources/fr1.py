@@ -8,6 +8,8 @@ import astropy.units as au
 from .psparams import PixelParams
 from .base import BasePointSource
 from .flux import Flux
+from fg21sim.utils import grid
+
 
 class FRI(BasePointSource):
     """
@@ -25,10 +27,13 @@ class FRI(BasePointSource):
     Reference
     ----------
     [1] Wang J et al.,
-    "How to Identify and Separate Bright Galaxy Clusters from the
-    Low-frequency Radio Sky?",
-    2010, ApJ, 723, 620-633.
-    http://adsabs.harvard.edu/abs/2010ApJ...723..620W
+        "How to Identify and Separate Bright Galaxy Clusters from the
+        Low-frequency Radio Sky?",
+        2010, ApJ, 723, 620-633.
+        http://adsabs.harvard.edu/abs/2010ApJ...723..620W
+    [2] Fast cirles drawing
+        https://github.com/liweitianux/fg21sim/fg21sim/utils/draw.py
+        https://github.com/liweitianux/fg21sim/fg21sim/utils/grid.py
     """
 
     def __init__(self,configs):
@@ -73,8 +78,8 @@ class FRI(BasePointSource):
 
         # Position
         x = np.random.uniform(0,1)
-        self.theta = np.arccos(x)/np.pi * 180 * au.deg
-        self.phi = np.random.uniform(0,np.pi*2)/ np.pi * 180 * au.deg
+        self.lat = (np.arccos(2*x-1)/np.pi * 180 - 90) * au.deg
+        self.lon = np.random.uniform(0,np.pi*2)/ np.pi * 180 * au.deg
 
         # lobe
         lobe = self.gen_lobe()
@@ -82,8 +87,8 @@ class FRI(BasePointSource):
         # Area
         self.area = np.pi * self.lobe_maj * self.lobe_min
 
-        ps_list = [self.z, self.dA.value, self.theta.value,
-                   self.phi.value, self.area.value]
+        ps_list = [self.z, self.dA.value, self.lat.value,
+                   self.lon.value, self.area.value]
 
         ps_list.extend(lobe)
 
@@ -129,6 +134,7 @@ class FRI(BasePointSource):
             frequency
         """
         # Init
+        resolution = 1 # [degree]
         npix = hp.nside2npix(self.nside)
         hpmap = np.zeros((npix,))
         num_ps = self.ps_catelog.shape[0]
@@ -138,103 +144,46 @@ class FRI(BasePointSource):
         # Iteratively draw ps
         for i in range(num_ps):
             # Parameters
-            theta = self.ps_catelog['Theta (deg)'][i] * au.deg
-            phi = self.ps_catelog['Phi (deg)'][i] * au.deg
-            lobe_maj = self.ps_catelog['lobe_maj (rad)'][i]
-            lobe_min = self.ps_catelog['lobe_min (rad)'][i]
+            c_lat = self.ps_catelog['Lat (deg)'][i] # core lat [au.deg]
+            c_lon = self.ps_catelog['Lon (deg)'][i] # core lon [au.deg]
+            lobe_maj = self.ps_catelog['lobe_maj (rad)'][i] * au.rad
+            lobe_min = self.ps_catelog['lobe_min (rad)'][i] * au.rad
             lobe_ang = self.ps_catelog['lobe_ang (deg)'][i] / 180 * np.pi
 
             # Lobe1
-            lobe1_theta = lobe_maj * np.cos(lobe_ang) * au.rad
-            lobe1_theta = theta + lobe1_theta.to(au.deg)
-            lobe1_phi = lobe_maj * np.sin(lobe_ang) * au.rad
-            lobe1_phi = phi + lobe1_phi.to(au.deg)
-            # Focuses
-            lobe_c = np.sqrt(lobe_maj**2 - lobe_min**2)  # focus distance
-            F1_core_x = lobe_c
-            F1_core_y = 0
-            F2_core_x = -lobe_c
-            F2_core_y = 0
+            lobe1_lat = (lobe_maj/2).to(au.deg) * np.cos(lobe_ang)
+            lobe1_lat = c_lat + lobe1_lat.value
+            lobe1_lon = (lobe_min/2).to(au.deg) * np.sin(lobe_ang)
+            lobe1_lon = c_lon + lobe1_lon.value
             # draw
-            step = lobe_maj / 10
-            x = np.arange(-lobe_maj, lobe_maj + step, step)
-            y = np.arange(-lobe_min, lobe_min + step, step)
-            # Ellipse
-            for p in range(len(x)):
-                for q in range(len(y)):
-                    DistFocus1 = np.sqrt(
-                        (x[p] - F1_core_x)**2 + (y[q] - F1_core_y)**2)
-                    DistFocus2 = np.sqrt(
-                        (x[p] - F2_core_x)**2 + (y[q] - F2_core_y)**2)
-                    if (DistFocus1 + DistFocus2 <= 2 * lobe_maj):
-                        # rotation
-                        x_ang = (x[p] * au.rad).to(au.deg)
-                        y_ang = (y[q] * au.rad).to(au.deg)
-                        x_r = ((x_ang * np.cos(lobe_ang) -
-                               y_ang * np.sin(lobe_ang) +
-                               lobe1_theta).value / 180 * np.pi)
-                        y_r = ((x_ang * np.sin(lobe_ang) +
-                               y_ang * np.cos(lobe_ang) +
-                               lobe1_phi).value / 180 * np.pi)
-                        # Judge and Fill
-                        if x_r > np.pi:
-                            x_r -= np.pi
-                        elif x_r < 0:
-                            x_r += np.pi
-                        if y_r > 2 * np.pi:
-                            y_r -= 2 * np.pi
-                        elif y_r < 0:
-                            y_r += 2 * np.pi
-                        pix_tmp = hp.ang2pix(
-                            self.nside, x_r, y_r )
-                        hpmap[pix_tmp] += ps_lobe[i]
+            # Fill with circle
+            lon,lat,gridmap = grid.make_grid_ellipse(
+                (lobe1_lon,lobe1_lat),
+                (lobe_maj.to(au.deg).value,lobe_min.to(au.deg).value),
+                resolution,lobe_ang/np.pi*180)
+            indices,values = grid.map_grid_to_healpix(
+                (lon,lat,gridmap),self.nside)
+            hpmap[indices] += ps_lobe[i]
 
             # Lobe2
-            lobe2_theta = lobe_maj * np.cos(lobe_ang + np.pi) * au.rad
-            lobe2_theta = theta + lobe2_theta.to(au.deg)
-            lobe2_phi = lobe_maj * np.sin(lobe_ang + np.pi) * au.rad
-            lobe2_phi = phi + lobe2_phi.to(au.deg)
-            # Focuses
-            lobe_c = np.sqrt(lobe_maj**2 - lobe_min**2)  # focus distance
-            F1_core_x = lobe_c
-            F1_core_y = 0
-            F2_core_x = -lobe_c
-            F2_core_y = 0
+            lobe2_lat = (lobe_maj/2).to(au.deg) * np.cos(lobe_ang+np.pi)
+            lobe2_lat = c_lat + lobe2_lat.value
+            lobe2_lon = (lobe_min/2).to(au.deg) * np.sin(lobe_ang+np.pi)
+            lobe2_lon = c_lon + lobe2_lon.value
             # draw
-            step = lobe_maj / 10
-            x = np.arange(-lobe_maj, lobe_maj + step, step)
-            y = np.arange(-lobe_min, lobe_min + step, step)
-            # Ellipse
-            for p in range(len(x)):
-                for q in range(len(y)):
-                    DistFocus1 = np.sqrt(
-                        (x[p] - F1_core_x)**2 + (y[q] - F1_core_y)**2)
-                    DistFocus2 = np.sqrt(
-                        (x[p] - F2_core_x)**2 + (y[q] - F2_core_y)**2)
-                    if (DistFocus1 + DistFocus2 <= 2 * lobe_maj):
-                        # rotation
-                        x_ang = (x[p] * au.rad).to(au.deg)
-                        y_ang = (y[q] * au.rad).to(au.deg)
-                        x_r = ((x_ang * np.cos(lobe_ang + np.pi) -
-                               y_ang * np.sin(lobe_ang + np.pi) +
-                               lobe2_theta).value / 180 * np.pi)
-                        y_r = ((x_ang * np.sin(lobe_ang + np.pi) +
-                               y_ang * np.cos(lobe_ang + np.pi) +
-                               lobe2_phi).value / 180 * np.pi)
-                        # Judge and Fill
-                        if x_r > np.pi:
-                            x_r -= np.pi
-                        elif x_r < 0:
-                            x_r += np.pi
-                        if y_r > 2 * np.pi:
-                            y_r -= 2 * np.pi
-                        elif y_r < 0:
-                            y_r += 2 * np.pi
-                        pix_tmp = hp.ang2pix(self.nside, x_r,y_r)
-                        hpmap[pix_tmp] += ps_lobe[i]
+            # Fill with circle
+            lon,lat,gridmap = grid.make_grid_ellipse(
+                (lobe2_lon,lobe2_lat),
+                (lobe_maj.to(au.deg).value,lobe_min.to(au.deg).value),
+                resolution,lobe_ang/np.pi*180)
+            indices,values = grid.map_grid_to_healpix(
+                (lon,lat,gridmap),self.nside)
+            hpmap[indices] += ps_lobe[i]
+
             # Core
-            pix_tmp = hp.ang2pix(self.nside, self.ps_catelog['Theta (deg)'] / 180 *
-                                 np.pi, self.ps_catelog['Phi (deg)'] / 180 * np.pi)
+            pix_tmp = hp.ang2pix(self.nside, (self.ps_catelog['Lat (deg)']+90)
+                                /180*np.pi, self.ps_catelog['Lon (deg)']
+                                /180*np.pi)
             ps_core = ps_flux_list[:, 0]
             hpmap[pix_tmp] += ps_core
 
