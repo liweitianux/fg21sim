@@ -2,7 +2,7 @@
 # MIT license
 
 """
-Interface to the simulations of various supported foreground components.
+Interface o the simulations of various supported foreground components.
 
 Currently supported foregrounds:
 
@@ -24,7 +24,7 @@ import healpy as hp
 from .galactic import (Synchrotron as GalacticSynchrotron,
                        FreeFree as GalacticFreeFree,
                        SuperNovaRemnants as GalacticSNR)
-from ..utils import write_fits_healpix
+from .utils import write_fits_healpix
 
 
 logger = logging.getLogger(__name__)
@@ -97,9 +97,10 @@ class Foregrounds:
         #
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.use_float = self.configs.getn("output/use_float")
+        self.clobber = self.configs.getn("output/clobber")
         self.combine = self.configs.getn("output/combine")
         self.prefix = self.configs.getn("output/combine_prefix")
-        self.clobber = self.configs.getn("output/clobber")
+        self.output_dir = self.configs.get_path("output/output_dir")
         self.nside = self.configs.getn("common/nside")
 
     def _make_filepath(self, **kwargs):
@@ -159,7 +160,7 @@ class Foregrounds:
             hpmap = hpmap.astype(np.float32)
         write_fits_healpix(filepath, hpmap, header=header,
                            clobber=self.clobber)
-        logger.info("Write simulated map to file: {0}".format(filepath))
+        logger.info("Write combined foreground to file: {0}".format(filepath))
 
     def preprocess(self):
         """Perform the preparation procedures for the final simulations."""
