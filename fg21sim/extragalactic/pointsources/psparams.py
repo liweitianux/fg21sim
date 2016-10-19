@@ -52,29 +52,27 @@ class PixelParams():
     # angular resolution
     ang_res = 0.0 * au.rad
 
-    def __init__(self, z = 0.0):
+    def __init__(self, z=0.0):
         self.z = z
         self.cosmo = FlatLambdaCDM(H0=self.H0, Om0=self.Om0)
 
         # angular diameter distance, [Mpc]
         self.dA = self.cosmo.angular_diameter_distance(self.z)
 
-    def get_angle(self, scale = 1.0*au.Mpc):
+    def get_angle(self, scale=1.0 * au.Mpc):
         """
         Input real object scale, and output the respect observed
         angle, and pixels.
         """
-        ang = scale / self.dA # [rac]
-        # ang_pix = ang /self.ang_res # [pix]
+        ang = scale / self.dA  # [rac]
 
         return ang
 
-    def get_scale(self, ang = 1.0 * au.rad):
+    def get_scale(self, ang=1.0 * au.rad):
         """
         Input real observed scale, and output the respect
         real object scale, and pixels.
         """
-        scale = ang * self.dA #[Mpc]
-        #scale_pix = ang / self.ang_res
+        scale = ang * self.dA  # [Mpc]
 
         return scale
