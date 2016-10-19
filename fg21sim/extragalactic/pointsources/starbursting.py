@@ -108,7 +108,7 @@ class StarBursting(BasePointSource):
         resolution = 1
         for i in range(num_ps):
             # grid
-            ps_radius = self.ps_catelog['radius (rad)'][i] * au.rad  
+            ps_radius = self.ps_catelog['radius (rad)'][i] * au.rad
             ps_radius = ps_radius.to(au.deg).value # radius[rad]
             c_lat = self.ps_catelog['Lat (deg)'][i] # core_lat [au.deg]
             c_lon = self.ps_catelog['Lon (deg)'][i] # core_lon [au.deg]
@@ -121,13 +121,13 @@ class StarBursting(BasePointSource):
 
         return hpmap
 
-    def draw_ps(self):
+    def draw_ps(self, freq):
         """
         Read csv ps list file, and generate the healpix structure vector
         with the respect frequency.
         """
         # Init
-        num_freq = len(self.freq)
+        num_freq = len(freq)
         npix = hp.nside2npix(self.nside)
         hpmaps = np.zeros((npix,num_freq))
 
@@ -135,6 +135,6 @@ class StarBursting(BasePointSource):
         self.gen_catelog()
         # get hpmaps
         for i in range(num_freq):
-            hpmaps[:, i] = self.draw_single_ps(self.freq[i])
+            hpmaps[:, i] = self.draw_single_ps(freq[i])
 
         return hpmaps
