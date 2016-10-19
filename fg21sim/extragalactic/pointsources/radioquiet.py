@@ -73,13 +73,13 @@ class RadioQuiet(BasePointSource):
 
         return hpmap
 
-    def draw_ps(self):
+    def draw_ps(self, freq):
         """
         Read csv ps list file, and generate the healpix structure vector
         with the respect frequency.
         """
         # Init
-        num_freq = len(self.freq)
+        num_freq = len(freq)
         npix = hp.nside2npix(self.nside)
         hpmaps = np.zeros((npix,num_freq))
 
@@ -87,6 +87,6 @@ class RadioQuiet(BasePointSource):
         self.gen_catelog()
         # get hpmaps
         for i in range(num_freq):
-            hpmaps[:, i] = self.draw_single_ps(self.freq[i])
+            hpmaps[:, i] = self.draw_single_ps(freq[i])
 
         return hpmaps
