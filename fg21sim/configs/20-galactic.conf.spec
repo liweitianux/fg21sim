@@ -10,6 +10,8 @@
 
     # Extragalactic point sources
     [[pointsources]]
+    # PS components to be simulated
+    pscomponents=string_list(default=list())
     # Number of each type of point source
     # Star forming
     num_sf = integer(default=100)
