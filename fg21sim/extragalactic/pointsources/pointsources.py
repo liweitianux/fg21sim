@@ -7,6 +7,8 @@ Extragalactic point sources (ps) simulation
 
 import logging
 import numpy as np
+import healpy as hp
+from collections import OrderedDict
 
 from .starforming import StarForming
 from .starbursting import StarBursting
@@ -20,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class PointSources:
     """
-    This class namely pointsource is designed to generate PS catelogs,
+    This class namely pointsource is designed to generate PS catalogs,
     read csv format PS lists, calculate the flux and surface brightness
     of the sources at different frequencies, and then ouput hpmaps
 
@@ -32,52 +34,63 @@ class PointSources:
 
     Functions
     ---------
-    get_ps
-        Generate the ps catelogs for each type.
-
+    preprocessing
+        Generate the ps catalogs for each type.
+        simulate_frequency
+            Simualte point sources at provivded frequency
     simulate
-        Simulate and project pss to the healpix map.
+        Simulate and project PSs to the healpix map.
+        postprocessing
+            Save catalogs
     """
+    PSCOMPONENTS_ALL = OrderedDict([
+        ("starforming", StarForming),
+        ("starbursting", StarBursting),
+        ("radioquiet", RadioQuiet),
+        ("FRI", FRI),
+        ("FRII", FRII),
+    ])
 
     def __init__(self, configs):
         self.configs = configs
-        self._get_configs()
+        self._set_configs()
+        self.pscomps = OrderedDict()
+        for comp in self.pscomps_id:
+            logger.info("Initlalize PS component: {0}".format(comp))
+            comp_type = self.PSCOMPONENTS_ALL[comp]
+            self.pscomps[comp] = comp_type(configs)
+        logger.info("Done initlalize %d PS components!" %
+                    len(self.pscomps))
 
-    def _get_configs(self):
+    def _set_configs(self):
         """Load configs and set the attributes"""
+        # Prefix of simulated point sources
+        self.pscomps_id = self.configs.getn("extragalactic/pscomponents")
+        if self.pscomps_id is None:
+            self.pscomps_id = ['starforming', 'starbursting', 'radioquiet',
+                               'FRI', 'FRII']
+        print(self.pscomps_id)
         # nside of the healpix cell
         self.nside = self.configs.getn("common/nside")
         # save flag
         self.save = self.configs.getn("extragalactic/pointsources/save")
 
     def preprocess(self):
-        """Preprocess and generate the catelogs"""
-        logger.info("Generating PS catelogs...")
-        # Init
-        self.sf = StarForming(self.configs)
-        self.sb = StarBursting(self.configs)
-        self.rq = RadioQuiet(self.configs)
-        self.fr1 = FRI(self.configs)
-        self.fr2 = FRII(self.configs)
+        """Preprocess and generate the catalogs"""
+        logger.info("Generating PS catalogs...")
+        # Gen ps_catalog
+        for pscomp_obj in self.pscomps.values():
+            pscomp_obj.gen_catalog()
+        logger.info("Generating PS catalogs done!")
 
-        # Gen ps_catelog
-        self.sf.gen_catelog()
-        self.sb.gen_catelog()
-        self.rq.gen_catelog()
-        self.fr1.gen_catelog()
-        self.fr2.gen_catelog()
-        logger.info("Generating PS catelogs done!")
-
-
-    def simulate_frequency(self,freq):
+    def simulate_frequency(self, freq):
         """Simulate the point sources and output hpmaps"""
+        npix = hp.nside2npix(self.nside)
+        hpmap_f = np.zeros((npix,))
         # Projecting
         logger.info("Generating PS hpmaps...")
-        hpmap_f = (self.sf.draw_single_ps(freq) +
-                  self.sb.draw_single_ps(freq) +
-                  self.rq.draw_single_ps(freq) +
-                  self.fr1.draw_single_ps(freq) +
-                  self.fr2.draw_single_ps(freq))
+        for pscomp_obj in self.pscomps.values():
+            hpmap_f += pscomp_obj.draw_single_ps(freq)
         logger.info("Generating PS hpmaps done!")
 
         return hpmap_f
@@ -105,11 +118,9 @@ class PointSources:
 
     def postprocess(self):
         """Perform the post-simulation operations before the end."""
-        logger.info("Saving simulated catelogs...")
         # Save the catalog actually used in the simulation
         if self.save:
-            self.sf.save_as_csv()
-            self.sb.save_as_csv()
-            self.rq.save_as_csv()
-            self.fr1.save_as_csv()
-            self.fr2.save_as_csv()
+            logger.info("Saving simulated catalogs...")
+            for pscomp_obj in self.pscomps.values():
+                pscomp_obj.save_as_csv()
+            logger.info("Saving simulated catalogs done!")
