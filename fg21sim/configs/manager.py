@@ -244,13 +244,19 @@ class ConfigManager:
 
     @property
     def frequencies(self):
-        """Get (calculate if necessary) )the frequencies at which to
-        carry out the simulations.
+        """Get or calculate if ``frequency/type = custom`` the frequencies
+        where to perform the simulations.
+
+        Returns
+        -------
+        frequencies : list[float]
+            List of frequencies where the simulations are requested.
         """
         if self.getn("frequency/type") == "custom":
+            # The value is validated to be a float list
             frequencies = self.getn("frequency/frequencies")
         else:
-            # calculate the frequency values
+            # Calculate the frequency values
             start = self.getn("frequency/start")
             stop = self.getn("frequency/stop")
             step = self.getn("frequency/step")
