@@ -37,6 +37,7 @@ import astropy.units as au
 
 from .psparams import PixelParams
 
+
 class BasePointSource:
     """
     The basic class of point sources
@@ -46,8 +47,9 @@ class BasePointSource:
     z: float;
         Redshift, z ~ U(0,20)
     dA: au.Mpc;
-        Angular diameter distance, which is calculated according to the cosmology
-        constants. In this work, it is calculated by module basic_params
+        Angular diameter distance, which is calculated according to the
+        cosmology constants. In this work, it is calculated by module
+        basic_params
     lat: au.deg;
         The colatitude angle in the spherical coordinate system
     lon: au.deg;
@@ -56,17 +58,18 @@ class BasePointSource:
         Area of the point sources, sr = rad^2
 
     """
-    #Init
-    def __init__(self,configs):
+    # Init
+
+    def __init__(self, configs):
         # configures
         self.configs = configs
         # PS_list information
         self.columns = ['z', 'dA (Mpc)', 'Lat (deg)',
                         'Lon (deg)', 'Area (sr)']
         self.nCols = len(self.columns)
-        self._get_base_configs()
+        self._set_configs()
 
-    def _get_base_configs(self):
+    def _set_configs(self):
         """
         Load the configs and set the corresponding class attributes.
         """
@@ -75,9 +78,8 @@ class BasePointSource:
         # save flag
         self.save = self.configs.getn("extragalactic/pointsources/save")
         # Output_dir
-        self.output_dir = self.configs.getn(
-                            "extragalactic/pointsources/output_dir")
-
+        self.output_dir = self.configs.get_path(
+            "extragalactic/pointsources/output_dir")
 
     def gen_single_ps(self):
         """
@@ -89,19 +91,19 @@ class BasePointSource:
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
         # Position
-        x = np.random.uniform(0,1)
-        self.lat = (np.arccos(2*x-1)/np.pi * 180 - 90) * au.deg
-        self.lon = np.random.uniform(0,np.pi*2)/np.pi * 180 * au.deg
+        x = np.random.uniform(0, 1)
+        self.lat = (np.arccos(2 * x - 1) / np.pi * 180 - 90) * au.deg
+        self.lon = np.random.uniform(0, np.pi * 2) / np.pi * 180 * au.deg
         # Area
         npix = hp.nside2npix(self.nside)
-        self.area = 4*np.pi/npix * au.sr
+        self.area = 4 * np.pi / npix * au.sr
 
         ps_list = [self.z, self.dA.value, self.lat.value,
                    self.lon.value, self.area.value]
 
         return ps_list
 
-    def gen_catelog(self):
+    def gen_catalog(self):
         """
         Generate num_ps of point sources and save them into a csv file.
         """
@@ -111,21 +113,20 @@ class BasePointSource:
             ps_table[x, :] = self.gen_single_ps()
 
         # Transform into Dataframe
-        self.ps_catelog = pd.DataFrame(ps_table, columns=self.columns,
-                             index=list(range(self.num_ps)))
-
+        self.ps_catalog = pd.DataFrame(ps_table, columns=self.columns,
+                                       index=list(range(self.num_ps)))
 
     def save_as_csv(self):
-        """Save the catelog"""
+        """Save the catalog"""
         if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
 
         pattern = "{prefix}.csv"
-        filename = pattern.format(prefix = self.prefix)
+        filename = pattern.format(prefix=self.prefix)
 
         # save to csv
         if self.save:
             file_name = os.path.join(self.output_dir, filename)
-            self.ps_catelog.to_csv(file_name)
+            self.ps_catalog.to_csv(file_name)
 
         return file_name
