@@ -47,8 +47,6 @@ class PointSources:
         """Load configs and set the attributes"""
         # nside of the healpix cell
         self.nside = self.configs.getn("common/nside")
-        # frequencies
-        self.freq = self.configs.getn("frequency/frequencies")
         # save flag
         self.save = self.configs.getn("extragalactic/pointsources/save")
 
@@ -69,7 +67,7 @@ class PointSources:
         self.fr1.gen_catelog()
         self.fr2.gen_catelog()
         logger.info("Generating PS catelogs done!")
-        
+
 
     def simulate_frequency(self,freq):
         """Simulate the point sources and output hpmaps"""
