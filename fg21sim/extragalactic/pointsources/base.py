@@ -72,19 +72,6 @@ class BasePointSource:
         """
         # common
         self.nside = self.configs.getn("common/nside")
-        # frequencies
-        self.frequnit = self.configs.getn("frequency/units")
-        freqtype = self.configs.getn('frequency/type')
-        if freqtype == 'custom':
-            self.freq = self.configs.getn("frequency/frequencies")
-        else:
-            freqstart = self.configs.getn('frequency/start')
-            freqstop = self.configs.getn('frequency/stop')
-            freqstep = self.configs.getn('frequency/step')
-            self.freq = np.array(freqstart,freqstop+freqstep,freqstep)
-        # Change unit to MHz
-        if self.frequnit == 'GHz':
-             self.frequencies = np.array(self.frequencies) * 1000
         # save flag
         self.save = self.configs.getn("extragalactic/pointsources/save")
         # Output_dir
