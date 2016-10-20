@@ -76,6 +76,7 @@ setup(
         "bin/hpx2healpix",
         "bin/zea2healpix",
         "bin/fg21sim-download-snr-data",
+        "bin/fg21sim-download-cluster-data",
     ],
     install_requires=[
         "numpy",
