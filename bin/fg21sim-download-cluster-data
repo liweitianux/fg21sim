@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+#
+# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# MIT license
+
+"""
+Retrieve the galaxy cluster catalog simulated by the *Hubble Volume Project*:
+
+    http://wwwmpa.mpa-garching.mpg.de/galform/virgo/hubble/
+
+The data used by this package is the *cluster catalog* of the *deep wedge*
+assuming the *ΛCMD* lightcone geometry,
+and can be downloaded from:
+
+    http://www.mpa-garching.mpg.de/galform/virgo/hubble/lcdm.DW.tar.gz
+
+The catalog data is downloaded, extracted, transformed, and finally saved
+to a CSV file.
+"""
+
+
+import os
+import sys
+import re
+import argparse
+import logging
+import csv
+import urllib.request
+import tarfile
+
+from fg21sim.configs import configs
+from fg21sim.utils import setup_logging
+
+
+# URL to the simulated galaxy cluster catalog data
+DATA_URL = "http://www.mpa-garching.mpg.de/galform/virgo/hubble/lcdm.DW.tar.gz"
+
+
+def main():
+    outfile_default = "HVP_LCDM_DeepWedge_Catalog.csv"
+
+    parser = argparse.ArgumentParser(
+        description="Retrieve Simulated galaxy cluster catalog data")
+    parser.add_argument("outfile", nargs="?", default=outfile_default,
+                        help="output CSV file to save the catalog data " +
+                        "(default: %s)" % outfile_default)
+    parser.add_argument("-U", "--url", default=DATA_URL,
+                        help="URL to Green's SNRs catalog summary page " +
+                        "or a local HTML file (default: %s)" % DATA_URL)
+    parser.add_argument("-C", "--clobber", action="store_true",
+                        help="overwrite the existing output file")
+    parser.add_argument("-l", "--log", dest="loglevel", default=None,
+                        choices=["DEBUG", "INFO", "WARNING",
+                                 "ERROR", "CRITICAL"],
+                        help="set the log level")
+    parser.add_argument("-L", "--logfile", default=None,
+                        help="filename where to save the log messages")
+    parser.add_argument("-Q", "--quiet", action="store_true",
+                        help="be quiet so do not log messages to screen")
+    args = parser.parse_args()
+
+    if args.quiet:
+        log_stream = ""
+    else:
+        log_stream = None
+
+    tool = os.path.basename(sys.argv[0])
+
+    setup_logging(dict_config=configs.logging,
+                  level=args.loglevel,
+                  stream=log_stream,
+                  logfile=args.logfile)
+    logger = logging.getLogger(tool)
+    logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
+    if os.path.exists(args.outfile) and (not args.clobber):
+        raise IOError("output file already exists: %s" % args.outfile)
+
+    basename = os.path.splitext(args.outfile)[0]
+    fn_catalog = basename + ".tar.gz"
+    fn_catalogtxt = basename + ".txt"
+
+    logger.info("Downloading the catalog data from: {0}".format(args.url))
+    urllib.request.urlretrieve(args.url, fn_catalog)
+    logger.info("Done download the catalog as file: {0}".format(fn_catalog))
+
+    logger.info("Extract the catalog data from the downloaded archive ...")
+    tf = tarfile.open(fn_catalog)
+    members = tf.getmembers()
+    if len(members) != 1:
+        raise ValueError("Catalog should contain only 1 file, but got %d" %
+                         len(members))
+    m0 = members[0]
+    tf.extract(m0)
+    tf.close()
+    os.rename(m0.name, fn_catalogtxt)
+    logger.info("Done extract catalog data to file: %s" % fn_catalogtxt)
+
+    # Data column names
+    header = ["m", "redshift", "sigma", "ip", "x", "y", "z", "vx", "vy", "vz"]
+    with open(args.outfile, "w") as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(header)
+        i = 0
+        for line in open(fn_catalogtxt):
+            if re.match(r"^\s*#|^\s*$", line):
+                # Ignore comment and blank line
+                continue
+            values = line.split()
+            if len(header) != len(values):
+                raise ValueError("Invalid line: '{0}'".format(line))
+            values = [
+                int(values[0]),       # m: number of particles
+                float(values[1]),     # redshift
+                float(values[2]),     # sigma: measured 1D velocity dispersion
+                int(values[3]),       # ip: parent flag
+                float(values[4]),     # x: cluster X location in 0-1 units
+                float(values[5]),     # y: cluster Y location in 0-1 units
+                float(values[6]),     # z: cluster Z location in 0-1 units
+                float(values[7]),     # vx: physical peculiar velocity [km/s]
+                float(values[8]),     # vy: physical peculiar velocity [km/s]
+                float(values[9]),     # vz: physical peculiar velocity [km/s]
+            ]
+            i += 1
+            csvwriter.writerow(values)
+    logger.info("Catalog data contains %d clusters" % i)
+    logger.info("Cluster catalog data write to: %s" % args.outfile)
+
+
+if __name__ == "__main__":
+    main()
