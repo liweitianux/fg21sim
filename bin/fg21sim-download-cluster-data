@@ -16,6 +16,43 @@ and can be downloaded from:
 
 The catalog data is downloaded, extracted, transformed, and finally saved
 to a CSV file.
+
+
+Catalog Description
+-------------------
+The Hubble Volume Project is a joint effort of the Virgo Consortium and
+Collaborators in U.S., Canada, U.K., and Germany.  To study the formation
+of clusters of galaxies, filaments and void-structures, a significant
+fraction of the entire observable Universe is modeled and simulated by
+employing one billion (1e9) mass particles. [Evard2002]_
+
+The ΛCDM cosmological model, one of the two models adopted by the Project,
+has the following parameters:
+
+    Ω_m = 0.3, Ω_Λ = 0.7, h = 0.7, σ_8 = 0.9
+    Cube side length: 3000 h^-1 Mpc
+    Main slice: 3000 x 3000 x 30 h^-3 Mpc^3
+    P^3M: z_init = 35, s = 100 h^-1 kpc
+    1000^3 particles, 1024^3 mesh
+    M_particle = 2.25e12 h^-1 M_⊙
+
+The retrieved catalog of the galaxy clusters is derived from a *spherical
+overdensity* method applied to the *deep wedge* light-cone particle data,
+with overdensity threshold Δ=200.  The deep wedge lightcone covers
+10x10 deg^2, with a maximum LoS distance of 5100 h^-1 Mpc, and a redshift
+coverage limit of 4.37.  The coordinates used in the catalog are mapped
+to 0-1 unit, and as for the deep wedge catalog, the origin is at (0, 0, 0),
+and is directed toward (1, 1, 1).
+
+
+References
+----------
+.. [Evard2002]
+   Evard, A. E. et al.,
+   "Galaxy Clusters in Hubble Volume Simulations: Cosmological Constraints
+   from Sky Survey Populations",
+   2002, ApJ, 573, 7-36,
+   http://adsabs.harvard.edu/abs/2002ApJ...573....7E
 """
 
 
