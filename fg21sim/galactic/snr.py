@@ -27,8 +27,9 @@ class SuperNovaRemnants:
     """
     Simulate the Galactic supernova remnants emission.
 
-    The simulation is based on the Galactic SNRs catalog maintained by
-    *D. A. Green* [GreenSNRDataWeb]_, which contains 294 SNRs (2014-May).
+    The simulation follows the method adopted by [Jelic2008]_, which is
+    based on the Galactic SNRs catalog maintained by *D. A. Green*
+    [Green2014]_ and [GreenSNRDataWeb]_, which contains 294 SNRs (2014-May).
     However, some SNRs have incomplete data which are excluded, while
     some SNRs with uncertain properties are currently kept.
 
@@ -39,9 +40,9 @@ class SuperNovaRemnants:
 
     Parameters
     ----------
-    configs : ConfigManager object
-        An `ConfigManager` object contains default and user configurations.
-        For more details, see the example config specification.
+    configs : `ConfigManager`
+        A `ConfigManager` instance containing default and user configurations.
+        For more details, see the example configuration specifications.
 
     Attributes
     ----------
@@ -49,6 +50,12 @@ class SuperNovaRemnants:
 
     References
     ----------
+    .. [Jelic2008]
+       Jelić, V. et al.,
+       "Foreground simulations for the LOFAR-epoch of reionization experiment",
+       2008, MNRAS, 389, 1319-1335,
+       http://adsabs.harvard.edu/abs/2008MNRAS.389.1319J
+
     .. [Green2014]
        Green, D. A.,
        "A catalogue of 294 Galactic supernova remnants",
