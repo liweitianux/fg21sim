@@ -220,7 +220,7 @@ class SuperNovaRemnants:
         """
         freq = frequency * self.freq_unit
         flux = flux * self.units["flux"]
-        Fnu = flux * (freq / self.catalog_flux_freq).value ** (-specindex)
+        Fnu = flux * float(freq / self.catalog_flux_freq) ** (-specindex)
         omega = size[0]*self.units["size"] * size[1]*self.units["size"]
         Tb = Fnu_to_Tb(Fnu, omega, freq)
         return Tb.value
