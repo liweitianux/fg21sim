@@ -175,7 +175,7 @@ class GalaxyClusters:
         logger.info("Adopted dimensionless Hubble parameter: {0}".format(h))
         # Cluster masses, unit: solMass (NOTE: h dependence)
         self.catalog["mass"] = (self.catalog["m"] *
-                                self.catalog_prop["m_particles"].value / h)
+                                self.catalog_prop["m_particle"].value / h)
         self.units["mass"] = au.solMass
         logger.info("Catalog: calculated cluster masses")
         # Cluster distances from the observer, unit: Mpc
@@ -199,7 +199,8 @@ class GalaxyClusters:
         fullsky = 4*np.pi * au.sr
         factor = float(fullsky / self.catalog_prop["coverage"])
         n0_cluster = len(self.catalog)
-        logger.info("Halo fraction in clusters: %f" % self.halo_fraction)
+        logger.info("Radio halo fraction in clusters: {0}".format(
+            self.halo_fraction))
         # Total number of clusters on the full sky
         N_cluster = int(n0_cluster * factor * self.halo_fraction)
         logger.info("Total number of clusters on the full sky: {0:,}".format(
@@ -281,10 +282,10 @@ class GalaxyClusters:
         Attributes
         ----------
         catalog["r_vir"] : 1D `~numpy.ndarray`
-           The virial radii (unit: Mpc) calculated from the cluster masses
+            The virial radii (unit: Mpc) calculated from the cluster masses
         catalog["size_major"], catalog["size_minor] : 1D `~numpy.ndarray`
-           The major and minor axes (unit: degree) of the clusters calculated
-           from the above virial radii and the random eccentricities.
+            The major and minor axes (unit: degree) of the clusters calculated
+            from the above virial radii and the random eccentricities.
 
         NOTE
         ----
@@ -308,7 +309,7 @@ class GalaxyClusters:
         # Calculate (elliptical) angular sizes, i.e., major and minor axes
         logger.info("Calculating the elliptical angular sizes ...")
         distance = self.catalog["distance"].data * self.units["distance"]
-        theta2 = float(2 * r_vir / distance)  # [ rad ]
+        theta2 = (r_vir / distance).decompose().value  # [ rad ]
         size_major = theta2 / (1 - self.catalog["eccentricity"]**2) ** 0.25
         size_minor = theta2 * (1 - self.catalog["eccentricity"]**2) ** 0.25
         self.catalog["size_major"] = size_major * au.rad.to(au.deg)
@@ -324,6 +325,16 @@ class GalaxyClusters:
         scaling relation between mass and X-ray luminosity.
         Then, derive the radio luminosity by employing the scaling
         relation between X-ray and radio luminosity.
+
+        Attributes
+        ----------
+        catalog["luminosity"] : 1D `~numpy.ndarray`
+            The luminosity density (at 1.4 GHz) of each cluster.
+        catalog_prop["luminosity_freq"] : `~astropy.units.Quantity`
+            The frequency (as an ``astropy`` quantity) where the above
+            luminosity derived.
+        units["luminosity"] : `~astropy.units.Unit`
+            The unit used by the above luminosity.
 
         XXX/TODO
         --------
@@ -367,7 +378,9 @@ class GalaxyClusters:
         # Hubble parameter conversion factor
         h_conv1 = (h_our / h_others) ** (b_X-2)
         # X-ray luminosity (0.1-2.4 keV) [ erg/s ]
-        L_X = (a_X * 1e45 * float(mass_RB / (1e15*au.solMass))**b_X) * h_conv1
+        L_X = ((a_X * 1e45 *
+                (mass_RB / (1e15*au.solMass)).decompose().value ** b_X) *
+               h_conv1)
         # Calculate the radio luminosity from X-ray luminosity
         a_r = 2.78
         b_r = 1.94
@@ -379,6 +392,24 @@ class GalaxyClusters:
         self.catalog_prop["luminosity_freq"] = 1.4 * au.GHz
         self.units["luminosity"] = au.W / au.Hz
         logger.info("Done Calculate the radio luminosity")
+
+    def _calc_specindex(self):
+        """Calculate the radio spectral indexes for each cluster.
+
+        Attributes
+        ----------
+        catalog["specindex"] : 1D `~numpy.ndarray`
+            The radio spectral index of each cluster.
+
+        XXX/TODO
+        --------
+        Currently, a common/uniform spectral index (1.2) is assumed for all
+        clusters, which may be improved by investigating more recent results.
+        """
+        specindex = 1.2
+        logger.info("Use common spectral index for all clusters: "
+                    "{0}".format(specindex))
+        self.catalog["specindex"] = specindex
 
     def _calc_Tb(self, luminosity, distance, specindex, frequency, size):
         """Calculate the brightness temperature at requested frequency
@@ -453,6 +484,9 @@ class GalaxyClusters:
         logger.info("Simulating HEALPix templates for each cluster ...")
         templates = []
         resolution = self.resolution.to(au.deg).value
+        # Make sure the index is reset, therefore, the *row indexes* can be
+        # simply used to identify the corresponding template image.
+        self.catalog.reset_index(inplace=True)
         # XXX/TODO: be parallel
         for row in self.catalog.itertuples():
             # TODO: progress bar
@@ -492,8 +526,8 @@ class GalaxyClusters:
         --------
         `self._simulate_template()` for more detailed description.
         """
-        name = data.name
-        hpidx, hpval = self.templates[name]
+        index = data.Index
+        hpidx, hpval = self.templates[index]
         # Calculate the brightness temperature
         luminosity = data.luminosity
         distance = data.distance
@@ -525,7 +559,7 @@ class GalaxyClusters:
         history) for the simulated products.
         """
         header = fits.Header()
-        header["COMP"] = ("extragalactic clusters of galaxies (radio halos)",
+        header["COMP"] = ("Extragalactic clusters of galaxies",
                           "Emission component")
         header["UNIT"] = ("Kelvin", "Map unit")
         header["CREATOR"] = (__name__, "File creator")
@@ -586,6 +620,7 @@ class GalaxyClusters:
         #
         self._calc_sizes()
         self._calc_luminosity()
+        self._calc_specindex()
         #
         self._simulate_templates()
         #
