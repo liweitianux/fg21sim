@@ -3,12 +3,20 @@
 #
 # Syntax: `ConfigObj`, https://github.com/DiffSK/configobj
 #
-# This file contains the general configurations, which control the general
-# behaviors, or will be used in other configuration sections.
+# There are various configuration options that specify the input data
+# and/or templates required by the simulations, the properties of the input
+# data, the output products, as well as some parameters affecting the
+# simulation behaviors.
+#
+# This file contains the options corresponding the Galactic emission
+# components, which currently includes the following components:
+# - synchrotron
+# - freefree
+# - snr
 #
 # NOTE:
-# The input templates for simulations should be HEALPix full-sky maps.
-#
+# - The input templates for simulations should be HEALPix full-sky maps.
+# - The input catalog should be in CSV format.
 
 
 [galactic]
