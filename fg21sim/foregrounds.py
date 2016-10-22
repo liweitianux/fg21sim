@@ -24,6 +24,7 @@ import healpy as hp
 from .galactic import (Synchrotron as GalacticSynchrotron,
                        FreeFree as GalacticFreeFree,
                        SuperNovaRemnants as GalacticSNR)
+from .extragalactic import GalaxyClusters as EGGalaxyClusters
 from .utils import write_fits_healpix
 
 
@@ -62,9 +63,10 @@ class Foregrounds:
     """
     # All supported foreground components
     COMPONENTS_ALL = OrderedDict([
-        ("galactic/synchrotron", GalacticSynchrotron),
-        ("galactic/freefree",    GalacticFreeFree),
-        ("galactic/snr",         GalacticSNR),
+        ("galactic/synchrotron",   GalacticSynchrotron),
+        ("galactic/freefree",      GalacticFreeFree),
+        ("galactic/snr",           GalacticSNR),
+        ("extragalactic/clusters", EGGalaxyClusters),
     ])
 
     def __init__(self, configs):
