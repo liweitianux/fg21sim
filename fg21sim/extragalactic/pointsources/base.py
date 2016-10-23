@@ -50,6 +50,8 @@ class BasePointSource:
         Angular diameter distance, which is calculated according to the
         cosmology constants. In this work, it is calculated by module
         basic_params
+	lumo: au.Jy;
+	    Luminosity at the reference frequency.
     lat: au.deg;
         The colatitude angle in the spherical coordinate system
     lon: au.deg;
@@ -64,7 +66,7 @@ class BasePointSource:
         # configures
         self.configs = configs
         # PS_list information
-        self.columns = ['z', 'dA (Mpc)', 'Lat (deg)',
+        self.columns = ['z', 'dA (Mpc)', 'luminosity (Jy)','Lat (deg)',
                         'Lon (deg)', 'Area (sr)']
         self.nCols = len(self.columns)
         self._set_configs()
@@ -81,15 +83,88 @@ class BasePointSource:
         self.output_dir = self.configs.get_path(
             "extragalactic/pointsources/output_dir")
 
+    def calc_number_density(self):
+        pass
+
+    def calc_cdf(self):
+        """
+        Calculate cumulative distribution functions for simulating of
+        samples with corresponding reshift and luminosity.
+
+        Parameter
+        -----------
+        rho_mat: np.ndarray rho(lumo,z)
+            The number density matrix (joint-distribution of z and flux)
+            of this type of PS.
+
+        Returns
+        -------
+        cdf_z, cdf_lumo: np.ndarray
+            Cumulative distribution functions of redshift and flux.
+        """
+        # Normalization
+        rho_mat = self.rho_mat
+        rho_max = rho_mat.max()
+        rho_min = rho_mat.min()
+        rho_norm = (rho_mat - rho_min)/(rho_max-rho_min)
+        # probability distribution of redshift
+        pdf_z = np.sum(rho_norm, axis=0)
+        pdf_lumo = np.sum(rho_norm, axis=1)
+        # Cumulative function
+        cdf_z = np.zeros(pdf_z.shape)
+        cdf_lumo = np.zeros(pdf_lumo.shape)
+        for i in range(len(pdf_z)):
+            cdf_z[i] = np.sum(pdf_z[:i])
+        for i in range(len(pdf_lumo)):
+            cdf_lumo[i] = np.sum(pdf_lumo[:i])
+
+        return cdf_z, cdf_lumo
+
+    def get_lumo_redshift(self):
+        """
+        Randomly generate redshif and luminosity at ref frequency using
+        the CDF functions.
+
+        Paramaters
+        ------------
+        df_z, cdf_lumo: np.ndarray
+            Cumulative distribution functions of redshift and flux.
+        zbin,lumobin: np.ndarray
+            Bins of redshif and luminosity.
+
+        Returns
+        -------
+        z: float
+            Redshift.
+        lumo: au.W/Hz/sr
+            Luminosity.
+         """
+        # Uniformlly generate random number in interval [0,1]
+        rnd_z = np.random.uniform(0,1)
+        rnd_lumo = np.random.uniform(0,1)
+        # Get redshift
+        dist_z = np.abs(self.cdf_z - rnd_z)
+        idx_z = np.where(dist_z == dist_z.min())
+        z = self.zbin[idx_z[0]]
+        # Get luminosity
+        dist_lumo = np.abs(self.cdf_lumo - rnd_lumo)
+        idx_lumo = np.where(dist_lumo == dist_lumo.min())
+        lumo = 10 ** self.lumobin[idx_lumo[0]]
+
+        return float(z), float(lumo)
+
     def gen_single_ps(self):
         """
         Generate single point source, and return its data as a list.
         """
-        # Redshift
-        self.z = np.random.uniform(0, 20)
+        # Redshift and luminosity
+        self.z, self.lumo = self.get_lumo_redshift()
         # angular diameter distance
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
+        # W/Hz/Sr to Jy
+        self.lumo = self.lumo / self.dA.to(au.m).value**2 * au.W/au.Hz/au.m/au.m
+        self.lumo = self.lumo.to(au.Jy)
         # Position
         x = np.random.uniform(0, 1)
         self.lat = (np.arccos(2 * x - 1) / np.pi * 180 - 90) * au.deg
@@ -98,9 +173,8 @@ class BasePointSource:
         npix = hp.nside2npix(self.nside)
         self.area = 4 * np.pi / npix * au.sr
 
-        ps_list = [self.z, self.dA.value, self.lat.value,
+        ps_list = [self.z, self.dA.value, self.lumo.value, self.lat.value,
                    self.lon.value, self.area.value]
-
         return ps_list
 
     def gen_catalog(self):
