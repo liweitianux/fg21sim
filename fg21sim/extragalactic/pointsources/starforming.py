@@ -5,11 +5,11 @@ import numpy as np
 import healpy as hp
 import astropy.units as au
 
-from .psparams import PixelParams
+# from .psparams import PixelParams
 from .base import BasePointSource
 from ...utils import grid
 from ...utils import convert
-
+from .psparams import PixelParams
 
 class StarForming(BasePointSource):
     """
@@ -27,36 +27,122 @@ class StarForming(BasePointSource):
         self.columns.append('radius (rad)')
         self.nCols = len(self.columns)
         self._set_configs()
+        # Number density matrix
+        self.rho_mat = self.calc_number_density()
+        # Cumulative distribution of z and lumo
+        self.cdf_z, self.cdf_lumo = self.calc_cdf()
 
     def _set_configs(self):
         """ Load the configs and set the corresponding class attributes"""
         super()._set_configs()
         # point sources amount
-        self.num_ps = self.configs.getn("extragalactic/pointsources/num_sf")
-        # Luminosity at 1.4GHz
-        self.lumo_1400 = self.configs.getn(
-            "extragalactic/pointsources/lumo_1400")
+        self.num_ps = self.configs.getn(
+            "extragalactic/pointsources/starforming/numps")
         # prefix
         self.prefix = self.configs.getn(
-            "extragalactic/pointsources/prefix_sf")
+            "extragalactic/pointsources/starforming/prefix")
+        # redshift bin
+        z_type = self.configs.getn(
+            "extragalactic/pointsources/starforming/z_type")
+        if z_type == 'custom':
+            start = self.configs.getn(
+                "extragalactic/pointsources/starforming/z_start")
+            stop = self.configs.getn(
+                "extragalactic/pointsources/starforming/z_stop")
+            step = self.configs.getn(
+                "extragalactic/pointsources/starforming/z_step")
+            self.zbin = np.arange(start,stop+step,step)
+        else:
+            self.zbin = np.arange(0.1,10,0.1);
+        # luminosity bin
+        lumo_type = self.configs.getn(
+            "extragalactic/pointsources/starforming/lumo_type")
+        if lumo_type == 'custom':
+            start = self.configs.getn(
+                "extragalactic/pointsources/starforming/lumo_start")
+            stop = self.configs.getn(
+                "extragalactic/pointsources/starforming/lumo_stop")
+            step = self.configs.getn(
+                "extragalactic/pointsources/starforming/lumo_step")
+            self.lumobin = np.arange(start,stop+step,step)
+        else:
+            self.lumobin = np.arange(17,25.5,0.1); # [W/Hz/sr]
+
+    def calc_number_density(self):
+        """
+        Calculate number density rho(lumo,z) of FRI
+
+        References
+        ----------
+        [1] Wilman et al.,
+             "A semi-empirical simulation of the extragalactic radio continuum
+             sky for next generation radio telescopes",
+             2008, MNRAS, 388, 1335-1348.
+             http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
+
+        Returns
+        -------
+        rho_mat: np.ndarray
+            Number density matris (joint-distribution of luminosity and
+            reshift).
+        """
+        # Init
+        rho_mat = np.zeros((len(self.lumobin),len(self.zbin)))
+        # Parameters
+        # Refer to Willman's section 2.4
+        alpha = 0.7 # spectral index
+        lumo_star = 10.0**22 # critical luminosity at 1400MHz
+        rho_l0 = 10.0**(-7) # normalization constant
+        z1 = 1.5 # cut-off redshift
+        k1 = 3.1 # index of space density revolution
+        # Calculation
+        for i,z in enumerate(self.zbin):
+            if z <= z1:
+                rho_mat[:,i] =  (rho_l0 * (10**self.lumobin/lumo_star) ** (-alpha) *
+                                 np.exp(-10**self.lumobin/lumo_star) * (1+z)**k1)
+            else:
+                rho_mat[:,i] = (rho_l0 * (10**self.lumobin/lumo_star) ** (-alpha) *
+                                np.exp(-10**self.lumobin/lumo_star) * (1+z1)**k1)
+
+        return rho_mat
 
     def get_radius(self):
-        Temp = (0.22 * np.log10(self.lumo_1400) -
-                np.log10(1 + self.z) - 3.32)
-        self.radius = 10 ** Temp / 2 * au.Mpc
+        """
+        Generate the disc diameter of normal starforming galaxies.
 
+        Reference
+        ---------
+        [1] Wilman et al.,  Eq(7-9),
+             "A semi-empirical simulation of the extragalactic radio continuum
+             sky for next generation radio telescopes",
+             2008, MNRAS, 388, 1335-1348.
+             http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
+        """
+        # Willman Eq. (8)
+        delta = np.random.normal(0,0.3)
+        log_M_HI = 0.44 * np.log10(self.lumo) + 0.48 + delta
+        # Willman Eq. (7)
+        log_D_HI = ((log_M_HI - (6.52+np.random.uniform(-0.06,0.06))) /
+                    1.96+np.random.uniform(-0.04,0.04))
+        # Willman Eq. (9)
+        log_D = log_D_HI - 0.23 - np.log10(1+self.z)
+        self.radius = 10**log_D / 2 * 1e-3 * au.Mpc # [Mpc]
         return self.radius
 
     def gen_single_ps(self):
         """
         Generate single point source, and return its data as a list.
         """
-        # Redshift
-        self.z = np.random.uniform(0, 20)
+        # Redshift and luminosity
+        self.z, self.lumo = self.get_lumo_redshift()
         # angular diameter distance
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
+        # Radius
         self.radius = self.param.get_angle(self.get_radius())  # [rad]
+        # W/Hz/Sr to Jy
+        self.lumo = self.lumo / self.dA.to(au.m).value**2 * au.W/au.Hz/au.m/au.m
+        self.lumo = self.lumo.to(au.Jy)
         # Area
         self.area = np.pi * self.radius**2  # [sr] ?
         # Position
@@ -66,7 +152,7 @@ class StarForming(BasePointSource):
         self.lon = np.random.uniform(
             0, np.pi * 2) / np.pi * 180 * au.deg  # [0,360]
 
-        ps_list = [self.z, self.dA.value, self.lat.value,
+        ps_list = [self.z, self.dA.value, self.lumo.value, self.lat.value,
                    self.lon.value, self.area.value, self.radius.value]
 
         return ps_list
@@ -142,12 +228,12 @@ class StarForming(BasePointSource):
              Average brightness temperature, e.g., `1.0*au.K`
         """
         # Init
-        freq_ref = 151 * au.MHz
+        freq_ref = 1400 * au.MHz
         freq = freq * au.MHz
-        # Refer to Wang et al,'s work listed above.
-        I_151 = 10**(np.random.uniform(-4, -3)) * au.Jy
+        # Luminosity at 1400MHz
+        lumo_1400 = self.lumo.to(au.Jy)  # [W/Hz/Sr to Jy]
         # Calc flux
-        flux = (freq / freq_ref)**(-0.7) * I_151
+        flux = (freq / freq_ref)**(-0.7) * lumo_1400
         # Calc brightness temperature
         Tb = convert.Fnu_to_Tb(flux, area, freq)
 
