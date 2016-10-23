@@ -8,34 +8,42 @@
 
 [extragalactic]
 
-    # Extragalactic point sources
-    [[pointsources]]
-    # PS components to be simulated
-    pscomponents=string_list(default=list())
-    # Number of each type of point source
-    # Star forming
-    num_sf = integer(default=100)
-    # Star bursting	
-    num_sb = integer(default=100)
-    # Radio quiet AGN	
-    num_rq = integer(default=100)
-    # Faranoff-Riley I	
-    num_fr1 = integer(default=100)
-    # Faranoff-Riley II	
-    num_fr2 = integer(default=100)
-    
-    # Filename prefix for this component
-    prefix_sf = string(default="SF")
-    prefix_sb = string(default="SB")
-    prefix_rq = string(default="RQ")
-    prefix_fr1 = string(default="FRI")
-    prefix_fr2 = string(default="FRII")
-    
-    # Whether save this point source catelogue to disk
-    save = boolean(default=True)
-    
-    # Output directory to save the simulated catelogues
-    output_dir = string(default="PS_tables")
+# Extragalactic point sources
+[[pointsources]]
+# Whether save this point source catelogue to disk
+save = boolean(default=True)
+# Output directory to save the simulated catelogues
+output_dir = string(default="PS_tables")
+# PS components to be simulated
+pscomponents=string_list(default=list())
+# Number of each type of point source
+# Star forming
+[[[starforming]]]
+# Number of samples
+numps = integer(default=1000)
+# Prefix
+prefix = string(default="SF")
 
-    # Special parameters
-    lumo_1400 = float(default=0.0)
+[[[starbursting]]]
+# Number of samples
+numps = integer(default=1000)
+# Prefix
+prefix = string(default="SB")
+
+[[[radioquiet]]]
+# Number of samples
+numps = integer(default=1000)
+# Prefix
+prefix = string(default="RQ")
+
+[[[FRI]]]
+# Number of samples
+numps = integer(default=1000)
+# Prefix
+prefix = string(default="FRI")
+
+[[[FRII]]]
+# Number of samples
+numps = integer(default=1000)
+# Prefix
+prefix = string(default="FRII")
