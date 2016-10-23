@@ -42,15 +42,101 @@ class FRI(BasePointSource):
             ['lobe_maj (rad)', 'lobe_min (rad)', 'lobe_ang (deg)'])
         self.nCols = len(self.columns)
         self._set_configs()
+        # Paramters for core/lobe ratio
+        # Willman et al. 2008 Sec2.5.(iii)-(iv)
+        self.xmed = -2.6
+        # Lorentz factor of the jet
+        self.gamma = 6
+        # Number density matrix
+        self.rho_mat = self.calc_number_density()
+        # Cumulative distribution of z and lumo
+        self.cdf_z, self.cdf_lumo = self.calc_cdf()
 
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes"""
         super()._set_configs()
         # point sources amount
-        self.num_ps = self.configs.getn("extragalactic/pointsources/num_fr1")
+        self.num_ps = self.configs.getn(
+            "extragalactic/pointsources/FRI/numps")
         # prefix
         self.prefix = self.configs.getn(
-            "extragalactic/pointsources/prefix_fr1")
+            "extragalactic/pointsources/FRI/prefix")
+        # redshift bin
+        z_type = self.configs.getn(
+            "extragalactic/pointsources/FRI/z_type")
+        if z_type == 'custom':
+            start = self.configs.getn(
+                "extragalactic/pointsources/FRI/z_start")
+            stop = self.configs.getn(
+                "extragalactic/pointsources/FRI/z_stop")
+            step = self.configs.getn(
+                "extragalactic/pointsources/FRI/z_step")
+            self.zbin = np.arange(start,stop+step,step)
+        else:
+            self.zbin = np.arange(0.1,10,0.1);
+        # luminosity bin
+        lumo_type = self.configs.getn(
+            "extragalactic/pointsources/FRI/lumo_type")
+        if lumo_type == 'custom':
+            start = self.configs.getn(
+                "extragalactic/pointsources/FRI/lumo_start")
+            stop = self.configs.getn(
+                "extragalactic/pointsources/FRI/lumo_stop")
+            step = self.configs.getn(
+                "extragalactic/pointsources/FRI/lumo_step")
+            self.lumobin = np.arange(start,stop+step,step)
+        else:
+            self.lumobin = np.arange(20,28,0.1); # [W/Hz/sr]
+
+    def calc_number_density(self):
+        """
+        Calculate number density rho(lumo,z) of FRI
+
+        References
+        ----------
+        [1] Wilman et al.,
+             "A semi-empirical simulation of the extragalactic radio continuum
+             sky for next generation radio telescopes",
+             2008, MNRAS, 388, 1335-1348.
+             http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
+        [2] Willott et al.,
+             "The radio luminosity function from the low-frequency 3CRR,
+             6CE and 7CRS complete samples",
+             2001, MNRAS, 322, 536-552.
+             http://adsabs.harvard.edu/abs/2001MNRAS.322..536W
+
+        Returns
+        -------
+        rho_mat: np.ndarray
+            Number density matris (joint-distribution of luminosity and
+            reshift).
+        """
+        # Init
+        rho_mat = np.zeros((len(self.lumobin),len(self.zbin)))
+        # Parameters
+        # Refer to [2] Table. 1  model C and Willman's section 2.4
+        alpha = 0.539 # spectral index
+        lumo_star = 10.0**26.1 # critical luminosity
+        rho_l0 = 10.0**(-7.120) # normalization constant
+        z1 = 0.706 # cut-off redshift
+        z2 = 2.5 # cut-off redshift adviced by Willman
+        k1 = 4.30 # index of space density revolution
+        # Calculation
+        for i, z in enumerate(self.zbin):
+            if z <= z1:
+                rho_mat[:,i] = ((rho_l0 * (10**self.lumobin/lumo_star) **
+                                 -alpha * np.exp(-10**self.lumobin /
+                                                  lumo_star)) * (1+z)**k1)
+            elif z <= z2:
+                rho_mat[:,i] = ((rho_l0 * (10**self.lumobin/lumo_star) **
+                                 -alpha * np.exp(-10**self.lumobin /
+                                                 lumo_star)) * (1+z1)**k1)
+            else:
+                rho_mat[:,i] = ((rho_l0 * (10**self.lumobin/lumo_star) **
+                                 -alpha * np.exp(-10**self.lumobin /
+                                                 lumo_star)) * (1+z)**-z2)
+
+        return rho_mat
 
     def gen_lobe(self):
         D0 = 1 * au.Mpc
@@ -71,12 +157,14 @@ class FRI(BasePointSource):
         """
         Generate single point source, and return its data as a list.
         """
-        # Redshift
-        self.z = np.random.uniform(0, 20)
+        # Redshift and luminosity
+        self.z, self.lumo = self.get_lumo_redshift()
         # angular diameter distance
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
-
+        # W/Hz/Sr to Jy
+        self.lumo = self.lumo / self.dA.to(au.m).value**2 * au.W/au.Hz/au.m/au.m
+        self.lumo = self.lumo.to(au.Jy)
         # Position
         x = np.random.uniform(0, 1)
         self.lat = (np.arccos(2 * x - 1) / np.pi * 180 - 90) * au.deg
@@ -88,7 +176,7 @@ class FRI(BasePointSource):
         # Area
         self.area = np.pi * self.lobe_maj * self.lobe_min
 
-        ps_list = [self.z, self.dA.value, self.lat.value,
+        ps_list = [self.z, self.dA.value, self.lumo.value, self.lat.value,
                    self.lon.value, self.area.value]
 
         ps_list.extend(lobe)
@@ -129,7 +217,7 @@ class FRI(BasePointSource):
             # Lobe1
             lobe1_lat = (lobe_maj / 2).to(au.deg) * np.cos(lobe_ang)
             lobe1_lat = c_lat + lobe1_lat.value
-            lobe1_lon = (lobe_min / 2).to(au.deg) * np.sin(lobe_ang)
+            lobe1_lon = (lobe_maj / 2).to(au.deg) * np.sin(lobe_ang)
             lobe1_lon = c_lon + lobe1_lon.value
             # draw
             # Fill with circle
@@ -144,7 +232,7 @@ class FRI(BasePointSource):
             # Lobe2
             lobe2_lat = (lobe_maj / 2).to(au.deg) * np.cos(lobe_ang + np.pi)
             lobe2_lat = c_lat + lobe2_lat.value
-            lobe2_lon = (lobe_min / 2).to(au.deg) * np.sin(lobe_ang + np.pi)
+            lobe2_lon = (lobe_maj / 2).to(au.deg) * np.sin(lobe_ang + np.pi)
             lobe2_lon = c_lon + lobe2_lon.value
             # draw
             # Fill with circle
@@ -203,14 +291,11 @@ class FRI(BasePointSource):
         # Init
         freq_ref = 151 * au.MHz
         freq = freq * au.MHz
-        # Refer to Wang et al,'s work listed above.
-        I_151 = 10**(np.random.uniform(-4, -3)) * au.Jy
+        # Luminosity at 151MHz
+        lumo_151 = self.lumo.to(au.Jy)  # [W/Hz/Sr to Jy]
         # Calc flux
-        # lobe
-        flux_lobe = (freq / freq_ref)**-0.75 * I_151
-        Tb_lobe = convert.Fnu_to_Tb(flux_lobe, area, freq)
         # Core
-        a0 = (np.log10(I_151.value) - 0.7 *
+        a0 = (np.log10(lumo_151.value) - 0.7 *
               np.log10(freq_ref.to(au.GHz).value) +
               0.29 * np.log10(freq_ref.to(au.GHz).value) *
               np.log10(freq_ref.to(au.GHz).value))
@@ -219,6 +304,14 @@ class FRI(BasePointSource):
                np.log10(freq.to(au.GHz).value))
         flux_core = 10**lgs * au.Jy
         Tb_core = convert.Fnu_to_Tb(flux_core, area, freq)
+        # lobe
+        x = np.random.normal(self.xmed,0.5)
+        beta = np.sqrt((self.gamma**2-1)/self.gamma)
+        B_theta = 0.5 * ((1-beta*np.cos(self.lobe_ang))**-2 +
+                         (1+beta*np.cos(self.lobe_ang))**-2)
+        ratio_obs = 10**x * B_theta
+        flux_lobe = flux_core / ratio_obs
+        Tb_lobe = convert.Fnu_to_Tb(flux_lobe, area, freq)
 
         Tb = [Tb_core.value, Tb_lobe.value]
         return Tb
