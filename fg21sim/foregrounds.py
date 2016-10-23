@@ -25,6 +25,7 @@ from .galactic import (Synchrotron as GalacticSynchrotron,
                        FreeFree as GalacticFreeFree,
                        SuperNovaRemnants as GalacticSNR)
 from .extragalactic import GalaxyClusters as EGGalaxyClusters
+from .extragalactic import PointSources as ExtragalacticPointSources
 from .utils import write_fits_healpix
 
 
@@ -67,6 +68,10 @@ class Foregrounds:
         ("galactic/freefree",      GalacticFreeFree),
         ("galactic/snr",           GalacticSNR),
         ("extragalactic/clusters", EGGalaxyClusters),
+        ("galactic/synchrotron", GalacticSynchrotron),
+        ("galactic/freefree",    GalacticFreeFree),
+        ("galactic/snr",         GalacticSNR),
+        ("extragalactic/pointsources", ExtragalacticPointSources),
     ])
 
     def __init__(self, configs):
