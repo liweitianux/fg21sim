@@ -24,7 +24,7 @@ class RadioQuiet(BasePointSource):
         super()._set_configs()
         # point sources amount
         self.num_ps = self.configs.getn(
-        "extragalactic/pointsources/radioquiet/numps")
+            "extragalactic/pointsources/radioquiet/numps")
         # prefix
         self.prefix = self.configs.getn(
             "extragalactic/pointsources/radioquiet/prefix")
@@ -33,14 +33,14 @@ class RadioQuiet(BasePointSource):
             "extragalactic/pointsources/radioquiet/z_type")
         if z_type == 'custom':
             start = self.configs.getn(
-               "extragalactic/pointsources/radioquiet/z_start")
+                "extragalactic/pointsources/radioquiet/z_start")
             stop = self.configs.getn(
                 "extragalactic/pointsources/radioquiet/z_stop")
             step = self.configs.getn(
                 "extragalactic/pointsources/radioquiet/z_step")
-            self.zbin = np.arange(start,stop+step,step)
+            self.zbin = np.arange(start, stop + step, step)
         else:
-            self.zbin = np.arange(0.1,10,0.1);
+            self.zbin = np.arange(0.1, 10, 0.1)
         # luminosity bin
         lumo_type = self.configs.getn(
             "extragalactic/pointsources/radioquiet/lumo_type")
@@ -51,9 +51,9 @@ class RadioQuiet(BasePointSource):
                 "extragalactic/pointsources/radioquiet/lumo_stop")
             step = self.configs.getn(
                 "extragalactic/pointsources/radioquiet/lumo_step")
-            self.lumobin = np.arange(start,stop+step,step)
+            self.lumobin = np.arange(start, stop + step, step)
         else:
-            self.lumobin = np.arange(18.7,25.7,0.1); # [W/Hz/sr]
+            self.lumobin = np.arange(18.7, 25.7, 0.1)  # [W/Hz/sr]
 
     def calc_number_density(self):
         """
@@ -74,24 +74,26 @@ class RadioQuiet(BasePointSource):
         reshift).
         """
         # Init
-        rho_mat = np.zeros((len(self.lumobin),len(self.zbin)))
+        rho_mat = np.zeros((len(self.lumobin), len(self.zbin)))
         # Parameters
         # Refer to Willman's section 2.4
-        alpha = 0.7 # spectral index
-        lumo_star = 10.0**21.3 # critical luminosity at 1400MHz
-        rho_l0 = 10.0**(-7) # normalization constant
-        z1 = 1.9 # cut-off redshift
-        k1 = -3.27 # index of space density revolution
+        alpha = 0.7  # spectral index
+        lumo_star = 10.0**21.3  # critical luminosity at 1400MHz
+        rho_l0 = 10.0**(-7)  # normalization constant
+        z1 = 1.9  # cut-off redshift
+        k1 = -3.27  # index of space density revolution
         # Calculation
         for i, z in enumerate(self.zbin):
             if z <= z1:
-                rho_mat[:,i] = ((rho_l0 * (10**self.lumobin/lumo_star)**
-                                 -alpha * np.exp(-10**self.lumobin /
-                                                 lumo_star)) * (1+z)**k1)
+                rho_mat[:, i] = ((rho_l0 * (10**self.lumobin / lumo_star) **
+                                  (-alpha) *
+                                  np.exp(-10**self.lumobin / lumo_star)) *
+                                 (1 + z)**k1)
             else:
-                rho_mat[:,i] = ((rho_l0 * (10**self.lumobin/lumo_star)**
-                                 -alpha * np.exp(-10**self.lumobin /
-                                                 lumo_star)) * (1+z1)**k1)
+                rho_mat[:, i] = ((rho_l0 * (10**self.lumobin / lumo_star) **
+                                  (-alpha) *
+                                  np.exp(-10**self.lumobin / lumo_star)) *
+                                 (1 + z1)**k1)
         return rho_mat
 
     def draw_single_ps(self, freq):
