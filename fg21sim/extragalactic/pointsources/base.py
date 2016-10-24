@@ -50,8 +50,8 @@ class BasePointSource:
         Angular diameter distance, which is calculated according to the
         cosmology constants. In this work, it is calculated by module
         basic_params
-	lumo: au.Jy;
-	    Luminosity at the reference frequency.
+        lumo: au.Jy;
+            Luminosity at the reference frequency.
     lat: au.deg;
         The colatitude angle in the spherical coordinate system
     lon: au.deg;
@@ -66,7 +66,7 @@ class BasePointSource:
         # configures
         self.configs = configs
         # PS_list information
-        self.columns = ['z', 'dA (Mpc)', 'luminosity (Jy)','Lat (deg)',
+        self.columns = ['z', 'dA (Mpc)', 'luminosity (Jy)', 'Lat (deg)',
                         'Lon (deg)', 'Area (sr)']
         self.nCols = len(self.columns)
         self._set_configs()
@@ -104,9 +104,8 @@ class BasePointSource:
         """
         # Normalization
         rho_mat = self.rho_mat
-        rho_max = rho_mat.max()
-        rho_min = rho_mat.min()
-        rho_norm = (rho_mat - rho_min)/(rho_max-rho_min)
+        rho_sum = np.sum(rho_mat)
+        rho_norm = rho_mat / rho_sum
         # probability distribution of redshift
         pdf_z = np.sum(rho_norm, axis=0)
         pdf_lumo = np.sum(rho_norm, axis=1)
@@ -126,7 +125,7 @@ class BasePointSource:
         the CDF functions.
 
         Paramaters
-        ------------
+        ----------
         df_z, cdf_lumo: np.ndarray
             Cumulative distribution functions of redshift and flux.
         zbin,lumobin: np.ndarray
@@ -140,8 +139,8 @@ class BasePointSource:
             Luminosity.
          """
         # Uniformlly generate random number in interval [0,1]
-        rnd_z = np.random.uniform(0,1)
-        rnd_lumo = np.random.uniform(0,1)
+        rnd_z = np.random.uniform(0, 1)
+        rnd_lumo = np.random.uniform(0, 1)
         # Get redshift
         dist_z = np.abs(self.cdf_z - rnd_z)
         idx_z = np.where(dist_z == dist_z.min())
@@ -163,7 +162,8 @@ class BasePointSource:
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
         # W/Hz/Sr to Jy
-        self.lumo = self.lumo / self.dA.to(au.m).value**2 * au.W/au.Hz/au.m/au.m
+        self.lumo = self.lumo / \
+            self.dA.to(au.m).value**2 * au.W / au.Hz / au.m / au.m
         self.lumo = self.lumo.to(au.Jy)
         # Position
         x = np.random.uniform(0, 1)
