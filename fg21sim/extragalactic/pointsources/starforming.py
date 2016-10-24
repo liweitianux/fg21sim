@@ -11,6 +11,7 @@ from ...utils import grid
 from ...utils import convert
 from .psparams import PixelParams
 
+
 class StarForming(BasePointSource):
     """
     Generate star forming point sources, inheritate from PointSource class.
@@ -51,9 +52,9 @@ class StarForming(BasePointSource):
                 "extragalactic/pointsources/starforming/z_stop")
             step = self.configs.getn(
                 "extragalactic/pointsources/starforming/z_step")
-            self.zbin = np.arange(start,stop+step,step)
+            self.zbin = np.arange(start, stop + step, step)
         else:
-            self.zbin = np.arange(0.1,10,0.1);
+            self.zbin = np.arange(0.1, 10, 0.1)
         # luminosity bin
         lumo_type = self.configs.getn(
             "extragalactic/pointsources/starforming/lumo_type")
@@ -64,9 +65,9 @@ class StarForming(BasePointSource):
                 "extragalactic/pointsources/starforming/lumo_stop")
             step = self.configs.getn(
                 "extragalactic/pointsources/starforming/lumo_step")
-            self.lumobin = np.arange(start,stop+step,step)
+            self.lumobin = np.arange(start, stop + step, step)
         else:
-            self.lumobin = np.arange(17,25.5,0.1); # [W/Hz/sr]
+            self.lumobin = np.arange(17, 25.5, 0.1)  # [W/Hz/sr]
 
     def calc_number_density(self):
         """
@@ -87,22 +88,24 @@ class StarForming(BasePointSource):
             reshift).
         """
         # Init
-        rho_mat = np.zeros((len(self.lumobin),len(self.zbin)))
+        rho_mat = np.zeros((len(self.lumobin), len(self.zbin)))
         # Parameters
         # Refer to Willman's section 2.4
-        alpha = 0.7 # spectral index
-        lumo_star = 10.0**22 # critical luminosity at 1400MHz
-        rho_l0 = 10.0**(-7) # normalization constant
-        z1 = 1.5 # cut-off redshift
-        k1 = 3.1 # index of space density revolution
+        alpha = 0.7  # spectral index
+        lumo_star = 10.0**22  # critical luminosity at 1400MHz
+        rho_l0 = 10.0**(-7)  # normalization constant
+        z1 = 1.5  # cut-off redshift
+        k1 = 3.1  # index of space density revolution
         # Calculation
-        for i,z in enumerate(self.zbin):
+        for i, z in enumerate(self.zbin):
             if z <= z1:
-                rho_mat[:,i] =  (rho_l0 * (10**self.lumobin/lumo_star) ** (-alpha) *
-                                 np.exp(-10**self.lumobin/lumo_star) * (1+z)**k1)
+                rho_mat[:, i] = (rho_l0 * (10**self.lumobin / lumo_star) **
+                                 (-alpha) * np.exp(-10**self.lumobin /
+                                                   lumo_star) * (1 + z)**k1)
             else:
-                rho_mat[:,i] = (rho_l0 * (10**self.lumobin/lumo_star) ** (-alpha) *
-                                np.exp(-10**self.lumobin/lumo_star) * (1+z1)**k1)
+                rho_mat[:, i] = (rho_l0 * (10**self.lumobin / lumo_star) **
+                                 (-alpha) * np.exp(-10**self.lumobin /
+                                                   lumo_star) * (1 + z1)**k1)
 
         return rho_mat
 
@@ -119,14 +122,14 @@ class StarForming(BasePointSource):
              http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
         """
         # Willman Eq. (8)
-        delta = np.random.normal(0,0.3)
+        delta = np.random.normal(0, 0.3)
         log_M_HI = 0.44 * np.log10(self.lumo) + 0.48 + delta
         # Willman Eq. (7)
-        log_D_HI = ((log_M_HI - (6.52+np.random.uniform(-0.06,0.06))) /
-                    1.96+np.random.uniform(-0.04,0.04))
+        log_D_HI = ((log_M_HI - (6.52 + np.random.uniform(-0.06, 0.06))) /
+                    1.96 + np.random.uniform(-0.04, 0.04))
         # Willman Eq. (9)
-        log_D = log_D_HI - 0.23 - np.log10(1+self.z)
-        self.radius = 10**log_D / 2 * 1e-3 * au.Mpc # [Mpc]
+        log_D = log_D_HI - 0.23 - np.log10(1 + self.z)
+        self.radius = 10**log_D / 2 * 1e-3 * au.Mpc  # [Mpc]
         return self.radius
 
     def gen_single_ps(self):
@@ -141,7 +144,8 @@ class StarForming(BasePointSource):
         # Radius
         self.radius = self.param.get_angle(self.get_radius())  # [rad]
         # W/Hz/Sr to Jy
-        self.lumo = self.lumo / self.dA.to(au.m).value**2 * au.W/au.Hz/au.m/au.m
+        self.lumo = self.lumo / \
+            self.dA.to(au.m).value**2 * au.W / au.Hz / au.m / au.m
         self.lumo = self.lumo.to(au.Jy)
         # Area
         self.area = np.pi * self.radius**2  # [sr] ?
