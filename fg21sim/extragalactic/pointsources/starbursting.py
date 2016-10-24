@@ -47,9 +47,9 @@ class StarBursting(BasePointSource):
                 "extragalactic/pointsources/starbursting/z_stop")
             step = self.configs.getn(
                 "extragalactic/pointsources/starbursting/z_step")
-            self.zbin = np.arange(start,stop+step,step)
+            self.zbin = np.arange(start, stop + step, step)
         else:
-            self.zbin = np.arange(0.1,10,0.1);
+            self.zbin = np.arange(0.1, 10, 0.1)
         # luminosity bin
         lumo_type = self.configs.getn(
             "extragalactic/pointsources/starbursting/lumo_type")
@@ -60,48 +60,50 @@ class StarBursting(BasePointSource):
                 "extragalactic/pointsources/starbursting/lumo_stop")
             step = self.configs.getn(
                 "extragalactic/pointsources/starbursting/lumo_step")
-            self.lumobin = np.arange(start,stop+step,step)
+            self.lumobin = np.arange(start, stop + step, step)
         else:
-            self.lumobin = np.arange(21,27,0.1) # [W/Hz/sr]
+            self.lumobin = np.arange(21, 27, 0.1)  # [W/Hz/sr]
 
     def calc_number_density(self):
-       """
-       Calculate number density rho(lumo,z) of FRI
+        """
+        Calculate number density rho(lumo,z) of FRI
 
-       References
-       ----------
-       [1] Wilman et al.,
-            "A semi-empirical simulation of the extragalactic radio continuum
-            sky for next generation radio telescopes",
-            2008, MNRAS, 388, 1335-1348.
-            http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
+        References
+        ----------
+        [1] Wilman et al.,
+             "A semi-empirical simulation of the extragalactic radio continuum
+             sky for next generation radio telescopes",
+             2008, MNRAS, 388, 1335-1348.
+             http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
 
-       Returns
-       -------
-       rho_mat: np.ndarray
-           Number density matris (joint-distribution of luminosity and
-           reshift).
-       """
-       # Init
-       rho_mat = np.zeros((len(self.lumobin),len(self.zbin)))
-       # Parameters
-       # Refer to Willman's section 2.4
-       alpha = 0.7 # spectral index
-       lumo_star = 10.0**22 # critical luminosity at 1400MHz
-       rho_l0 = 10.0**(-7) # normalization constant
-       z1 = 1.5 # cut-off redshift
-       k1 = 3.1 # index of space density revolution
-       # Calculation
-       for i, z in enumerate(self.zbin):
-           if z <= z1:
-                rho_mat[:,i] = ((rho_l0 * (10**self.lumobin/lumo_star) **
-                                 -alpha * np.exp(-10**self.lumobin /
-                                                 lumo_star)) * (1+z)**k1)
-           else:
-                rho_mat[:,i] = ((rho_l0 * (10**self.lumobin/lumo_star) **
-                                 -alpha * np.exp(-10**self.lumobin /
-                                                 lumo_star)) * (1+z1)**k1)
-       return rho_mat
+        Returns
+        -------
+        rho_mat: np.ndarray
+            Number density matris (joint-distribution of luminosity and
+            reshift).
+        """
+        # Init
+        rho_mat = np.zeros((len(self.lumobin), len(self.zbin)))
+        # Parameters
+        # Refer to Willman's section 2.4
+        alpha = 0.7  # spectral index
+        lumo_star = 10.0**22  # critical luminosity at 1400MHz
+        rho_l0 = 10.0**(-7)  # normalization constant
+        z1 = 1.5  # cut-off redshift
+        k1 = 3.1  # index of space density revolution
+        # Calculation
+        for i, z in enumerate(self.zbin):
+            if z <= z1:
+                rho_mat[:, i] = ((rho_l0 * (10**self.lumobin / lumo_star) **
+                                  (-alpha) *
+                                  np.exp(-10**self.lumobin / lumo_star)) *
+                                 (1 + z)**k1)
+            else:
+                rho_mat[:, i] = ((rho_l0 * (10**self.lumobin / lumo_star) **
+                                  (-alpha) *
+                                  np.exp(-10**self.lumobin / lumo_star)) *
+                                 (1 + z1)**k1)
+        return rho_mat
 
     def get_radius(self):
         if self.z <= 1.5:
@@ -121,7 +123,8 @@ class StarBursting(BasePointSource):
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
         # W/Hz/Sr to Jy
-        self.lumo = self.lumo / self.dA.to(au.m).value**2 * au.W/au.Hz/au.m/au.m
+        self.lumo = self.lumo / \
+            self.dA.to(au.m).value**2 * au.W / au.Hz / au.m / au.m
         self.lumo = self.lumo.to(au.Jy)
         # Radius
         self.radius = self.param.get_angle(self.get_radius())
