@@ -23,7 +23,7 @@ import pandas as pd
 
 from ..utils import write_fits_healpix
 from ..utils.random import spherical_uniform
-from ..utils.convert import Fnu_to_Tb
+from ..utils.convert import Fnu_to_Tb_fast
 from ..utils.grid import make_grid_ellipse, map_grid_to_healpix
 
 
@@ -228,7 +228,6 @@ class GalaxyClusters:
         glat = 90.0 - np.degrees(theta)
         self.catalog["glon"] = glon
         self.catalog["glat"] = glat
-        self.units["coord"] = au.deg
         logger.info("Done add random positions for each cluster")
 
     def _add_random_eccentricity(self):
@@ -353,7 +352,7 @@ class GalaxyClusters:
           *cosmic mean mass density ρ_m = Ω_m * ρ_c,
           therefore, the mass needs following conversion (which is an
           approximation):
-              M_{R&B} ~= M * sqrt(OmegaM0)
+              M_{R&B} ≈ M * sqrt(OmegaM0)
         - The derived X-ray luminosity is for the 0.1-2.4 keV energy band.
         - The X-ray-radio luminosity scaling relation adopted here is
           derived at 1.4 GHz.
@@ -370,7 +369,7 @@ class GalaxyClusters:
         #
         logger.info("Calculating the radio luminosity (at 1.4 GHz) ...")
         # Calculate the X-ray luminosity from mass
-        # XXX: why the mass conversion ??
+        # NOTE: mass conversion (see also the above notes)
         mass_RB = (self.catalog["mass"].data * self.units["mass"] *
                    self.catalog_prop["omega_m"]**0.5)
         a_X = 0.449
@@ -389,7 +388,7 @@ class GalaxyClusters:
         # Radio luminosity density (at 1.4 GHz) [ W/Hz ]
         L_r = (a_r * 1e24 * (L_X / 1e45)**b_r) * h_conv2
         self.catalog["luminosity"] = L_r
-        self.catalog_prop["luminosity_freq"] = 1.4 * au.GHz
+        self.catalog_prop["luminosity_freq"] = 1400 * self.freq_unit
         self.units["luminosity"] = au.W / au.Hz
         logger.info("Done Calculate the radio luminosity")
 
@@ -428,10 +427,10 @@ class GalaxyClusters:
             The spectral index of the power-law spectrum.
             Note the *negative* sign in the formula.
         frequency : float
-            The frequency (unit: `self.freq_unit`) where the brightness
+            The frequency (unit: [ MHz ]) where the brightness
             temperature requested.
         size : 2-float tuple
-            The (major, minor) axes (unit: `self.units["size"]`).
+            The (major, minor) axes (unit: [ deg ]).
             The order of major and minor can be arbitrary.
 
         Returns
@@ -447,14 +446,15 @@ class GalaxyClusters:
         be calculated by extrapolating the spectrum, then convert the flux
         density to derive the brightness temperature.
         """
-        freq = frequency * self.freq_unit
-        freq_ref = self.catalog_prop["luminosity_freq"]
+        freq = frequency  # [ MHz ]
+        freq_ref = self.catalog_prop["luminosity_freq"].value
         luminosity = luminosity * self.units["luminosity"]
-        Lnu = luminosity * float(freq / freq_ref) ** (-specindex)
+        Lnu = luminosity * (freq / freq_ref) ** (-specindex)
         Fnu = Lnu / (4*np.pi * (distance*self.units["distance"])**2)
-        omega = size[0]*self.units["size"] * size[1]*self.units["size"]
-        Tb = Fnu_to_Tb(Fnu, omega, freq)
-        return Tb.value
+        Fnu_Jy = Fnu.to(au.Jy).value  # [ Jy ]
+        omega = size[0] * size[1]  # [ deg^2 ]
+        Tb = Fnu_to_Tb_fast(Fnu_Jy, omega, freq)
+        return Tb
 
     def _simulate_templates(self):
         """Simulate the template (HEALPix) images for each cluster, and
@@ -649,7 +649,9 @@ class GalaxyClusters:
         logger.info("Simulating {name} map at {freq} ({unit}) ...".format(
             name=self.name, freq=frequency, unit=self.freq_unit))
         hpmap_f = np.zeros(hp.nside2npix(self.nside))
+        # XXX/TODO: be parallel
         for row in self.catalog.itertuples():
+            # TODO: progress bar
             hpidx, hpval = self._simulate_single(row, frequency)
             hpmap_f[hpidx] += hpval
         #
