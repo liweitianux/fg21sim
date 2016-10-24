@@ -71,9 +71,9 @@ class FRI(BasePointSource):
                 "extragalactic/pointsources/FRI/z_stop")
             step = self.configs.getn(
                 "extragalactic/pointsources/FRI/z_step")
-            self.zbin = np.arange(start,stop+step,step)
+            self.zbin = np.arange(start, stop + step, step)
         else:
-            self.zbin = np.arange(0.1,10,0.1);
+            self.zbin = np.arange(0.1, 10, 0.1)
         # luminosity bin
         lumo_type = self.configs.getn(
             "extragalactic/pointsources/FRI/lumo_type")
@@ -84,9 +84,9 @@ class FRI(BasePointSource):
                 "extragalactic/pointsources/FRI/lumo_stop")
             step = self.configs.getn(
                 "extragalactic/pointsources/FRI/lumo_step")
-            self.lumobin = np.arange(start,stop+step,step)
+            self.lumobin = np.arange(start, stop + step, step)
         else:
-            self.lumobin = np.arange(20,28,0.1); # [W/Hz/sr]
+            self.lumobin = np.arange(20, 28, 0.1)  # [W/Hz/sr]
 
     def calc_number_density(self):
         """
@@ -112,29 +112,32 @@ class FRI(BasePointSource):
             reshift).
         """
         # Init
-        rho_mat = np.zeros((len(self.lumobin),len(self.zbin)))
+        rho_mat = np.zeros((len(self.lumobin), len(self.zbin)))
         # Parameters
         # Refer to [2] Table. 1  model C and Willman's section 2.4
-        alpha = 0.539 # spectral index
-        lumo_star = 10.0**26.1 # critical luminosity
-        rho_l0 = 10.0**(-7.120) # normalization constant
-        z1 = 0.706 # cut-off redshift
-        z2 = 2.5 # cut-off redshift adviced by Willman
-        k1 = 4.30 # index of space density revolution
+        alpha = 0.539  # spectral index
+        lumo_star = 10.0**26.1  # critical luminosity
+        rho_l0 = 10.0**(-7.120)  # normalization constant
+        z1 = 0.706  # cut-off redshift
+        z2 = 2.5  # cut-off redshift adviced by Willman
+        k1 = 4.30  # index of space density revolution
         # Calculation
         for i, z in enumerate(self.zbin):
             if z <= z1:
-                rho_mat[:,i] = ((rho_l0 * (10**self.lumobin/lumo_star) **
-                                 -alpha * np.exp(-10**self.lumobin /
-                                                  lumo_star)) * (1+z)**k1)
+                rho_mat[:, i] = ((rho_l0 * (10**self.lumobin / lumo_star) **
+                                  (-alpha) *
+                                  np.exp(-10**self.lumobin / lumo_star)) *
+                                 (1 + z)**k1)
             elif z <= z2:
-                rho_mat[:,i] = ((rho_l0 * (10**self.lumobin/lumo_star) **
-                                 -alpha * np.exp(-10**self.lumobin /
-                                                 lumo_star)) * (1+z1)**k1)
+                rho_mat[:, i] = ((rho_l0 * (10**self.lumobin / lumo_star) **
+                                  (-alpha) *
+                                  np.exp(-10**self.lumobin / lumo_star)) *
+                                 (1 + z1)**k1)
             else:
-                rho_mat[:,i] = ((rho_l0 * (10**self.lumobin/lumo_star) **
-                                 -alpha * np.exp(-10**self.lumobin /
-                                                 lumo_star)) * (1+z)**-z2)
+                rho_mat[:, i] = ((rho_l0 * (10**self.lumobin / lumo_star) **
+                                  (-alpha) *
+                                  np.exp(-10**self.lumobin / lumo_star)) *
+                                 (1 + z)**-z2)
 
         return rho_mat
 
@@ -163,7 +166,8 @@ class FRI(BasePointSource):
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
         # W/Hz/Sr to Jy
-        self.lumo = self.lumo / self.dA.to(au.m).value**2 * au.W/au.Hz/au.m/au.m
+        self.lumo = self.lumo / \
+            self.dA.to(au.m).value**2 * au.W / au.Hz / au.m / au.m
         self.lumo = self.lumo.to(au.Jy)
         # Position
         x = np.random.uniform(0, 1)
@@ -220,7 +224,7 @@ class FRI(BasePointSource):
             lobe1_lon = (lobe_maj / 2).to(au.deg) * np.sin(lobe_ang)
             lobe1_lon = c_lon + lobe1_lon.value
             # draw
-            # Fill with circle
+            # Fill with ellipse
             lon, lat, gridmap = grid.make_grid_ellipse(
                 (lobe1_lon, lobe1_lat),
                 (lobe_maj.to(au.deg).value, lobe_min.to(au.deg).value),
@@ -235,7 +239,7 @@ class FRI(BasePointSource):
             lobe2_lon = (lobe_maj / 2).to(au.deg) * np.sin(lobe_ang + np.pi)
             lobe2_lon = c_lon + lobe2_lon.value
             # draw
-            # Fill with circle
+            # Fill with ellipse
             lon, lat, gridmap = grid.make_grid_ellipse(
                 (lobe2_lon, lobe2_lat),
                 (lobe_maj.to(au.deg).value, lobe_min.to(au.deg).value),
@@ -305,10 +309,10 @@ class FRI(BasePointSource):
         flux_core = 10**lgs * au.Jy
         Tb_core = convert.Fnu_to_Tb(flux_core, area, freq)
         # lobe
-        x = np.random.normal(self.xmed,0.5)
-        beta = np.sqrt((self.gamma**2-1)/self.gamma)
-        B_theta = 0.5 * ((1-beta*np.cos(self.lobe_ang))**-2 +
-                         (1+beta*np.cos(self.lobe_ang))**-2)
+        x = np.random.normal(self.xmed, 0.5)
+        beta = np.sqrt((self.gamma**2 - 1) / self.gamma)
+        B_theta = 0.5 * ((1 - beta * np.cos(self.lobe_ang))**-2 +
+                         (1 + beta * np.cos(self.lobe_ang))**-2)
         ratio_obs = 10**x * B_theta
         flux_lobe = flux_core / ratio_obs
         Tb_lobe = convert.Fnu_to_Tb(flux_lobe, area, freq)
