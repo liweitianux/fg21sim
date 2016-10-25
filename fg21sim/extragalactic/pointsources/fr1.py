@@ -328,11 +328,11 @@ class FRI(BasePointSource):
         # core area
         npix = hp.nside2npix(self.nside)
         core_area = 4 * np.pi / npix  # [sr]
-        Tb_core = convert.Fnu_to_Tb(flux_core, core_area, freq)  # [K]
+        Tb_core = convert.Fnu_to_Tb_fast(flux_core, core_area, freq)  # [K]
         # lobe
         lumo_lobe = lumo_151 * (1 - ratio_obs) / (1 + ratio_obs)  # [Jy]
         flux_lobe = (freq / freq_ref)**(-0.75) * lumo_lobe
-        Tb_lobe = convert.Fnu_to_Tb(flux_lobe, area, freq)  # [K]
+        Tb_lobe = convert.Fnu_to_Tb_fast(flux_lobe, area, freq)  # [K]
 
         Tb = [Tb_core, Tb_lobe]
         return Tb
