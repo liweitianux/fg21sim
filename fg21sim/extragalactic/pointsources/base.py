@@ -28,12 +28,9 @@ References
     https://www.jasondavies.com/maps/random-points/
 """
 import os
-
 import numpy as np
 import pandas as pd
-
 import healpy as hp
-import astropy.units as au
 
 from .psparams import PixelParams
 
@@ -162,19 +159,17 @@ class BasePointSource:
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
         # W/Hz/Sr to Jy
-        self.lumo = (self.lumo /
-                     self.dA.to(au.m).value**2 * au.W / au.Hz / au.m / au.m)
-        self.lumo = self.lumo.to(au.Jy)
+        dA = self.dA * 3.0856775814671917E+22  # Mpc to meter
+        self.lumo = self.lumo / dA**2 / (10.0**-24)  # [Jy]
         # Position
         x = np.random.uniform(0, 1)
-        self.lat = (np.arccos(2 * x - 1) / np.pi * 180 - 90) * au.deg
-        self.lon = np.random.uniform(0, np.pi * 2) / np.pi * 180 * au.deg
+        self.lat = (np.arccos(2 * x - 1) / np.pi * 180 - 90)   # [deg]
+        self.lon = np.random.uniform(0, np.pi * 2) / np.pi * 180  # [deg]
         # Area
         npix = hp.nside2npix(self.nside)
-        self.area = 4 * np.pi / npix * au.sr
+        self.area = 4 * np.pi / npix  # [sr]
 
-        ps_list = [self.z, self.dA.value, self.lumo.value, self.lat.value,
-                   self.lon.value, self.area.value]
+        ps_list = [self.z, self.dA, self.lumo, self.lat, self.lon, self.area]
         return ps_list
 
     def gen_catalog(self):
