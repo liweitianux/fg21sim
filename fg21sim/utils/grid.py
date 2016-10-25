@@ -75,20 +75,23 @@ def make_coordinate_grid(center, size, resolution):
 
 
 @nb.jit(nb.types.UniTuple(nb.float64[:, :], 2)(
-    nb.float64, nb.float64, nb.float64, nb.float64, nb.float64),
+    nb.types.UniTuple(nb.float64, 2),
+    nb.types.UniTuple(nb.float64, 2),
+    nb.float64),
         nopython=True)
-def make_coordinate_grid_fast(lon_c, lat_c, size_lon, size_lat, resolution):
+def make_coordinate_grid_fast(center, size, resolution):
     """Make a rectangle, Cartesian coordinate grid.
 
     This is the ``numba.jit`` optimized version of ``make_coordinate_grid``.
 
     Parameters
     ----------
-    lon_c, lat_c : float
-        The longitude and latitude of the center coordinate,
+    center : 2-float tuple
+        Center coordinate (longitude, latitude) of the grid,
         with longitude [0, 360) degree, latitude [-90, 90] degree.
-    size_lon, size_lat : float
-        The sizes of the grid along the longitude and latitude directions.
+    size : float, or 2-float tuple
+        The sizes (size_lon, size_lat) of the grid along the longitude
+        and latitude directions.
     resolution : float
         The grid resolution, unit [ degree ].
 
@@ -104,15 +107,17 @@ def make_coordinate_grid_fast(lon_c, lat_c, size_lon, size_lat, resolution):
         pixel.
         Also, the latitudes are fixed to be in the valid range [-90, 90].
     """
+    lon0, lat0 = center
+    size_lon, size_lat = size
     # Half number of pixels (excluding the center)
     hn_lon = int(np.ceil(0.5*size_lon / resolution))
     hn_lat = int(np.ceil(0.5*size_lat / resolution))
-    idx_lon = lon_c + np.arange(-hn_lon, hn_lon+1) * resolution
-    idx_lat = lat_c + np.arange(-hn_lat, hn_lat+1) * resolution
+    idx_lon = lon0 + np.arange(-hn_lon, hn_lon+1) * resolution
+    idx_lat = lat0 + np.arange(-hn_lat, hn_lat+1) * resolution
     # Fix the longitudes and latitudes to be in the valid ranges
     idx_lon = _wrap_longitudes(idx_lon)
     idx_lat = _wrap_latitudes(idx_lat)
-    # ``numpy.meshgrid`` currently not supported by ``numba``
+    # XXX: ``numba`` currently does not support ``numpy.meshgrid``
     shape = (len(idx_lat), len(idx_lon))
     lon = np.zeros(shape)
     for i in range(shape[0]):
@@ -164,8 +169,8 @@ def make_grid_ellipse(center, size, resolution, rotation=None):
     therefore, we can simply rotate the ellipse without reshaping.
     """
     size_major = max(size)
-    lon, lat = make_coordinate_grid_fast(center[0], center[1],
-                                         size_major, size_major, resolution)
+    size = (size_major, size_major)
+    lon, lat = make_coordinate_grid_fast(center, size, resolution)
     shape = lon.shape
     # Fill the ellipse into the grid
     r0, c0 = np.floor(np.array(shape) / 2.0).astype(np.int)
