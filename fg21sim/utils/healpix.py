@@ -71,9 +71,9 @@ def healpix2hpx(data, append_history=None, append_comment=None):
     logger.info("Loaded HEALPix data: dtype={0}, Npixel={1}, Nside={2}".format(
         dtype, npix, nside))
     hp_data = np.append(hp_data, np.nan).astype(dtype)
-    logger.info("Calculating the HPX indices ...")
-    hpx_idx = _calc_hpx_indices(nside)
-    # Fix indices of "-1" to set empty pixels with above appended NaN
+    logger.info("Calculating the HPX indexes ...")
+    hpx_idx = _calc_hpx_indexes(nside)
+    # Fix indexes of "-1" to set empty pixels with above appended NaN
     hpx_idx[hpx_idx == -1] = len(hp_data) - 1
     hpx_data = hp_data[hpx_idx]
     hpx_header = _make_hpx_header(hp_header,
@@ -126,11 +126,11 @@ def hpx2healpix(data, append_history=None, append_comment=None):
     logger.info("Determined HEALPix Nside=%d" % nside)
     #
     npix = hp.nside2npix(nside)
-    logger.info("Calculating the HPX indices ...")
-    hpx_idx = _calc_hpx_indices(nside).flatten()
+    logger.info("Calculating the HPX indexes ...")
+    hpx_idx = _calc_hpx_indexes(nside).flatten()
     hpx_idx_uniq, idxx = np.unique(hpx_idx, return_index=True)
     if np.sum(hpx_idx_uniq >= 0) != npix:
-        raise ValueError("Number of pixels does not match indices")
+        raise ValueError("Number of pixels does not match indexes")
     hpx_data = hpx_data.flatten()
     hp_data = hpx_data[idxx[hpx_idx_uniq >= 0]]
     hp_header = _make_healpix_header(hpx_header, nside=nside,
@@ -141,7 +141,7 @@ def hpx2healpix(data, append_history=None, append_comment=None):
 
 @nb.jit(nb.int64[:](nb.int64, nb.int64, nb.int64), nopython=True)
 def _calc_hpx_row_idx(nside, facet, jmap):
-    """Calculate the HEALPix indices for one row of a facet.
+    """Calculate the HEALPix indexes for one row of a facet.
 
     NOTE
     ----
@@ -210,8 +210,8 @@ def _calc_hpx_row_idx(nside, facet, jmap):
 
 
 @nb.jit(nb.int64[:, :](nb.int64), nopython=True)
-def _calc_hpx_indices(nside):
-    """Calculate HEALPix element indices for the HPX projection scheme.
+def _calc_hpx_indexes(nside):
+    """Calculate HEALPix element indexes for the HPX projection scheme.
 
     Parameters
     ----------
@@ -220,15 +220,15 @@ def _calc_hpx_indices(nside):
 
     Returns
     -------
-    indices : 2D `~numpy.ndarray`
+    indexes : 2D `~numpy.ndarray`
         2D integer array of same size as the input/output HPX FITS image,
-        with elements tracking the indices of the HPX pixels in the
+        with elements tracking the indexes of the HPX pixels in the
         HEALPix 1D array, while elements with value "-1" indicating
         null/empty HPX pixels.
 
     NOTE
     ----
-    * The indices are 0-based;
+    * The indexes are 0-based;
     * Currently only HEALPix RING ordering supported;
     * The null/empty elements in the HPX projection are filled with "-1".
     """
@@ -250,7 +250,7 @@ def _calc_hpx_indices(nside):
     FACETS_LAYOUT[4, :] = [-1, -1, -1,  2,  6]
     #
     shape = (nfacet*nside, nfacet*nside)
-    indices = -np.ones(shape, dtype=np.int64)
+    indexes = -np.ones(shape, dtype=np.int64)
     #
     # Loop vertically facet-by-facet
     for jfacet in range(nfacet):
@@ -266,9 +266,9 @@ def _calc_hpx_indices(nside):
                 else:
                     idx = _calc_hpx_row_idx(nside, facet, j)
                     col = ifacet * nside
-                    indices[row, col:(col+nside)] = idx
+                    indexes[row, col:(col+nside)] = idx
     #
-    return indices
+    return indexes
 
 
 def _make_hpx_header(header, append_history=None, append_comment=None):
@@ -510,7 +510,7 @@ def ang2pix_ring(nside, theta, phi):
     Returns
     -------
     ipix : 1D or 1D `~numpy.ndarray`
-        The indices of the pixels corresponding to the input coordinates.
+        The indexes of the pixels corresponding to the input coordinates.
         The shape is the same as the input array.
 
     NOTE
@@ -539,7 +539,7 @@ def pix2ang_ring(nside, ipix):
     Parameters
     ----------
     ipix : 1D or 2D `~numpy.ndarray`
-        The indices of the HEALPix pixels in the RING ordering
+        The indexes of the HEALPix pixels in the RING ordering
 
     Returns
     -------

@@ -20,11 +20,11 @@ def spherical_uniform(n=1):
     Returns
     -------
     theta : float, or 1D `~numpy.ndarray`
-        The polar angles, φ ∈ [0, π]. (unit: rad)
+        The polar angles, θ ∈ [0, π]. (unit: rad)
         If ``n > 1``, then returns a 1D array containing all the generated
         coordinates. (unit: rad)
     phi : float, or 1D `~numpy.ndarray`
-        The azimuthal angles, θ ∈ [0, 2π).
+        The azimuthal angles, φ ∈ [0, 2π).
 
     NOTE
     ----
