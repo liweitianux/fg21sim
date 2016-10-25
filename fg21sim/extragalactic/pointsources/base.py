@@ -162,8 +162,8 @@ class BasePointSource:
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
         # W/Hz/Sr to Jy
-        self.lumo = self.lumo / \
-            self.dA.to(au.m).value**2 * au.W / au.Hz / au.m / au.m
+        self.lumo = (self.lumo /
+                     self.dA.to(au.m).value**2 * au.W / au.Hz / au.m / au.m)
         self.lumo = self.lumo.to(au.Jy)
         # Position
         x = np.random.uniform(0, 1)
