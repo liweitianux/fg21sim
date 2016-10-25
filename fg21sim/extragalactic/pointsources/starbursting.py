@@ -216,7 +216,7 @@ class StarBursting(BasePointSource):
         # Calc flux
         flux = (freq / freq_ref)**(-0.7) * lumo_1400
         # Calc brightness temperature
-        Tb = convert.Fnu_to_Tb(flux, area, freq)
+        Tb = convert.Fnu_to_Tb_fast(flux, area, freq)
 
         return Tb
 
