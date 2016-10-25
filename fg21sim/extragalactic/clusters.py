@@ -417,12 +417,10 @@ class GalaxyClusters:
         Parameters
         ----------
         luminosity : float
-            The luminosity density (unit: `self.units["luminosity"]`) at
-            the reference frequency (i.e.,
-            `self.catalog_prop["luminosity_freq"]`).
+            The luminosity density (unit: [ W/Hz ]) at the reference
+            frequency (i.e., `self.catalog_prop["luminosity_freq"]`).
         distance : float
-            The luminosity distance (unit: `self.units["distance"]`) to the
-            object
+            The luminosity distance (unit: [ Mpc ]) to the object
         specindex : float
             The spectral index of the power-law spectrum.
             Note the *negative* sign in the formula.
@@ -445,15 +443,23 @@ class GalaxyClusters:
         Therefore, the flux density at the requested frequency should first
         be calculated by extrapolating the spectrum, then convert the flux
         density to derive the brightness temperature.
+
+        XXX/NOTE
+        --------
+        The *luminosity distance* is required to calculate the flux density
+        from the luminosity density.
+        Whether the distance (i.e., ``self.catalog["distance"]``) is the
+        *comoving distance* ??
+        Whether a conversion is required to get the *luminosity distance* ??
         """
         freq = frequency  # [ MHz ]
         freq_ref = self.catalog_prop["luminosity_freq"].value
-        luminosity = luminosity * self.units["luminosity"]
-        Lnu = luminosity * (freq / freq_ref) ** (-specindex)
-        Fnu = Lnu / (4*np.pi * (distance*self.units["distance"])**2)
-        Fnu_Jy = Fnu.to(au.Jy).value  # [ Jy ]
+        Lnu = luminosity * (freq / freq_ref) ** (-specindex)  # [ W/Hz ]
+        # Conversion coefficient: [ W/Hz/Mpc^2 ] => [ Jy ]
+        coef = 1.0502650403056097e-19
+        Fnu = coef * Lnu / (4*np.pi * distance**2)  # [ Jy ]
         omega = size[0] * size[1]  # [ deg^2 ]
-        Tb = Fnu_to_Tb_fast(Fnu_Jy, omega, freq)
+        Tb = Fnu_to_Tb_fast(Fnu, omega, freq)
         return Tb
 
     def _simulate_templates(self):
