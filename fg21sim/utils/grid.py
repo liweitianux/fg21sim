@@ -30,56 +30,12 @@ def _wrap_latitudes(lat):
     return lat
 
 
-def make_coordinate_grid(center, size, resolution):
-    """Make a rectangle, Cartesian coordinate grid.
-
-    Parameters
-    ----------
-    center : 2-float tuple
-        Center coordinate (longitude, latitude) of the grid,
-        with longitude [0, 360) degree, latitude [-90, 90] degree.
-    size : float, or 2-float tuple
-        The sizes (size_lon, size_lat) of the grid along the longitude
-        and latitude directions.  If only one float specified, then the
-        grid is square.
-    resolution : float
-        The grid resolution, unit [ degree ].
-
-    Returns
-    -------
-    lon : 2D `~numpy.ndarray`
-        The array with elements representing the longitudes of each grid
-        pixel.  The array is odd-sized, with the input center locating at
-        the exact grid central pixel.
-        Also, the longitudes are fixed to be in the valid range [0, 360).
-    lat : 2D `~numpy.ndarray`
-        The array with elements representing the latitudes of each grid
-        pixel.
-        Also, the latitudes are fixed to be in the valid range [-90, 90].
-    """
-    lon0, lat0 = center
-    try:
-        size_lon, size_lat = size
-    except (TypeError, ValueError):
-        size_lon = size_lat = size
-    # Half number of pixels (excluding the center)
-    hn_lon = np.ceil(0.5*size_lon / resolution).astype(np.int)
-    hn_lat = np.ceil(0.5*size_lat / resolution).astype(np.int)
-    idx_lon = lon0 + np.arange(-hn_lon, hn_lon+1) * resolution
-    idx_lat = lat0 + np.arange(-hn_lat, hn_lat+1) * resolution
-    # Fix the longitudes and latitudes to be in the valid ranges
-    idx_lon = _wrap_longitudes(idx_lon)
-    idx_lat = _wrap_latitudes(idx_lat)
-    lon, lat = np.meshgrid(idx_lon, idx_lat)
-    return (lon, lat)
-
-
 @nb.jit(nb.types.UniTuple(nb.float64[:, :], 2)(
     nb.types.UniTuple(nb.float64, 2),
     nb.types.UniTuple(nb.float64, 2),
     nb.float64),
         nopython=True)
-def make_coordinate_grid_fast(center, size, resolution):
+def make_coordinate_grid(center, size, resolution):
     """Make a rectangle, Cartesian coordinate grid.
 
     This is the ``numba.jit`` optimized version of ``make_coordinate_grid``.
@@ -170,7 +126,7 @@ def make_grid_ellipse(center, size, resolution, rotation=None):
     """
     size_major = max(size)
     size = (size_major, size_major)
-    lon, lat = make_coordinate_grid_fast(center, size, resolution)
+    lon, lat = make_coordinate_grid(center, size, resolution)
     shape = lon.shape
     # Fill the ellipse into the grid
     r0, c0 = np.floor(np.array(shape) / 2.0).astype(np.int)
