@@ -9,10 +9,12 @@ Grid utilities.
 import numpy as np
 from scipy import ndimage
 import healpy as hp
+import numba as nb
 
 from .draw import ellipse
 
 
+@nb.jit(nopython=True)
 def _wrap_longitudes(lon):
     """Wrap the longitudes for values that beyond the valid range [0, 360)"""
     lon[lon < 0] += 360
@@ -20,6 +22,7 @@ def _wrap_longitudes(lon):
     return lon
 
 
+@nb.jit(nopython=True)
 def _wrap_latitudes(lat):
     """Wrap the latitudes for values that beyond the valid range [-90, 90]"""
     lat[lat < -90] = -lat[lat < -90] - 180
@@ -68,7 +71,56 @@ def make_coordinate_grid(center, size, resolution):
     idx_lon = _wrap_longitudes(idx_lon)
     idx_lat = _wrap_latitudes(idx_lat)
     lon, lat = np.meshgrid(idx_lon, idx_lat)
-    return lon, lat
+    return (lon, lat)
+
+
+@nb.jit(nb.types.UniTuple(nb.float64[:, :], 2)(
+    nb.float64, nb.float64, nb.float64, nb.float64, nb.float64),
+        nopython=True)
+def make_coordinate_grid_fast(lon_c, lat_c, size_lon, size_lat, resolution):
+    """Make a rectangle, Cartesian coordinate grid.
+
+    This is the ``numba.jit`` optimized version of ``make_coordinate_grid``.
+
+    Parameters
+    ----------
+    lon_c, lat_c : float
+        The longitude and latitude of the center coordinate,
+        with longitude [0, 360) degree, latitude [-90, 90] degree.
+    size_lon, size_lat : float
+        The sizes of the grid along the longitude and latitude directions.
+    resolution : float
+        The grid resolution, unit [ degree ].
+
+    Returns
+    -------
+    lon : 2D `~numpy.ndarray`
+        The array with elements representing the longitudes of each grid
+        pixel.  The array is odd-sized, with the input center locating at
+        the exact grid central pixel.
+        Also, the longitudes are fixed to be in the valid range [0, 360).
+    lat : 2D `~numpy.ndarray`
+        The array with elements representing the latitudes of each grid
+        pixel.
+        Also, the latitudes are fixed to be in the valid range [-90, 90].
+    """
+    # Half number of pixels (excluding the center)
+    hn_lon = int(np.ceil(0.5*size_lon / resolution))
+    hn_lat = int(np.ceil(0.5*size_lat / resolution))
+    idx_lon = lon_c + np.arange(-hn_lon, hn_lon+1) * resolution
+    idx_lat = lat_c + np.arange(-hn_lat, hn_lat+1) * resolution
+    # Fix the longitudes and latitudes to be in the valid ranges
+    idx_lon = _wrap_longitudes(idx_lon)
+    idx_lat = _wrap_latitudes(idx_lat)
+    # ``numpy.meshgrid`` currently not supported by ``numba``
+    shape = (len(idx_lat), len(idx_lon))
+    lon = np.zeros(shape)
+    for i in range(shape[0]):
+        lon[i, :] = idx_lon
+    lat = np.zeros(shape)
+    for i in range(shape[1]):
+        lat[:, i] = idx_lat
+    return (lon, lat)
 
 
 def make_grid_ellipse(center, size, resolution, rotation=None):
@@ -111,9 +163,9 @@ def make_grid_ellipse(center, size, resolution, rotation=None):
     The generated grid is square, determined by the major axis of the ellipse,
     therefore, we can simply rotate the ellipse without reshaping.
     """
-    major = max(size)
-    size_square = (major, major)
-    lon, lat = make_coordinate_grid(center, size_square, resolution)
+    size_major = max(size)
+    lon, lat = make_coordinate_grid_fast(center[0], center[1],
+                                         size_major, size_major, resolution)
     shape = lon.shape
     # Fill the ellipse into the grid
     r0, c0 = np.floor(np.array(shape) / 2.0).astype(np.int)
