@@ -3,7 +3,6 @@
 
 import numpy as np
 import healpy as hp
-import astropy.units as au
 
 from .base import BasePointSource
 from .psparams import PixelParams
@@ -132,19 +131,32 @@ class FRII(BasePointSource):
         return rho_mat
 
     def gen_lobe(self):
-        D0 = 1 * au.Mpc
-        self.lobe_maj = (0.5 *
-                         np.random.uniform(0, D0 * (1 + self.z)**(-1.4)) *
-                         au.Mpc)
-        self.lobe_min = self.lobe_maj * np.random.uniform(0.2, 1)
+        """
+        Calculate lobe parameters
 
-        # Rotation angle
-        self.lobe_ang = np.random.uniform(0, np.pi) / np.pi * 180 * au.deg
+        References
+        ----------
+        [1] Wilman et al.,
+             "A semi-empirical simulation of the extragalactic radio continuum
+             sky for next generation radio telescopes",
+             2008, MNRAS, 388, 1335-1348.
+             http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
+
+        Return
+        ------
+        lobe: list
+            lobe = [lobe_maj, lobe_min, lobe_ang], which represent the major
+            and minor axes and the rotation angle.
+        """
+        D0 = 1  # [Mpc]
+        self.lobe_maj = 0.5 * np.random.uniform(0, D0 * (1 + self.z)**(-1.4))
+        self.lobe_min = self.lobe_maj * np.random.uniform(0.2, 1)
+        self.lobe_ang = np.random.uniform(0, np.pi) / np.pi * 180
 
         # Transform to pixel
         self.lobe_maj = self.param.get_angle(self.lobe_maj)
         self.lobe_min = self.param.get_angle(self.lobe_min)
-        lobe = [self.lobe_maj.value, self.lobe_min.value, self.lobe_ang.value]
+        lobe = [self.lobe_maj, self.lobe_min, self.lobe_ang]
 
         return lobe
 
@@ -160,21 +172,18 @@ class FRII(BasePointSource):
         self.param = PixelParams(self.z)
         self.dA = self.param.dA
         # W/Hz/Sr to Jy
-        self.lumo = self.lumo / \
-            self.dA.to(au.m).value**2 * au.W / au.Hz / au.m / au.m
-        self.lumo = self.lumo.to(au.Jy)
+        dA = self.dA * 3.0856775814671917E+22  # Mpc to meter
+        self.lumo = self.lumo / dA**2 / (10.0**-24)  # [Jy]
         # Position
         x = np.random.uniform(0, 1)
-        self.lat = (np.arccos(2 * x - 1) / np.pi * 180 - 90) * au.deg
-        self.lon = np.random.uniform(0, np.pi * 2) / np.pi * 180 * au.deg
+        self.lat = (np.arccos(2 * x - 1) / np.pi * 180 - 90)  # [deg]
+        self.lon = np.random.uniform(0, np.pi * 2) / np.pi * 180  # [deg]
         # lobe
         lobe = self.gen_lobe()
         # Area
         self.area = np.pi * self.lobe_maj * self.lobe_min
 
-        ps_list = [self.z, self.dA.value, self.lumo.value, self.lat.value,
-                   self.lon.value, self.area.value]
-
+        ps_list = [self.z, self.dA, self.lumo, self.lat, self.lon, self.area]
         ps_list.extend(lobe)
 
         return ps_list
@@ -204,25 +213,25 @@ class FRII(BasePointSource):
         # Iteratively draw ps
         for i in range(num_ps):
             # Parameters
-            c_lat = self.ps_catalog[
-                'Lat (deg)'][i] * au.deg  # core lat [au.deg]
-            c_lon = self.ps_catalog[
-                'Lon (deg)'][i] * au.deg  # core lon [au.deg]
-            lobe_maj = self.ps_catalog['lobe_maj (rad)'][i] * au.rad
-            lobe_min = self.ps_catalog['lobe_min (rad)'][i] * au.rad
-            lobe_ang = self.ps_catalog['lobe_ang (deg)'][i] / 180 * np.pi
+            c_lat = self.ps_catalog['Lat (deg)'][i]  # core lat [deg]
+            c_lon = self.ps_catalog['Lon (deg)'][i]  # core lon [au.deg]
+            lobe_maj = self.ps_catalog['lobe_maj (rad)'][
+                i] * 180 / np.pi  # [deg]
+            lobe_min = self.ps_catalog['lobe_min (rad)'][
+                i] * 180 / np.pi  # [deg]
+            lobe_ang = self.ps_catalog['lobe_ang (deg)'][
+                i] / 180 * np.pi  # [rad]
             # Offset to the core, refer to Willman Sec2.5.vii
             offset = lobe_maj * 2 * np.random.uniform(0.2, 0.8)
             # Lobe1
-            lobe1_lat = (lobe_maj / 2 + offset).to(au.deg) * np.cos(lobe_ang)
+            lobe1_lat = (lobe_maj / 2 + offset) * np.cos(lobe_ang)
             lobe1_lat = c_lat + lobe1_lat
-            lobe1_lon = (lobe_maj / 2 + offset).to(au.deg) * np.sin(lobe_ang)
+            lobe1_lon = (lobe_maj / 2 + offset) * np.sin(lobe_ang)
             lobe1_lon = c_lon + lobe1_lon
             # draw
             # Fill with ellipse
             lon, lat, gridmap = grid.make_grid_ellipse(
-                (lobe1_lon.value, lobe1_lat.value),
-                (lobe_maj.to(au.deg).value, lobe_min.to(au.deg).value),
+                (lobe1_lon, lobe1_lat), (lobe_maj, lobe_min),
                 resolution, lobe_ang / np.pi * 180)
             indices, values = grid.map_grid_to_healpix(
                 (lon, lat, gridmap), self.nside)
@@ -230,27 +239,26 @@ class FRII(BasePointSource):
 
             # lobe1_hotspot
             lobe1_hot_lat = (lobe_maj + offset) * np.cos(lobe_ang)
-            lobe1_hot_lat = (c_lat + 90 * au.deg).to(au.rad) + lobe1_lat
-            lobe1_hot_lon = (lobe_maj + offset).to(au.deg) * np.sin(lobe_ang)
-            lobe1_hot_lon = c_lon.to(au.rad) + lobe1_lon
+            lobe1_hot_lat = (c_lat + 90 + lobe1_lat) / 180 * np.pi
+            lobe1_hot_lon = (lobe_maj + offset) * np.sin(lobe_ang)
+            lobe1_hot_lon = (c_lon + lobe1_lon) / 180 * np.pi
             if lobe1_hot_lat.value < 0:
-                lobe1_hot_lat += np.pi * au.rad
+                lobe1_hot_lat += np.pi
             elif lobe1_hot_lat.value > np.pi:
-                lobe1_hot_lat -= np.pi * au.rad
+                lobe1_hot_lat -= np.pi
             lobe1_hot_index = hp.ang2pix(
-                self.nside, lobe1_hot_lat.value, lobe1_hot_lon.value)
+                self.nside, lobe1_hot_lat, lobe1_hot_lon)
             hpmap[lobe1_hot_index] += Tb_list[i, 2]
 
             # Lobe2
-            lobe2_lat = (lobe_maj / 2).to(au.deg) * np.cos(lobe_ang + np.pi)
+            lobe2_lat = (lobe_maj / 2) * np.cos(lobe_ang + np.pi)
             lobe2_lat = c_lat + lobe2_lat
-            lobe2_lon = (lobe_maj / 2).to(au.deg) * np.sin(lobe_ang + np.pi)
+            lobe2_lon = (lobe_maj / 2) * np.sin(lobe_ang + np.pi)
             lobe2_lon = c_lon + lobe2_lon
             # draw
             # Fill with ellipse
             lon, lat, gridmap = grid.make_grid_ellipse(
-                (lobe2_lon.value, lobe2_lat.value),
-                (lobe_maj.to(au.deg).value, lobe_min.to(au.deg).value),
+                (lobe2_lon, lobe2_lat), (lobe_maj, lobe_min),
                 resolution, lobe_ang / np.pi * 180)
             indices, values = grid.map_grid_to_healpix(
                 (lon, lat, gridmap), self.nside)
@@ -258,17 +266,15 @@ class FRII(BasePointSource):
 
             # lobe2_hotspot
             lobe2_hot_lat = (lobe_maj + offset) * np.cos(lobe_ang + np.pi)
-            lobe2_hot_lat = (c_lat + 90 * au.deg).to(au.rad) + lobe1_lat
-            lobe2_hot_lon = ((lobe_maj + offset).to(au.deg) *
-                             np.sin(lobe_ang + np.pi))
-            lobe2_hot_lon = c_lon.to(au.rad) + lobe1_lon
+            lobe2_hot_lat = (c_lat + 90 + lobe1_lat) / 180 * np.pi
+            lobe2_hot_lon = (lobe_maj + offset) * np.sin(lobe_ang + np.pi)
+            lobe2_hot_lon = (c_lon + lobe1_lon) / 180 * np.pi
             if lobe2_hot_lat.value < 0:
-                lobe2_hot_lat += np.pi * au.rad
+                lobe2_hot_lat += np.pi
             elif lobe2_hot_lat.value > np.pi:
-                lobe2_hot_lat -= np.pi * au.rad
-            lobe2_hot_index = hp.ang2pix(self.nside,
-                                         lobe2_hot_lat.value,
-                                         lobe2_hot_lon.value)
+                lobe2_hot_lat -= np.pi
+            lobe2_hot_index = hp.ang2pix(
+                self.nside, lobe2_hot_lat, lobe2_hot_lon)
             hpmap[lobe2_hot_index] += Tb_list[i, 2]
 
             # Core
@@ -316,13 +322,13 @@ class FRII(BasePointSource):
              Average brightness temperature, e.g., `1.0*au.K`
         """
         # Init
-        freq_ref = 151 * au.MHz
-        freq = freq * au.MHz
+        freq_ref = 151  # [MHz]
+        freq = freq  # [MHz]
         # Luminosity at 151MHz
-        lumo_151 = self.lumo.to(au.Jy)  # [W/Hz/Sr to Jy]
+        lumo_151 = self.lumo  # [Jy]
         # Calc flux
         # core-to-extend ratio
-        ang = self.lobe_ang.to(au.rad).value
+        ang = self.lobe_ang / 180 * np.pi
         x = np.random.normal(self.xmed, 0.5)
         beta = np.sqrt((self.gamma**2 - 1) / self.gamma)
         B_theta = 0.5 * ((1 - beta * np.cos(ang))**-2 +
@@ -330,29 +336,30 @@ class FRII(BasePointSource):
         ratio_obs = 10**x * B_theta
         # Core
         lumo_core = ratio_obs / (1 + ratio_obs) * lumo_151
-        a0 = (np.log10(lumo_core.value) - 0.07 *
-              np.log10(freq_ref.to(au.GHz).value) +
-              0.29 * np.log10(freq_ref.to(au.GHz).value) *
-              np.log10(freq_ref.to(au.GHz).value))
-        lgs = (a0 + 0.07 * np.log10(freq.to(au.GHz).value) - 0.29 *
-               np.log10(freq.to(au.GHz).value) *
-               np.log10(freq.to(au.GHz).value))
-        flux_core = 10**lgs * au.Jy
+        a0 = (np.log10(lumo_core) - 0.07 *
+              np.log10(freq_ref * 10.0E-3) +
+              0.29 * np.log10(freq_ref * 10.0E-3) *
+              np.log10(freq_ref * 10.0E-3))
+        lgs = (a0 + 0.07 * np.log10(freq * 10.0E-3) - 0.29 *
+               np.log10(freq * 10.0E-3) *
+               np.log10(freq * 10.0E-3))
+        flux_core = 10**lgs  # [Jy]
         # core area
         npix = hp.nside2npix(self.nside)
-        core_area = 4 * np.pi * au.sr / npix
-        Tb_core = convert.Fnu_to_Tb(flux_core, core_area, freq)
+        core_area = 4 * np.pi / npix  # [sr]
+        Tb_core = convert.Fnu_to_Tb(flux_core, core_area, freq)  # [K]
         # lobe
-        lumo_lobe = lumo_151 * (1 - ratio_obs) / (1 + ratio_obs)
+        lumo_lobe = lumo_151 * (1 - ratio_obs) / (1 + ratio_obs)  # [Jy]
         flux_lobe = (freq / freq_ref)**(-0.75) * lumo_lobe
-        Tb_lobe = convert.Fnu_to_Tb(flux_lobe, area, freq)
+        Tb_lobe = convert.Fnu_to_Tb(flux_lobe, area, freq)  # [K]
 
         # hotspots
         # Willman Eq. (3)
         f_hs = (0.4 * (np.log10(self.lumo_sr) - 25.5) +
                 np.random.uniform(-0.5, 0.5))
         Tb_hotspot = Tb_lobe * (1 + f_hs)
-        Tb = [Tb_core.value, Tb_lobe.value, Tb_hotspot.value]
+        Tb = [Tb_core, Tb_lobe, Tb_hotspot]
+
         return Tb
 
     def calc_Tb(self, freq):
@@ -376,7 +383,7 @@ class FRII(BasePointSource):
         Tb_list = np.zeros((num_ps, 3))
         # Iteratively calculate Tb
         for i in range(num_ps):
-            ps_area = self.ps_catalog['Area (sr)'][i] * au.sr
+            ps_area = self.ps_catalog['Area (sr)'][i]  # [sr]
             Tb_list[i, :] = self.calc_single_Tb(ps_area, freq)
 
         return Tb_list
