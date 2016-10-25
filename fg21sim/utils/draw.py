@@ -83,16 +83,29 @@ def _ellipse_in_shape(shape, center, radii):
     return (xi, yi)
 
 
-def ellipse(r, c, r_radius, c_radius, shape=None):
+@nb.jit(nb.types.UniTuple(nb.int64[:], 2)(nb.int64, nb.int64,
+                                          nb.int64, nb.int64,
+                                          nb.types.UniTuple(nb.int64, 2)),
+        nopython=True)
+def ellipse(r, c, r_radius, c_radius, shape):
     """Generate coordinates of pixels within the ellipse.
+
+    XXX/NOTE
+    --------
+    * Cannot figure out why ``nb.optional(nb.types.UniTuple(nb.int64, 2))``
+      does NOT work.  Therefore, make ``shape`` as mandatory parameter
+      instead of optional.
+    * Cannot figure out multi-dispatch that allows both int and float types
+      for ``r``, ``c``, ``r_radius`` and ``c_radius``.  Thus only support
+      the int type for the moment.
 
     Parameters
     ----------
-    r, c : float
+    r, c : int
         Center coordinate of the ellipse.
-    r_radius, c_radius : float
+    r_radius, c_radius : int
         Minor and major semi-axes. ``(r/r_radius)**2 + (c/c_radius)**2 = 1``.
-    shape : tuple, optional
+    shape : tuple
         Image shape which is used to determine the maximum extent of output
         pixel coordinates.  This is useful for ellipses that exceed the image
         size.  If None, the full extent of the ellipse is used.
@@ -127,35 +140,32 @@ def ellipse(r, c, r_radius, c_radius, shape=None):
 
     # The upper_left and lower_right corners of the
     # smallest rectangle containing the ellipse.
-    upper_left = np.ceil(center - radii).astype(int)
-    lower_right = np.floor(center + radii).astype(int)
+    upper_left = np.ceil(center - radii).astype(np.int64)
+    lower_right = np.floor(center + radii).astype(np.int64)
 
-    if shape is not None:
-        # Constrain upper_left and lower_right by shape boundary.
-        upper_left = np.maximum(upper_left, np.array([0, 0]))
-        lower_right = np.minimum(lower_right, np.array(shape[:2]) - 1)
+    # Constrain upper_left and lower_right by shape boundary.
+    upper_left = np.maximum(upper_left, np.array([0, 0]))
+    lower_right = np.minimum(lower_right, np.array(shape)-1)
 
     shifted_center = center - upper_left
     bounding_shape = lower_right - upper_left + 1
 
     rr, cc = _ellipse_in_shape(bounding_shape, shifted_center, radii)
-    rr.flags.writeable = True
-    cc.flags.writeable = True
     rr += upper_left[0]
     cc += upper_left[1]
-    return rr, cc
+    return (rr, cc)
 
 
-def circle(r, c, radius, shape=None):
+def circle(r, c, radius, shape):
     """Generate coordinates of pixels within the circle.
 
     Parameters
     ----------
-    r, c : float
+    r, c : int
         Center coordinate of the circle.
-    radius : float
+    radius : int
         Radius of the circle.
-    shape : tuple, optional
+    shape : tuple
         Image shape which is used to determine the maximum extent of output
         pixel coordinates.  This is useful for circles that exceed the image
         size.  If None, the full extent of the circle is used.
