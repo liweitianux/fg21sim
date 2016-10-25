@@ -73,7 +73,7 @@ class FRII(BasePointSource):
                 "extragalactic/pointsources/FRII/z_step")
             self.zbin = np.arange(start, stop + step, step)
         else:
-            self.zbin = np.arange(0.1, 10, 0.1)
+            self.zbin = np.arange(0.1, 10, 0.05)
             # luminosity bin
         lumo_type = self.configs.getn(
             "extragalactic/pointsources/FRII/lumo_type")
@@ -194,7 +194,7 @@ class FRII(BasePointSource):
             frequency
         """
         # Init
-        resolution = 1  # [degree]
+        resolution = 0.001  # [degree]
         npix = hp.nside2npix(self.nside)
         hpmap = np.zeros((npix,))
         num_ps = self.ps_catalog.shape[0]
@@ -306,7 +306,7 @@ class FRII(BasePointSource):
         Parameters
         ------------
         area: `~astropy.units.Quantity`
-              Area of the PS, e.g., `1.0*au.sr2`
+              Area of the PS, e.g., `1.0*au.sr`
         freq: `~astropy.units.Quantity`
               Frequency, e.g., `1.0*au.MHz`
 
@@ -318,33 +318,39 @@ class FRII(BasePointSource):
         # Init
         freq_ref = 151 * au.MHz
         freq = freq * au.MHz
-        # Refer to Wang et al,'s work listed above.
+        # Luminosity at 151MHz
         lumo_151 = self.lumo.to(au.Jy)  # [W/Hz/Sr to Jy]
         # Calc flux
+        # core-to-extend ratio
+        ang = self.lobe_ang.to(au.rad).value
+        x = np.random.normal(self.xmed, 0.5)
+        beta = np.sqrt((self.gamma**2 - 1) / self.gamma)
+        B_theta = 0.5 * ((1 - beta * np.cos(ang))**-2 +
+                         (1 + beta * np.cos(ang))**-2)
+        ratio_obs = 10**x * B_theta
         # Core
-        a0 = (np.log10(lumo_151.value) - 0.7 *
+        lumo_core = ratio_obs / (1 + ratio_obs) * lumo_151
+        a0 = (np.log10(lumo_core.value) - 0.07 *
               np.log10(freq_ref.to(au.GHz).value) +
               0.29 * np.log10(freq_ref.to(au.GHz).value) *
               np.log10(freq_ref.to(au.GHz).value))
-        lgs = (a0 + 0.7 * np.log10(freq.to(au.GHz).value) - 0.29 *
+        lgs = (a0 + 0.07 * np.log10(freq.to(au.GHz).value) - 0.29 *
                np.log10(freq.to(au.GHz).value) *
                np.log10(freq.to(au.GHz).value))
         flux_core = 10**lgs * au.Jy
-        Tb_core = convert.Fnu_to_Tb(flux_core, area, freq)
-
+        # core area
+        npix = hp.nside2npix(self.nside)
+        core_area = 4 * np.pi * au.sr / npix
+        Tb_core = convert.Fnu_to_Tb(flux_core, core_area, freq)
         # lobe
-        x = np.random.normal(self.xmed, 0.5)
-        beta = np.sqrt((self.gamma**2 - 1) / self.gamma)
-        B_theta = 0.5 * ((1 - beta * np.cos(self.lobe_ang))**-2 +
-                         (1 + beta * np.cos(self.lobe_ang))**-2)
-        ratio_obs = 10**x * B_theta
-        flux_lobe = flux_core / ratio_obs
+        lumo_lobe = lumo_151 * (1 - ratio_obs) / (1 + ratio_obs)
+        flux_lobe = (freq / freq_ref)**(-0.75) * lumo_lobe
         Tb_lobe = convert.Fnu_to_Tb(flux_lobe, area, freq)
 
         # hotspots
         # Willman Eq. (3)
-        f_hs = 0.4 * (np.log10(self.lumo_sr) - 25.5) + \
-            np.random.uniform(-0.5, 0.5)
+        f_hs = (0.4 * (np.log10(self.lumo_sr) - 25.5) +
+                np.random.uniform(-0.5, 0.5))
         Tb_hotspot = Tb_lobe * (1 + f_hs)
         Tb = [Tb_core.value, Tb_lobe.value, Tb_hotspot.value]
         return Tb
