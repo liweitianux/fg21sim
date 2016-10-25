@@ -242,9 +242,9 @@ class FRII(BasePointSource):
             lobe1_hot_lat = (c_lat + 90 + lobe1_lat) / 180 * np.pi
             lobe1_hot_lon = (lobe_maj + offset) * np.sin(lobe_ang)
             lobe1_hot_lon = (c_lon + lobe1_lon) / 180 * np.pi
-            if lobe1_hot_lat.value < 0:
+            if lobe1_hot_lat < 0:
                 lobe1_hot_lat += np.pi
-            elif lobe1_hot_lat.value > np.pi:
+            elif lobe1_hot_lat > np.pi:
                 lobe1_hot_lat -= np.pi
             lobe1_hot_index = hp.ang2pix(
                 self.nside, lobe1_hot_lat, lobe1_hot_lon)
@@ -269,9 +269,9 @@ class FRII(BasePointSource):
             lobe2_hot_lat = (c_lat + 90 + lobe1_lat) / 180 * np.pi
             lobe2_hot_lon = (lobe_maj + offset) * np.sin(lobe_ang + np.pi)
             lobe2_hot_lon = (c_lon + lobe1_lon) / 180 * np.pi
-            if lobe2_hot_lat.value < 0:
+            if lobe2_hot_lat < 0:
                 lobe2_hot_lat += np.pi
-            elif lobe2_hot_lat.value > np.pi:
+            elif lobe2_hot_lat > np.pi:
                 lobe2_hot_lat -= np.pi
             lobe2_hot_index = hp.ang2pix(
                 self.nside, lobe2_hot_lat, lobe2_hot_lon)
@@ -347,11 +347,11 @@ class FRII(BasePointSource):
         # core area
         npix = hp.nside2npix(self.nside)
         core_area = 4 * np.pi / npix  # [sr]
-        Tb_core = convert.Fnu_to_Tb(flux_core, core_area, freq)  # [K]
+        Tb_core = convert.Fnu_to_Tb_fast(flux_core, core_area, freq)  # [K]
         # lobe
         lumo_lobe = lumo_151 * (1 - ratio_obs) / (1 + ratio_obs)  # [Jy]
         flux_lobe = (freq / freq_ref)**(-0.75) * lumo_lobe
-        Tb_lobe = convert.Fnu_to_Tb(flux_lobe, area, freq)  # [K]
+        Tb_lobe = convert.Fnu_to_Tb_fast(flux_lobe, area, freq)  # [K]
 
         # hotspots
         # Willman Eq. (3)
