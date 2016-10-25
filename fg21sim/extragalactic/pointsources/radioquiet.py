@@ -3,7 +3,6 @@
 
 import numpy as np
 import healpy as hp
-import astropy.units as au
 
 from .base import BasePointSource
 from ...utils import convert
@@ -161,10 +160,10 @@ class RadioQuiet(BasePointSource):
              Average brightness temperature, e.g., `1.0*au.K`
         """
         # Init
-        freq_ref = 1400 * au.MHz
-        freq = freq * au.MHz
+        freq_ref = 1400  # [MHz]
+        freq = freq  # [MHz]
         # Luminosity at 1400MHz
-        lumo_1400 = self.lumo.to(au.Jy)  # [W/Hz/Sr to Jy]
+        lumo_1400 = self.lumo  # [Jy]
         # Calc flux
         flux = (freq / freq_ref)**(-0.7) * lumo_1400
         # Calc brightness temperature
@@ -193,7 +192,7 @@ class RadioQuiet(BasePointSource):
         Tb_list = np.zeros((num_ps,))
         # Iteratively calculate Tb
         for i in range(num_ps):
-            ps_area = self.ps_catalog['Area (sr)'][i] * au.sr
-            Tb_list[i] = self.calc_single_Tb(ps_area, freq).value
+            ps_area = self.ps_catalog['Area (sr)'][i]  # [sr]
+            Tb_list[i] = self.calc_single_Tb(ps_area, freq)
 
         return Tb_list
