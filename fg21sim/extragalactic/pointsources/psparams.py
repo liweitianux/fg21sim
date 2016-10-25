@@ -56,7 +56,7 @@ class PixelParams():
         self.cosmo = FlatLambdaCDM(H0=self.H0, Om0=self.Om0)
 
         # angular diameter distance, [Mpc]
-        self.dA = self.cosmo.angular_diameter_distance(self.z)
+        self.dA = self.cosmo.angular_diameter_distance(self.z).value
 
     def get_angle(self, scale=1.0):
         """
