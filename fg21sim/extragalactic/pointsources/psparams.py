@@ -13,7 +13,6 @@ References
      FlatLambdaCDM.html#astropy.cosmology.FlatLambdaCDM}
 """
 
-import astropy.units as au
 from astropy.cosmology import FlatLambdaCDM
 
 
@@ -48,9 +47,9 @@ class PixelParams():
     # Cosmology calculator
     cosmo = 0.0
     # angular diameter distance, [Mpc]
-    dA = 0.0 * au.Mpc
+    dA = 0.0
     # angular resolution
-    ang_res = 0.0 * au.rad
+    ang_res = 0.0
 
     def __init__(self, z=0.0):
         self.z = z
@@ -59,7 +58,7 @@ class PixelParams():
         # angular diameter distance, [Mpc]
         self.dA = self.cosmo.angular_diameter_distance(self.z)
 
-    def get_angle(self, scale=1.0 * au.Mpc):
+    def get_angle(self, scale=1.0):
         """
         Input real object scale, and output the respect observed
         angle, and pixels.
@@ -68,7 +67,7 @@ class PixelParams():
 
         return ang
 
-    def get_scale(self, ang=1.0 * au.rad):
+    def get_scale(self, ang=1.0):
         """
         Input real observed scale, and output the respect
         real object scale, and pixels.
