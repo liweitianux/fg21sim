@@ -54,7 +54,7 @@ class StarForming(BasePointSource):
                 "extragalactic/pointsources/starforming/z_step")
             self.zbin = np.arange(start, stop + step, step)
         else:
-            self.zbin = np.arange(0.1, 10, 0.1)
+            self.zbin = np.arange(0.1, 10, 0.05)
         # luminosity bin
         lumo_type = self.configs.getn(
             "extragalactic/pointsources/starforming/lumo_type")
