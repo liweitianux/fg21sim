@@ -55,15 +55,32 @@ Credits
 
 
 import numpy as np
+import numba as nb
 
 
+@nb.jit([nb.types.UniTuple(nb.int64[:], 2)(nb.types.UniTuple(nb.int64, 2),
+                                           nb.types.UniTuple(nb.int64, 2),
+                                           nb.types.UniTuple(nb.int64, 2)),
+         nb.types.UniTuple(nb.int64[:], 2)(nb.int64[:], nb.int64[:],
+                                           nb.int64[:])],
+        nopython=True)
 def _ellipse_in_shape(shape, center, radii):
     """Generate coordinates of points within the ellipse bounded by shape."""
-    r_lim, c_lim = np.ogrid[0:float(shape[0]), 0:float(shape[1])]
+    # XXX: ``numba`` currently does not support ``numpy.meshgrid``
+    nrow, ncol = shape
+    r_lim = np.zeros((nrow, ncol))
+    for i in range(nrow):
+        r_lim[i, :] = np.arange(float(ncol))
+    c_lim = np.zeros((nrow, ncol))
+    for i in range(ncol):
+        c_lim[:, i] = np.arange(float(nrow))
+    #
     r_o, c_o = center
     r_r, c_r = radii
-    distances = ((r_lim - r_o) / r_r)**2 + ((c_lim - c_o) / c_r)**2
-    return np.nonzero(distances < 1.0)
+    distances = (((r_lim-r_o) / r_r) * ((r_lim-r_o) / r_r) +
+                 ((c_lim-c_o) / c_r) * ((c_lim-c_o / c_r)))
+    xi, yi = np.nonzero(distances < 1.0)
+    return (xi, yi)
 
 
 def ellipse(r, c, r_radius, c_radius, shape=None):
