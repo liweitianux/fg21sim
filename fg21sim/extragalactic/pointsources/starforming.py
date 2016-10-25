@@ -3,7 +3,6 @@
 
 import numpy as np
 import healpy as hp
-import astropy.units as au
 
 # from .psparams import PixelParams
 from .base import BasePointSource
@@ -129,7 +128,7 @@ class StarForming(BasePointSource):
                     1.96 + np.random.uniform(-0.04, 0.04))
         # Willman Eq. (9)
         log_D = log_D_HI - 0.23 - np.log10(1 + self.z)
-        self.radius = 10**log_D / 2 * 1e-3 * au.Mpc  # [Mpc]
+        self.radius = 10**log_D / 2 * 1e-3  # [Mpc]
         return self.radius
 
     def gen_single_ps(self):
@@ -144,20 +143,17 @@ class StarForming(BasePointSource):
         # Radius
         self.radius = self.param.get_angle(self.get_radius())  # [rad]
         # W/Hz/Sr to Jy
-        self.lumo = self.lumo / \
-            self.dA.to(au.m).value**2 * au.W / au.Hz / au.m / au.m
-        self.lumo = self.lumo.to(au.Jy)
-        # Area
-        self.area = np.pi * self.radius**2  # [sr] ?
+        dA = self.dA * 3.0856775814671917E+22  # Mpc to meter
+        self.lumo = self.lumo / dA**2 / (10.0**-24)  # [Jy]
         # Position
         x = np.random.uniform(0, 1)
-        self.lat = (np.arccos(2 * x - 1) / np.pi *
-                    180 - 90) * au.deg  # [-90,90]
-        self.lon = np.random.uniform(
-            0, np.pi * 2) / np.pi * 180 * au.deg  # [0,360]
+        self.lat = (np.arccos(2 * x - 1) / np.pi * 180 - 90)  # [deg]
+        self.lon = np.random.uniform(0, np.pi * 2) / np.pi * 180  # [deg]
+        # Area
+        self.area = np.pi * self.radius**2  # [sr] ?
 
-        ps_list = [self.z, self.dA.value, self.lumo.value, self.lat.value,
-                   self.lon.value, self.area.value, self.radius.value]
+        ps_list = [self.z, self.dA, self.lumo, self.lat, self.lon,
+                   self.area, self.radius]
 
         return ps_list
 
@@ -184,10 +180,10 @@ class StarForming(BasePointSource):
         resolution = 1
         for i in range(num_ps):
             # grid
-            ps_radius = self.ps_catalog['radius (rad)'][i] * au.rad
-            ps_radius = ps_radius.to(au.deg).value  # radius[rad]
-            c_lat = self.ps_catalog['Lat (deg)'][i]  # core_lat [au.deg]
-            c_lon = self.ps_catalog['Lon (deg)'][i]  # core_lon [au.deg]
+            ps_radius = self.ps_catalog['radius (rad)'][i]  # [rad]
+            ps_radius = ps_radius * 180 / np.pi  # radius [deg]
+            c_lat = self.ps_catalog['Lat (deg)'][i]  # core_lat [deg]
+            c_lon = self.ps_catalog['Lon (deg)'][i]  # core_lon [deg]
             # Fill with circle
             lon, lat, gridmap = grid.make_grid_ellipse(
                 (c_lon, c_lat), (2 * ps_radius, 2 * ps_radius), resolution)
@@ -232,10 +228,10 @@ class StarForming(BasePointSource):
              Average brightness temperature, e.g., `1.0*au.K`
         """
         # Init
-        freq_ref = 1400 * au.MHz
-        freq = freq * au.MHz
+        freq_ref = 1400  # [MHz]
+        freq = freq  # [MHz]
         # Luminosity at 1400MHz
-        lumo_1400 = self.lumo.to(au.Jy)  # [W/Hz/Sr to Jy]
+        lumo_1400 = self.lumo  # [Jy]
         # Calc flux
         flux = (freq / freq_ref)**(-0.7) * lumo_1400
         # Calc brightness temperature
@@ -264,7 +260,7 @@ class StarForming(BasePointSource):
         Tb_list = np.zeros((num_ps,))
         # Iteratively calculate Tb
         for i in range(num_ps):
-            ps_area = self.ps_catalog['Area (sr)'][i] * au.sr
-            Tb_list[i] = self.calc_single_Tb(ps_area, freq).value
+            ps_area = self.ps_catalog['Area (sr)'][i]  # [sr]
+            Tb_list[i] = self.calc_single_Tb(ps_area, freq)
 
         return Tb_list
