@@ -29,6 +29,7 @@ from datetime import datetime, timezone
 import logging
 
 import numpy as np
+import numba as nb
 import healpy as hp
 from astropy.io import fits
 
@@ -70,6 +71,7 @@ def healpix2hpx(data, append_history=None, append_comment=None):
     logger.info("Loaded HEALPix data: dtype={0}, Npixel={1}, Nside={2}".format(
         dtype, npix, nside))
     hp_data = np.append(hp_data, np.nan).astype(dtype)
+    logger.info("Calculating the HPX indices ...")
     hpx_idx = _calc_hpx_indices(nside)
     # Fix indices of "-1" to set empty pixels with above appended NaN
     hpx_idx[hpx_idx == -1] = len(hp_data) - 1
@@ -124,6 +126,7 @@ def hpx2healpix(data, append_history=None, append_comment=None):
     logger.info("Determined HEALPix Nside=%d" % nside)
     #
     npix = hp.nside2npix(nside)
+    logger.info("Calculating the HPX indices ...")
     hpx_idx = _calc_hpx_indices(nside).flatten()
     hpx_idx_uniq, idxx = np.unique(hpx_idx, return_index=True)
     if np.sum(hpx_idx_uniq >= 0) != npix:
@@ -136,64 +139,7 @@ def hpx2healpix(data, append_history=None, append_comment=None):
     return (hp_data.astype(hpx_data.dtype), hp_header)
 
 
-def _calc_hpx_indices(nside):
-    """Calculate HEALPix element indices for the HPX projection scheme.
-
-    Parameters
-    ----------
-    nside : int
-        Nside of the input/output HEALPix data
-
-    Returns
-    -------
-    indices : 2D integer `~numpy.ndarray`
-        2D integer array of same size as the input/output HPX FITS image,
-        with elements tracking the indices of the HPX pixels in the
-        HEALPix 1D array, while elements with value "-1" indicating
-        null/empty HPX pixels.
-
-    NOTE
-    ----
-    * The indices are 0-based;
-    * Currently only HEALPix RING ordering supported;
-    * The null/empty elements in the HPX projection are filled with "-1".
-    """
-    # number of horizontal/vertical facet
-    nfacet = 5
-    # Facets layout of the HPX projection scheme.
-    # Note that this appears to be upside-down, and the blank facets
-    # are marked with "-1".
-    # Ref: ref.[2], Fig.4
-    FACETS_LAYOUT = [[ 6,  9, -1, -1, -1],
-                     [ 1,  5,  8, -1, -1],
-                     [-1,  0,  4, 11, -1],
-                     [-1, -1,  3,  7, 10],
-                     [-1, -1, -1,  2,  6]]
-    #
-    shape = (nfacet*nside, nfacet*nside)
-    indices = -np.ones(shape).astype(np.int)
-    logger.info("HPX indices matrix shape: {0}".format(shape))
-    logger.info("Calculating the HPX indices ... (may take a while ...)")
-    #
-    # Loop vertically facet-by-facet
-    for jfacet in range(nfacet):
-        # Loop row-by-row
-        for j in range(nside):
-            row = jfacet * nside + j
-            # Loop horizontally facet-by-facet
-            for ifacet in range(nfacet):
-                facet = FACETS_LAYOUT[jfacet][ifacet]
-                if facet < 0:
-                    # blank facet
-                    pass
-                else:
-                    idx = _calc_hpx_row_idx(nside, facet, j)
-                    col = ifacet * nside
-                    indices[row, col:(col+nside)] = idx
-    #
-    return indices
-
-
+@nb.jit(nb.int64[:](nb.int64, nb.int64, nb.int64), nopython=True)
 def _calc_hpx_row_idx(nside, facet, jmap):
     """Calculate the HEALPix indices for one row of a facet.
 
@@ -217,7 +163,7 @@ def _calc_hpx_row_idx(nside, facet, jmap):
     i0 = nside * I0[facet]
     j0 = nside * J0[facet]
     #
-    row_idx = []
+    row_idx = np.zeros(nside, dtype=np.int64)
     for imap in range(nside):
         # (i, j) are 0-based, double-pixelization pixel coordinates.
         # The origin is at the intersection of the equator and prime
@@ -259,8 +205,70 @@ def _calc_hpx_row_idx(nside, facet, jmap):
                 idx2 += i % n2side + (j + nside) - 1
         # convert double-pixelization index to regular RING index
         idx = (idx2 - 1) // 2
-        row_idx.append(idx)
+        row_idx[imap] = idx
     return row_idx
+
+
+@nb.jit(nb.int64[:, :](nb.int64), nopython=True)
+def _calc_hpx_indices(nside):
+    """Calculate HEALPix element indices for the HPX projection scheme.
+
+    Parameters
+    ----------
+    nside : int
+        Nside of the input/output HEALPix data
+
+    Returns
+    -------
+    indices : 2D `~numpy.ndarray`
+        2D integer array of same size as the input/output HPX FITS image,
+        with elements tracking the indices of the HPX pixels in the
+        HEALPix 1D array, while elements with value "-1" indicating
+        null/empty HPX pixels.
+
+    NOTE
+    ----
+    * The indices are 0-based;
+    * Currently only HEALPix RING ordering supported;
+    * The null/empty elements in the HPX projection are filled with "-1".
+    """
+    # number of horizontal/vertical facet
+    nfacet = 5
+    # Facets layout of the HPX projection scheme.
+    # Note that this appears to be upside-down, and the blank facets
+    # are marked with "-1".
+    # Ref: ref.[2], Fig.4
+    #
+    # XXX:
+    # Cannot use the nested list here, which fails with ``numba`` error:
+    # ``NotImplementedError: unsupported nested memory-managed object``
+    FACETS_LAYOUT = np.zeros((nfacet, nfacet), dtype=np.int64)
+    FACETS_LAYOUT[0, :] = [6,   9, -1, -1, -1]
+    FACETS_LAYOUT[1, :] = [1,   5,  8, -1, -1]
+    FACETS_LAYOUT[2, :] = [-1,  0,  4, 11, -1]
+    FACETS_LAYOUT[3, :] = [-1, -1,  3,  7, 10]
+    FACETS_LAYOUT[4, :] = [-1, -1, -1,  2,  6]
+    #
+    shape = (nfacet*nside, nfacet*nside)
+    indices = -np.ones(shape, dtype=np.int64)
+    #
+    # Loop vertically facet-by-facet
+    for jfacet in range(nfacet):
+        # Loop row-by-row
+        for j in range(nside):
+            row = jfacet * nside + j
+            # Loop horizontally facet-by-facet
+            for ifacet in range(nfacet):
+                facet = FACETS_LAYOUT[jfacet, ifacet]
+                if facet < 0:
+                    # blank facet
+                    pass
+                else:
+                    idx = _calc_hpx_row_idx(nside, facet, j)
+                    col = ifacet * nside
+                    indices[row, col:(col+nside)] = idx
+    #
+    return indices
 
 
 def _make_hpx_header(header, append_history=None, append_comment=None):
