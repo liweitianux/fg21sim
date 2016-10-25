@@ -352,3 +352,216 @@ def _make_healpix_header(header, nside,
         for comment in append_comment:
             header.add_comment(comment)
     return header
+
+
+@nb.jit(nb.int64(nb.int64), nopython=True)
+def nside2npix(nside):
+    """Calculate the number of pixels for the given Nside resolution.
+
+    NOTE
+    ----
+    This is the JIT-optimized version that replaces the ``healpy.nside2npix``
+    """
+    return 12 * nside * nside
+
+
+@nb.jit(nb.int64(nb.int64, nb.float64, nb.float64), nopython=True)
+def ang2pix_ring_single(nside, theta, phi):
+    """Calculate the pixel indexes in RING ordering scheme for one single
+    pair of angular coordinate on the sphere.
+
+    Parameters
+    ----------
+    theta : float
+        The polar angle (i.e., latitude), θ ∈ [0, π]. (unit: rad)
+    phi : float
+        The azimuthal angle (i.e., longitude), φ ∈ [0, 2π). (unit: rad)
+
+    Returns
+    -------
+    ipix : int
+        The index of the pixel corresponding to the input coordinate.
+
+    NOTE
+    ----
+    * Only support the *RING* ordering scheme
+    * This is the JIT-optimized version that partially replaces the
+      ``healpy.ang2pix``
+
+    References
+    ----------
+    - HEALPix software: ``src/C/subs/chealpix.c``: ``ang2pix_ring_z_phi()``
+      http://healpix.sourceforge.net/
+    """
+    z = np.cos(theta)  # colatitude
+    za = np.absolute(z)
+    tt = (2.0 / np.pi) * np.remainder(phi, 2*np.pi)  # range: [0, 4)
+    if za <= 2.0/3.0:
+        # Equatorial region
+        temp1 = nside * (tt + 0.5)
+        temp2 = nside * z * 0.75
+        jp = int(temp1 - temp2)  # Index of ascending edge line
+        jm = int(temp1 + temp2)  # Index of descending edge line
+        # Ring number counted from z=2/3
+        iring = nside + 1 + jp - jm  # range: [1, 2n+1]
+        kshift = 1 - (iring & 1)  # kshift=1 if ir even, 0 otherwise
+        ip = int((jp + jm - nside + kshift + 1) / 2)
+        ip = np.remainder(ip, 4*nside)
+        ipix = nside * (nside-1) * 2 + (iring-1) * 4 * nside + ip
+    else:
+        # North & South polar caps
+        tp = tt - int(tt)
+        tmp = nside * np.sqrt(3 * (1-za))
+        jp = int(tp * tmp)
+        jm = int((1.0-tp) * tmp)
+        # Ring number counted from the closest pole
+        iring = jp + jm + 1
+        ip = int(tt * iring)
+        ip = np.remainder(ip, 4*iring)
+        #
+        if z > 0:
+            ipix = 2 * iring * (iring-1) + ip
+        else:
+            ipix = 12 * nside * nside - 2 * iring * (iring+1) + ip
+    #
+    return ipix
+
+
+@nb.jit(nb.types.UniTuple(nb.float64, 2)(nb.int64, nb.int64), nopython=True)
+def pix2ang_ring_single(nside, ipix):
+    """Calculate the angular coordinate on the sphere for one pixel index
+    in the RING ordering scheme.
+
+    Parameters
+    ----------
+    ipix : int
+        The index of the HEALPix pixel in RING ordering.
+
+    Returns
+    -------
+    theta : float
+        The polar angle (i.e., latitude), θ ∈ [0, π]. (unit: rad)
+    phi : float
+        The azimuthal angle (i.e., longitude), φ ∈ [0, 2π). (unit: rad)
+
+    NOTE
+    ----
+    * Only support the *RING* ordering scheme
+    * This is the JIT-optimized version that partially replaces the
+      ``healpy.ang2pix``
+
+    References
+    ----------
+    - HEALPix software: ``src/C/subs/chealpix.c``: ``pix2ang_ring_z_phi()``
+      http://healpix.sourceforge.net/
+    """
+    ncap = nside * (nside-1) * 2
+    npix = nside2npix(nside)
+    fact2 = 4.0 / npix
+    if ipix < ncap:
+        # North polar cap
+        tmp = int(np.sqrt(2*ipix + 1 + 0.5))
+        # Ring number counted from the North pole
+        iring = int((tmp + 1) / 2)
+        iphi = (ipix + 1) - 2 * iring * (iring-1)
+        z = 1.0 - iring * iring * fact2
+        phi = (iphi - 0.5) * np.pi / (2 * iring)
+    elif ipix < (npix - ncap):
+        # Equatorial region
+        fact1 = 2 * nside * fact2
+        ip = ipix - ncap
+        # Ring number counted from the North pole
+        iring = int(ip / (4*nside) + nside)
+        iphi = ip % (4*nside) + 1
+        if (iring + nside) % 2 == 1:
+            fodd = 1.0  # (iring+nside) is odd
+        else:
+            fodd = 0.5
+        z = (2*nside - iring) * fact1
+        phi = (iphi - fodd) * np.pi / (2 * nside)
+    else:
+        # South polar cap
+        ip = npix - ipix
+        tmp = int(np.sqrt(2*ip - 1 + 0.5))
+        # Ring number counted from the South pole
+        iring = int((tmp + 1) / 2)
+        iphi = 4 * iring + 1 - (ip - 2 * iring * (iring-1))
+        z = iring * iring * fact2 - 1.0
+        phi = (iphi - 0.5) * np.pi / (2 * iring)
+    #
+    theta = np.arccos(z)
+    return (theta, phi)
+
+
+@nb.jit([nb.int64[:](nb.int64, nb.float64[:], nb.float64[:]),
+         nb.int64[:, :](nb.int64, nb.float64[:, :], nb.float64[:, :])],
+        nopython=True)
+def ang2pix_ring(nside, theta, phi):
+    """Calculate the pixel indexes in RING ordering scheme for each
+    pair of angular coordinates on the sphere.
+
+    Parameters
+    ----------
+    theta : 1D or 2D `~numpy.ndarray`
+        The polar angles (i.e., latitudes), θ ∈ [0, π]. (unit: rad)
+    phi : 1D or 2D `~numpy.ndarray`
+        The azimuthal angles (i.e., longitudes), φ ∈ [0, 2π). (unit: rad)
+
+    Returns
+    -------
+    ipix : 1D or 1D `~numpy.ndarray`
+        The indices of the pixels corresponding to the input coordinates.
+        The shape is the same as the input array.
+
+    NOTE
+    ----
+    * Only support the *RING* ordering scheme
+    * This is the JIT-optimized version that partially replaces the
+      ``healpy.ang2pix``
+    """
+    shape = theta.shape
+    size = theta.size
+    theta = theta.flatten()
+    phi = phi.flatten()
+    ipix = np.zeros(size, dtype=np.int64)
+    for i in range(size):
+        ipix[i] = ang2pix_ring_single(nside, theta[i], phi[i])
+    return ipix.reshape(shape)
+
+
+@nb.jit([nb.types.UniTuple(nb.float64[:], 2)(nb.int64, nb.int64[:]),
+         nb.types.UniTuple(nb.float64[:, :], 2)(nb.int64, nb.int64[:, :])],
+        nopython=True)
+def pix2ang_ring(nside, ipix):
+    """Calculate the angular coordinates on the sphere for each pixel
+    index in the RING ordering scheme.
+
+    Parameters
+    ----------
+    ipix : 1D or 2D `~numpy.ndarray`
+        The indices of the HEALPix pixels in the RING ordering
+
+    Returns
+    -------
+    theta : 1D or 2D `~numpy.ndarray`
+        The polar angles (i.e., latitudes), θ ∈ [0, π]. (unit: rad)
+    phi : 1D or 2D `~numpy.ndarray`
+        The azimuthal angles (i.e., longitudes), φ ∈ [0, 2π). (unit: rad)
+        The shape is the same as the input array.
+
+    NOTE
+    ----
+    * Only support the *RING* ordering scheme
+    * This is the JIT-optimized version that partially replaces the
+      ``healpy.pix2ang``
+    """
+    shape = ipix.shape
+    size = ipix.size
+    ipix = ipix.flatten()
+    theta = np.zeros(size, dtype=np.float64)
+    phi = np.zeros(size, dtype=np.float64)
+    for i in range(size):
+        theta_, phi_ = pix2ang_ring_single(nside, ipix[i])
+        theta[i] = theta_
+        phi[i] = phi_
+    return (theta.reshape(shape), phi.reshape(shape))
