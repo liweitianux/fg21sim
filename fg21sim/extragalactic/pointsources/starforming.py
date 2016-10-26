@@ -177,7 +177,7 @@ class StarForming(BasePointSource):
         Tb_list = self.calc_Tb(freq)
         #  Iteratively draw the ps
         num_ps = self.ps_catalog.shape[0]
-        resolution = 1
+        resolution = 0.001
         for i in range(num_ps):
             # grid
             ps_radius = self.ps_catalog['radius (rad)'][i]  # [rad]
