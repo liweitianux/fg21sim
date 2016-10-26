@@ -8,9 +8,9 @@ Grid utilities.
 
 import numpy as np
 import numba as nb
-from scipy import ndimage
 
 from .draw import ellipse
+from .rotate import rotate_center
 from .healpix import ang2pix_ring
 
 
@@ -136,8 +136,8 @@ def make_grid_ellipse(center, size, resolution, rotation=None):
     gridmap[rr, cc] = 1.0
     if rotation is not None:
         # Rotate the ellipse
-        gridmap = ndimage.rotate(gridmap, angle=rotation, order=1,
-                                 reshape=False)
+        gridmap = rotate_center(gridmap, angle=rotation, interp=True,
+                                reshape=False, fill_value=0.0)
     return (lon, lat, gridmap)
 
 

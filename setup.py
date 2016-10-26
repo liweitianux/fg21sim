@@ -81,7 +81,6 @@ setup(
     install_requires=[
         "numpy",
         "numba",
-        "scipy",
         "pandas",
         "astropy",
         "healpy",

@@ -1,6 +1,5 @@
 numpy
 numba
-scipy
 pandas
 astropy
 healpy
