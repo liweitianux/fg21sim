@@ -84,7 +84,11 @@ def make_coordinate_grid(center, size, resolution):
     return (lon, lat)
 
 
-def make_grid_ellipse(center, size, resolution, rotation=None):
+@nb.jit(nb.types.UniTuple(nb.float64[:, :], 3)(
+    nb.types.UniTuple(nb.float64, 2), nb.types.UniTuple(nb.float64, 2),
+    nb.float64, nb.float64),
+        nopython=True)
+def make_grid_ellipse(center, size, resolution, rotation=0.0):
     """Make a square coordinate grid just containing the specified
     (rotated) ellipse.
 
@@ -97,7 +101,7 @@ def make_grid_ellipse(center, size, resolution, rotation=None):
         The (major, minor) axes of the filling ellipse, unit [ degree ].
     resolution : float
         The grid resolution, unit [ degree ].
-    rotation : float, optional
+    rotation : float
         The rotation angle (unit [ degree ]) of the filling ellipse.
 
     Returns
@@ -129,15 +133,16 @@ def make_grid_ellipse(center, size, resolution, rotation=None):
     lon, lat = make_coordinate_grid(center, size, resolution)
     shape = lon.shape
     # Fill the ellipse into the grid
-    r0, c0 = np.floor(np.array(shape) / 2.0).astype(np.int)
-    r_radius, c_radius = np.ceil(0.5*np.array(size)/resolution).astype(np.int)
-    rr, cc = ellipse(r0, c0, r_radius, c_radius, shape=shape)
+    r0, c0 = np.floor(np.array(shape) / 2.0).astype(np.int64)
+    radii = np.ceil(0.5*np.array(size)/resolution).astype(np.int64)
+    rr, cc = ellipse(r0, c0, radii[0], radii[1], shape=shape)
     gridmap = np.zeros(shape)
-    gridmap[rr, cc] = 1.0
-    if rotation is not None:
-        # Rotate the ellipse
-        gridmap = rotate_center(gridmap, angle=rotation, interp=True,
-                                reshape=False, fill_value=0.0)
+    # XXX: ``numba`` only support one advanced index
+    for ri, ci in zip(rr, cc):
+        gridmap[ri, ci] = 1.0
+    # Rotate the ellipse about the grid center
+    gridmap = rotate_center(gridmap, angle=rotation, interp=True,
+                            reshape=False, fill_value=0.0)
     return (lon, lat, gridmap)
 
 
