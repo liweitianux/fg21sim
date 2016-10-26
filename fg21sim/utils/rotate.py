@@ -61,10 +61,10 @@ def rotate_center(imgin, angle, interp=True, reshape=True, fill_value=0.0):
     if reshape:
         dest = np.dot(corners.astype(np.float64), mrotate)
         # XXX: ``numba`` does not support ``np.max()`` with arguments
-        minc = np.min(dest[:, 0])
-        minr = np.min(dest[:, 1])
-        maxc = np.max(dest[:, 0])
-        maxr = np.max(dest[:, 1])
+        minr = np.min(dest[:, 0])
+        minc = np.min(dest[:, 1])
+        maxr = np.max(dest[:, 0])
+        maxc = np.max(dest[:, 1])
         nr = int(maxr - minr + 0.5)
         nc = int(maxc - minc + 0.5)
     else:
@@ -110,6 +110,15 @@ def rotate_center(imgin, angle, interp=True, reshape=True, fill_value=0.0):
                     # Use area mapping of the 4 closest input pixels
                     idx_rf, idx_cf = np.floor(p_in).astype(np.int64)
                     idx_rc, idx_cc = np.ceil(p_in).astype(np.int64)
+                    # NOTE:
+                    # It is possible that ``p_in[0]`` and/or ``p_in[1]``
+                    # are just integers, which cause ``idx_rf == idx_rc``
+                    # and/or ``idx_cf == idx_cc``, which further lead to
+                    # the calculated pixel value ``p_val = 0``.
+                    if idx_rf == idx_rc:
+                        idx_rc += 1
+                    if idx_cf == idx_cc:
+                        idx_cc += 1
                     # Calculate the overlapping areas
                     p_r, p_c = p_in
                     p4_area = np.array([(idx_rc - p_r) * (idx_cc - p_c),
