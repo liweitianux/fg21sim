@@ -35,35 +35,26 @@ class StarForming(BasePointSource):
     def _set_configs(self):
         """ Load the configs and set the corresponding class attributes"""
         super()._set_configs()
+        pscomp = "extragalactic/pointsources/starforming/"
         # point sources amount
-        self.num_ps = self.configs.getn(
-            "extragalactic/pointsources/starforming/numps")
+        self.num_ps = self.configs.getn(pscomp+"numps")
         # prefix
-        self.prefix = self.configs.getn(
-            "extragalactic/pointsources/starforming/prefix")
+        self.prefix = self.configs.getn(pscomp+"prefix")
         # redshift bin
-        z_type = self.configs.getn(
-            "extragalactic/pointsources/starforming/z_type")
+        z_type = self.configs.getn(pscomp+"z_type")
         if z_type == 'custom':
-            start = self.configs.getn(
-                "extragalactic/pointsources/starforming/z_start")
-            stop = self.configs.getn(
-                "extragalactic/pointsources/starforming/z_stop")
-            step = self.configs.getn(
-                "extragalactic/pointsources/starforming/z_step")
+            start = self.configs.getn(pscomp+"z_start")
+            stop = self.configs.getn(pscomp+"z_stop")
+            step = self.configs.getn(pscomp+"z_step")
             self.zbin = np.arange(start, stop + step, step)
         else:
             self.zbin = np.arange(0.1, 10, 0.05)
         # luminosity bin
-        lumo_type = self.configs.getn(
-            "extragalactic/pointsources/starforming/lumo_type")
+        lumo_type = self.configs.getn(pscomp+"lumo_type")
         if lumo_type == 'custom':
-            start = self.configs.getn(
-                "extragalactic/pointsources/starforming/lumo_start")
-            stop = self.configs.getn(
-                "extragalactic/pointsources/starforming/lumo_stop")
-            step = self.configs.getn(
-                "extragalactic/pointsources/starforming/lumo_step")
+            start = self.configs.getn(pscomp+"lumo_start")
+            stop = self.configs.getn(pscomp+"lumo_stop")
+            step = self.configs.getn(pscomp+"lumo_step")
             self.lumobin = np.arange(start, stop + step, step)
         else:
             self.lumobin = np.arange(17, 25.5, 0.1)  # [W/Hz/sr]
@@ -177,7 +168,7 @@ class StarForming(BasePointSource):
         Tb_list = self.calc_Tb(freq)
         #  Iteratively draw the ps
         num_ps = self.ps_catalog.shape[0]
-        resolution = 0.001
+        resolution = self.resolution / 60  # [degree]
         for i in range(num_ps):
             # grid
             ps_radius = self.ps_catalog['radius (rad)'][i]  # [rad]
