@@ -66,6 +66,12 @@ filetype = option("fits", default="fits")
 # be finally formatted using `str.format()`.
 filename_pattern = string(default="{prefix}_{frequency:05.1f}")
 
+# Whether calculate the checksum for the output file (e.g., "CHECKSUM"
+# keyword in FITS header)?
+# NOTE:
+# FITS checksum calculation may account for half the time to output the data.
+checksum = boolean(default=False)
+
 # Whether overwrite existing files
 clobber = boolean(default=False)
 
