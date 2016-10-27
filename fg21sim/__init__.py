@@ -19,8 +19,6 @@ __description__ = ("Realistic Foregrounds Simulation for "
 
 import logging
 
-from .foregrounds import Foregrounds
-
 
 # Set default logging handle to avoid "No handler found" warnings.
 logging.getLogger(__name__).addHandler(logging.NullHandler())
