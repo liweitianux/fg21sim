@@ -62,11 +62,18 @@ def main():
         'See also {0}'.format(fg21sim.__url__)
     ]
 
+    if os.path.exists(args.outfile):
+        if args.clobber:
+            logger.warning("Remove existing output file: %s" % args.outfile)
+            os.remove(args.outfile)
+        else:
+            raise OSError("Output file already exists: %s" % args.outfile)
+
     hpx_data, hpx_header = healpix2hpx(args.infile,
                                        append_history=history,
                                        append_comment=comments)
     hdu = fits.PrimaryHDU(data=hpx_data, header=hpx_header)
-    hdu.writeto(args.outfile, clobber=args.clobber, checksum=True)
+    hdu.writeto(args.outfile, checksum=True)
     logger.info("HPX FITS images write to: %s" % args.outfile)
 
 
