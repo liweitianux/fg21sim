@@ -54,35 +54,26 @@ class FRII(BasePointSource):
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes"""
         super()._set_configs()
+        pscomp = "extragalactic/pointsources/FRII/"
         # point sources amount
-        self.num_ps = self.configs.getn(
-            "extragalactic/pointsources/FRII/numps")
+        self.num_ps = self.configs.getn(pscomp+"numps")
         # prefix
-        self.prefix = self.configs.getn(
-            "extragalactic/pointsources/FRII/prefix")
+        self.prefix = self.configs.getn(pscomp+"prefix")
         # redshift bin
-        z_type = self.configs.getn(
-            "extragalactic/pointsources/FRII/z_type")
+        z_type = self.configs.getn(pscomp+"z_type")
         if z_type == 'custom':
-            start = self.configs.getn(
-                "extragalactic/pointsources/FRII/z_start")
-            stop = self.configs.getn(
-                "extragalactic/pointsources/FRII/z_stop")
-            step = self.configs.getn(
-                "extragalactic/pointsources/FRII/z_step")
+            start = self.configs.getn(pscomp+"z_start")
+            stop = self.configs.getn(pscomp+"z_stop")
+            step = self.configs.getn(pscomp+"z_step")
             self.zbin = np.arange(start, stop + step, step)
         else:
             self.zbin = np.arange(0.1, 10, 0.05)
-            # luminosity bin
-        lumo_type = self.configs.getn(
-            "extragalactic/pointsources/FRII/lumo_type")
+        # luminosity bin
+        lumo_type = self.configs.getn(pscomp+"lumo_type")
         if lumo_type == 'custom':
-            start = self.configs.getn(
-                "extragalactic/pointsources/FRII/lumo_start")
-            stop = self.configs.getn(
-                "extragalactic/pointsources/FRII/lumo_stop")
-            step = self.configs.getn(
-                "extragalactic/pointsources/FRII/lumo_step")
+            start = self.configs.getn(pscomp+"lumo_start")
+            stop = self.configs.getn(pscomp+"lumo_stop")
+            step = self.configs.getn(pscomp+"lumo_step")
             self.lumobin = np.arange(start, stop + step, step)
         else:
             self.lumobin = np.arange(25.5, 30.5, 0.1)  # [W/Hz/sr]
@@ -203,7 +194,7 @@ class FRII(BasePointSource):
             frequency
         """
         # Init
-        resolution = 0.001  # [degree]
+        resolution = self.resolution / 60  # [degree]
         npix = hp.nside2npix(self.nside)
         hpmap = np.zeros((npix,))
         num_ps = self.ps_catalog.shape[0]
