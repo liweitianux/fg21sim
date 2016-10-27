@@ -72,7 +72,8 @@ def read_fits_healpix(filename):
     return (data.astype(dtype), header)
 
 
-def write_fits_healpix(filename, hpmap, header=None, clobber=False):
+def write_fits_healpix(filename, hpmap, header=None, clobber=False,
+                       checksum=False):
     """Write the HEALPix map to a FITS file with proper header as well
     as the user-provided header.
 
@@ -88,14 +89,17 @@ def write_fits_healpix(filename, hpmap, header=None, clobber=False):
     ----------
     filename : str
         Filename of the output file to write the HEALPix map data
-    hpmap : numpy.ndarray (1D)
+    hpmap : 1D `~numpy.ndarray`
         1D array containing the HEALPix map data, and the ordering
         scheme should be "RING";
         The data type is preserved in the output FITS file.
-    header : fits.Header object
-        Extra header to be written
-    clobber : bool
-        Whether to overwrite the existing file?
+    header : `~astropy.io.fits.Header`, optional
+        Extra header to be appended to the output FITS
+    clobber : bool, optional
+        Whether overwrite the existing file?
+    checksum : bool, optional
+        Whether calculate the checksum for the output file, which is
+        recorded as the "CHECKSUM" header keyword.
 
     NOTE
     ----
@@ -137,11 +141,12 @@ def write_fits_healpix(filename, hpmap, header=None, clobber=False):
     hdr["CREATOR"] = (__name__, "File creator")
     hdr["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
                    "File creation date")
-    # merge user-provided header
+    # Merge user-provided header
+    # NOTE: use the `.extend()` method instead of `.update()` method
     if header is not None:
         hdr.extend(fits.Header(header))
     #
     hdu = fits.BinTableHDU.from_columns([
         fits.Column(name="I", array=hpmap, format=colfmt)
     ], header=hdr)
-    hdu.writeto(filename, clobber=clobber, checksum=True)
+    hdu.writeto(filename, clobber=clobber, checksum=checksum)
