@@ -61,6 +61,7 @@ class Synchrotron:
         # output
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.use_float = self.configs.getn("output/use_float")
+        self.checksum = self.configs.getn("output/checksum")
         self.clobber = self.configs.getn("output/clobber")
         self.nside = self.configs.getn("common/nside")
         self.lmin = self.configs.getn("common/lmin")
@@ -192,7 +193,7 @@ class Synchrotron:
         if self.use_float:
             hpmap = hpmap.astype(np.float32)
         write_fits_healpix(filepath, hpmap, header=header,
-                           clobber=self.clobber)
+                           clobber=self.clobber, checksum=self.checksum)
         logger.info("Write simulated map to file: {0}".format(filepath))
 
     def preprocess(self):
