@@ -48,34 +48,36 @@
   output_dir = string(default="PS_tables")
   # PS components to be simulated
   pscomponents=string_list(default=list())
+  # Resolution [arcmin]
+  resolution=float(default=0.6)
   # Number of each type of point source
-  # Star forming
-  [[[starforming]]]
-  # Number of samples
-  numps = integer(default=1000)
-  # Prefix
-  prefix = string(default="SF")
+    # Star forming
+    [[[starforming]]]
+    # Number of samples
+    numps = integer(default=1000)
+    # Prefix
+    prefix = string(default="SF")
 
-  [[[starbursting]]]
-  # Number of samples
-  numps = integer(default=1000)
-  # Prefix
-  prefix = string(default="SB")
+    [[[starbursting]]]
+    # Number of samples
+    numps = integer(default=1000)
+    # Prefix
+    prefix = string(default="SB")
 
-  [[[radioquiet]]]
-  # Number of samples
-  numps = integer(default=1000)
-  # Prefix
-  prefix = string(default="RQ")
+    [[[radioquiet]]]
+    # Number of samples
+    numps = integer(default=1000)
+    # Prefix
+    prefix = string(default="RQ")
 
-  [[[FRI]]]
-  # Number of samples
-  numps = integer(default=1000)
-  # Prefix
-  prefix = string(default="FRI")
+    [[[FRI]]]
+    # Number of samples
+    numps = integer(default=1000)
+    # Prefix
+    prefix = string(default="FRI")
 
-  [[[FRII]]]
-  # Number of samples
-  numps = integer(default=1000)
-  # Prefix
-  prefix = string(default="FRII")
+    [[[FRII]]]
+    # Number of samples
+    numps = integer(default=1000)
+    # Prefix
+    prefix = string(default="FRII")

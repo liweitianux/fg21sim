@@ -72,13 +72,15 @@ class BasePointSource:
         """
         Load the configs and set the corresponding class attributes.
         """
+        comp = "extragalactic/pointsources/"
         # common
         self.nside = self.configs.getn("common/nside")
+        # resolution
+        self.resolution = self.configs.getn(comp+"resolution")
         # save flag
-        self.save = self.configs.getn("extragalactic/pointsources/save")
+        self.save = self.configs.getn(comp+"save")
         # Output_dir
-        self.output_dir = self.configs.get_path(
-            "extragalactic/pointsources/output_dir")
+        self.output_dir = self.configs.get_path(comp+"output_dir")
 
     def calc_number_density(self):
         pass
