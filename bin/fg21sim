@@ -13,7 +13,7 @@ import sys
 import argparse
 import logging
 
-from fg21sim import Foregrounds
+from fg21sim.foregrounds import Foregrounds
 from fg21sim.configs import configs, validate_configs
 from fg21sim.utils import setup_logging
 
