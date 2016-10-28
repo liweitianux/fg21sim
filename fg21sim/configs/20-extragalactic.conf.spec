@@ -40,44 +40,69 @@
   # Output directory to save the simulated results
   output_dir = string(default=None)
 
-  # Extragalactic point sources
+  # Emission from various types of point sources (PS)
   [[pointsources]]
-  # Whether save this point source catelogue to disk
+  # Enabled types of PS to be simulated
+  ps_types = string_list(default=list("starforming", "starbursting", "radioquiet", "fr1", "fr2"))
+
+  # FIXME:
+  # The number of each PS type should be determined from the observation
+  # or theoretical prediction, e.g., luminosity function.
+  # On the other hand, due to the large number of PS, an option
+  # "number_fraction" can be supplied to specify the fraction of total
+  # PS number to be only simulated, which may be useful for testing purpose.
+  #
+  # number_fraction = float(default=1.0)
+
+  # Resolution (unit: arcmin) of the simulation grid for each PS, which are
+  # finally mapped to the HEALPix map of resolution "nside".
+  resolution = float(default=0.5)
+
+  # FIXME:
+  # Move this option to "[output]" section;
+  # Rename "filename_pattern" in "[output]" section to "hpmap_pattern" ?
+  #
+  # Filename pattern for the simulated catalogs of each PS type, which will
+  # be saved in CSV format.
+  catalog_pattern = "catalog_{prefix}.csv"
+
+  # Filename prefix (with additional prefix specified for each PS type)
+  prefix = string(default="egps")
+  # Whether save the *combined maps* of all enabled PS types to disk
   save = boolean(default=True)
-  # Output directory to save the simulated catelogues
-  output_dir = string(default="PS_tables")
-  # PS components to be simulated
-  pscomponents=string_list(default=list())
-  # Resolution [arcmin]
-  resolution=float(default=0.6)
-  # Number of each type of point source
-    # Star forming
+  # Output directory to save the simulated maps and catalogs
+  output_dir = string(default=None)
+
+    # PS type: Star-forming galaxies
     [[[starforming]]]
-    # Number of samples
-    numps = integer(default=1000)
-    # Prefix
-    prefix = string(default="SF")
+    # Number of point sources of this PS type
+    number = integer(default=1000)
+    # Additional filename prefix to identify this PS type, which will be
+    # *appended* to the upper-level "prefix" of "[pointsources]" section.
+    prefix2 = string(default="sf")
+    # Whether save the simulated maps of this PS types to disk
+    save2 = boolean(default=False)
 
+    # PS type: Star-bursting galaxies
     [[[starbursting]]]
-    # Number of samples
-    numps = integer(default=1000)
-    # Prefix
-    prefix = string(default="SB")
+    number = integer(default=1000)
+    prefix2 = string(default="sb")
+    save2 = boolean(default=False)
 
+    # PS type: radio-quiet AGNs
     [[[radioquiet]]]
-    # Number of samples
-    numps = integer(default=1000)
-    # Prefix
-    prefix = string(default="RQ")
+    number = integer(default=1000)
+    prefix2 = string(default="rq")
+    save2 = boolean(default=False)
 
-    [[[FRI]]]
-    # Number of samples
-    numps = integer(default=1000)
-    # Prefix
-    prefix = string(default="FRI")
+    # PS type: radio-loud AGNs (FR I)
+    [[[fr1]]]
+    number = integer(default=1000)
+    prefix2 = string(default="fr1")
+    save2 = boolean(default=False)
 
-    [[[FRII]]]
-    # Number of samples
-    numps = integer(default=1000)
-    # Prefix
-    prefix = string(default="FRII")
+    # PS type: radio-loud AGNs (FR II)
+    [[[fr2]]]
+    number = integer(default=1000)
+    prefix2 = string(default="fr2")
+    save2 = boolean(default=False)
