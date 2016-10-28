@@ -11,6 +11,8 @@ References
 - Image rotation by MATLAB without using imrotate
   https://stackoverflow.com/a/19687481/4856091
   https://stackoverflow.com/a/19689081/4856091
+- Stackoverflow: Python: Rotating greyscale images
+  https://codereview.stackexchange.com/a/41903
 """
 
 
