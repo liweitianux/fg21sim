@@ -1,97 +1,125 @@
 # Copyright (c) 2016 Zhixian MA <zxma_sjtu@qq.com>
+# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
 # MIT license
 
 """
-Simulation of point sources for 21cm signal detection
+Simulation the radio emissions from various types of point sources (PS)
 
-Point sources types
--------------------
-1. Star forming (SF) galaxies
-2. Star bursting (SB) galaxies
-3. Radio quiet AGN (RQ_AGN)
-4. Faranoff-Riley I (FRI)
-5. Faranoff-Riley II (FRII)
+Currently supported PS types:
+
+* Star-forming (SF) galaxies
+* Star-bursting (SB) galaxies
+* Radio-quiet AGNs
+* Radio-loud AGNs: Fanaroff-Riley type I (FRI)
+* Radio-loud AGNs: Fanaroff-Riley type II (FRII)
 
 References
 ----------
-[1] Wilman et al.,
-    "A semi-empirical simulation of the extragalactic radio continuum
-    sky for next generation radio telescopes",
-    2008, MNRAS, 388, 1335-1348.
-    http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
-[2] Jelic et al.,
-    "Foreground simulations for the LOFAR-Epoch of Reionization
-    Experiment",
-    2008, MNRAS, 389, 1319-1335.
-    http://adsabs.harvard.edu/abs/2008MNRAS.389.1319W
-[3] Spherical uniform distribution
-    https://www.jasondavies.com/maps/random-points/
+.. [Wilman2008]
+   Wilman et al.,
+   "A semi-empirical simulation of the extragalactic radio continuum
+   sky for next generation radio telescopes",
+   2008, MNRAS, 388, 1335-1348,
+   http://adsabs.harvard.edu/abs/2008MNRAS.388.1335W
+
+.. [Jelic2008]
+   Jelic et al.,
+   "Foreground simulations for the LOFAR-Epoch of Reionization
+   Experiment",
+   2008, MNRAS, 389, 1319-1335,
+   http://adsabs.harvard.edu/abs/2008MNRAS.389.1319W
 """
+
+
 import os
+import logging
+
 import numpy as np
+import astropy.units as au
+from astropy.cosmology import FlatLambdaCDM
 import pandas as pd
 import healpy as hp
 
-from .psparams import PixelParams
+from ...utils.random import spherical_uniform
+
+
+logger = logging.getLogger(__name__)
 
 
 class BasePointSource:
     """
-    The basic class of point sources
+    Base class for point sources simulation
 
-    Parameters
+    FIXME: rewrite this doc string!
+
+    Attributes
     ----------
-    z: float;
+    z: float
         Redshift, z ~ U(0,20)
     dA: au.Mpc;
         Angular diameter distance, which is calculated according to the
-        cosmology constants. In this work, it is calculated by module
-        basic_params
-        lumo: au.Jy;
-            Luminosity at the reference frequency.
+        cosmology constants.
+    lumo: au.Jy;
+        Luminosity at the reference frequency
     lat: au.deg;
-        The colatitude angle in the spherical coordinate system
+        The latitude in the spherical coordinate system
     lon: au.deg;
-        The longtitude angle in the spherical coordinate system
+        The longitude in the spherical coordinate system
     area: au.sr;
-        Area of the point sources, sr = rad^2
-
+        Angular size/area of the point sources
     """
-    # Init
+    # Identifier of the PS component
+    comp_id = "extragalactic/pointsources"
+    # ID of this PS type
+    ps_type = None
+    # Name of this PS type
+    name = None
 
     def __init__(self, configs):
         # configures
         self.configs = configs
-        # PS_list information
+        # FIXME: get rid of this `columns`
+        # Basic PS catalog columns
         self.columns = ['z', 'dA (Mpc)', 'luminosity (Jy)', 'Lat (deg)',
                         'Lon (deg)', 'Area (sr)']
-        self.nCols = len(self.columns)
         self._set_configs()
 
     def _set_configs(self):
-        """
-        Load the configs and set the corresponding class attributes.
-        """
-        comp = "extragalactic/pointsources/"
-        # common
+        """Load the configs and set the corresponding class attributes."""
+        # Configurations shared between all supported PS types
+        comp = self.comp_id
+        self.resolution = self.configs.getn(comp+"/resolution") * au.arcmin
+        self.catalog_pattern = self.configs.getn(comp+"/catalog_pattern")
+        self.save = self.configs.getn(comp+"/save")
+        self.output_dir = self.configs.get_path(comp+"/output_dir")
+        # Specific configurations for this PS type
+        pstype = "/".join([self.comp_id, self.ps_type])
+        self.number = self.configs.getn(pstype+"/number")
+        self.prefix2 = self.configs.getn(pstype+"/prefix2")
+        self.save2 = self.configs.getn(pstype+"/save2")
+        #
+        self.use_float = self.configs.getn("output/use_float")
+        self.clobber = self.configs.getn("output/clobber")
         self.nside = self.configs.getn("common/nside")
-        # resolution
-        self.resolution = self.configs.getn(comp+"resolution")
-        # save flag
-        self.save = self.configs.getn(comp+"save")
-        # Output_dir
-        self.output_dir = self.configs.get_path(comp+"output_dir")
+        self.npix = hp.nside2npix(self.nside)
+        # Cosmology model
+        self.H0 = self.configs.getn("cosmology/H0")
+        self.OmegaM0 = self.configs.getn("cosmology/OmegaM0")
+        self.cosmo = FlatLambdaCDM(H0=self.H0, Om0=self.OmegaM0)
+        #
+        logger.info("Loaded and set up configurations")
 
     def calc_number_density(self):
-        pass
+        raise NotImplementedError("Sub-class must implement this method!")
 
+    # FIXME: directly sample from joint distribution of z and flux/luminosity
     def calc_cdf(self):
         """
         Calculate cumulative distribution functions for simulating of
         samples with corresponding reshift and luminosity.
 
-        Parameter
-        -----------
+        Parameters
+        ----------
         rho_mat: np.ndarray rho(lumo,z)
             The number density matrix (joint-distribution of z and flux)
             of this type of PS.
@@ -111,6 +139,7 @@ class BasePointSource:
         # Cumulative function
         cdf_z = np.zeros(pdf_z.shape)
         cdf_lumo = np.zeros(pdf_lumo.shape)
+        # FIXME: use `cumsum()`
         for i in range(len(pdf_z)):
             cdf_z[i] = np.sum(pdf_z[:i])
         for i in range(len(pdf_lumo)):
@@ -118,12 +147,13 @@ class BasePointSource:
 
         return cdf_z, cdf_lumo
 
+    # FIXME: get rid of self.* !
     def get_lumo_redshift(self):
         """
         Randomly generate redshif and luminosity at ref frequency using
         the CDF functions.
 
-        Paramaters
+        Parameters
         ----------
         df_z, cdf_lumo: np.ndarray
             Cumulative distribution functions of redshift and flux.
@@ -136,8 +166,7 @@ class BasePointSource:
             Redshift.
         lumo: au.W/Hz/sr
             Luminosity.
-         """
-        # Uniformlly generate random number in interval [0,1]
+        """
         rnd_z = np.random.uniform(0, 1)
         rnd_lumo = np.random.uniform(0, 1)
         # Get redshift
@@ -148,56 +177,92 @@ class BasePointSource:
         dist_lumo = np.abs(self.cdf_lumo - rnd_lumo)
         idx_lumo = np.where(dist_lumo == dist_lumo.min())
         lumo = 10 ** self.lumobin[idx_lumo[0]]
-
         return float(z), float(lumo)
 
+    # FIXME: Get rid of this function!
     def gen_single_ps(self):
-        """
-        Generate single point source, and return its data as a list.
-        """
+        """Generate the information of one single point source"""
         # Redshift and luminosity
-        self.z, self.lumo = self.get_lumo_redshift()
+        z, lumo = self.get_lumo_redshift()
         # angular diameter distance
-        self.param = PixelParams(self.z)
-        self.dA = self.param.dA
-        # W/Hz/Sr to Jy
-        dA = self.dA * 3.0856775814671917E+22  # Mpc to meter
-        self.lumo = self.lumo / dA**2 / (10.0**-24)  # [Jy]
+        DA = self.cosmo.angular_diameter_distance(z).to(au.Mpc).value
+        # [ W/Hz/sr ] => [ Jy ]
+        DA_m = DA * 3.0856775814671917E+22  # Mpc to meter
+        lumo = lumo / DA_m**2 / 1e-24  # [Jy]
         # Position
-        x = np.random.uniform(0, 1)
-        self.lat = (np.arccos(2 * x - 1) / np.pi * 180 - 90)   # [deg]
-        self.lon = np.random.uniform(0, np.pi * 2) / np.pi * 180  # [deg]
+        theta, phi = spherical_uniform()
+        glon = np.rad2deg(phi)
+        glat = 90.0 - np.rad2deg(theta)
         # Area
-        npix = hp.nside2npix(self.nside)
-        self.area = 4 * np.pi / npix  # [sr]
+        area = 4 * np.pi / self.npix  # [sr]
+        ps_data = [z, DA_m, lumo, glat, glon, area]
+        return ps_data
 
-        ps_list = [self.z, self.dA, self.lumo, self.lat, self.lon, self.area]
-        return ps_list
-
+    # FIXME: The catalog should be simulated on the column based, not on
+    #        single PS based, which slows the speed!
     def gen_catalog(self):
         """
         Generate num_ps of point sources and save them into a csv file.
         """
-        # Init
-        ps_table = np.zeros((self.num_ps, self.nCols))
-        for x in range(self.num_ps):
-            ps_table[x, :] = self.gen_single_ps()
+        shape = (self.number, len(self.columns))
+        catalog = np.zeros(shape)
+        for i in range(shape[0]):
+            catalog[i, :] = self.gen_single_ps()
+        self.catalog = pd.DataFrame(catalog, columns=self.columns)
+        logger.info("Done simulate the catalog")
 
-        # Transform into Dataframe
-        self.ps_catalog = pd.DataFrame(ps_table, columns=self.columns,
-                                       index=list(range(self.num_ps)))
-
-    def save_as_csv(self):
+    def save_catalog(self):
         """Save the catalog"""
         if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
+            logger.info("Created output directory: %s" % self.output_dir)
+        # Append the prefix for the specific PS type
+        if self.prefix2 is not None:
+            prefix = "_".join([self.prefix, self.prefix2])
+        filepath = self._make_filepath(pattern=self.catalog_pattern,
+                                       prefix=prefix)
+        # Save catalog data
+        if os.path.exists(filepath):
+            if self.clobber:
+                logger.warning("Remove existing catalog file: %s" % filepath)
+                os.remove(filepath)
+            else:
+                raise OSError("Output file already exists: %s" % filepath)
+        self.catalog.to_csv(filepath, header=True, index=False)
+        logger.info("Save clusters catalog in use to: {0}".format(filepath))
 
-        pattern = "{prefix}.csv"
-        filename = pattern.format(prefix=self.prefix)
+    def output(self):
+        raise NotImplementedError("TODO")
 
-        # save to csv
-        if self.save:
-            file_name = os.path.join(self.output_dir, filename)
-            self.ps_catalog.to_csv(file_name)
+    def _make_filepath(self, pattern=None, **kwargs):
+        """Make the path of output file according to the filename pattern
+        and output directory loaded from configurations.
 
-        return file_name
+        Parameters
+        ----------
+        pattern : str, optional
+            Specify the filename (without the extension) pattern in string
+            format template syntax.  If not specified, then use
+            ``self.filename_pattern``.
+        **kwargs : optional
+            Other named parameters used to format the filename pattern.
+
+        Returns
+        -------
+        filepath : str
+            The full path to the output file (with directory and extension).
+        """
+        data = {
+            "prefix": self.prefix,
+        }
+        data.update(kwargs)
+        if pattern is None:
+            pattern = self.filename_pattern
+        filename = pattern.format(**data)
+        filetype = self.configs.getn("output/filetype")
+        if filetype == "fits":
+            filename += ".fits"
+        else:
+            raise NotImplementedError("unsupported filetype: %s" % filetype)
+        filepath = os.path.join(self.output_dir, filename)
+        return filepath
