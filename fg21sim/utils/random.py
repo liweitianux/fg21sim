@@ -34,6 +34,11 @@ def spherical_uniform(n=1):
     However, this convention is *different* to the convention generally
     used by mathematicians.
 
+    The following relation can be used to convert the generated (theta, phi)
+    to the Galactic longitude and latitude convention:
+        glon = np.rad2deg(phi)
+        glat = 90.0 - np.rad2deg(theta)
+
     References
     ----------
     .. [SpherePointPicking]
