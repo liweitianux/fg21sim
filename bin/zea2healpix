@@ -22,7 +22,9 @@ import logging
 
 import fg21sim
 from fg21sim.configs import configs
-from fg21sim.utils import zea2healpix, write_fits_healpix, setup_logging
+from fg21sim.utils import setup_logging
+from fg21sim.utils.reproject import zea2healpix
+from fg21sim.utils.fits import write_fits_healpix
 
 
 def main():

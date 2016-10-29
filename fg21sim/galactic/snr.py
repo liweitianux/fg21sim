@@ -15,7 +15,7 @@ import astropy.units as au
 import healpy as hp
 import pandas as pd
 
-from ..utils import write_fits_healpix
+from ..utils.fits import write_fits_healpix
 from ..utils.convert import Fnu_to_Tb
 from ..utils.grid import make_grid_ellipse, map_grid_to_healpix
 

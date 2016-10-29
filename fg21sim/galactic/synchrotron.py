@@ -14,7 +14,7 @@ from astropy.io import fits
 import astropy.units as au
 import healpy as hp
 
-from ..utils import read_fits_healpix, write_fits_healpix
+from ..utils.fits import read_fits_healpix, write_fits_healpix
 
 
 logger = logging.getLogger(__name__)

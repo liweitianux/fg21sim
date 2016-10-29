@@ -26,7 +26,7 @@ from .galactic import (Synchrotron as GalacticSynchrotron,
                        SuperNovaRemnants as GalacticSNR)
 from .extragalactic import GalaxyClusters as EGGalaxyClusters
 from .extragalactic import PointSources as ExtragalacticPointSources
-from .utils import write_fits_healpix
+from .utils.fits import write_fits_healpix
 
 
 logger = logging.getLogger(__name__)
