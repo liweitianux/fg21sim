@@ -8,6 +8,8 @@
 #     https://packaging.python.org/
 # [2] pytest - Good Integration Practices
 #     http://doc.pytest.org/en/latest/goodpractices.html
+# [3] setuptools: Building and Distributing Packages with Setuptools
+#     https://setuptools.readthedocs.io/en/latest/setuptools.html
 #
 
 import os
@@ -70,6 +72,9 @@ setup(
     ],
     packages=find_packages(exclude=["docs", "tests"]),
     include_package_data=True,
+    # Do NOT installed as a zipped egg, since Tornado requires direct access
+    # to the templates and static files.
+    zip_safe=False,
     scripts=[
         "bin/fg21sim",
         "bin/healpix2hpx",
