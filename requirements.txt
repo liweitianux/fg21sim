@@ -7,3 +7,4 @@ healpy
 configobj
 beautifulsoup4
 requests
+tornado

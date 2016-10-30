@@ -93,6 +93,7 @@ setup(
         "configobj",
         "beautifulsoup4",
         "requests",
+        "tornado",
     ],
     tests_require=["pytest"],
     cmdclass={"test": PyTest},
