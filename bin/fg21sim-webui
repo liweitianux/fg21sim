@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+# -*- mode: python -*-
+#
+# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# MIT license
+
+"""
+Start (and control) the Web user interface (UI) of "fg21sim",
+which is based upon Tornado_ and uses WebSocket_.
+
+.. _Tornado: http://www.tornadoweb.org/
+
+.. _WebSocket: https://en.wikipedia.org/wiki/WebSocket ,
+   http://caniuse.com/#feat=websockets
+"""
+
+
+import os
+import sys
+import argparse
+import logging
+
+import tornado.ioloop
+
+from fg21sim.configs import configs
+from fg21sim.utils import setup_logging
+from fg21sim.webui import make_application
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Start the fg21sim Web UI")
+    parser.add_argument("-p", "--port", type=int, default=21127,
+                        help="Tornado server listen port (default: 21127)")
+    parser.add_argument("-d", "--debug", action="store_true",
+                        help="enable Tornado debug mode")
+    args = parser.parse_args()
+
+    setup_logging(dict_config=configs.logging)
+    tool = os.path.basename(sys.argv[0])
+    logger = logging.getLogger(tool)
+    logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
+    application = make_application(debug=args.debug)
+    application.listen(args.port)
+    logger.info("Tornado started on: {protocol}://{host}:{port}".format(
+        protocol="http", host="localhost", port=args.port))
+    tornado.ioloop.IOLoop.current().start()
+
+
+if __name__ == "__main__":
+    main()

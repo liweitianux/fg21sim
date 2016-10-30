@@ -77,6 +77,7 @@ setup(
     zip_safe=False,
     scripts=[
         "bin/fg21sim",
+        "bin/fg21sim-webui",
         "bin/healpix2hpx",
         "bin/hpx2healpix",
         "bin/zea2healpix",
