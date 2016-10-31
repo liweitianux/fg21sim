@@ -5,7 +5,7 @@
  #
  # Tornado base template for the Web UI of "fg21sim"
  #}
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>{% block title %}TITLE{% end %}</title>
@@ -22,11 +22,21 @@
   {% block head_script %}{% end %}
 </head>
 <body>
-  {% block header %}{% end %}
+  <div class="page">
+    {% block page %}
+    <header class="masthead" role="banner">
+      {% block header %}{% end %}
+    </header>
 
-  {% block main %}{% end %}
+    <main class="container" role="main">
+      {% block main %}{% end %}
+    </main>
 
-  {% block footer %}{% end %}
+    <footer class="footer" role="contentinfo">
+      {% block footer %}{% end %}
+    </footer>
+    {% end %}  {# block page #}
+  </div>
 
   {% block script %}
   <script src="//code.jquery.com/jquery-3.1.1.min.js"></script>
