@@ -1,0 +1,63 @@
+/**
+ * Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+ * MIT license
+ *
+ * Font styles for the Web UI of "fg21sim"
+ *
+ * Credits:
+ * [1] https://www.smashingmagazine.com/2013/02/setting-weights-and-styles-at-font-face-declaration/
+ * [2] https://stackoverflow.com/a/28339483/4856091
+ */
+
+
+/**
+ * Source Sans Pro
+ */
+@font-face {
+    font-family: 'Source Sans Pro';
+    src: url('../fonts/SourceSansPro-Regular.ttf.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Source Sans Pro';
+    src: url('../fonts/SourceSansPro-Bold.ttf.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Source Sans Pro';
+    src: url('../fonts/SourceSansPro-It.ttf.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'Source Sans Pro';
+    src: url('../fonts/SourceSansPro-BoldIt.ttf.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
+}
+
+
+/**
+ * Source Code Pro
+ */
+@font-face {
+    font-family: 'Source Code Pro';
+    src: local('Source Code Pro'),
+         url('../fonts/SourceCodePro-Regular.ttf.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+/**
+ * Set font styles
+ */
+body {
+    font-family: 'Source Sans Pro', 'Helvetica', 'Arial', sans-serif;
+}
+
+pre {
+    font-family: 'Source Code Pro', 'DejaVu Sans Mono', monospace;
+}
