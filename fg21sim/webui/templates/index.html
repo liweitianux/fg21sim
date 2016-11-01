@@ -21,16 +21,8 @@
 
 {% block main %}
   {% include "configs.html" %}
-
-  <section id="xxx-results" class="container target">
-    <h2 id="results">Results</h2>
-    <p>Simulation results go here :)</p>
-  </section>
-
-  <section id="logs" class="container target">
-    <h2>Logs</h2>
-    <p>Logging messages should go here :)</p>
-  </section>
+  {% include "console.html" %}
+  {% include "results.html" %}
 {% end %}
 
 {% block footer %}

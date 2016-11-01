@@ -1,0 +1,29 @@
+{#
+ # Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+ # MIT license
+ #
+ # Console part
+ #}
+<section id="console">
+  <h2>Console</h2>
+  <hr />
+
+  <p class="status"><strong>
+      Simulation status:
+      <span id="fg21sim-status" class="label label-default">N/A</span>
+  </strong></p>
+
+  <p class="button-group">
+    <button type="button" id="start-fg21sim"><span class="fa fa-play" aria-hidden="true"></span> Start</button>
+    <button type="button" class="button button-warning" id="stop-fg21sim" disabled="disabled"><span class="fa fa-stop" aria-hidden="true"></span> Stop</button>
+  </p>
+
+  <div id="log-messages" class="panel panel-default">
+    <div class="panel-heading">
+      <span class="panel-title">Logging Messages</span>
+    </div>
+    <div class="panel-body">
+      <p>messages ...</p>
+    </div>
+  </div>
+</section>
