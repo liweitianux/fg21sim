@@ -11,18 +11,12 @@
 
 
 /**
- * Source Sans Pro
+ * Source Sans Pro: Regular + Semibold
  */
 @font-face {
     font-family: 'Source Sans Pro';
     src: url('../fonts/SourceSansPro-Regular.ttf.woff') format('woff');
     font-weight: normal;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'Source Sans Pro';
-    src: url('../fonts/SourceSansPro-Bold.ttf.woff') format('woff');
-    font-weight: bold;
     font-style: normal;
 }
 @font-face {
@@ -33,7 +27,13 @@
 }
 @font-face {
     font-family: 'Source Sans Pro';
-    src: url('../fonts/SourceSansPro-BoldIt.ttf.woff') format('woff');
+    src: url('../fonts/SourceSansPro-Semibold.ttf.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Source Sans Pro';
+    src: url('../fonts/SourceSansPro-SemiboldIt.ttf.woff') format('woff');
     font-weight: bold;
     font-style: italic;
 }
