@@ -1,0 +1,38 @@
+{#
+ # Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+ # MIT license
+ #
+ # Index page for the Web UI of "fg21sim"
+ #}
+
+{% extends "base.html" %}
+
+{% block title %}fg21sim Web UI{% end %}
+
+{% block extra_head %}
+  <meta name="author" content="Weitian LI" />
+  <meta name="description" content="fg21sim: Realistic Foregrounds Simulation for EoR 21cm Signal Detection" />
+  <link rel="icon" type="image/png" href="{{ static_url('images/favicon.png') }}" />
+{% end %}
+
+{% block header %}
+  {% include "header.html" %}
+{% end %}
+
+{% block main %}
+  {% include "configs.html" %}
+
+  <section id="xxx-results" class="container target">
+    <h2 id="results">Results</h2>
+    <p>Simulation results go here :)</p>
+  </section>
+
+  <section id="logs" class="container target">
+    <h2>Logs</h2>
+    <p>Logging messages should go here :)</p>
+  </section>
+{% end %}
+
+{% block footer %}
+  {% include "footer.html" %}
+{% end %}
