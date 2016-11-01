@@ -1,0 +1,259 @@
+/**
+ * Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+ * MIT license
+ *
+ * Stylesheet for the Web UI of "fg21sim"
+ *
+ * Credit:
+ * [1] Milligram:
+ *     https://milligram.github.io/
+ *     https://github.com/milligram/milligram.github.io
+ * [2] Bootstrap:
+ *     https://getbootstrap.com/css/
+ * [3] Font Awesome:
+ *     http://fontawesome.io/
+ */
+
+
+/**
+ * Basic styles
+ */
+body {
+    background-color: #e7e7e7;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/**
+ * Screen reader only
+ * Credit: refs.(2, 3)
+ */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+
+/**
+ * Header with fixed navigation banner
+ */
+header.masthead {
+    /* Prevent fixed navigation banner hiding main contents */
+    margin-bottom: 7rem;
+}
+
+
+/**
+ * Prevent fixed navigation banner hiding anchor target
+ *
+ * Credit:
+ * [1] https://css-tricks.com/hash-tag-links-padding/
+ * [2] http://nicolasgallagher.com/jump-links-and-viewport-positioning/demo/
+ *
+ * FIXME: this invisible element overlaps above visible elements!
+ *        may be related to the `milligram` CSS framework ??
+ */
+/*
+:target {
+    margin-top: -7rem;
+    padding-top: 7rem;
+    background-clip: content-box;
+}
+*/
+
+
+/**
+ * Navigation
+ */
+.navigation {
+    background: #f4f5f6;
+    border-bottom: 0.1rem solid #d1d1d1;
+    display: block;
+    width: 100%;
+    height: 5.2rem;
+    left: 0;
+    max-width: 100%;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 100;
+}
+.navigation .container {
+    padding-bottom: 0;
+    padding-top: 0;
+}
+.navigation .logo {
+    height: 2rem;
+    position: relative;
+    top: 0.3rem;
+}
+.navigation .navigation-title,
+.navigation .title,
+.navigation .description {
+    display: inline;
+    position: relative;
+    font-size: 1.6rem;
+    line-height: 5.2rem;
+    padding: 0;
+    text-decoration: none;
+}
+.navigation .title {
+    font-size: 2.0rem;
+    font-variant: small-caps;
+    margin-right: 0.5rem;
+}
+.navigation .description {
+    color: #606c76;
+    font-style: italic;
+}
+.navigation .navigation-list {
+    list-style: none;
+    margin-bottom: 0;
+}
+.navigation .navigation-item {
+    float: left;
+    margin-bottom: 0;
+    margin-left: 2.5rem;
+    position: relative;
+}
+.navigation .navigation-link {
+    display: inline;
+    font-size: 1.6rem;
+    line-height: 5.2rem;
+    padding: 0;
+    text-decoration: none;
+}
+.navigation .navigation-link .active {
+    color: #606c76;
+}
+
+
+/**
+ * Github stamp at the top-right corner
+ */
+.github {
+    border: 0;
+    color: #f4f5f6;
+    fill: #9b4dca;
+    height: 5.2rem;
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 5.2rem;
+    z-index: 100;
+}
+.github:hover .octo-arm {
+    animation:a 0.8s infinite;
+}
+@keyframes a {
+    0%, 50% {
+        transform: rotate(0);
+    }
+    25%, 75% {
+        transform: rotate(-25deg);
+    }
+}
+
+
+/**
+ * Form styles
+ */
+
+/* Inline form */
+label, legend {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    line-height: 2.0;
+}
+.form-inline .form-group {
+    display: inline-block;
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+.form-inline .form-control {
+    display: inline-block;
+    width: auto;
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+.form-inline .checkboxes {
+    display: inline-block;
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+
+/* Checkboxes & Radios */
+.checkboxes .legend,
+.radios .legend {
+    margin-right: 0.5rem;
+}
+.checkboxes .form-control,
+.radios .form-control {
+    margin-right: 0.5rem;
+}
+.checkboxes .form-group label,
+.radios .form-group label {
+    margin-right: 2.5rem;
+    padding-top: 0.2rem;
+    font-weight: normal;
+}
+
+
+/**
+ * Button styles
+ */
+button,
+.button {
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.button-small {
+    font-size: .8rem;
+    height: 2.8rem;
+    line-height: 2.8rem;
+    padding: 0 1.5rem;
+}
+.button-large {
+    font-size: 1.4rem;
+    height: 4.5rem;
+    line-height: 4.5rem;
+    padding: 0 2rem;
+}
+
+
+/**
+ * Horizontal rules
+ */
+hr {
+    margin: 2rem 0;
+    border-top-color: #9b4dca;
+    border-top-width: 0.2rem;
+}
+hr.hr-condensed {
+    margin: 1rem 0;
+}
+hr.hr-thin {
+    border-top-width: 0.1rem;
+}
+hr.hr-thick {
+    border-top-width: 0.3rem;
+}
+hr.hr-solid {
+    border-top-style: solid;
+}
+hr.hr-dashed {
+    border-top-style: dashed;
+}
+hr.hr-dotted {
+    border-top-style: dotted;
+}
