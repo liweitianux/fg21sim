@@ -19,7 +19,15 @@
  * Basic styles
  */
 body {
-    background-color: #e7e7e7;
+    background-color: #f7f7f7;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #9b4dca;
+}
+
+p {
+    margin-bottom: 1rem;
 }
 
 .text-center {
@@ -74,7 +82,7 @@ header.masthead {
  * Navigation
  */
 .navigation {
-    background: #f4f5f6;
+    background: #f1f1f1;
     border-bottom: 0.1rem solid #d1d1d1;
     display: block;
     width: 100%;
@@ -111,7 +119,6 @@ header.masthead {
     margin-right: 0.5rem;
 }
 .navigation .description {
-    color: #606c76;
     font-style: italic;
 }
 .navigation .navigation-list {
@@ -151,7 +158,7 @@ header.masthead {
     z-index: 100;
 }
 .github:hover .octo-arm {
-    animation:a 0.8s infinite;
+    animation:a 1.0s infinite;
 }
 @keyframes a {
     0%, 50% {
@@ -208,6 +215,43 @@ label, legend {
 
 
 /**
+ * Label styles (general usage)
+ */
+.label {
+    display: inline;
+    padding: 0.2rem 0.6rem 0.3rem 0.6rem;
+    color: #fff;
+    font-weight: bold;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+}
+.label-small {
+    font-size: 0.8rem;
+}
+.label-default {
+    background-color: #777;
+}
+.label-primary {
+    background-color: #337ab7;
+}
+.label-success {
+    background-color: #5cb85c;
+}
+.label-info {
+    background-color: #5bc0de;
+}
+.label-warning {
+    background-color: #f0ad4e;
+}
+.label-danger {
+    background-color: #d9534f;
+}
+
+
+/**
  * Button styles
  */
 button,
@@ -217,8 +261,14 @@ button,
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
 }
+
+.button-group button,
+.button-group .button {
+    margin-right: 1.5rem;
+}
+
 .button-small {
-    font-size: .8rem;
+    font-size: 0.8rem;
     height: 2.8rem;
     line-height: 2.8rem;
     padding: 0 1.5rem;
@@ -228,6 +278,76 @@ button,
     height: 4.5rem;
     line-height: 4.5rem;
     padding: 0 2rem;
+}
+
+.button-success {
+    background-color: #5cb85c;
+    border-color: #5cb85c;
+}
+.button-success:hover,
+.button-success:focus {
+    background-color: #398439;
+    border-color: #398439;
+}
+.button-info {
+    background-color: #5bc0de;
+    border-color: #5bc0de;
+}
+.button-info:hover,
+.button-info:focus {
+    background-color: #269abc;
+    border-color: #269abc;
+}
+.button-warning {
+    background-color: #f0ad4e;
+    border-color: #f0ad4e;
+}
+.button-warning:hover,
+.button-warning:focus {
+    background-color: #d58512;
+    border-color: #d58512;
+}
+.button-danger {
+    background-color: #d9534f;
+    border-color: #d9534f;
+}
+.button-danger:hover,
+.button-danger:focus {
+    background-color: #ac2925;
+    border-color: #ac2925;
+}
+
+
+/**
+ * Panel styles
+ */
+.panel {
+    margin-bottom: 2rem;
+    border: 0.1rem solid transparent;
+    border-radius: 0.4rem;
+    box-shadow: 0 0.1rem 0.1rem rgba(0, 0, 0, 0.05);
+}
+.panel-default {
+    border-color: #d1d1d1;
+}
+.panel-heading {
+    padding: 1rem 1.5rem;
+    border-bottom: 0.1rem solid transparent;
+    border-top-left-radius: 0.4rem;
+    border-top-right-radius: 0.4rem;
+}
+.panel-default > .panel-heading {
+    background-color: #e7e7e7;
+    border-color: #d1d1d1;
+}
+.panel-title {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 1.6rem;
+    font-weight: bold;
+}
+.panel-body {
+    padding: 1.5rem;
 }
 
 
