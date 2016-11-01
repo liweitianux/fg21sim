@@ -11,28 +11,29 @@
 
 
 /**
- * Source Sans Pro: Regular + Semibold
+ * Source Sans Pro
+ * (Regular + Semibold)
  */
 @font-face {
-    font-family: 'Source Sans Pro';
+    font-family: 'SourceSansPro';
     src: url('../fonts/SourceSansPro-Regular.ttf.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 @font-face {
-    font-family: 'Source Sans Pro';
+    font-family: 'SourceSansPro';
     src: url('../fonts/SourceSansPro-It.ttf.woff') format('woff');
     font-weight: normal;
     font-style: italic;
 }
 @font-face {
-    font-family: 'Source Sans Pro';
+    font-family: 'SourceSansPro';
     src: url('../fonts/SourceSansPro-Semibold.ttf.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
 @font-face {
-    font-family: 'Source Sans Pro';
+    font-family: 'SourceSansPro';
     src: url('../fonts/SourceSansPro-SemiboldIt.ttf.woff') format('woff');
     font-weight: bold;
     font-style: italic;
@@ -41,11 +42,11 @@
 
 /**
  * Source Code Pro
+ * (Regular only)
  */
 @font-face {
-    font-family: 'Source Code Pro';
-    src: local('Source Code Pro'),
-         url('../fonts/SourceCodePro-Regular.ttf.woff') format('woff');
+    font-family: 'SourceCodePro';
+    src: url('../fonts/SourceCodePro-Regular.ttf.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
@@ -55,9 +56,9 @@
  * Set font styles
  */
 body {
-    font-family: 'Source Sans Pro', 'Helvetica', 'Arial', sans-serif;
+    font-family: 'SourceSansPro', sans-serif;
 }
 
 pre {
-    font-family: 'Source Code Pro', 'DejaVu Sans Mono', monospace;
+    font-family: 'SourceCodePro', monospace;
 }
