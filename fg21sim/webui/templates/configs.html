@@ -4,7 +4,7 @@
  #
  # Configuration part
  #}
-<section id="configs" class="container target">
+<section id="configs">
   <h2>Configurations</h2>
   <hr />
 
@@ -22,13 +22,13 @@
           <input class="form-control" type="text" id="conf-configfile" name="configfile" />
         </div>
       </div>
-      <div class="text-center">
+      <div class="button-group">
         <!-- NOTE: HTML5 "button" element has a default behavior of submit.
              Credit: https://stackoverflow.com/a/10836076/4856091
            -->
-        <button type="button" class="button-small" id="reset-defaults"><span class="fa fa-undo" aria-hidden="true"></span> Reset to Defaults</button>
-        <button type="button" class="button-small" id="load-configfile"><span class="fa fa-download" aria-hidden="true"></span> Load from Configuration File</button>
-        <button type="button" class="button-small" id="save-configfile"><span class="fa fa-save" aria-hidden="true"></span> Save to Configuration File</button>
+        <button type="button" id="load-configfile"><span class="fa fa-download" aria-hidden="true"></span> Load from Configuration File</button>
+        <button type="button" id="save-configfile"><span class="fa fa-save" aria-hidden="true"></span> Save to Configuration File</button>
+        <button type="button" class="button-warning" id="reset-defaults" disabled="disabled"><span class="fa fa-undo" aria-hidden="true"></span> Reset to Defaults</button>
       </div>
     </fieldset>
 
