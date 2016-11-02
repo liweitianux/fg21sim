@@ -85,7 +85,10 @@ class ConfigManager:
                                      list_values=False, _inspec=True)
         configs_default = ConfigObj(interpolation=False,
                                     configspec=self._configspec)
-        self._config = self._validate(configs_default)
+        # Keep a copy of the default configurations
+        self._config_default = self._validate(configs_default)
+        # NOTE: `_config_default.copy()` only returns a *shallow* copy.
+        self._config = ConfigObj(self._config_default, interpolation=False)
         if userconfig:
             self.read_userconfig(userconfig)
 
@@ -164,11 +167,15 @@ class ConfigManager:
             raise ConfigError(error_msg)
         return config
 
-    def get(self, key, fallback=None):
+    def get(self, key, fallback=None, from_default=False):
         """Get config value by key."""
-        return self._config.get(key, fallback)
+        if from_default:
+            config = self._config_default
+        else:
+            config = self._config
+        return config.get(key, fallback)
 
-    def getn(self, key, sep="/"):
+    def getn(self, key, sep="/", from_default=False):
         """Get the config value from the nested dictionary configs using
         a list of keys or a "sep"-separated keys strings.
 
@@ -183,6 +190,10 @@ class ConfigManager:
             If the above "keys" is a string, then this parameter specify
             the character used to separate the multi-level keys.
             This parameter should be a string of length 1 (i.e., a character).
+        from_default : bool, optional
+            If True, get the config option value from the *default*
+            configurations, other than the configurations merged with user
+            configurations (default).
 
         References
         ----------
@@ -193,7 +204,13 @@ class ConfigManager:
             raise ValueError("Invalid parameter 'sep': %s" % sep)
         if isinstance(key, str):
             key = key.split(sep)
-        return reduce(dict.get, key, self._config)
+        #
+        if from_default:
+            config = self._config_default
+        else:
+            config = self._config
+        #
+        return reduce(dict.get, key, config)
 
     def get_path(self, key):
         """Return the absolute path of the file/directory specified by the
@@ -298,3 +315,23 @@ class ConfigManager:
             "handlers": handlers,
         }
         return logconf
+
+    def dump(self, from_default=False):
+        """Dump the configurations as plain Python dictionary.
+
+        Parameters
+        ----------
+        from_default : bool, optional
+            If True, dump the default configurations (as specified by the
+            bundled specifications); otherwise, dump the configurations with
+            user-supplied options merged (default).
+
+        NOTE
+        ----
+        The original option orders are missing.
+        """
+        if from_default:
+            config = self._config_default
+        else:
+            config = self._config
+        return config.dict()
