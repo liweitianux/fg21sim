@@ -120,6 +120,7 @@ header.masthead {
 }
 .navigation .description {
     font-style: italic;
+    margin-right: 2.5rem;
 }
 .navigation .navigation-list {
     list-style: none;
@@ -245,6 +246,10 @@ label, legend {
 }
 .label-danger {
     background-color: #d9534f;
+}
+
+.label .icon {
+    margin-right: 0.2rem;
 }
 
 

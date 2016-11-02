@@ -28,3 +28,7 @@
 {% block footer %}
   {% include "footer.html" %}
 {% end %}
+
+{% block extra_script %}
+  <script src="{{ static_url('js/websocket.js') }}"></script>
+{% end %}
