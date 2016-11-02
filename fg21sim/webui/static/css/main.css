@@ -133,13 +133,10 @@ header.masthead {
 }
 .navigation .navigation-link {
     display: inline;
-    font-size: 1.6rem;
+    font-size: 1.2rem;
     line-height: 5.2rem;
-    padding: 0;
-    text-decoration: none;
-}
-.navigation .navigation-link .active {
-    color: #606c76;
+    padding: 0.3rem 0.5rem;
+    margin-top: 1.5rem;
 }
 
 
