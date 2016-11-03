@@ -14,6 +14,7 @@ import sys
 import logging
 from logging import FileHandler, StreamHandler
 from functools import reduce
+import operator
 import pkg_resources
 
 from configobj import ConfigObj, ConfigObjError, flatten_errors
@@ -188,42 +189,45 @@ class ConfigManager:
             config = self._config
         return config.get(key, fallback)
 
-    def getn(self, key, sep="/", from_default=False):
+    def getn(self, key, from_default=False):
         """Get the config value from the nested dictionary configs using
-        a list of keys or a "sep"-separated keys strings.
+        a list of keys or a "sep"-separated keys string.
 
         Parameters
         ----------
         key : str, or list[str]
-            List of keys or a string separated by a specific character
-            (e.g., "/") to specify the item in the ``self._config``, which
+            List of keys or a string of keys separated by a the ``/``
+            character to specify the item in the ``self._config``, which
             is a nested dictionary.
             e.g., ``["section1", "key2"]``, ``"section1/key2"``
-        sep : str (len=1), optional
-            If the above "keys" is a string, then this parameter specify
-            the character used to separate the multi-level keys.
-            This parameter should be a string of length 1 (i.e., a character).
         from_default : bool, optional
             If True, get the config option value from the *default*
             configurations, other than the configurations merged with user
             configurations (default).
 
+        Raises
+        ------
+        KeyError :
+            The input key specifies a non-exist config option.
+
         References
         ----------
         - Stackoverflow: Checking a Dictionary using a dot notation string
           https://stackoverflow.com/q/12414821/4856091
+          https://stackoverflow.com/a/12414913/4856091
         """
-        if len(sep) != 1:
-            raise ValueError("Invalid parameter 'sep': %s" % sep)
         if isinstance(key, str):
-            key = key.split(sep)
+            key = key.split("/")
         #
         if from_default:
             config = self._config_default
         else:
             config = self._config
         #
-        return reduce(dict.get, key, config)
+        try:
+            return reduce(operator.getitem, key, config)
+        except (KeyError, TypeError):
+            raise KeyError("%s: invalid key")
 
     def get_path(self, key):
         """Return the absolute path of the file/directory specified by the
