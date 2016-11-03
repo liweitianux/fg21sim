@@ -17,10 +17,11 @@ References
   http://caniuse.com/#feat=websockets
 """
 
-from urllib.parse import urlparse
 import logging
 
 import tornado.websocket
+
+from .utils import get_host_ip
 
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,7 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         """Invoked when a new WebSocket is closed by the client."""
+        code, reason = None, None
         if hasattr(self, "close_code"):
             code = self.close_code
         if hasattr(self, "close_reason"):
@@ -84,15 +86,15 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         Currently, only allow access from the ``localhost``
         (i.e., 127.0.0.1) and local LAN.
         """
-        logger.info("WebSocket: {0}: access origin: {1}".format(
-            self.name, origin))
-        # NOTE: `urlparse`: `scheme://netloc/path;parameters?query#fragment`
-        netloc = urlparse(origin).netloc
-        # NOTE: `netloc` example: `user:pass@example.com:8080`
-        host = netloc.split("@")[-1].split(":")[0]
-        if host in ["localhost", "127.0.0.1"]:
+        logger.info("WebSocket: {0}: origin: {1}".format(self.name, origin))
+        ip = get_host_ip(url=origin)
+        if ip == "127.0.0.1":
             self.from_localhost = True
-            logger.info("WebSocket: %s: access from localhost" % self.name)
+            logger.info("WebSocket: %s: origin is localhost" % self.name)
             return True
-        # XXX/TODO: check whether from the local LAN ??
-        return False
+        else:
+            self.from_localhost = False
+            # FIXME/TODO: check whether from local LAN (or in same subnet)??
+            logger.error("WebSocket: %s: " % self.name +
+                         "ONLY allow access from localhost at the moment :(")
+            return False
