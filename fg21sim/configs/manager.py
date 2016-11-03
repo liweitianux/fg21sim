@@ -69,11 +69,11 @@ class ConfigManager:
     userconfig : str
         The filename and path to the user-provided configurations.
         NOTE:
-        - This attribute only presents after loading the user configuration
-          by ``self.read_userconfig()``;
+        - This attribute has valid value only after loading the user
+          configuration by ``self.read_userconfig()``;
         - This attribute is used to determine the absolute path of the
           configs specifying the input templates or data files, therefore
-          allow the use of relative path for those configs.
+          allow the use of relative path for those config options.
     """
     # Path to the user provided configuration file, which indicates user
     # configurations merged if not ``None``.
@@ -126,21 +126,19 @@ class ConfigManager:
 
         NOTE
         ----
-        The user configuration file can be loaded *only once*, i.e.,
-        *only one* user configuration file supported.
-        Since the *path* of the user configuration file is recorded, and
-        thus allow the use of *relative path* of some input files (e.g.,
-        "galactic/synchrotron/template") within the configurations.
+        If a user configuration file is already loaded, then the
+        configurations are *reset* before loading the supplied user
+        configuration file.
         """
-        if self.userconfig is not None:
-            raise ConfigError('User configuration already loaded from "%s"' %
-                              self.userconfig)
-        #
         try:
             config = open(userconfig).read().split("\n")
         except IOError:
             raise ConfigError('Cannot read config from "%s"' % userconfig)
         #
+        if self.userconfig is not None:
+            logger.warning('User configuration already loaded from "%s"' %
+                           self.userconfig)
+            self.reset()
         self.read_config(config)
         self.userconfig = os.path.abspath(userconfig)
         logger.info("Loaded user config: {0}".format(self.userconfig))
