@@ -319,6 +319,12 @@ button,
     border-color: #ac2925;
 }
 
+.btn {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    cursor: pointer;
+}
+
 
 /**
  * Panel styles

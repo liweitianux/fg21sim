@@ -5,12 +5,19 @@
  * WebSocket codes for the Web UI of "fg21sim"
  */
 
+"use strict";
 
 /**
  * Global variable
  * FIXME: try to avoid this ...
  */
 var ws = null;  /* WebSocket */
+/* WebSocket reconnection settings */
+var ws_reconnect = {
+  maxTry: 100,
+  tried: 0,
+  timeout: 1000,  /* ms */
+};
 
 
 /**
@@ -65,7 +72,29 @@ var updateWSStatus = function (action) {
     $("#ws-status .text").text("Unsupported!!");
   }
   else {
-    console.error("updateWSStatus: Unknown action: ", action);
+    console.error("updateWSStatus: Unknown action:", action);
+  }
+};
+
+
+/**
+ * Toggle the visibility of element "#ws-status".
+ */
+var toggleWSReconnect = function (action) {
+  /**
+   * Function default parameters: https://stackoverflow.com/a/894877/4856091
+   */
+  action = typeof action !== "undefined" ? action : "toggle";
+
+  var target = $("#ws-reconnect");
+  if (action === "toggle") {
+    target.toggle();
+  } else if (action === "show") {
+    target.show();
+  } else if (action === "hide") {
+    target.hide();
+  } else {
+    console.error("toggleWSReconnect: Unknown action:", action);
   }
 };
 
@@ -76,19 +105,29 @@ var updateWSStatus = function (action) {
 var connectWebSocket = function (url) {
   ws = new WebSocket(url);
   ws.onopen = function () {
-    console.log("Opened WebSocket: " + ws.url);
+    console.log("Opened WebSocket:", ws.url);
     updateWSStatus("open");
+    toggleWSReconnect("hide");
   };
   ws.onclose = function (e) {
-    console.log("WebSocket closed because: ", e.reason);
+    console.log("WebSocket closed: code:", e.code, ", reason:", e.reason);
     updateWSStatus("close");
     // Reconnect
-    console.log("Reconnect the WebSocket in 1 second");
-    setTimeout(function () { connectWebSocket(url); }, 1000);
+    if (ws_reconnect.tried < ws_reconnect.maxTry) {
+      ws_reconnect.tried++;
+      console.log("Try reconnect the WebSocket: No." + ws_reconnect.tried);
+      setTimeout(function () { connectWebSocket(url); },
+                 ws_reconnect.timeout);
+    } else {
+      console.error("WebSocket already tried allowed maximum times:",
+                    ws_reconnect.maxTry);
+      toggleWSReconnect("show");
+    }
   };
   ws.onerror = function (e) {
-    console.error("WebSocket encountered error: ", e.message);
+    console.error("WebSocket encountered error:", e.message);
     updateWSStatus("error");
+    toggleWSReconnect("show");
   };
   ws.onmessage = function (e) {
     console.log("WebSocket received message:");
@@ -107,6 +146,14 @@ $(document).ready(function () {
 
     var ws_url = getWebSocketURL("/ws");
     connectWebSocket(ws_url);
+
+    // Bind event to the "#ws-reconnect" button
+    $("#ws-reconnect").on("click", function () {
+      console.log("WebSocket: reset the tried reconnection counter");
+      ws_reconnect.tried = 0;
+      console.log("Manually reconnect the WebSocket:", ws_url);
+      connectWebSocket(ws_url);
+    });
 
   } else {
     // WebSocket NOT supported
