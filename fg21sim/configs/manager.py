@@ -75,6 +75,10 @@ class ConfigManager:
           configs specifying the input templates or data files, therefore
           allow the use of relative path for those configs.
     """
+    # Path to the user provided configuration file, which indicates user
+    # configurations merged if not ``None``.
+    userconfig = None
+
     def __init__(self, userconfig=None):
         """Load the bundled default configurations and specifications.
         If the ``userconfig`` provided, the user configurations is also
@@ -128,7 +132,7 @@ class ConfigManager:
         thus allow the use of *relative path* of some input files (e.g.,
         "galactic/synchrotron/template") within the configurations.
         """
-        if hasattr(self, "userconfig"):
+        if self.userconfig is not None:
             raise ConfigError('User configuration already loaded from "%s"' %
                               self.userconfig)
         #
@@ -140,6 +144,17 @@ class ConfigManager:
         self.read_config(config)
         self.userconfig = os.path.abspath(userconfig)
         logger.info("Loaded user config: {0}".format(self.userconfig))
+
+    def reset(self):
+        """Reset the current configurations to the copy of defaults from
+        the specifications.
+
+        NOTE: Also reset ``self.userconfig`` to ``None``.
+        """
+        # NOTE: `_config_default.copy()` only returns a *shallow* copy.
+        self._config = ConfigObj(self._config_default, interpolation=False)
+        self.userconfig = None
+        logger.warning("Reset the configurations to the copy of defaults!")
 
     def _validate(self, config):
         """Validate the config against the specification using a default
