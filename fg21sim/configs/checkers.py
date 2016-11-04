@@ -2,13 +2,14 @@
 # MIT license
 
 """
-Custom validations for the configurations.
+Custom checkers to further validate the configurations.
 
 NOTE
 ----
-These checker functions check the configurations as a whole, and may check
-a config item against its context,
-Therefore, they are very different to the checker function of `Validator`.
+These functions further check the configurations as a whole, which means
+one config option may be checked against its context.
+Therefore, they are very different to the checker functions used in the
+``validate.Validator``.
 """
 
 import os
@@ -128,40 +129,51 @@ _CHECKERS = [
 ]
 
 
-def validate_configs(configs, checkers=_CHECKERS):
-    """Validate the configurations through the supplied checkers.
+def check_configs(configs, raise_exception=True, checkers=_CHECKERS):
+    """Check/validate the whole configurations through all the supplied
+    checker functions.
 
-    These checker usually validate on the global scale, and validate
-    some specific configs against their contexts.
+    These checker functions may check one config option against its context
+    if necessary to determine whether it has a valid value.
 
     Parameters
     ----------
-    configs : `ConfigManager` object
-        An `ConfigManager` object contains both default and user
+    configs : `ConfigManager` instance
+        An ``ConfigManager`` instance contains both default and user
         configurations.
-    checkers : list of functions
+    raise_exception : bool, optional
+        Whether raise a ``ConfigError`` exception if there is any invalid
+        config options?
+    checkers : list of functions, optional
         List of checker functions through which the configurations
-        will be validated.
+        will be checked.
 
     Returns
     -------
-    bool
-        True if the configurations pass all checker functions, otherwise,
-        the `ConfigError` will be raised with corresponding message.
+    result : bool
+        ``True`` if the configurations pass all checker functions.
+    errors : dict
+        An dictionary containing the details about the invalid config options,
+        with the keys identifying the config options and values indicating
+        the error message.
+        If above ``result=True``, then this is an empty dictionary ``{}``.
 
     Raises
     ------
     ConfigError
-        If any configuration failed the check, a `ConfigError` with
-        details will be raised.
+        If any config option failed to pass any of the checkers, a
+        ``ConfigError`` with details is raised.
     """
-    results = {}
+    errors = {}
     for checker in checkers:
-        results.update(checker(configs))
+        errors.update(checker(configs))
     #
-    if results == {}:
-        return True
+    if errors == {}:
+        result = True
     else:
-        err_msg = "\n".join(['Config "{key}": {msg}'.format(key=key, msg=msg)
-                             for key, msg in results.items()])
-        raise ConfigError(err_msg)
+        result = False
+        if raise_exception:
+            msg = "\n".join(['Config "{key}": {val}'.format(key=key, val=val)
+                             for key, val in errors.items()])
+            raise ConfigError(msg)
+    return (result, errors)
