@@ -17,6 +17,7 @@ References
   http://caniuse.com/#feat=websockets
 """
 
+import os
 import json
 import logging
 
@@ -117,7 +118,7 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
 
         The sent message also has a ``type`` item of same value, which the
         client can be used to figure out the proper actions.
-        There is a ``status`` item which indicates the status of the
+        There is a ``success`` item which indicates the status of the
         requested operation, and a ``data`` item containing the response
         data.
         """
@@ -128,10 +129,10 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         except json.JSONDecodeError:
             logger.warning("WebSocket: {0}: ".format(self.name) +
                            "message is not a valid JSON string")
-            response = {"status": False, "type": None}
+            response = {"success": False, "type": None}
         except (KeyError, TypeError):
             logger.warning("WebSocket: %s: skip invalid message" % self.name)
-            response = {"status": False, "type": None}
+            response = {"success": False, "type": None}
         else:
             # Check the message type and dispatch task
             if msg_type == "configs":
@@ -147,7 +148,7 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
                 # Message of unknown type
                 logger.warning("WebSocket: {0}: ".format(self.name) +
                                "unknown message type: {0}".format(msg_type))
-                response = {"status": False, "type": msg_type}
+                response = {"success": False, "type": msg_type}
         #
         msg_response = json.dumps(response)
         self.write_message(msg_response)
@@ -189,24 +190,24 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
             if msg_action == "get":
                 # Get the values of the specified options
                 data, errors = self._get_configs(keys=msg_data)
-                response["status"] = True if errors == {} else False
+                response["success"] = True if errors == {} else False
                 response["data"] = data
                 response["errors"] = errors
             elif msg_action == "set":
                 # Set the values of the specified options
                 errors = self._set_configs(data=msg_data)
-                response["status"] = True if errors == {} else False
+                response["success"] = True if errors == {} else False
                 response["data"] = {}
                 response["errors"] = errors
             else:
                 logger.warning("WebSocket: {0}: ".format(self.name) +
                                "unknown action: {0}".format(msg_action))
-                response["status"] = False
+                response["success"] = False
                 response["data"] = {}
                 response["errors"] = {}
         except KeyError:
             # Received message has wrong syntax/format
-            response = {"status": False, "type": msg_type, "action": None}
+            response = {"success": False, "type": msg_type, "action": None}
         #
         logger.debug("WebSocket: {0}: ".format(self.name) +
                      "response: {0}".format(response))
@@ -264,6 +265,10 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
             A dictionary of key-value pairs, with keys specifying the config
             options whose value will be changed, and values the new values
             to which config options will be set.
+            NOTE:
+            If want to set the ``userconfig`` option, an *absolute path*
+            must be provided (i.e., client should take care of the ``workdir``
+            value and generate a absolute path for ``userconfig``).
 
         Returns
         -------
@@ -271,14 +276,32 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
             When error occurs (e.g., invalid key, invalid values), then the
             specific errors with details are stored in this dictionary.
         """
-        pass
+        errors = {}
+        for key, value in data.items():
+            if key == "userconfig":
+                # NOTE: The ``userconfig`` must be an absolute path
+                if os.path.isabs(value):
+                    self.configs.userconfig = value
+                else:
+                    errors["userconfig"] = "Not an absolute path"
+            else:
+                try:
+                    self.configs.setn(key, value)
+                except KeyError as e:
+                    errors[key] = str(e)
+        # NOTE:
+        # Check the whole configurations after all provided options are
+        # updated, and merge the validation errors.
+        __, cherr = self.configs.check_all(raise_exception=False)
+        errors.update(cherr)
+        return errors
 
     def _handle_console(self, msg):
         # Got a message of supported types
         msg_type = msg["type"]
         logger.info("WebSocket: {0}: ".format(self.name) +
                     "handle message of type: {0}".format(msg_type))
-        response = {"status": True, "type": msg_type}
+        response = {"success": True, "type": msg_type}
         return response
 
     def _handle_results(self, msg):
@@ -286,5 +309,5 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         msg_type = msg["type"]
         logger.info("WebSocket: {0}: ".format(self.name) +
                     "handle message of type: {0}".format(msg_type))
-        response = {"status": True, "type": msg_type}
+        response = {"success": True, "type": msg_type}
         return response

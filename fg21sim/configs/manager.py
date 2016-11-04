@@ -337,7 +337,7 @@ class ConfigManager:
         val_new = reduce(operator.getitem, key, config_new)
         d2 = reduce(lambda x, y: {y: x}, reversed(key), val_new)
         self.merge(d2)
-        logger.info("Set config: {key}: {val_new} <= {val_old}".format(
+        logger.info("Set config: {key}: {val_new} <- {val_old}".format(
             key="/".join(key), val_new=val_new, val_old=val_old))
 
     def get_path(self, key):
@@ -364,9 +364,9 @@ class ConfigManager:
 
         NOTE
         ----
-        - The "~" (tilde) inside path is expanded to the user home directory.
+        - The beginning ``~`` (tilde) is expanded to user's home directory.
         - The relative path (with respect to the user configuration file)
-          is converted to absolute path if `self.userconfig` presents.
+          is converted to absolute path if ``self.userconfig`` is valid.
         """
         value = self.getn(key)
         if value is None:
@@ -379,8 +379,8 @@ class ConfigManager:
         #
         path = os.path.expanduser(value)
         if not os.path.isabs(path):
-            # Got relative path, try to convert to the absolute path
-            if hasattr(self, "userconfig"):
+            # Got a relative path, try to convert to the absolute path
+            if self.userconfig is not None:
                 # User configuration loaded
                 path = os.path.join(os.path.dirname(self.userconfig), path)
             else:
