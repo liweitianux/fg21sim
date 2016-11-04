@@ -97,6 +97,22 @@ class ConfigManager:
         if userconfig:
             self.read_userconfig(userconfig)
 
+    def merge(self, config):
+        """Simply merge the given configurations without validation.
+
+        Parameters
+        ----------
+        config : `~ConfigObj`, dict, str, or list[str]
+            Supplied configurations to be merged.
+        """
+        if not isinstance(config, ConfigObj):
+            try:
+                config = ConfigObj(config, interpolation=False)
+            except ConfigObjError as e:
+                logger.exception(e)
+                raise ConfigError(e)
+        self._config.merge(config)
+
     def read_config(self, config):
         """Read, validate and merge the input config.
 
@@ -113,8 +129,8 @@ class ConfigManager:
         except ConfigObjError as e:
             raise ConfigError(e)
         newconfig = self._validate(newconfig)
-        self._config.merge(newconfig)
-        logger.info("Loaded additional config: {0}".format(config))
+        self.merge(newconfig)
+        logger.info("Loaded additional config")
 
     def read_userconfig(self, userconfig):
         """Read user configuration file, validate, and merge into the
@@ -164,7 +180,7 @@ class ConfigManager:
         try:
             results = config.validate(validator, preserve_errors=True)
         except ConfigObjError as e:
-            raise ConfigError(e.message)
+            raise ConfigError(e)
         if results is not True:
             error_msg = ""
             for (section_list, key, res) in flatten_errors(config, results):
@@ -190,8 +206,8 @@ class ConfigManager:
         return config.get(key, fallback)
 
     def getn(self, key, from_default=False):
-        """Get the config value from the nested dictionary configs using
-        a list of keys or a "sep"-separated keys string.
+        """Get the value of a config option specified by the input key from
+        from the configurations which is a nested dictionary.
 
         Parameters
         ----------
@@ -227,7 +243,71 @@ class ConfigManager:
         try:
             return reduce(operator.getitem, key, config)
         except (KeyError, TypeError):
-            raise KeyError("%s: invalid key")
+            raise KeyError("%s: invalid key" % "/".join(key))
+
+    def setn(self, key, value):
+        """Set the value of config option specified by a list of keys or a
+        "sep"-separated keys string.
+
+        The supplied key-value config pair is first used to create a
+        temporary ``ConfigObj`` instance, which is then validated against
+        the configuration specifications.
+        If validated to be *valid*, the input key-value pair is then *merged*
+        into the configurations, otherwise, a ``ConfigError`` raised.
+
+        NOTE/XXX
+        --------
+        Given a ``ConfigObj`` instance with an option that does NOT exist in
+        the specifications, it will simply *pass* the validation against the
+        specifications.
+        There seems no way to prevent the ``Validator`` from accepting the
+        config options that does NOT exist in the specification.
+        Therefore, try to get the option value specified by the input key
+        first, if no ``KeyError`` raised, then it is a valid key.
+
+        Parameters
+        ----------
+        key : str, or list[str]
+            List of keys or a string of keys separated by a the ``/``
+            character to specify the item in the ``self._config``, which
+            is a nested dictionary.
+            e.g., ``["section1", "key2"]``, ``"section1/key2"``
+        value : str, bool, int, float, list
+            The value can be any acceptable type to ``ConfigObj``.
+
+        Raises
+        ------
+        KeyError :
+            The input key specifies a non-exist config option.
+        ConfigError :
+            The value fails to pass the validation against specifications.
+        """
+        try:
+            val_old = self.getn(key)
+        except KeyError as e:
+            raise KeyError(e)
+        if val_old == value:
+            # No need to set this option value
+            return
+        # Create a nested dictionary from the input key-value pair
+        # Credit:
+        # * Stackoverflow: Convert a list into a nested dictionary
+        #   https://stackoverflow.com/a/6689604/4856091
+        if isinstance(key, str):
+            key = key.split("/")
+        d = reduce(lambda x, y: {y: x}, reversed(key), value)
+        # Create the temporary ``ConfigObj`` instance and validate it
+        config_new = ConfigObj(d, interpolation=False,
+                               configspec=self._configspec)
+        config_new = self._validate(config_new)
+        # NOTE:
+        # The validated ``config_new`` is populated with all other options
+        # from the specifications.
+        val_new = reduce(operator.getitem, key, config_new)
+        d2 = reduce(lambda x, y: {y: x}, reversed(key), val_new)
+        self.merge(d2)
+        logger.info("Set config: {key}: {val_new} <= {val_old}".format(
+            key="/".join(key), val_new=val_new, val_old=val_old))
 
     def get_path(self, key):
         """Return the absolute path of the file/directory specified by the
