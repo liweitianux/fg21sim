@@ -119,8 +119,8 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         The sent message also has a ``type`` item of same value, which the
         client can be used to figure out the proper actions.
         There is a ``success`` item which indicates the status of the
-        requested operation, and a ``data`` item containing the response
-        data.
+        requested operation, and an ``error`` recording the error message
+        if ``success=False``.
         """
         logger.debug("WebSocket: %s: received: %s" % (self.name, message))
         try:
@@ -129,10 +129,14 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         except json.JSONDecodeError:
             logger.warning("WebSocket: {0}: ".format(self.name) +
                            "message is not a valid JSON string")
-            response = {"success": False, "type": None}
+            response = {"success": False,
+                        "type": None,
+                        "error": "message is not a valid JSON string"}
         except (KeyError, TypeError):
             logger.warning("WebSocket: %s: skip invalid message" % self.name)
-            response = {"success": False, "type": None}
+            response = {"success": False,
+                        "type": None,
+                        "error": "type is missing"}
         else:
             # Check the message type and dispatch task
             if msg_type == "configs":
@@ -148,7 +152,9 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
                 # Message of unknown type
                 logger.warning("WebSocket: {0}: ".format(self.name) +
                                "unknown message type: {0}".format(msg_type))
-                response = {"success": False, "type": msg_type}
+                response = {"success": False,
+                            "type": msg_type,
+                            "error": "unknown message type %s" % msg_type}
         #
         msg_response = json.dumps(response)
         self.write_message(msg_response)
@@ -190,24 +196,31 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
             if msg_action == "get":
                 # Get the values of the specified options
                 data, errors = self._get_configs(keys=msg_data)
-                response["success"] = True if errors == {} else False
+                response["success"] = True
                 response["data"] = data
                 response["errors"] = errors
             elif msg_action == "set":
                 # Set the values of the specified options
                 errors = self._set_configs(data=msg_data)
-                response["success"] = True if errors == {} else False
-                response["data"] = {}
+                response["success"] = True
+                response["data"] = {}  # be more consistent
                 response["errors"] = errors
+            elif msg_action == "reset":
+                raise NotImplementedError("TODO")
+            elif msg_action == "load":
+                raise NotImplementedError("TODO")
+            elif msg_action == "save":
+                raise NotImplementedError("TODO")
             else:
                 logger.warning("WebSocket: {0}: ".format(self.name) +
                                "unknown action: {0}".format(msg_action))
                 response["success"] = False
-                response["data"] = {}
-                response["errors"] = {}
+                response["error"] = "unknown action: {0}".format(msg_action)
         except KeyError:
             # Received message has wrong syntax/format
-            response = {"success": False, "type": msg_type, "action": None}
+            response = {"success": False,
+                        "type": msg_type,
+                        "error": "no action specified"}
         #
         logger.debug("WebSocket: {0}: ".format(self.name) +
                      "response: {0}".format(response))
