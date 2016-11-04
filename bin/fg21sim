@@ -38,11 +38,7 @@ def main():
               sep="\n", file=sys.stderr)
     check_configs(configs)
 
-    if args.quiet:
-        log_stream = ""
-    else:
-        log_stream = None
-
+    log_stream = "" if args.quiet else None
     setup_logging(dict_config=configs.logging,
                   level=args.loglevel,
                   stream=log_stream,

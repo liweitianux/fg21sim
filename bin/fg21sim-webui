@@ -5,8 +5,8 @@
 # MIT license
 
 """
-Start (and control) the Web user interface (UI) of "fg21sim",
-which is based upon Tornado_ and uses WebSocket_.
+Start (and/or control) the Web user interface (UI) of "fg21sim",
+which is built using the Tornado_ web server and WebSocket_ protocol.
 
 .. _Tornado: http://www.tornadoweb.org/
 
@@ -35,7 +35,8 @@ def main():
                         help="enable Tornado debug mode")
     args = parser.parse_args()
 
-    setup_logging(dict_config=configs.logging)
+    loglevel = "DEBUG" if args.debug else None
+    setup_logging(dict_config=configs.logging, level=loglevel)
     tool = os.path.basename(sys.argv[0])
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
