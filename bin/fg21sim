@@ -14,7 +14,7 @@ import argparse
 import logging
 
 from fg21sim.foregrounds import Foregrounds
-from fg21sim.configs import configs, validate_configs
+from fg21sim.configs import configs, check_configs
 from fg21sim.utils import setup_logging
 
 
@@ -36,7 +36,7 @@ def main():
     if os.environ.get("DEBUG_FG21SIM"):
         print("DEBUG: Current configurations:", configs._config,
               sep="\n", file=sys.stderr)
-    validate_configs(configs)
+    check_configs(configs)
 
     if args.quiet:
         log_stream = ""
