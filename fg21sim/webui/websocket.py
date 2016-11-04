@@ -128,29 +128,27 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         except json.JSONDecodeError:
             logger.warning("WebSocket: {0}: ".format(self.name) +
                            "message is not a valid JSON string")
+            response = {"status": False, "type": None}
         except (KeyError, TypeError):
             logger.warning("WebSocket: %s: skip invalid message" % self.name)
-        finally:
             response = {"status": False, "type": None}
-            msg_response = json.dumps(response)
-            self.write_message(msg_response)
-            return
-
-        # Check the message type and dispatch task
-        if msg_type == "configs":
-            # Request or set the configurations
-            response = self._handle_configs(msg)
-        elif msg_type == "console":
-            # Control the simulation tasks, or request logging messages
-            response = self._handle_console(msg)
-        elif msg_type == "results":
-            # Request the simulation results
-            response = self._handle_results(msg)
         else:
-            # Message of unknown type
-            logger.warning("WebSocket: {0}: ".format(self.name) +
-                           "message of unknown type: {0}".format(msg_type))
-            response = {"status": False, "type": msg_type}
+            # Check the message type and dispatch task
+            if msg_type == "configs":
+                # Request or set the configurations
+                response = self._handle_configs(msg)
+            elif msg_type == "console":
+                # Control the simulation tasks, or request logging messages
+                response = self._handle_console(msg)
+            elif msg_type == "results":
+                # Request the simulation results
+                response = self._handle_results(msg)
+            else:
+                # Message of unknown type
+                logger.warning("WebSocket: {0}: ".format(self.name) +
+                               "unknown message type: {0}".format(msg_type))
+                response = {"status": False, "type": msg_type}
+        #
         msg_response = json.dumps(response)
         self.write_message(msg_response)
 
