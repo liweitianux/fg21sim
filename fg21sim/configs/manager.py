@@ -20,6 +20,7 @@ import pkg_resources
 from configobj import ConfigObj, ConfigObjError, flatten_errors
 from validate import Validator
 
+from .checkers import check_configs
 from ..errors import ConfigError
 
 
@@ -196,6 +197,36 @@ class ConfigManager:
                 error_msg += msg + "\n"
             raise ConfigError(error_msg)
         return config
+
+    def check_all(self, raise_exception=True):
+        """Further check the whole configurations through a set of custom
+        checker functions, which may check one config option against its
+        context if necessary to determine whether it has a valid value.
+
+        Parameters
+        ----------
+        raise_exception : bool, optional
+            Whether raise a ``ConfigError`` exception if there is any invalid
+            config options?
+
+        Returns
+        -------
+        result : bool
+            ``True`` if the configurations pass all checker functions.
+        errors : dict
+            An dictionary containing the details about the invalid config
+            options, with the keys identifying the config options and values
+            indicating the error message.
+            If above ``result=True``, then this is an empty dictionary ``{}``.
+
+        Raises
+        ------
+        ConfigError
+            If any config option failed to pass any of the checkers, a
+            ``ConfigError`` with details is raised.
+        """
+        result, errors = check_configs(self, raise_exception=raise_exception)
+        return (result, errors)
 
     def get(self, key, fallback=None, from_default=False):
         """Get config value by key."""
