@@ -16,7 +16,7 @@ var ws = null;  /* WebSocket */
 var ws_reconnect = {
   maxTry: 100,
   tried: 0,
-  timeout: 1000,  /* ms */
+  timeout: 3000,  /* ms */
 };
 
 
@@ -130,8 +130,9 @@ var connectWebSocket = function (url) {
     toggleWSReconnect("show");
   };
   ws.onmessage = function (e) {
-    console.log("WebSocket received message:");
-    console.log(e.data);
+    var msg = JSON.parse(e.data);
+    console.log("WebSocket received message: type:", msg.type,
+                ", status:", msg.status);
   };
 };
 
