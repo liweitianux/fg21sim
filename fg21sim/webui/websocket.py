@@ -153,12 +153,125 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         self.write_message(msg_response)
 
     def _handle_configs(self, msg):
-        # Got a message of supported types
-        msg_type = msg["type"]
-        logger.info("WebSocket: {0}: ".format(self.name) +
-                    "handle message of type: {0}".format(msg_type))
-        response = {"status": True, "type": msg_type}
+        """Handle the message of type "configs", which request to get or
+        set some configurations by the client.
+
+        TODO: improve the description ...
+
+        Parameters
+        ----------
+        msg : dict
+            A dictionary parsed from the incoming JSON message, which
+            generally has the following syntax:
+            ``{"type": "configs", "action": <action>, "data": <data>}``
+            where the ``<action>`` is ``set`` or ``get``, and the ``<data>``
+            is a list of config keys or a dict of config key-value pairs.
+
+        Returns
+        -------
+        response : dict
+            A dictionary parsed from the incoming JSON message, which
+            generally has the following syntax:
+            ``{"type": "configs", "action": <action>,
+               "data": <data>, "errors": <errors>}``
+            where the ``<action>`` is the same as input, the ``<data>`` is
+            a list of config keys or a dict of config key-value pairs, and
+            ``<errors>`` contains the error message for the invalid config
+            values.
+        """
+        try:
+            msg_type = msg["type"]
+            msg_action = msg["action"]
+            msg_data = msg["data"]
+            response = {"type": msg_type, "action": msg_action}
+            logger.info("WebSocket: {0}: handle message: ".format(self.name) +
+                        "type: {0}, action: {1}".format(msg_type, msg_action))
+            if msg_action == "get":
+                # Get the values of the specified options
+                data, errors = self._get_configs(keys=msg_data)
+                response["status"] = True if errors == {} else False
+                response["data"] = data
+                response["errors"] = errors
+            elif msg_action == "set":
+                # Set the values of the specified options
+                errors = self._set_configs(data=msg_data)
+                response["status"] = True if errors == {} else False
+                response["data"] = {}
+                response["errors"] = errors
+            else:
+                logger.warning("WebSocket: {0}: ".format(self.name) +
+                               "unknown action: {0}".format(msg_action))
+                response["status"] = False
+                response["data"] = {}
+                response["errors"] = {}
+        except KeyError:
+            # Received message has wrong syntax/format
+            response = {"status": False, "type": msg_type, "action": None}
+        #
+        logger.debug("WebSocket: {0}: ".format(self.name) +
+                     "response: {0}".format(response))
         return response
+
+    def _get_configs(self, keys=None):
+        """Get the values of the config options specified by the given keys.
+
+        Parameters
+        ----------
+        keys : list[str], optional
+            A list of keys specifying the config options whose values will
+            be obtained.
+            If ``keys=None``, then all the configurations values are dumped.
+
+        Returns
+        -------
+        data : dict
+            A dictionary with keys the same as the input keys, and values
+            the corresponding config option values.
+        errors : dict
+            When error occurs (e.g., invalid key), then the specific errors
+            with details are stored in this dictionary.
+
+        NOTE
+        ----
+        Do not forget the ``userconfig`` option.
+        """
+        if keys is None:
+            # Dump all the configurations
+            data = self.configs.dump()
+            data["userconfig"] = self.configs.userconfig
+            errors = {}
+        else:
+            data = {}
+            errors = {}
+            for key in keys:
+                if key == "userconfig":
+                    data["userconfig"] = self.configs.userconfig
+                else:
+                    try:
+                        data[key] = self.configs.getn(key)
+                    except KeyError as e:
+                        errors[key] = str(e)
+        #
+        return (data, errors)
+
+    def _set_configs(self, data):
+        """Set the values of the config options specified by the given keys
+        to the corresponding supplied data.
+
+        Parameters
+        ----------
+        data : dict
+            A dictionary of key-value pairs, with keys specifying the config
+            options whose value will be changed, and values the new values
+            to which config options will be set.
+
+        Returns
+        -------
+        errors : dict
+            When error occurs (e.g., invalid key, invalid values), then the
+            specific errors with details are stored in this dictionary.
+        """
+        pass
 
     def _handle_console(self, msg):
         # Got a message of supported types
