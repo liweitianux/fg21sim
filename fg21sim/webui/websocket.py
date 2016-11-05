@@ -24,6 +24,7 @@ import logging
 import tornado.websocket
 
 from ..configs import ConfigManager
+from ..errors import ConfigError
 from .utils import get_host_ip
 
 
@@ -189,28 +190,54 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         try:
             msg_type = msg["type"]
             msg_action = msg["action"]
-            msg_data = msg["data"]
             response = {"type": msg_type, "action": msg_action}
             logger.info("WebSocket: {0}: handle message: ".format(self.name) +
                         "type: {0}, action: {1}".format(msg_type, msg_action))
             if msg_action == "get":
                 # Get the values of the specified options
-                data, errors = self._get_configs(keys=msg_data)
-                response["success"] = True
-                response["data"] = data
-                response["errors"] = errors
+                try:
+                    data, errors = self._get_configs(keys=msg["data"])
+                    response["success"] = True
+                    response["data"] = data
+                    response["errors"] = errors
+                except KeyError:
+                    response["success"] = False
+                    response["error"] = "'data' is missing"
             elif msg_action == "set":
                 # Set the values of the specified options
-                errors = self._set_configs(data=msg_data)
-                response["success"] = True
-                response["data"] = {}  # be more consistent
-                response["errors"] = errors
+                try:
+                    errors = self._set_configs(data=msg["data"])
+                    response["success"] = True
+                    response["data"] = {}  # be more consistent
+                    response["errors"] = errors
+                except KeyError:
+                    response["success"] = False
+                    response["error"] = "'data' is missing"
             elif msg_action == "reset":
-                raise NotImplementedError("TODO")
+                # Reset the configurations to the defaults
+                self._reset_configs()
+                response["success"] = True
             elif msg_action == "load":
-                raise NotImplementedError("TODO")
+                # Load the supplied user configuration file
+                try:
+                    success, error = self._load_configs(msg["userconfig"])
+                    response["success"] = success
+                    if not success:
+                        response["error"] = error
+                except KeyError:
+                    response["success"] = False
+                    response["error"] = "'userconfig' is missing"
             elif msg_action == "save":
-                raise NotImplementedError("TODO")
+                # Save current configurations to file
+                try:
+                    success, error = self._save_configs(msg["outfile"],
+                                                        msg["clobber"])
+                    response["success"] = success
+                    if not success:
+                        response["error"] = error
+                except KeyError:
+                    response["success"] = False
+                    response["error"] = "'outfile' or 'clobber' is missing"
             else:
                 logger.warning("WebSocket: {0}: ".format(self.name) +
                                "unknown action: {0}".format(msg_action))
@@ -272,6 +299,10 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         """Set the values of the config options specified by the given keys
         to the corresponding supplied data.
 
+        NOTE
+        ----
+        The ``userconfig`` and ``workdir`` options are ignored.
+
         Parameters
         ----------
         data : dict
@@ -291,12 +322,9 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         """
         errors = {}
         for key, value in data.items():
-            if key == "userconfig":
-                # NOTE: The ``userconfig`` must be an absolute path
-                if os.path.isabs(value):
-                    self.configs.userconfig = value
-                else:
-                    errors["userconfig"] = "Not an absolute path"
+            if key in ["userconfig", "workdir"]:
+                # Ignore "userconfig" and "workdir"
+                continue
             else:
                 try:
                     self.configs.setn(key, value)
@@ -308,6 +336,65 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         __, cherr = self.configs.check_all(raise_exception=False)
         errors.update(cherr)
         return errors
+
+    def _reset_configs(self):
+        """Reset the configurations to the defaults."""
+        self.configs.reset()
+
+    def _load_configs(self, userconfig):
+        """Load configurations from the provided user configuration file.
+
+        Parameters
+        ----------
+        userconfig: str
+            The filepath to the user configuration file, which must be
+            an *absolute path*.
+
+        Returns
+        -------
+        success : bool
+            ``True`` if the operation succeeded, otherwise, ``False``.
+        error : str
+            If failed, this ``error`` saves the details, otherwise, ``None``.
+        """
+        success = False
+        error = None
+        if os.path.isabs(userconfig):
+            try:
+                self.configs.read_userconfig(userconfig)
+                success = True
+            except ConfigError as e:
+                error = str(e)
+        else:
+            error = "Not an absolute path"
+        return (success, error)
+
+    def _save_configs(self, outfile, clobber=False):
+        """Save current configurations to file.
+
+        Parameters
+        ----------
+        outfile: str
+            The filepath to the output configuration file, which must be
+            an *absolute path*.
+        clobber : bool, optional
+            Whether overwrite the output file if already exists?
+
+        Returns
+        -------
+        success : bool
+            ``True`` if the operation succeeded, otherwise, ``False``.
+        error : str
+            If failed, this ``error`` saves the details, otherwise, ``None``.
+        """
+        success = False
+        error = None
+        try:
+            self.configs.save(outfile, clobber=clobber)
+            success = True
+        except (ValueError, OSError) as e:
+            error = str(e)
+        return (success, error)
 
     def _handle_console(self, msg):
         # Got a message of supported types
