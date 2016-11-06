@@ -13,8 +13,9 @@ import os
 import sys
 import logging
 from logging import FileHandler, StreamHandler
-from functools import reduce
 import operator
+from functools import reduce
+from collections import MutableMapping
 import pkg_resources
 
 from configobj import ConfigObj, ConfigObjError, flatten_errors
@@ -44,6 +45,63 @@ def _get_configspec():
         for fn in specfiles
     ]).split("\n")
     return configspec
+
+
+def _flatten_dict(d, sep="/", parent_key=""):
+    """Recursively flatten a nested dictionary with keys compressed.
+
+    The dictionary is recursively flattened into a one-level dictionary,
+    i.e., all the leaves are raised to the top level.
+    For each leaf, the value is simply preserved, while its keys list is
+    compressed into a single key by concatenating with a separator.
+
+    Parameters
+    ----------
+    d : dict
+        Input nested dictionary.
+    sep : str, optional
+        The separator used to concatenate the keys for each leaf item.
+    parent_key : str, optional
+        The parent key string that will be prepended to the flatten key
+        string when flattening the dictionary.
+        NOTE:
+        This parameter is required for the recursion, so user can simply
+        ignore this..
+
+    Returns
+    -------
+    flatdict : dict
+        The flattened dictionary.
+
+    Examples
+    --------
+    FIXME: fix the style
+    - input nested dictionary:
+      {'a': 1,
+       'c': {'a': 2,
+             'b': {'x': 5,
+                   'y': 10}},
+       'd': [1, 2, 3]}
+    - output flatten dictionary:
+      {'a': 1,
+       'c/a': 2,
+       'c/b/x': 5,
+       'c/b/y': 10,
+       'd': [1, 2, 3]}
+
+    References
+    ----------
+    - Stackoverflow: Flatten nested Python dictionaries, compressing keys
+      http://stackoverflow.com/a/6027615
+    """
+    items = []
+    for k, v in d.items():
+        new_key = (parent_key + sep + k) if parent_key else k
+        if isinstance(v, MutableMapping):
+            items.extend(_flatten_dict(v, sep=sep, parent_key=new_key).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 
 class ConfigManager:
@@ -444,22 +502,56 @@ class ConfigManager:
         }
         return logconf
 
-    def dump(self, from_default=False):
+    def dump(self, from_default=False, flatten=False):
         """Dump the configurations as plain Python dictionary.
 
         Parameters
         ----------
         from_default : bool, optional
-            If True, dump the default configurations (as specified by the
+            If ``True``, dump the default configurations (as specified by the
             bundled specifications); otherwise, dump the configurations with
             user-supplied options merged (default).
+        flatten : bool, optional
+            If ``True``, flatten the configurations with is a nested
+            dictionary into an one-level flat dictionary, make it much easier
+            for client's manipulations.
 
         NOTE
         ----
         The original option orders are missing.
         """
         if from_default:
-            config = self._config_default
+            data = self._config_default.dict()
         else:
-            config = self._config
-        return config.dict()
+            data = self._config.dict()
+        #
+        if flatten:
+            data = _flatten_dict(data)
+        #
+        return data
+
+    def save(self, outfile=None, clobber=False):
+        """Save the configurations to file.
+
+        XXX/TODO:
+        Will the comments be preserved when save to file ??
+
+        Parameters
+        ----------
+        outfile : str, optional
+            The path to the output configuration file.
+            If not provided, then use ``self.userconfig``, however, set
+            ``clobber=True`` may be required.
+            NOTE: This must be an *absolute path*.
+        clobber : bool, optional
+            Overwrite the output file if already exists.
+
+        Raises
+        ------
+        ValueError :
+            The given ``filepath`` is not an *absolute path*, or the
+            ``self.userconfig`` is invalid while the ``filepath`` not given.
+        OSError :
+            If the target filename already exists.
+        """
+        raise NotImplementedError("TODO")
