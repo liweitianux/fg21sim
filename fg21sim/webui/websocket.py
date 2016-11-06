@@ -196,13 +196,13 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
             if msg_action == "get":
                 # Get the values of the specified options
                 try:
-                    data, errors = self._get_configs(keys=msg["data"])
+                    data, errors = self._get_configs(keys=msg["keys"])
                     response["success"] = True
                     response["data"] = data
                     response["errors"] = errors
                 except KeyError:
                     response["success"] = False
-                    response["error"] = "'data' is missing"
+                    response["error"] = "'keys' is missing"
             elif msg_action == "set":
                 # Set the values of the specified options
                 try:
@@ -278,7 +278,7 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         """
         if keys is None:
             # Dump all the configurations
-            data = self.configs.dump()
+            data = self.configs.dump(flatten=True)
             data["userconfig"] = self.configs.userconfig
             errors = {}
         else:
