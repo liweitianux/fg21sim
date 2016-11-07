@@ -27,11 +27,11 @@
   catalog_outfile = string(default=None)
 
   # The fraction that a cluster hosts a radio halo
-  halo_fraction = float(default=None)
+  halo_fraction = float(default=None, min=0.0, max=1.0)
 
   # Resolution (unit: arcmin) for simulating each cluster, which are finally
   # mapped to the HEALPix map of Nside specified in "[common]" section.
-  resolution = float(default=0.5)
+  resolution = float(default=0.5, min=0.0)
 
   # Filename prefix for this component
   prefix = string(default="egcluster")
@@ -49,7 +49,7 @@
   # PS components to be simulated
   pscomponents=string_list(default=list())
   # Resolution [arcmin]
-  resolution=float(default=0.6)
+  resolution=float(default=0.6, min=0.0)
   # Number of each type of point source
     # Star forming
     [[[starforming]]]

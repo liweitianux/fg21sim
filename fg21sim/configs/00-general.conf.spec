@@ -46,9 +46,9 @@ frequencies = float_list(default=list())
 
 # Parameters to calculate the frequencies
 # start and stop frequency value (both inclusive)
-start = float(default=None)
-stop = float(default=None)
-step = float(default=None)
+start = float(default=None, min=0.0)
+stop = float(default=None, min=0.0)
+step = float(default=None, min=0.0)
 
 
 # Configuration for output products
@@ -88,9 +88,9 @@ output_dir = string(default=None)
 # Cosmological parameters
 [cosmology]
 # Hubble constant at z=0 [ km/s/Mpc ]
-H0 = float(default=71.0)
+H0 = float(default=71.0, min=0.0)
 # Density of non-relativistic matter in units of the critical density at z=0
-OmegaM0 = float(default=0.27)
+OmegaM0 = float(default=0.27, min=0.0, max=1.0)
 
 
 # Configurations for initialization/reconfiguration of the `logging` module

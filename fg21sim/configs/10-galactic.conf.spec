@@ -26,7 +26,7 @@
   # The template map for the simulation.
   template = string(default=None)
   # The frequency of the template map (same unit as in [frequency] section)
-  template_freq = float(default=None)
+  template_freq = float(default=None, min=0.0)
   # The unit of the template map pixel
   template_unit = string(default=None)
 
@@ -71,7 +71,7 @@
 
   # Resolution (unit: arcmin) for simulating each SNR, which are finally
   # mapped to the HEALPix map of Nside specified in "[common]" section.
-  resolution = float(default=1.0)
+  resolution = float(default=1.0, min=0.0)
 
   # Filename prefix for this component
   prefix = string(default="gsnr")
