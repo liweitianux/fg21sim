@@ -44,6 +44,30 @@ def _check_existence(configs, keys):
     return results
 
 
+def _is_power2(n):
+    """Check a number whether a power of 2"""
+    # Credit: https://stackoverflow.com/a/29489026/4856091
+    return (n and not (n & (n-1)))
+
+
+def check_common(configs):
+    """Check the "[common]" section of the configurations."""
+    results = {}
+    # "common/nside" must be a power of 2
+    key = "common/nside"
+    if not _is_power2(configs.getn(key)):
+        results[key] = "not a power of 2"
+    # "common/lmax" must be greater than "common/lmin"
+    key = "common/lmax"
+    if configs.getn(key) <= configs.getn("common/lmin"):
+        results[key] = "not greater than 'common/lmin'"
+    # Check enabled components
+    key = "common/components"
+    if len(configs.getn(key)) == 0:
+        results[key] = "no components enabled/selected"
+    return results
+
+
 def check_frequency(configs):
     """Check the "[frequency]" section of the configurations."""
     results = {}
@@ -121,6 +145,7 @@ def check_galactic_snr(configs):
 
 # Available checkers to validate the configurations
 _CHECKERS = [
+    check_common,
     check_frequency,
     check_output,
     check_galactic_synchrotron,
