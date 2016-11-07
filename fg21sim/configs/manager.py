@@ -486,7 +486,7 @@ class ConfigManager:
         if stream:
             handlers.append(StreamHandler(getattr(sys, stream)))
         logfile = conf["filename"]
-        filemode = conf["filemode"]
+        filemode = "a" if conf["appendmode"] else "w"
         if logfile:
             handlers.append(FileHandler(logfile, mode=filemode))
         #

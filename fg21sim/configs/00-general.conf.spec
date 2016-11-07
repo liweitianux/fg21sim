@@ -26,7 +26,7 @@ lmax = integer(min=1, default=3071)
 #       Diffuse Galactic free-free emission
 # + galactic/snr:
 #       Galactic supernova remnants emission
-components = force_list(default=list("galactic/synchrotron", "galactic/freefree", "galactic/snr"))
+components = force_list(default=list("galactic/synchrotron", "galactic/freefree", "galactic/snr", "extragalactic/clusters"))
 
 
 # Frequencies specification of the simulation products
@@ -116,8 +116,8 @@ datefmt = string(default="%Y-%m-%dT%H:%M:%S")
 # Set the logging filename (will create a `FileHandler`)
 # If set to "" (empty string), then the `FileHandler` will be disabled.
 filename = string(default="")
-# Set the mode to open the above logging file (default: "append" mode)
-filemode = option("w", "a", default="a")
+# Whether append messages to the above logging file instead of overwrite
+appendmode = boolean(default=True)
 
 # Set the stream used to initialize the `StreamHandler`
 # If set to "" (empty string), then the `StreamHandler` will be disabled.
