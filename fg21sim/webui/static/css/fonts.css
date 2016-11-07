@@ -59,6 +59,6 @@ body {
     font-family: 'SourceSansPro', sans-serif;
 }
 
-pre {
+pre, .code {
     font-family: 'SourceCodePro', monospace;
 }
