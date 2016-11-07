@@ -39,15 +39,15 @@
       <div class="row">
         <div class="column column-30 form-group">
           <label for="conf-common-nside"><i>N</i><sub>side</sub>:</label>
-          <input class="form-control" type="number" id="conf-common-nside" name="common/nside" min="1" />
+          <input class="form-control" type="number" id="conf-common-nside" name="common/nside" min="1" required />
         </div>
         <div class="column column-30 form-group">
           <label for="conf-common-lmin"><i>l</i><sub>min</sub>:</label>
-          <input class="form-control" type="number" id="conf-common-lmin" name="common/lmin" min="0" />
+          <input class="form-control" type="number" id="conf-common-lmin" name="common/lmin" min="0" required />
         </div>
         <div class="column column-30 form-group">
           <label for="conf-common-lmax"><i>l</i><sub>max</sub>:</label>
-          <input class="form-control" type="number" id="conf-common-lmax" name="common/lmax" min="1" />
+          <input class="form-control" type="number" id="conf-common-lmax" name="common/lmax" min="1" required />
         </div>
       </div>
       <div class="row">
@@ -103,7 +103,7 @@
         </fieldset>
       </div>
       <div class="row">
-        <div class="column column-60 form-group">
+        <div class="column form-group">
           <label for="conf-frequency-frequencies">Custom Frequencies:</label>
           <input class="form-control" type="text" id="conf-frequency-frequencies" name="frequency/frequencies" placeholder="comma-separated list of frequencies" data-type="array" />
         </div>
@@ -155,7 +155,7 @@
       <div class="row">
         <div class="column form-group">
           <label for="conf-output-filename-pattern">Filename Pattern:</label>
-          <input class="form-control code" type="text" id="conf-output-filename-pattern" name="output/filename_pattern" />
+          <input class="form-control code" type="text" id="conf-output-filename-pattern" name="output/filename_pattern" required />
         </div>
       </div>
       <div class="row">
@@ -203,11 +203,11 @@
       <div class="row">
         <div class="column column-50 form-group">
           <label for="conf-cosmology-h0">Hubble Parameter (<i>H</i><sub>0</sub>):</label>
-          <input class="form-control" type="number" id="conf-cosmology-h0" name="cosmology/H0" step="any" min="0" />
+          <input class="form-control" type="number" id="conf-cosmology-h0" name="cosmology/H0" step="any" min="0" required />
         </div>
         <div class="column column-50 form-group">
           <label for="conf-cosmology-omegam0">Matter Density (<i>Ω</i><sub>M0</sub>):</label>
-          <input class="form-control" type="number" id="conf-cosmology-omegam0" name="cosmology/OmegaM0" step="any" min="0" max="1" />
+          <input class="form-control" type="number" id="conf-cosmology-omegam0" name="cosmology/OmegaM0" step="any" min="0" max="1" required />
         </div>
       </div>
     </fieldset>
@@ -245,13 +245,13 @@
       <div class="row">
         <div class="column form-group">
           <label for="conf-logging-format">Message Format:</label>
-          <input class="form-control code" type="text" id="conf-logging-format" name="logging/format" />
+          <input class="form-control code" type="text" id="conf-logging-format" name="logging/format" required />
         </div>
       </div>
       <div class="row">
         <div class="column form-group">
           <label for="conf-logging-datefmt">Date/time Format:</label>
-          <input class="form-control code" type="text" id="conf-logging-datefmt" name="logging/datefmt" />
+          <input class="form-control code" type="text" id="conf-logging-datefmt" name="logging/datefmt" required />
         </div>
       </div>
       <div class="row">
@@ -279,21 +279,21 @@
         <div class="row">
           <div class="column column-40 form-group">
             <label for="conf-g-synchrotron-template">Template Map:</label>
-            <input class="form-control code" type="text" id="conf-g-synchrotron-template" name="galactic/synchrotron/template" />
+            <input class="form-control code" type="text" id="conf-g-synchrotron-template" name="galactic/synchrotron/template" required />
           </div>
           <div class="column column-30 form-group">
             <label for="conf-g-synchrotron-template-freq">Frequency:</label>
-            <input class="form-control" type="number" id="conf-g-synchrotron-template-freq" name="galactic/synchrotron/template_freq" placeholder="MHz" step="any" min="0" />
+            <input class="form-control" type="number" id="conf-g-synchrotron-template-freq" name="galactic/synchrotron/template_freq" placeholder="MHz" step="any" min="0" required />
           </div>
           <div class="column column-30 form-group">
             <label for="conf-g-synchrotron-template-unit">Unit:</label>
-            <input class="form-control" type="text" id="conf-g-synchrotron-template-unit" name="galactic/synchrotron/template_unit" />
+            <input class="form-control" type="text" id="conf-g-synchrotron-template-unit" name="galactic/synchrotron/template_unit" required />
           </div>
         </div>
         <div class="row">
           <div class="column column-40 form-group">
             <label for="conf-g-synchrotron-indexmap">Spectral Index Map:</label>
-            <input class="form-control code" type="text" id="conf-g-synchrotron-indexmap" name="galactic/synchrotron/indexmap" />
+            <input class="form-control code" type="text" id="conf-g-synchrotron-indexmap" name="galactic/synchrotron/indexmap" required />
           </div>
         </div>
         <div class="row">
@@ -328,21 +328,21 @@
         <div class="row">
           <div class="column column-40 form-group">
             <label for="conf-g-freefree-halphamap">Hα Template Map:</label>
-            <input class="form-control code" type="text" id="conf-g-freefree-halphapam" name="galactic/freefree/halphamap" />
+            <input class="form-control code" type="text" id="conf-g-freefree-halphapam" name="galactic/freefree/halphamap" required />
           </div>
           <div class="column column-30 form-group">
             <label for="conf-g-freefree-halphamap-unit">Unit:</label>
-            <input class="form-control" type="text" id="conf-g-freefree-halphamap-unit" name="galactic/freefree/halphamap_unit" />
+            <input class="form-control" type="text" id="conf-g-freefree-halphamap-unit" name="galactic/freefree/halphamap_unit" required />
           </div>
         </div>
         <div class="row">
           <div class="column column-40 form-group">
             <label for="conf-g-freefree-dustmap">Dust Template Map:</label>
-            <input class="form-control code" type="text" id="conf-g-freefree-dustmap" name="galactic/freefree/dustmap" />
+            <input class="form-control code" type="text" id="conf-g-freefree-dustmap" name="galactic/freefree/dustmap" required />
           </div>
           <div class="column column-30 form-group">
             <label for="conf-g-freefree-dustmap-unit">Unit:</label>
-            <input class="form-control" type="text" id="conf-g-freefree-dustmap-unit" name="galactic/freefree/dustmap_unit" />
+            <input class="form-control" type="text" id="conf-g-freefree-dustmap-unit" name="galactic/freefree/dustmap_unit" required />
           </div>
         </div>
         <div class="row">
@@ -371,7 +371,7 @@
         <div class="row">
           <div class="column column-50 form-group">
             <label for="conf-g-snr-catalog">Input Catalog:</label>
-            <input class="form-control code" type="text" id="conf-g-snr-catalog" name="galactic/snr/catalog" />
+            <input class="form-control code" type="text" id="conf-g-snr-catalog" name="galactic/snr/catalog" required />
           </div>
           <div class="column column-50 form-group">
             <label for="conf-g-snr-catalog-out">Output Catalog:</label>
@@ -381,7 +381,7 @@
         <div class="row">
           <div class="column form-group">
             <label for="conf-g-snr-resolution">Grid Resolution:</label>
-            <input class="form-control" type="number" id="conf-g-snr-resolution" name="galactic/snr/resolution" placeholder="arcmin" step="any" min="0" />
+            <input class="form-control" type="number" id="conf-g-snr-resolution" name="galactic/snr/resolution" placeholder="arcmin" step="any" min="0" required />
           </div>
         </div>
         <div class="row">
@@ -416,7 +416,7 @@
         <div class="row">
           <div class="column column-50 form-group">
             <label for="conf-eg-clusters-catalog">Input Catalog:</label>
-            <input class="form-control code" type="text" id="conf-eg-clusters-catalog" name="extragalactic/clusters/catalog" />
+            <input class="form-control code" type="text" id="conf-eg-clusters-catalog" name="extragalactic/clusters/catalog" required />
           </div>
           <div class="column column-50 form-group">
             <label for="conf-eg-clusters-catalog-out">Output Catalog:</label>
@@ -426,13 +426,13 @@
         <div class="row">
           <div class="column form-group">
             <label for="conf-eg-clusters-halo-fraction">Halo Fraction:</label>
-            <input class="form-control" type="number" id="conf-eg-clusters-halo-fraction" name="extragalactic/clusters/halo_fraction" step="any" min="0" />
+            <input class="form-control" type="number" id="conf-eg-clusters-halo-fraction" name="extragalactic/clusters/halo_fraction" step="any" min="0" max="1" required />
           </div>
         </div>
         <div class="row">
           <div class="column form-group">
             <label for="conf-eg-clusters-resolution">Grid Resolution:</label>
-            <input class="form-control" type="number" id="conf-eg-clusters-resolution" name="extragalactic/clusters/resolution" placeholder="arcmin" step="any" min="0" />
+            <input class="form-control" type="number" id="conf-eg-clusters-resolution" name="extragalactic/clusters/resolution" placeholder="arcmin" step="any" min="0" required />
           </div>
         </div>
         <div class="row">
