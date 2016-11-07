@@ -15,20 +15,20 @@
       <div class="row">
         <div class="column column-50 form-group">
           <label for="conf-workdir">Working Directory:</label>
-          <input class="form-control" type="text" id="conf-workdir" name="workdir" />
+          <input class="form-control" type="text" id="conf-workdir" name="workdir" autocomplete />
         </div>
         <div class="column column-40 form-group">
           <label for="conf-configfile">Configuration File:</label>
-          <input class="form-control" type="text" id="conf-configfile" name="configfile" />
+          <input class="form-control" type="text" id="conf-configfile" name="configfile" autocomplete />
         </div>
       </div>
       <div class="button-group">
         <!-- NOTE: HTML5 "button" element has a default behavior of submit.
              Credit: https://stackoverflow.com/a/10836076/4856091
            -->
-        <button type="button" id="load-configfile"><span class="fa fa-download" aria-hidden="true"></span> Load from Configuration File</button>
-        <button type="button" id="save-configfile"><span class="fa fa-save" aria-hidden="true"></span> Save to Configuration File</button>
-        <button type="button" class="button-warning" id="reset-defaults" disabled="disabled"><span class="fa fa-undo" aria-hidden="true"></span> Reset to Defaults</button>
+        <button type="button" id="load-configfile"><span class="fa fa-download" aria-hidden="true"></span> Load Configurations</button>
+        <button type="button" id="save-configfile"><span class="fa fa-save" aria-hidden="true"></span> Save Configurations</button>
+        <button type="button" class="button-warning" id="reset-defaults"><span class="fa fa-undo" aria-hidden="true"></span> Reset to Defaults</button>
       </div>
     </fieldset>
 
@@ -39,15 +39,15 @@
       <div class="row">
         <div class="column column-30 form-group">
           <label for="conf-common-nside"><i>N</i><sub>side</sub>:</label>
-          <input class="form-control" type="number" id="conf-common-nside" name="common/nside" />
+          <input class="form-control" type="number" id="conf-common-nside" name="common/nside" min="1" />
         </div>
         <div class="column column-30 form-group">
           <label for="conf-common-lmin"><i>l</i><sub>min</sub>:</label>
-          <input class="form-control" type="number" id="conf-common-lmin" name="common/lmin" />
+          <input class="form-control" type="number" id="conf-common-lmin" name="common/lmin" min="0" />
         </div>
         <div class="column column-30 form-group">
           <label for="conf-common-lmax"><i>l</i><sub>max</sub>:</label>
-          <input class="form-control" type="number" id="conf-common-lmax" name="common/lmax" />
+          <input class="form-control" type="number" id="conf-common-lmax" name="common/lmax" min="1" />
         </div>
       </div>
       <div class="row">
@@ -79,17 +79,21 @@
       <h4><span class="fa fa-asterisk" aria-hidden="true"></span> Frequency</h4>
       <hr class="hr-thin hr-condensed hr-dashed" />
       <div class="row">
-        <div class="column column-30 form-group">
-          <label for="conf-frequency-unit">Unit:</label>
-          <input class="form-control" type="text" id="conf-frequency-unit" name="frequency/unit" />
-        </div>
+        <fieldset id="conf-frequency-unit" class="column radios">
+          <!-- XXX: cannot inline if use "legend" tag -->
+          <label class="legend">Unit:</label>
+          <div class="form-group">
+            <input class="form-control" type="radio" id="conf-frequency-unit-mhz" name="frequency/unit" value="MHz" checked />
+            <label for="conf-frequency-unit-mhz">MHz</label>
+          </div>
+        </fieldset>
       </div>
       <div class="row">
         <fieldset id="conf-frequency-type" class="column radios">
           <!-- XXX: cannot inline if use "legend" tag -->
           <label class="legend">Type:</label>
           <div class="form-group">
-            <input class="form-control" type="radio" id="conf-frequency-type-custom" name="frequency/type" value="custom" />
+            <input class="form-control" type="radio" id="conf-frequency-type-custom" name="frequency/type" value="custom" checked />
             <label for="conf-frequency-type-custom">custom</label>
           </div>
           <div class="form-group">
@@ -101,7 +105,7 @@
       <div class="row">
         <div class="column column-60 form-group">
           <label for="conf-frequency-frequencies">Custom Frequencies:</label>
-          <input class="form-control" type="text" id="conf-frequency-frequencies" name="frequency/frequencies" placeholder="comma-separated list of frequencies" />
+          <input class="form-control" type="text" id="conf-frequency-frequencies" name="frequency/frequencies" placeholder="comma-separated list of frequencies" data-type="array" />
         </div>
       </div>
       <div class="row">
@@ -129,17 +133,21 @@
       <h4><span class="fa fa-asterisk" aria-hidden="true"></span> Output</h4>
       <hr class="hr-thin hr-condensed hr-dashed" />
       <div class="row">
-        <div class="column column-30 form-group">
-          <label for="conf-output-unit">Unit:</label>
-          <input class="form-control" type="text" id="conf-output-unit" name="output/unit" />
-        </div>
+        <fieldset id="conf-output-unit" class="column radios">
+          <!-- XXX: cannot inline if use "legend" tag -->
+          <label class="legend">Unit:</label>
+          <div class="form-group">
+            <input class="form-control" type="radio" id="conf-output-unit-k" name="output/unit" value="K" checked />
+            <label for="conf-output-unit-k">K</label>
+          </div>
+        </fieldset>
       </div>
       <div class="row">
         <fieldset id="conf-output-filetype" class="column radios">
           <!-- XXX: cannot inline if use "legend" tag -->
           <label class="legend">File Type:</label>
           <div class="form-group">
-            <input class="form-control" type="radio" id="conf-output-filetype-fits" name="output/filetype" value="fits" checked="checked" />
+            <input class="form-control" type="radio" id="conf-output-filetype-fits" name="output/filetype" value="fits" checked />
             <label for="conf-output-filetype-fits">FITS</label>
           </div>
         </fieldset>
@@ -152,7 +160,7 @@
       </div>
       <div class="row">
         <div class="column form-group">
-          <input class="form-control" type="checkbox" id="conf-output-use-float" name="output/use_float" value="true" checked="checked" />
+          <input class="form-control" type="checkbox" id="conf-output-use-float" name="output/use_float" value="true" checked />
           <label for="conf-output-use-float">Use single-precision float instead of double</label>
         </div>
       </div>
@@ -217,7 +225,7 @@
             <label for="conf-logging-level-debug">debug</label>
           </div>
           <div class="form-group">
-            <input class="form-control" type="radio" id="conf-logging-level-info" name="logging/level" value="INFO" checked="checked" />
+            <input class="form-control" type="radio" id="conf-logging-level-info" name="logging/level" value="INFO" checked />
             <label for="conf-logging-level-info">info</label>
           </div>
           <div class="form-group">
@@ -253,7 +261,7 @@
             <input class="form-control" type="text" id="conf-logging-logfile" name="logging/filename" />
           </div>
           <div class="form-group">
-            <input class="form-control" type="checkbox" id="conf-logging-logfile-append" name="logging/filemode" value="a" checked="checked" />
+            <input class="form-control" type="checkbox" id="conf-logging-logfile-append" name="logging/appendmode" value="true" checked />
             <label for="conf-logging-logfile-append">Append mode</label>
           </div>
         </div>
@@ -290,13 +298,13 @@
         </div>
         <div class="row">
           <div class="column form-group">
-            <input class="form-control" type="checkbox" id="conf-g-synchrotron-smallscales" name="galactic/synchrotron/add_smallscales" value="true" checked="checked" />
+            <input class="form-control" type="checkbox" id="conf-g-synchrotron-smallscales" name="galactic/synchrotron/add_smallscales" value="true" checked />
             <label for="conf-g-synchrotron-smallscales">Add fluctuations on the small scales based on the angular power spectrum</label>
           </div>
         </div>
         <div class="row">
           <div class="column form-group">
-            <input class="form-control" type="checkbox" id="conf-g-synchrotron-save" name="galactic/synchrotron/save" value="true" checked="checked" />
+            <input class="form-control" type="checkbox" id="conf-g-synchrotron-save" name="galactic/synchrotron/save" value="true" checked />
             <label for="conf-g-synchrotron-save">Save this component standalone</label>
           </div>
         </div>
@@ -339,7 +347,7 @@
         </div>
         <div class="row">
           <div class="column form-group">
-            <input class="form-control" type="checkbox" id="conf-g-freefree-save" name="galactic/freefree/save" value="true" checked="checked" />
+            <input class="form-control" type="checkbox" id="conf-g-freefree-save" name="galactic/freefree/save" value="true" checked />
             <label for="conf-g-freefree-save">Save this component standalone</label>
           </div>
         </div>
@@ -378,7 +386,7 @@
         </div>
         <div class="row">
           <div class="column form-group">
-            <input class="form-control" type="checkbox" id="conf-g-snr-save" name="galactic/snr/save" value="true" checked="checked" />
+            <input class="form-control" type="checkbox" id="conf-g-snr-save" name="galactic/snr/save" value="true" checked />
             <label for="conf-g-snr-save">Save this component standalone</label>
           </div>
         </div>
@@ -429,7 +437,7 @@
         </div>
         <div class="row">
           <div class="column form-group">
-            <input class="form-control" type="checkbox" id="conf-eg-clusters-save" name="extragalactic/clusters/save" value="true" checked="checked" />
+            <input class="form-control" type="checkbox" id="conf-eg-clusters-save" name="extragalactic/clusters/save" value="true" checked />
             <label for="conf-eg-clusters-save">Save this component standalone</label>
           </div>
         </div>

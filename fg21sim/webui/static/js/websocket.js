@@ -11,13 +11,9 @@
  * Global variable
  * FIXME: try to avoid this ...
  */
-var ws = null;  /* WebSocket */
+var g_ws = null;  /* WebSocket */
 /* WebSocket reconnection settings */
-var ws_reconnect = {
-  maxTry: 100,
-  tried: 0,
-  timeout: 3000,  /* ms */
-};
+var g_ws_reconnect = {maxTry: 100, tried: 0, timeout: 3000};
 
 
 /**
@@ -103,36 +99,57 @@ var toggleWSReconnect = function (action) {
  * Connect to WebSocket and bind functions to events
  */
 var connectWebSocket = function (url) {
-  ws = new WebSocket(url);
-  ws.onopen = function () {
-    console.log("Opened WebSocket:", ws.url);
+  g_ws = new WebSocket(url);
+  g_ws.onopen = function () {
+    console.log("Opened WebSocket:", g_ws.url);
     updateWSStatus("open");
     toggleWSReconnect("hide");
   };
-  ws.onclose = function (e) {
+  g_ws.onclose = function (e) {
     console.log("WebSocket closed: code:", e.code, ", reason:", e.reason);
     updateWSStatus("close");
     // Reconnect
-    if (ws_reconnect.tried < ws_reconnect.maxTry) {
-      ws_reconnect.tried++;
-      console.log("Try reconnect the WebSocket: No." + ws_reconnect.tried);
+    if (g_ws_reconnect.tried < g_ws_reconnect.maxTry) {
+      g_ws_reconnect.tried++;
+      console.log("Try reconnect the WebSocket: No." + g_ws_reconnect.tried);
       setTimeout(function () { connectWebSocket(url); },
-                 ws_reconnect.timeout);
+                 g_ws_reconnect.timeout);
     } else {
       console.error("WebSocket already tried allowed maximum times:",
-                    ws_reconnect.maxTry);
+                    g_ws_reconnect.maxTry);
       toggleWSReconnect("show");
     }
   };
-  ws.onerror = function (e) {
+  g_ws.onerror = function (e) {
     console.error("WebSocket encountered error:", e.message);
     updateWSStatus("error");
     toggleWSReconnect("show");
   };
-  ws.onmessage = function (e) {
+  g_ws.onmessage = function (e) {
     var msg = JSON.parse(e.data);
     console.log("WebSocket received message: type:", msg.type,
-                ", status:", msg.status);
+                ", success:", msg.success);
+    console.debug(msg);
+    // Delegate appropriate actions to handle the received message
+    if (msg.type === "configs") {
+      handleMsgConfigs(msg);
+    }
+    else if (msg.type === "console") {
+      console.error("NotImplementedError");
+      // handleMsgConsole(msg);
+    }
+    else if (msg.type === "results") {
+      console.error("NotImplementedError");
+      // handleMsgResults(msg);
+    }
+    else {
+      // Unknown/unsupported message type
+      console.error("WebSocket received message of unknown type:", msg.type);
+      if (! msg.success) {
+        console.error("WebSocket request failed with error:", msg.error);
+        // TODO: add error codes support and handle each specific error
+      }
+    }
   };
 };
 
@@ -148,12 +165,41 @@ $(document).ready(function () {
     var ws_url = getWebSocketURL("/ws");
     connectWebSocket(ws_url);
 
-    // Bind event to the "#ws-reconnect" button
+    // Manually reconnect the WebSocket after tried allowed maximum times
     $("#ws-reconnect").on("click", function () {
       console.log("WebSocket: reset the tried reconnection counter");
       ws_reconnect.tried = 0;
       console.log("Manually reconnect the WebSocket:", ws_url);
       connectWebSocket(ws_url);
+    });
+
+    // Reset the configurations to the defaults
+    $("#reset-defaults").on("click", function () {
+      // TODO:
+      // * add a confirmation dialog;
+      // * add pop up to indicate success/fail
+      resetConfigForm(g_ws);
+      resetServerConfigs(g_ws);
+      getServerConfigs(g_ws);
+    });
+
+    // Load the configurations from the specified user configuration file
+    $("#load-configfile").on("click", function () {
+      // TODO:
+      // * add pop up to indicate success/fail
+      var userconfig = getFormUserconfig();
+      resetConfigForm(g_ws);
+      loadServerConfigFile(g_ws, userconfig);
+      getServerConfigs(g_ws);
+    });
+
+    // Save the current configurations to file
+    $("#save-configfile").on("click", function () {
+      // TODO:
+      // * validate the whole configurations before save
+      // * add a confirmation on overwrite
+      // * add pop up to indicate success/fail
+      saveServerConfigFile(g_ws, true);  // clobber=true
     });
 
   } else {
