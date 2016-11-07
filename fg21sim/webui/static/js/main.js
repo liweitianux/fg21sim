@@ -5,6 +5,8 @@
  * JavaScript codes for the Web UI of "fg21sim"
  */
 
+"use strict";
+
 
 $(document).ready(function () {
   /**

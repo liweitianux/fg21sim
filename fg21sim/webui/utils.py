@@ -3,6 +3,12 @@
 
 """
 Utilities for the Web UI
+
+TODO:
+* Add a function to determine whether the two IPs are in the same sub-network.
+  References:
+  + Stackoverflow: How can I check if an IP is in a network in Python?
+    https://stackoverflow.com/q/819355/4856091
 """
 
 
