@@ -70,90 +70,107 @@ var resetConfigForm = function () {
 
 
 /**
+ * Get the value of one single form field by specifying the name.
+ *
+ * @param {String} name - The name of filed name
+ */
+var getFormConfigSingle = function (name) {
+  var value = null;
+  if (name == null) {
+    // do nothing
+  } else if (name === "userconfig") {
+    value = joinPath($("input[name=workdir]").val(),
+                     $("input[name=configfile]").val());
+  } else {
+    var selector = "input[name='" + name + "']";
+    var target = $(selector);
+    if (target.length) {
+      if (target.is(":radio")) {
+        value = target.filter(":checked").val();
+      } else if (target.is(":checkbox")) {
+        // Get values of checked checkboxes into array
+        // Credit: https://stackoverflow.com/a/16171146/4856091
+        value = target.filter(":checked").map(
+          function () { return $(this).val(); }).get();
+      } else {
+        value = target.val();
+      }
+    } else {
+      console.error("No such element:", selector);
+    }
+  }
+  return value;
+};
+
+
+/**
+ * Set the value of one single form field according to the given
+ * name and value.
+ *
+ * NOTE:
+ * Change the value of an input element using JavaScript (e.g., `.val()`)
+ * won't fire the "change" event, so manually trigger this event.
+ *
+ * @param {String} name - The name of filed name
+ * @param {String|Number|Array} value - The value to be set for the field
+ */
+var setFormConfigSingle = function (name, value) {
+  if (name === "userconfig" && value) {
+    // Split the absolute path to "workdir" and "configfile"
+    var workdir = dirname(value);
+    var configfile = basename(value);
+    $("input[name=workdir]").val(workdir).trigger("change");
+    $("input[name=configfile]").val(configfile).trigger("change");
+  } else {
+    var selector = "input[name='" + name + "']";
+    var target = $(selector);
+    if (target.length) {
+      if (target.is(":radio")) {
+        target.val([value]);  // Use Array in "val()"
+      } else if (target.is(":checkbox")) {
+        // Convert value (key of a single option) to an Array
+        if (! Array.isArray(value)) {
+          value = [value];
+        }
+        target.val(value);
+      } else if (target.is(":text") && target.data("type") == "array") {
+        // The received value is already an Array
+        value = value.join(", ");
+        target.val(value);
+      } else {
+        target.val(value);
+      }
+      // Manually trigger the "change" event
+      target.trigger("change");
+    } else {
+      console.error("No such element:", selector);
+    }
+  }
+};
+
+
+/**
  * Set the configuration form to the supplied data, and mark out the fields
  * with error states as specified in the given errors.
  *
  * @param {Object} data - The input configurations data, key-value pairs.
  * @param {Object} errors - The config options with invalid values.
  */
-var setConfigForm = function (data, errors) {
+var setFormConfigs = function (data, errors) {
   // Clear previously marked errors
   clearConfigFormErrors();
 
   // Set the values of form field to the input configurations data
-  for (var key in data) {
-    if (! data.hasOwnProperty(key)) {
-      /**
-       * NOTE: Skip if the property is from prototype
-       * Credit: http://stackoverflow.com/a/921808
-       */
-      continue;
+  $.each(data, function (name, value) {
+    var val_old = getFormConfigSingle(name);
+    if (val_old != null) {
+      setFormConfigSingle(name, value);
+      console.debug("Set input '" + name + "' to:", value, " <-", val_old);
     }
-    var value = data[key];
-    if (key === "userconfig" && value) {
-      // Split the absolute path to "workdir" and "configfile"
-      var workdir = dirname(value);
-      var configfile = basename(value);
-      $("input[name=workdir]").val(workdir).trigger("change");
-      $("input[name=configfile]").val(configfile).trigger("change");
-    }
-    else {
-      var selector = "input[name='" + key + "']";
-      var target = $(selector);
-      if (target.length) {
-        if (target.is(":radio")) {
-          var val_old = target.filter(":checked").val();
-          target.val([value]).trigger("change");  // Use Array in "val()"
-        } else if (target.is(":checkbox")) {
-          // Get values of checked checkboxes into array
-          // Credit: https://stackoverflow.com/a/16171146/4856091
-          var val_old = target.filter(":checked").map(
-            function () { return $(this).val(); }).get();
-          // Convert value to an Array
-          if (! Array.isArray(value)) {
-            value = [value];
-          }
-          target.val(value).trigger("change");
-        } else if (target.is(":text") && target.data("type") == "array") {
-          // This field is a string that is ", "-joined from an Array
-          var val_old = target.val();
-          // The received value is already an Array
-          value = value.join(", ");
-          target.val(value).trigger("change");
-        } else {
-          var val_old = target.val();
-          target.val(value).trigger("change");
-        }
-        console.debug("Set input '" + key + "' to:", value, " <-", val_old);
-      }
-      else {
-        console.error("No such element:", selector);
-      }
-    }
-  }
+  });
 
   // Mark error states on fields with invalid values
-  for (var key in errors) {
-    if (! errors.hasOwnProperty(key)) {
-      // NOTE: Skip if the property is from prototype
-      continue;
-    }
-    var value = errors[key];
-    // TODO: mark the error states
-  }
-};
-
-
-/**
- * Get the filepath to the user configuration file from the form fields
- * "workdir" and "configfile".
- *
- * @returns {String} - Absolute path to the user configuration file.
- */
-var getFormUserconfig = function () {
-  var userconfig = joinPath($("input[name=workdir]").val(),
-                            $("input[name=configfile]").val());
-  return userconfig;
+  // TODO: mark the error states
 };
 
 
@@ -212,7 +229,7 @@ var setServerConfigs = function (ws, data) {
  */
 var loadServerConfigFile = function (ws, userconfig) {
   if (typeof userconfig === "undefined") {
-    userconfig = getFormUserconfig();
+    userconfig = getFormConfigSingle("userconfig");
   }
   var msg = {type: "configs", action: "load", userconfig: userconfig};
   ws.send(JSON.stringify(msg));
@@ -228,7 +245,7 @@ var loadServerConfigFile = function (ws, userconfig) {
  */
 var saveServerConfigFile = function (ws, clobber) {
   clobber = typeof clobber !== "undefined" ? clobber : false;
-  var userconfig = getFormUserconfig();
+  var userconfig = getFormConfigSingle("userconfig");
   var msg = {type: "configs",
              action: "save",
              outfile: userconfig,
@@ -242,7 +259,7 @@ var saveServerConfigFile = function (ws, clobber) {
  */
 var handleMsgConfigs = function (msg) {
   if (msg.success) {
-    setConfigForm(msg.data, msg.errors);
+    setFormConfigs(msg.data, msg.errors);
   } else {
     console.error("WebSocket 'configs' request failed with error:", msg.error);
     // TODO: add error code support and handle each specific error ...
