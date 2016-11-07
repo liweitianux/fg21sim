@@ -9,17 +9,17 @@
   <hr />
 
   <!-- Configuration Form -->
-  <form id="conf-form" class="form-inline">
+  <form id="conf-form" class="form-inline" autocomplete="on">
     <!-- General controlling configs -->
     <fieldset id="conf-control">
       <div class="row">
         <div class="column column-50 form-group">
           <label for="conf-workdir">Working Directory:</label>
-          <input class="form-control code" type="text" id="conf-workdir" name="workdir" autocomplete />
+          <input class="form-control code" type="text" id="conf-workdir" name="workdir" required />
         </div>
         <div class="column column-40 form-group">
           <label for="conf-configfile">Configuration File:</label>
-          <input class="form-control code" type="text" id="conf-configfile" name="configfile" autocomplete />
+          <input class="form-control code" type="text" id="conf-configfile" name="configfile" required />
         </div>
       </div>
       <div class="button-group">
@@ -114,15 +114,15 @@
           <label class="legend">Calculate Frequencies:</label>
           <div class="form-group">
             <label class="sr-only" for="conf-frequency-strat">Start</label>
-            <input class="form-control" type="number" id="conf-frequency-start" name="frequency/start" placeholder="start frequency" />
+            <input class="form-control" type="number" id="conf-frequency-start" name="frequency/start" placeholder="start frequency" step="any" min="0" />
           </div>
           <div class="form-group">
             <label class="sr-only" for="conf-frequency-stop">Stop</label>
-            <input class="form-control" type="number" id="conf-frequency-stop" name="frequency/stop" placeholder="stop frequency" />
+            <input class="form-control" type="number" id="conf-frequency-stop" name="frequency/stop" placeholder="stop frequency" step="any" min="0" />
           </div>
           <div class="form-group">
             <label class="sr-only" for="conf-frequency-step">Step</label>
-            <input class="form-control" type="number" id="conf-frequency-step" name="frequency/step" placeholder="frequency step" />
+            <input class="form-control" type="number" id="conf-frequency-step" name="frequency/step" placeholder="frequency step" step="any" min="0" />
           </div>
         </fieldset>
       </div>
@@ -203,11 +203,11 @@
       <div class="row">
         <div class="column column-50 form-group">
           <label for="conf-cosmology-h0">Hubble Parameter (<i>H</i><sub>0</sub>):</label>
-          <input class="form-control" type="number" id="conf-cosmology-h0" name="cosmology/H0" />
+          <input class="form-control" type="number" id="conf-cosmology-h0" name="cosmology/H0" step="any" min="0" />
         </div>
         <div class="column column-50 form-group">
           <label for="conf-cosmology-omegam0">Matter Density (<i>Ω</i><sub>M0</sub>):</label>
-          <input class="form-control" type="number" id="conf-cosmology-omegam0" name="cosmology/OmegaM0" />
+          <input class="form-control" type="number" id="conf-cosmology-omegam0" name="cosmology/OmegaM0" step="any" min="0" max="1" />
         </div>
       </div>
     </fieldset>
@@ -283,7 +283,7 @@
           </div>
           <div class="column column-30 form-group">
             <label for="conf-g-synchrotron-template-freq">Frequency:</label>
-            <input class="form-control" type="number" id="conf-g-synchrotron-template-freq" name="galactic/synchrotron/template_freq" placeholder="MHz" />
+            <input class="form-control" type="number" id="conf-g-synchrotron-template-freq" name="galactic/synchrotron/template_freq" placeholder="MHz" step="any" min="0" />
           </div>
           <div class="column column-30 form-group">
             <label for="conf-g-synchrotron-template-unit">Unit:</label>
@@ -381,7 +381,7 @@
         <div class="row">
           <div class="column form-group">
             <label for="conf-g-snr-resolution">Grid Resolution:</label>
-            <input class="form-control" type="number" id="conf-g-snr-resolution" name="galactic/snr/resolution" placeholder="arcmin" />
+            <input class="form-control" type="number" id="conf-g-snr-resolution" name="galactic/snr/resolution" placeholder="arcmin" step="any" min="0" />
           </div>
         </div>
         <div class="row">
@@ -426,13 +426,13 @@
         <div class="row">
           <div class="column form-group">
             <label for="conf-eg-clusters-halo-fraction">Halo Fraction:</label>
-            <input class="form-control" type="number" id="conf-eg-clusters-halo-fraction" name="extragalactic/clusters/halo_fraction" />
+            <input class="form-control" type="number" id="conf-eg-clusters-halo-fraction" name="extragalactic/clusters/halo_fraction" step="any" min="0" />
           </div>
         </div>
         <div class="row">
           <div class="column form-group">
             <label for="conf-eg-clusters-resolution">Grid Resolution:</label>
-            <input class="form-control" type="number" id="conf-eg-clusters-resolution" name="extragalactic/clusters/resolution" placeholder="arcmin" />
+            <input class="form-control" type="number" id="conf-eg-clusters-resolution" name="extragalactic/clusters/resolution" placeholder="arcmin" step="any" min="0" />
           </div>
         </div>
         <div class="row">

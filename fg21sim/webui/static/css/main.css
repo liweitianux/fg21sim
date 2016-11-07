@@ -211,6 +211,14 @@ label, legend {
     font-weight: normal;
 }
 
+/* Validation */
+input:valid {
+    border-color: #5cb85c;
+}
+input:invalid {
+    border-color: #d9534f;
+}
+
 
 /**
  * Label styles (general usage)
