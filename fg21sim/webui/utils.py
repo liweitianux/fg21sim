@@ -3,17 +3,22 @@
 
 """
 Utilities for the Web UI
+------------------------
 
-TODO:
-* Add a function to determine whether the two IPs are in the same sub-network.
-  References:
-  + Stackoverflow: How can I check if an IP is in a network in Python?
-    https://stackoverflow.com/q/819355/4856091
+get_host_ip :
+    Get the IP address of the host extracted from the input URL.
+
+get_local_ip :
+    Get the local IP address of this machine.
+
+ip_in_network :
+    Whether the IP address is contained in the network?
 """
 
 
-from urllib.parse import urlparse
+import ipaddress
 import socket
+from urllib.parse import urlparse
 
 
 def get_host_ip(url):
@@ -76,3 +81,21 @@ def get_local_ip(host="localhost", timeout=3.0):
         except (socket.gaierror, socket.timeout):
             ip = None
     return ip
+
+
+def ip_in_network(ip, network):
+    """
+    Check whether the IP address is contained in the network?
+
+    Parameters
+    ----------
+    ip : `~ipaddress.IPv4Address`, str
+        An `~ipaddress.IPv4Address` instance or a string of the IPv4 address
+    network : `~ipaddress.IPv4Network`, str
+        An `~ipaddress.IPv4Network` instance or a string of the IPv4 network
+    """
+    if not isinstance(ip, ipaddress.IPv4Address):
+        ip = ipaddress.IPv4Address(ip)
+    if not isinstance(network, ipaddress.IPv4Network):
+        network = ipaddress.IPv4Network(network)
+    return ip in network

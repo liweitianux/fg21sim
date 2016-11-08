@@ -22,10 +22,11 @@ import json
 import logging
 
 import tornado.websocket
+from tornado.options import options
 
 from ..configs import ConfigManager
 from ..errors import ConfigError
-from .utils import get_host_ip
+from .utils import get_host_ip, ip_in_network
 
 
 logger = logging.getLogger(__name__)
@@ -73,22 +74,32 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         Currently, only allow access from the ``localhost``
         (i.e., 127.0.0.1) and local LAN.
         """
+        self.from_localhost = False
         logger.info("WebSocket: {0}: origin: {1}".format(self.name, origin))
         ip = get_host_ip(url=origin)
+        network = options.hosts_allowed
         if ip == "127.0.0.1":
             self.from_localhost = True
+            allow = True
             logger.info("WebSocket: %s: origin is localhost" % self.name)
-            return True
-        else:
-            self.from_localhost = False
-            # FIXME/TODO: check whether from local LAN (or in same subnet)??
+        elif network.upper() == "ANY":
+            # Any hosts are allowed
+            allow = True
+            logger.error("WebSocket: %s: any hosts are allowed" % self.name)
+        elif ip_in_network(ip, network):
+            allow = True
             logger.error("WebSocket: %s: " % self.name +
-                         "ONLY allow access from localhost at the moment :(")
-            return False
+                         "client is in the allowed network: %s" % network)
+        else:
+            allow = False
+            logger.error("WebSocket: %s: " % self.name +
+                         "client is NOT in the allowed network: %s" % network)
+        return allow
 
     def open(self):
         """Invoked when a new WebSocket is opened by the client."""
-        logger.info("WebSocket: %s: opened" % self.name)
+        logger.info("WebSocket: {0}: opened".format(self.name))
+        logger.info("Allowed hosts: {0}".format(options.hosts_allowed))
 
     def on_close(self):
         """Invoked when a new WebSocket is closed by the client."""
