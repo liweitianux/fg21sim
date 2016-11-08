@@ -144,6 +144,7 @@ class ConfigManager:
         configspec = _get_configspec()
         self._configspec = ConfigObj(configspec, interpolation=False,
                                      list_values=False, _inspec=True)
+        # FIXME/NOTE: The comments are LOST!
         configs_default = ConfigObj(interpolation=False,
                                     configspec=self._configspec)
         # Keep a copy of the default configurations
@@ -530,9 +531,6 @@ class ConfigManager:
     def save(self, outfile=None, clobber=False):
         """Save the configurations to file.
 
-        XXX/TODO:
-        Will the comments be preserved when save to file ??
-
         Parameters
         ----------
         outfile : str, optional
@@ -546,9 +544,24 @@ class ConfigManager:
         Raises
         ------
         ValueError :
-            The given ``filepath`` is not an *absolute path*, or the
-            ``self.userconfig`` is invalid while the ``filepath`` not given.
+            The given ``outfile`` is not an *absolute path*, or the
+            ``self.userconfig`` is invalid while the ``outfile`` not given.
         OSError :
             If the target filename already exists.
         """
-        raise NotImplementedError("TODO")
+        if outfile is None:
+            if self.userconfig is None:
+                raise ValueError("no outfile and self.userconfig is None")
+            else:
+                outfile = self.userconfig
+                logger.warning("outfile not provided, " +
+                               "use self.userconfig: {0}".format(outfile))
+        if not os.path.isabs(outfile):
+            raise ValueError("not an absolute path: {0}".format(outfile))
+        if os.path.exists(outfile) and not clobber:
+            raise OSError("outfile already exists: {0}".format(outfile))
+        # Write out the configurations
+        # NOTE: need open the output file in *binary* mode
+        with open(outfile, "wb") as f:
+            self._config.indent_type = "  "
+            self._config.write(f)
