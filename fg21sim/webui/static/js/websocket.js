@@ -129,7 +129,7 @@ var connectWebSocket = function (url) {
     var msg = JSON.parse(e.data);
     console.log("WebSocket received message: type:", msg.type,
                 ", success:", msg.success);
-    console.debug(msg);
+    console.log(msg);
     // Delegate appropriate actions to handle the received message
     if (msg.type === "configs") {
       handleMsgConfigs(msg);
@@ -178,7 +178,7 @@ $(document).ready(function () {
       // TODO:
       // * add a confirmation dialog;
       // * add pop up to indicate success/fail
-      resetConfigForm(g_ws);
+      resetFormConfigs();
       resetServerConfigs(g_ws);
       getServerConfigs(g_ws);
     });
@@ -187,8 +187,8 @@ $(document).ready(function () {
     $("#load-configfile").on("click", function () {
       // TODO:
       // * add pop up to indicate success/fail
-      var userconfig = getFormUserconfig();
-      resetConfigForm(g_ws);
+      var userconfig = getFormConfigSingle("userconfig");
+      resetFormConfigs();
       loadServerConfigFile(g_ws, userconfig);
       getServerConfigs(g_ws);
     });
@@ -200,6 +200,15 @@ $(document).ready(function () {
       // * add a confirmation on overwrite
       // * add pop up to indicate success/fail
       saveServerConfigFile(g_ws, true);  // clobber=true
+    });
+
+    // Sync changed field to server, validate and update form
+    $("#conf-form input").on("change", function (e) {
+      console.log("Element changed:", e);
+      var name = $(e.target).attr("name");
+      var value = getFormConfigSingle(name);
+      // Sync form configuration to the server
+      setServerConfigs(g_ws, {name: value});
     });
 
   } else {

@@ -44,28 +44,61 @@ var joinPath = function (path1, path2) {
 };
 
 
-
 /**
- * Clear the error states previously marked on the fields with invalid values.
+ * Set custom error messages for the form fields that failed the server-side
+ * validations.
+ *
+ * NOTE:
+ * Add "error" class for easier manipulations, e.g., clearFormConfigErrors().
+ *
+ * References: Constraint Validation API
+ *
+ * @param {String} name - The name of filed name
+ * @param {String} error - The custom error message to be set for the field
  */
-var clearConfigFormErrors = function () {
-  // TODO
-  $("#conf-form").find(":input").each(function () {
-    // TODO
+var setFormConfigErrorSingle = function (name, error) {
+  var selector = null;
+  if (name === "userconfig") {
+    selector = "input[name=configfile]";
+  } else {
+    selector = "input[name='" + name + "']";
+  }
+  $(selector).each(function () {
+    // Reset the error message
+    this.setCustomValidity(error);
+    // Also add the "error" class for easier use later
+    $(this).addClass("error");
   });
 };
 
 
 /**
- * Reset the form to its defaults as written in the HTML.
+ * Clear the custom error states marked on the form fields that failed the
+ * server-side validations.
+ *
+ * NOTE: The form fields marked custom errors has the "error" class.
+ *
+ * References: Constraint Validation API
  */
-var resetConfigForm = function () {
+var clearFormConfigErrors = function () {
+  $("input.error").each(function () {
+    // Remove the dynamically added "error" class
+    $(this).removeClass("error");
+    // Reset the error message
+    this.setCustomValidity("");
+  });
+};
+
+
+/**
+ * Reset the configuration form to its defaults as written in the HTML.
+ */
+var resetFormConfigs = function () {
   // Credit: http://stackoverflow.com/a/6364313
   $("#conf-form")[0].reset();
 
-  // TODO: whether this is required ??
   // Clear previously marked errors
-  clearConfigFormErrors();
+  clearFormConfigErrors();
 };
 
 
@@ -107,20 +140,20 @@ var getFormConfigSingle = function (name) {
  * Set the value of one single form field according to the given
  * name and value.
  *
- * NOTE:
- * Change the value of an input element using JavaScript (e.g., `.val()`)
- * won't fire the "change" event, so manually trigger this event.
+ * NOTE: Do NOT manually trigger the "change" event.
  *
  * @param {String} name - The name of filed name
  * @param {String|Number|Array} value - The value to be set for the field
  */
 var setFormConfigSingle = function (name, value) {
-  if (name === "userconfig" && value) {
-    // Split the absolute path to "workdir" and "configfile"
-    var workdir = dirname(value);
-    var configfile = basename(value);
-    $("input[name=workdir]").val(workdir).trigger("change");
-    $("input[name=configfile]").val(configfile).trigger("change");
+  if (name === "userconfig") {
+    if (value) {
+      // Split the absolute path to "workdir" and "configfile"
+      var workdir = dirname(value);
+      var configfile = basename(value);
+      $("input[name=workdir]").val(workdir);
+      $("input[name=configfile]").val(configfile);
+    }
   } else {
     var selector = "input[name='" + name + "']";
     var target = $(selector);
@@ -140,8 +173,6 @@ var setFormConfigSingle = function (name, value) {
       } else {
         target.val(value);
       }
-      // Manually trigger the "change" event
-      target.trigger("change");
     } else {
       console.error("No such element:", selector);
     }
@@ -157,20 +188,25 @@ var setFormConfigSingle = function (name, value) {
  * @param {Object} errors - The config options with invalid values.
  */
 var setFormConfigs = function (data, errors) {
-  // Clear previously marked errors
-  clearConfigFormErrors();
-
   // Set the values of form field to the input configurations data
   $.each(data, function (name, value) {
+    if (value == null) {
+      value = "";  // Default to empty string
+    }
     var val_old = getFormConfigSingle(name);
-    if (val_old != null) {
+    if (val_old != null && val_old !== value) {
       setFormConfigSingle(name, value);
-      console.debug("Set input '" + name + "' to:", value, " <-", val_old);
+      console.log("Set input '" + name + "' to:", value, " <-", val_old);
     }
   });
 
-  // Mark error states on fields with invalid values
-  // TODO: mark the error states
+  // Clear previously marked errors
+  clearFormConfigErrors();
+
+  // Mark custom errors on fields with invalid values validated by the server
+  $.each(errors, function (name, error) {
+    setFormConfigErrorSingle(name, error);
+  });
 };
 
 
