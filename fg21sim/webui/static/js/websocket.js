@@ -208,7 +208,8 @@ $(document).ready(function () {
       var name = $(e.target).attr("name");
       var value = getFormConfigSingle(name);
       // Sync form configuration to the server
-      setServerConfigs(g_ws, {name: value});
+      // NOTE: Use the "computed property names" available in ECMAScript 6
+      setServerConfigs(g_ws, {[name]: value});
     });
 
   } else {
