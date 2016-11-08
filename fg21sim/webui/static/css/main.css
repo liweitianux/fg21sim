@@ -217,6 +217,14 @@ input:valid {
 }
 input:invalid {
     border-color: #d9534f;
+    box-shadow: 0 0 2px #d9534f;
+}
+input[type="radio"]:invalid,
+input[type="checkbox"]:invalid {
+    box-shadow: 0 0 1px 2px #d9534f;
+}
+input:focus {
+    box-shadow: none;
 }
 
 
