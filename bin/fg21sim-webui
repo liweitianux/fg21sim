@@ -17,35 +17,57 @@ which is built using the Tornado_ web server and WebSocket_ protocol.
 
 import os
 import sys
-import argparse
 import logging
+import ipaddress
 
 import tornado.ioloop
+from tornado.options import define, options, parse_command_line
 
 from fg21sim.configs import configs
 from fg21sim.utils import setup_logging
 from fg21sim.webui import make_application
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Start the fg21sim Web UI")
-    parser.add_argument("-p", "--port", type=int, default=21127,
-                        help="Tornado server listen port (default: 21127)")
-    parser.add_argument("-d", "--debug", action="store_true",
-                        help="enable Tornado debug mode")
-    args = parser.parse_args()
+# Define options in the global namespace
+# These options can also be used in other modules
+define("port", default=21127, type=int, help="Server listen port")
+define("debug", default=False, help="Enable the debug mode")
+define("no_browser", default=False,
+       help="Do not open the Web UI in a browser after startup")
+define("hosts_allowed", default="any", type=str,
+       help=("Hosts allowed to access the Web UI. "
+             "The network addresses should be given in CIDR format, e.g., "
+             "'192.168.0.0/24'. "
+             "Specify 'any' to allow any hosts. "
+             "Note that the localhost/127.0.0.1 is always allowed."))
 
-    loglevel = "DEBUG" if args.debug else None
+
+def main():
+    options.logging = None
+    parse_command_line()
+
+    # Validate the value of ``options.hosts_allowed``
+    if options.hosts_allowed.upper() != "ANY":
+        try:
+            ipaddress.ip_network(options.hosts_allowed)
+        except ValueError as e:
+            raise ValueError("Option 'hosts_allowed' invalid: " + str(e))
+
+    loglevel = "DEBUG" if options.debug else None
     setup_logging(dict_config=configs.logging, level=loglevel)
     tool = os.path.basename(sys.argv[0])
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
-    application = make_application(debug=args.debug)
-    application.listen(args.port)
+    application = make_application(debug=options.debug)
+    application.listen(options.port)
     logger.info("Tornado started on: {protocol}://{host}:{port}".format(
-        protocol="http", host="localhost", port=args.port))
+        protocol="http", host="localhost", port=options.port))
+    logger.info("Hosts allowed to access the Web UI: {0}".format(
+        options.hosts_allowed))
+    print("DEBUG: before IOLoop")
     tornado.ioloop.IOLoop.current().start()
+    print("DEBUG: after IOLoop")
 
 
 if __name__ == "__main__":
