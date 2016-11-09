@@ -33,7 +33,7 @@ import numba as nb
 import healpy as hp
 from astropy.io import fits
 
-from . import read_fits_healpix
+from .fits import read_fits_healpix
 
 
 logger = logging.getLogger(__name__)
