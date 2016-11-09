@@ -82,6 +82,52 @@ var appendLogMessage = function (msg) {
 
 
 /**
+ * Toggle the display of the logging messages at the given level.
+ *
+ * NOTE:
+ * Use a data attribute to keep the current toggle state to be more robust.
+ *
+ * @param {String} level - Which level of logging messages to be toggled?
+ *                         Valid: debug, info, warning, error, critical
+ */
+var toggleLogMessages = function (level) {
+  var valid_levels = ["debug", "info", "warning", "error", "critical"];
+  if (! level) {
+    console.error("toggleLogMessages: level not specified");
+  } else if ($.inArray(level.toLowerCase(), valid_levels) == -1) {
+    console.error("toggleLogMessages: invalid level:", level);
+  } else {
+    level = level.toLowerCase();
+    var logbox = $("#log-messages");
+    var status = null;
+    if (typeof logbox.data(level) === "undefined") {
+      // No stored display status, assuming true: show
+      status = true;
+      logbox.data(level, status);
+    } else {
+      // Use the stored display status
+      status = logbox.data(level);
+    }
+    // Toggle the display status
+    status = !status;
+    logbox.find("p.log-" + level).toggle();
+    // Save the new display status
+    logbox.data(level, status);
+    console.log("Toggled", level, "logging messages:",
+                status ? "show" : "hide");
+  }
+};
+
+
+/**
+ * Delete all the logging messages
+ */
+var deleteLogMessages = function () {
+  $("#log-messages").empty();
+  console.warn("Deleted all logging messages!");
+};
+
+/**
  * Get the task status from the server
  *
  * @param {Object} ws - The opened WebSocket object through which to send

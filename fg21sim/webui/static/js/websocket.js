@@ -234,6 +234,24 @@ $(document).ready(function () {
       getServerTaskStatus(g_ws);
     });
 
+    /* Logging messages controls */
+    $("#log-toggle-debug").on("click", function () {
+      toggleLogMessages("debug");
+    });
+    $("#log-toggle-info").on("click", function () {
+      toggleLogMessages("info");
+    });
+    $("#log-toggle-warning").on("click", function () {
+      toggleLogMessages("warning");
+    });
+    $("#log-toggle-error").on("click", function () {
+      toggleLogMessages("error");
+      toggleLogMessages("critical");
+    });
+    $("#log-delete").on("click", function () {
+      deleteLogMessages();
+    });
+
   } else {
     // WebSocket NOT supported
     console.error("Oops, WebSocket is NOT supported!");
