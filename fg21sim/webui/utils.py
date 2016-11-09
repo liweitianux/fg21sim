@@ -92,7 +92,13 @@ def ip_in_network(ip, network):
     ip : `~ipaddress.IPv4Address`, str
         An `~ipaddress.IPv4Address` instance or a string of the IPv4 address
     network : `~ipaddress.IPv4Network`, str
-        An `~ipaddress.IPv4Network` instance or a string of the IPv4 network
+        An `~ipaddress.IPv4Network` instance or a string of the IPv4 network,
+        which is generally written in the CIDR format.
+
+    Raises
+    ------
+    ValueError :
+        Input IP or network is invalid.
     """
     if not isinstance(ip, ipaddress.IPv4Address):
         ip = ipaddress.IPv4Address(ip)
