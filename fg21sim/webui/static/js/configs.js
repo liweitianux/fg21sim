@@ -211,6 +211,15 @@ var setFormConfigs = function (data, errors) {
 
 
 /**
+ * Update the configuration form status indicator: "#conf-status"
+ */
+var updateFormConfigStatus = function () {
+  // TODO
+  console.error("NotImplementedError");
+};
+
+
+/**
  * Reset the server-side configurations to the defaults.
  *
  * @param {Object} ws - The opened WebSocket object, through which send
@@ -291,11 +300,12 @@ var saveServerConfigFile = function (ws, clobber) {
 
 
 /**
- * Handle the received message of type "configs".replace
+ * Handle the received message of type "configs"
  */
 var handleMsgConfigs = function (msg) {
   if (msg.success) {
     setFormConfigs(msg.data, msg.errors);
+    updateFormConfigStatus();
   } else {
     console.error("WebSocket 'configs' request failed with error:", msg.error);
     // TODO: add error code support and handle each specific error ...

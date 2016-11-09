@@ -65,9 +65,7 @@ def main():
         protocol="http", host="localhost", port=options.port))
     logger.info("Hosts allowed to access the Web UI: {0}".format(
         options.hosts_allowed))
-    print("DEBUG: before IOLoop")
     tornado.ioloop.IOLoop.current().start()
-    print("DEBUG: after IOLoop")
 
 
 if __name__ == "__main__":
