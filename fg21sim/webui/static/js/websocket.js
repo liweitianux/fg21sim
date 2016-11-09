@@ -135,8 +135,7 @@ var connectWebSocket = function (url) {
       handleMsgConfigs(msg);
     }
     else if (msg.type === "console") {
-      console.error("NotImplementedError");
-      // handleMsgConsole(msg);
+      handleMsgConsole(msg);
     }
     else if (msg.type === "results") {
       console.error("NotImplementedError");
@@ -171,6 +170,18 @@ $(document).ready(function () {
       ws_reconnect.tried = 0;
       console.log("Manually reconnect the WebSocket:", ws_url);
       connectWebSocket(ws_url);
+    });
+
+    /**********************************************************************
+     * Configuration form
+     */
+
+    // Re-check/validate the whole form configurations
+    $("#conf-recheck").on("click", function () {
+      // TODO:
+      // * collect all current form configurations
+      // * sync to the server and validate
+      // * update the form errors
     });
 
     // Reset the configurations to the defaults
@@ -210,6 +221,17 @@ $(document).ready(function () {
       // Sync form configuration to the server
       // NOTE: Use the "computed property names" available in ECMAScript 6
       setServerConfigs(g_ws, {[name]: value});
+    });
+
+    /**********************************************************************
+     * Console operations
+     */
+
+    // Start the task on the server
+    $("#task-start").on("click", function () {
+      updateTaskStatus({running: true, finished: false});
+      startServerTask(g_ws);
+      getServerTaskStatus(g_ws);
     });
 
   } else {
