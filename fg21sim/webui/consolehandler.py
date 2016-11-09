@@ -78,11 +78,11 @@ class ConsoleHandler:
             logger.info("WebSocket: handle message: " +
                         "type: {0}, action: {1}".format(msg_type, msg_action))
             if msg_action == "start":
-                # Start the task asynchronously
-                future = self._start(msg["time"])
-                self.io_loop.add_future(future, self._response_future)
-                response["success"] = True
-                response["status"] = "future"
+                # FIXME/XXX: This task should be asynchronous!
+                success, error = self._start(msg["time"])
+                response["success"] = success
+                if not success:
+                    response["error"] = error
             elif msg_action == "get_status":
                 response["success"] = True
                 response["action"] = "push"
