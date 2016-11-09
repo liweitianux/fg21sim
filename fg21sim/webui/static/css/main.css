@@ -374,8 +374,36 @@ button,
     font-size: 1.6rem;
     font-weight: bold;
 }
+.panel-control {
+    float: right;
+}
 .panel-body {
     padding: 1.5rem;
+}
+
+
+/**
+ * Logging messages styles
+ */
+p.log {
+    font-size: 1.3rem;
+    margin-bottom: 0;
+}
+p.log span {
+    margin-right: 0.8rem;
+}
+p.log.log-debug {
+    color: inherit;
+}
+p.log.log-info {
+    color: #398439;
+}
+p.log.log-warning {
+    color: #d58512;
+}
+p.log.log-error,
+p.log.log-critical {
+    color: #ac2925;
 }
 
 

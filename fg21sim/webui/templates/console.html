@@ -22,12 +22,18 @@
     <button type="button" class="button button-warning" id="task-stop" disabled="disabled"><span class="fa fa-stop" aria-hidden="true"></span> Stop</button>
   </p>
 
-  <div id="log-messages" class="panel panel-default">
+  <div class="panel panel-default">
     <div class="panel-heading">
       <span class="panel-title"><span class="fa fa-comments" aria-hidden="true"></span> Logging Messages</span>
+      <span class="panel-control">
+        <span id="log-toggle-debug" title="Toggle display of DEBUG messages" class="btn fa fa-comment" aria-hidden="true"></span>
+        <span id="log-toggle-info" title="Toggle display of INFO messages" class="btn fa fa-info-circle" aria-hidden="true"></span>
+        <span id="log-toggle-warning" title="Toggle display of WARNING messages" class="btn fa fa-warning" aria-hidden="true"></span>
+        <span id="log-toggle-error" title="Toggle display of ERROR messages" class="btn fa fa-times-circle" aria-hidden="true"></span>
+        <span id="log-delete" title="Delete all messages" class="btn fa fa-trash" aria-hidden="true"></span>
+      </span>
     </div>
-    <div class="panel-body">
-      <p>messages ...</p>
+    <div id="log-messages" class="panel-body">
     </div>
   </div>
 </section>

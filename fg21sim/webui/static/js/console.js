@@ -58,6 +58,30 @@ var updateTaskStatus = function (status) {
 
 
 /**
+ * Append the logging messages to the "#log-messages" panel box
+ *
+ * @param {Object} msg - Server pushed logging message of "action=log"
+ */
+var appendLogMessage = function (msg) {
+  var log_icons = {
+    debug: "<span class='icon fa fa-comment'></span>",
+    info: "<span class='icon fa fa-info-circle'></span>",
+    warning: "<span class='icon fa fa-warning'></span>",
+    error: "<span class='icon fa fa-times-circle'></span>",
+    critical: "<span class='icon fa fa-times-circle'></span>",
+  };
+  var level = msg.levelname.toLowerCase();
+  var ele = $("<p>").addClass("code log log-" + level);
+  ele.append($(log_icons[level]));
+  ele.append($("<span>").addClass("asctime").text(msg.asctime));
+  ele.append($("<span>").addClass("levelname").text(msg.levelname));
+  ele.append($("<span>").addClass("name").text(msg.name));
+  ele.append($("<span>").addClass("message").text(msg.message));
+  ele.appendTo("#log-messages");
+};
+
+
+/**
  * Get the task status from the server
  *
  * @param {Object} ws - The opened WebSocket object through which to send
@@ -84,7 +108,7 @@ var startServerTask = function (ws, time) {
  */
 var handleMsgConsole = function (msg) {
   if (msg.action === "log") {
-    // TODO: show the logging messages
+    appendLogMessage(msg);
   }
   else if (msg.action === "push") {
     // Update the task status
