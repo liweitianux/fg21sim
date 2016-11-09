@@ -79,6 +79,12 @@ class ConsoleHandler:
                         "type: {0}, action: {1}".format(msg_type, msg_action))
             if msg_action == "start":
                 # FIXME/XXX: This task should be asynchronous!
+                success, error = self._start()
+                response["success"] = success
+                if not success:
+                    response["error"] = error
+            elif msg_action == "start_test":
+                # FIXME/XXX: This task should be asynchronous!
                 success, error = self._start(msg["time"])
                 response["success"] = success
                 if not success:
@@ -100,6 +106,35 @@ class ConsoleHandler:
         #
         logger.debug("WebSocket: response: {0}".format(response))
         return response
+
+    # FIXME/XXX:
+    # * How to call this task asynchronously ??
+    def _start_test(self, *args, **kwargs):
+        """
+        Start the task by submitting it to the executor
+
+        Returns
+        -------
+        success : bool
+            Whether success without any errors
+        error : str
+            Detail of the error if not succeed
+
+        """
+        if self.onetask_only and self.status["running"]:
+            logger.warning("Task already running, and only one task allowed")
+            success = False
+            error = "already running and only one task allowed"
+        else:
+            logger.info("Start the task on the executor ...")
+            self.status["running"] = True
+            self.status["finished"] = False
+            # Also push the logging messages to the client
+            self._add_wsloghandler()
+            future = self.executor.submit(self._task_test, *args, **kwargs)
+            self.io_loop.add_future(future, self._task_callback)
+            success, error = future.result()
+        return (success, error)
 
     # FIXME/XXX:
     # * How to call this task asynchronously ??
@@ -170,7 +205,7 @@ class ConsoleHandler:
         msg_response = json.dumps(response)
         self.websocket.write_message(msg_response)
 
-    def _task(self, *args, **kwargs):
+    def _task_test(self, *args, **kwargs):
         """
         The task this console to manage.
 
@@ -196,4 +231,45 @@ class ConsoleHandler:
             logger.info("console task: slept {0} seconds ...".format(i))
             time.sleep(1)
         logger.info("console task: DONE!")
+        return (True, None)
+
+    def _task(self, *args, **kwargs):
+        """
+        The task this console to manage.
+        Perform the foregrounds simulations.
+
+        Returns
+        -------
+        success : bool
+            Whether success without any errors
+        error : str
+            Detail of the error if not succeed
+
+        NOTE
+        ----
+        The task is synchronous and may be computationally intensive
+        (i.e., CPU-bound rather than IO/event-bound), therefore,
+        threads (or processes) are required to make it non-blocking
+        (i.e., asynchronous).
+
+        Credit: https://stackoverflow.com/a/32164711/4856091
+        """
+        logger.info("Preparing to start foregrounds simulations ...")
+        logger.info("Importing modules + Numba JIT, waiting ...")
+
+        from ..foregrounds import Foregrounds
+
+        # FIXME: This is a hack
+        configs = self.websocket.configs
+        logger.info("Checking the configurations ...")
+        configs.check_all()
+
+        fg = Foregrounds(configs)
+        fg.preprocess()
+        fg.simulate()
+        fg.postprocess()
+
+        logger.info("Foregrounds simulations DONE!")
+
+        # NOTE: Should always return a tuple of (success, error)
         return (True, None)

@@ -144,7 +144,18 @@ var getServerTaskStatus = function (ws) {
  */
 var startServerTask = function (ws, time) {
   time = typeof time !== "undefined" ? time : 5;
-  var msg = {type: "console", action: "start", time: time};
+  var msg = {type: "console", action: "start"};
+  ws.send(JSON.stringify(msg));
+};
+
+/**
+ * Request to start the test task on the server.
+ *
+ * @param {Number} time - Time in seconds for the sleep test task on server
+ */
+var startServerTaskTest = function (ws, time) {
+  time = typeof time !== "undefined" ? time : 5;
+  var msg = {type: "console", action: "start_test", time: time};
   ws.send(JSON.stringify(msg));
 };
 
