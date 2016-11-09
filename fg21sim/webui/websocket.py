@@ -24,9 +24,10 @@ import logging
 import tornado.websocket
 from tornado.options import options
 
+from .consolehandler import ConsoleHandler
+from .utils import get_host_ip, ip_in_network
 from ..configs import ConfigManager
 from ..errors import ConfigError
-from .utils import get_host_ip, ip_in_network
 
 
 logger = logging.getLogger(__name__)
@@ -58,7 +59,6 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
     """
     name = "fg21sim"
     from_localhost = None
-    configs = ConfigManager()
 
     def check_origin(self, origin):
         """Check the origin of the WebSocket access.
@@ -98,6 +98,12 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
 
     def open(self):
         """Invoked when a new WebSocket is opened by the client."""
+        # FIXME:
+        # * better to move to the `Application` class ??
+        # * or create a ``ConfigsHandler`` similar to the ``ConsoleHandler``
+        self.configs = ConfigManager()
+        self.console_handler = ConsoleHandler(websocket=self)
+        #
         logger.info("WebSocket: {0}: opened".format(self.name))
         logger.info("Allowed hosts: {0}".format(options.hosts_allowed))
 
@@ -111,6 +117,12 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         logger.info("WebSocket: {0}: closed by client: {1}, {2}".format(
             self.name, code, reason))
 
+    # FIXME/XXX:
+    # * How to be non-blocking ??
+    # NOTE: WebSocket.on_message: may NOT be a coroutine at the moment (v4.3)
+    # References:
+    # [1] https://stackoverflow.com/a/35543856/4856091
+    # [2] https://stackoverflow.com/a/33724486/4856091
     def on_message(self, message):
         """Handle incoming messages and dispatch task according to the
         message type.
@@ -156,7 +168,9 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
                 response = self._handle_configs(msg)
             elif msg_type == "console":
                 # Control the simulation tasks, or request logging messages
-                response = self._handle_console(msg)
+                # FIXME/XXX:
+                # * How to make this asynchronously ??
+                response = self.console_handler.handle_message(msg)
             elif msg_type == "results":
                 # Request the simulation results
                 response = self._handle_results(msg)
@@ -175,7 +189,9 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         """Handle the message of type "configs", which request to get or
         set some configurations by the client.
 
-        TODO: improve the description ...
+        TODO:
+        * improve the description ...
+        * split these handling functions into a separate class in a module
 
         Parameters
         ----------
@@ -406,14 +422,6 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         except (ValueError, OSError) as e:
             error = str(e)
         return (success, error)
-
-    def _handle_console(self, msg):
-        # Got a message of supported types
-        msg_type = msg["type"]
-        logger.info("WebSocket: {0}: ".format(self.name) +
-                    "handle message of type: {0}".format(msg_type))
-        response = {"success": True, "type": msg_type}
-        return response
 
     def _handle_results(self, msg):
         # Got a message of supported types
