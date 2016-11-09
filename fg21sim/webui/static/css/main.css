@@ -234,6 +234,8 @@ input:focus {
 .label {
     display: inline;
     padding: 0.2rem 0.6rem 0.3rem 0.6rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
     color: #fff;
     font-weight: bold;
     line-height: 1;
@@ -338,6 +340,8 @@ button,
 .btn {
     margin-left: 0.5rem;
     margin-right: 0.5rem;
+    font-size: 2.2rem;
+    vertical-align: middle;
     cursor: pointer;
 }
 

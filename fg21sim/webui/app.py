@@ -31,6 +31,9 @@ _settings = {
 }
 
 
+# FIXME:
+# * Subclass on `tornado.web.Application`
+# * hold the attributes (e.g., configs, console) ??
 def make_application(**kwargs):
     settings = _settings
     settings.update(kwargs)

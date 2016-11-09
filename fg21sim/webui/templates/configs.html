@@ -8,6 +8,25 @@
   <h2><span class="fa fa-wrench" aria-hidden="true"></span> Configurations</h2>
   <hr />
 
+  <p class="status"><strong>
+    <span class="fa fa-info-circle" aria-hidden="true"></span>
+    Configurations status:
+    <span id="conf-status" class="label label-default">
+      <span class="icon fa fa-question-circle" aria-hidden="true"></span>
+      <span class="text">N/A</span>
+    </span>
+    <span id="conf-recheck" class="btn fa fa-refresh" aria-hidden="true"></span>
+  </strong></p>
+
+  <p class="button-group">
+    <!-- NOTE: HTML5 "button" element has a default behavior of submit.
+         Credit: https://stackoverflow.com/a/10836076/4856091
+        -->
+    <button type="button" id="load-configfile"><span class="fa fa-download" aria-hidden="true"></span> Load Configurations</button>
+    <button type="button" id="save-configfile"><span class="fa fa-save" aria-hidden="true"></span> Save Configurations</button>
+    <button type="button" class="button-warning" id="reset-defaults"><span class="fa fa-undo" aria-hidden="true"></span> Reset to Defaults</button>
+  </p>
+
   <!-- Configuration Form -->
   <form id="conf-form" class="form-inline" autocomplete="on">
     <!-- General controlling configs -->
@@ -21,14 +40,6 @@
           <label for="conf-configfile">Configuration File:</label>
           <input class="form-control code" type="text" id="conf-configfile" name="configfile" required />
         </div>
-      </div>
-      <div class="button-group">
-        <!-- NOTE: HTML5 "button" element has a default behavior of submit.
-             Credit: https://stackoverflow.com/a/10836076/4856091
-           -->
-        <button type="button" id="load-configfile"><span class="fa fa-download" aria-hidden="true"></span> Load Configurations</button>
-        <button type="button" id="save-configfile"><span class="fa fa-save" aria-hidden="true"></span> Save Configurations</button>
-        <button type="button" class="button-warning" id="reset-defaults"><span class="fa fa-undo" aria-hidden="true"></span> Reset to Defaults</button>
       </div>
     </fieldset>
 
