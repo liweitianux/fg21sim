@@ -19,6 +19,7 @@ import os
 import sys
 import logging
 import ipaddress
+import webbrowser
 
 import tornado.ioloop
 from tornado.options import define, options, parse_command_line
@@ -61,8 +62,13 @@ def main():
 
     application = make_application(debug=options.debug)
     application.listen(options.port)
-    logger.info("Tornado started on: {protocol}://{host}:{port}".format(
-        protocol="http", host="localhost", port=options.port))
+    url = "http://localhost:{port}".format(port=options.port)
+    logger.info("Tornado started")
+    logger.info("You can use the Web UI by accessing:\n\t{0}".format(url))
+    if not options.no_browser:
+        # Open the Web UI in a new browser tab
+        webbrowser.open_new_tab(url)
+
     logger.info("Hosts allowed to access the Web UI: {0}".format(
         options.hosts_allowed))
     tornado.ioloop.IOLoop.current().start()
