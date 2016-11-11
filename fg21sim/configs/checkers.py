@@ -55,12 +55,20 @@ def check_common(configs):
     results = {}
     # "common/nside" must be a power of 2
     key = "common/nside"
-    if not _is_power2(configs.getn(key)):
-        results[key] = "not a power of 2"
+    res = _check_missing(configs, key)
+    if res == {}:
+        if not _is_power2(configs.getn(key)):
+            results[key] = "not a power of 2"
+    else:
+        results.update(res)
     # "common/lmax" must be greater than "common/lmin"
     key = "common/lmax"
-    if configs.getn(key) <= configs.getn("common/lmin"):
-        results[key] = "not greater than 'common/lmin'"
+    res = _check_missing(configs, [key, "common/lmin"])
+    if res == {}:
+        if configs.getn(key) <= configs.getn("common/lmin"):
+            results[key] = "not greater than 'common/lmin'"
+    else:
+        results.update(res)
     # Check enabled components
     key = "common/components"
     if len(configs.getn(key)) == 0:
