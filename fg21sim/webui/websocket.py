@@ -328,7 +328,8 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
 
         NOTE
         ----
-        The ``userconfig`` and ``workdir`` options are ignored.
+        The ``userconfig`` needs special handle.
+        The ``workdir`` and ``configfile`` options should be ignored.
 
         Parameters
         ----------
@@ -338,8 +339,7 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
             to which config options will be set.
             NOTE:
             If want to set the ``userconfig`` option, an *absolute path*
-            must be provided (i.e., client should take care of the ``workdir``
-            value and generate a absolute path for ``userconfig``).
+            must be provided.
 
         Returns
         -------
@@ -349,9 +349,14 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         """
         errors = {}
         for key, value in data.items():
-            if key in ["userconfig", "workdir"]:
-                # Ignore "userconfig" and "workdir"
+            if key in ["workdir", "configfile"]:
+                # Ignore "workdir" and "configfile"
                 continue
+            elif key == "userconfig":
+                if os.path.isabs(value):
+                    self.configs.userconfig = value
+                else:
+                    errors[key] = "Not an absolute path"
             else:
                 try:
                     self.configs.setn(key, value)
