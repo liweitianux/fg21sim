@@ -178,10 +178,8 @@ $(document).ready(function () {
 
     // Re-check/validate the whole form configurations
     $("#conf-recheck").on("click", function () {
-      // TODO:
-      // * collect all current form configurations
-      // * sync to the server and validate
-      // * update the form errors
+      var data = getFormConfigAll();
+      setServerConfigs(g_ws, data);
     });
 
     // Reset the configurations to the defaults

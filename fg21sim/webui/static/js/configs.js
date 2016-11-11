@@ -38,9 +38,20 @@ var dirname = function (path) {
  * FIXME: only support "/" as the path separator
  */
 var joinPath = function (path1, path2) {
+  var p = null;
   // Strip the trailing path separator
   path1 = path1.replace(/\/$/, "");
-  return (path1 + "/" + path2);
+  if (path1 === "") {
+    p = path2;
+  } else {
+    p = path1 + "/" + path2;
+  }
+  // Both "path1" and "path2" are empty
+  if (p === "/") {
+    console.error("Both 'path1' and 'path2' are empty");
+    p = null;
+  }
+  return p;
 };
 
 
@@ -106,10 +117,13 @@ var resetFormConfigs = function () {
  * Get the value of one single form field by specifying the name.
  *
  * @param {String} name - The name of filed name
+ *
+ * @returns value - value of the option field
+ *                  + `null` if the field not exists or empty (no value)
  */
 var getFormConfigSingle = function (name) {
   var value = null;
-  if (name == null) {
+  if (! name) {
     // do nothing
   } else if (name === "userconfig") {
     value = joinPath($("input[name=workdir]").val(),
@@ -120,19 +134,50 @@ var getFormConfigSingle = function (name) {
     if (target.length) {
       if (target.is(":radio")) {
         value = target.filter(":checked").val();
+      } else if (target.is(":checkbox") && target.data("type") === "boolean") {
+        // Convert the checkbox value into boolean
+        value = target.is(":checked") ? true : false;
       } else if (target.is(":checkbox")) {
         // Get values of checked checkboxes into array
         // Credit: https://stackoverflow.com/a/16171146/4856091
         value = target.filter(":checked").map(
           function () { return $(this).val(); }).get();
+      } else if (target.is(":text") && target.data("type") === "array") {
+        // Convert back to Array
+        value = target.val().split(/\s*,\s*/);
       } else {
         value = target.val();
+      }
+      // NOTE: convert "" (empty string) back to `null`
+      if (value === "") {
+        value = null;
       }
     } else {
       console.error("No such element:", selector);
     }
   }
   return value;
+};
+
+
+/**
+ * Collect all the current configurations and values from the form.
+ *
+ * @returns {Object} key-value pairs of the form configurations
+ */
+var getFormConfigAll = function () {
+  var names = $("#conf-form").find("input[name]").map(
+    function () { return $(this).attr("name"); }).get();
+  names = $.unique(names);
+  console.log("Collected", names.length, "configurations items");
+  var data = {};
+  $.each(names, function (i, name) {
+    data[name] = getFormConfigSingle(name);
+  });
+  // Do not forget the "userconfig"
+  data["userconfig"] = getFormConfigSingle("userconfig");
+  console.log("Collected form configurations data:", data);
+  return data;
 };
 
 
@@ -153,6 +198,8 @@ var setFormConfigSingle = function (name, value) {
       var configfile = basename(value);
       $("input[name=workdir]").val(workdir);
       $("input[name=configfile]").val(configfile);
+    } else {
+      console.warn("Value of 'userconfig' is invalid");
     }
   } else {
     var selector = "input[name='" + name + "']";
@@ -160,6 +207,9 @@ var setFormConfigSingle = function (name, value) {
     if (target.length) {
       if (target.is(":radio")) {
         target.val([value]);  // Use Array in "val()"
+      } else if (target.is(":checkbox") && target.data("type") == "boolean") {
+        // Convert the checkbox value into boolean
+        target.prop("checked", value);
       } else if (target.is(":checkbox")) {
         // Convert value (key of a single option) to an Array
         if (! Array.isArray(value)) {
@@ -194,7 +244,7 @@ var setFormConfigs = function (data, errors) {
       value = "";  // Default to empty string
     }
     var val_old = getFormConfigSingle(name);
-    if (val_old != null && val_old !== value) {
+    if (val_old !== value) {
       setFormConfigSingle(name, value);
       console.log("Set input '" + name + "' to:", value, " <-", val_old);
     }
@@ -214,8 +264,27 @@ var setFormConfigs = function (data, errors) {
  * Update the configuration form status indicator: "#conf-status"
  */
 var updateFormConfigStatus = function () {
-  // TODO
-  console.error("NotImplementedError");
+  var recheck_icon = $("#conf-recheck");
+  var invalid = $("#conf-form").find("input[name]:invalid");
+  if (invalid.length) {
+    // Exists invalid configurations
+    console.warn("Found", invalid.length, "invalid configurations!");
+    recheck_icon.show();
+    $("#conf-status").removeClass("label-default label-success")
+      .addClass("label-warning");
+    $("#conf-status .icon").removeClass("fa-question-circle fa-check-circle")
+      .addClass("fa-warning");
+    $("#conf-status .text").text("Invalid!");
+  } else {
+    // All valid
+    // console.info("Great, all configurations are valid :)");
+    recheck_icon.hide();
+    $("#conf-status").removeClass("label-default label-warning")
+      .addClass("label-success");
+    $("#conf-status .icon").removeClass("fa-question-circle fa-warning")
+      .addClass("fa-check-circle");
+    $("#conf-status .text").text("Valid :)");
+  }
 };
 
 
