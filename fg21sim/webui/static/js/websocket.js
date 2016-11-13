@@ -227,9 +227,13 @@ $(document).ready(function () {
 
     // Start the task on the server
     $("#task-start").on("click", function () {
-      updateTaskStatus({running: true, finished: false});
-      startServerTask(g_ws);
-      getServerTaskStatus(g_ws);
+      if ($("#conf-status").data("validity")) {
+        updateTaskStatus({running: true, finished: false});
+        startServerTask(g_ws);
+        getServerTaskStatus(g_ws);
+      } else {
+        console.error("Exist invalid configuration values!");
+      }
     });
 
     /* Logging messages controls */

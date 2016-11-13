@@ -262,28 +262,32 @@ var setFormConfigs = function (data, errors) {
 
 /**
  * Update the configuration form status indicator: "#conf-status"
+ * Also store the validity status in a custom data attribute.
  */
 var updateFormConfigStatus = function () {
+  var target = $("#conf-status");
   var recheck_icon = $("#conf-recheck");
   var invalid = $("#conf-form").find("input[name]:invalid");
   if (invalid.length) {
     // Exists invalid configurations
     console.warn("Found", invalid.length, "invalid configurations!");
     recheck_icon.show();
-    $("#conf-status").removeClass("label-default label-success")
+    target.removeClass("label-default label-success")
       .addClass("label-warning");
-    $("#conf-status .icon").removeClass("fa-question-circle fa-check-circle")
+    target.find(".icon").removeClass("fa-question-circle fa-check-circle")
       .addClass("fa-warning");
-    $("#conf-status .text").text("Invalid!");
+    target.find(".text").text("Invalid!");
+    target.data("validity", false);
   } else {
     // All valid
     // console.info("Great, all configurations are valid :)");
     recheck_icon.hide();
-    $("#conf-status").removeClass("label-default label-warning")
+    target.removeClass("label-default label-warning")
       .addClass("label-success");
-    $("#conf-status .icon").removeClass("fa-question-circle fa-warning")
+    target.find(".icon").removeClass("fa-question-circle fa-warning")
       .addClass("fa-check-circle");
-    $("#conf-status .text").text("Valid :)");
+    target.find(".text").text("Valid :)");
+    target.data("validity", true);
   }
 };
 
