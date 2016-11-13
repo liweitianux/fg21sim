@@ -136,7 +136,7 @@ var getFormConfigSingle = function (name) {
         value = target.filter(":checked").val();
       } else if (target.is(":checkbox") && target.data("type") === "boolean") {
         // Convert the checkbox value into boolean
-        value = target.is(":checked") ? true : false;
+        value = target.prop("checked");
       } else if (target.is(":checkbox")) {
         // Get values of checked checkboxes into array
         // Credit: https://stackoverflow.com/a/16171146/4856091
@@ -211,13 +211,10 @@ var setFormConfigSingle = function (name, value) {
         // Convert the checkbox value into boolean
         target.prop("checked", value);
       } else if (target.is(":checkbox")) {
-        // Convert value (key of a single option) to an Array
-        if (! Array.isArray(value)) {
-          value = [value];
-        }
+        // The received value is already an Array
         target.val(value);
       } else if (target.is(":text") && target.data("type") == "array") {
-        // The received value is already an Array
+        // Convert array of values into a string
         value = value.join(", ");
         target.val(value);
       } else {

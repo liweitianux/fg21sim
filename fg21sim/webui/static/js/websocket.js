@@ -232,6 +232,7 @@ $(document).ready(function () {
         startServerTask(g_ws);
         getServerTaskStatus(g_ws);
       } else {
+        $("#console-invalid-configs").modal();
         console.error("Exist invalid configuration values!");
       }
     });
