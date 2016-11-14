@@ -16,6 +16,7 @@ import os
 import tornado.web
 
 from .websocket import FG21simWSHandler
+from ..configs import ConfigManager
 
 
 class IndexHandler(tornado.web.RequestHandler):
@@ -23,23 +24,21 @@ class IndexHandler(tornado.web.RequestHandler):
         self.render("index.html")
 
 
-_settings = {
-    # The static files will be served from the default "/static/" URI.
-    # Recommend to use `{{ static_url(filepath) }}` in the templates.
-    "static_path": os.path.join(os.path.dirname(__file__), "static"),
-    "template_path": os.path.join(os.path.dirname(__file__), "templates"),
-}
+class Application(tornado.web.Application):
+    configmanager = ConfigManager()
 
-
-# FIXME:
-# * Subclass on `tornado.web.Application`
-# * hold the attributes (e.g., configs, console) ??
-def make_application(**kwargs):
-    settings = _settings
-    settings.update(kwargs)
-    appplication = tornado.web.Application(
-        handlers=[
-            (r"/", IndexHandler),
+    def __init__(self, **kwargs):
+        handlers = [
+            (r"/",   IndexHandler),
             (r"/ws", FG21simWSHandler),
-        ], **settings)
-    return appplication
+        ]
+        settings = {
+            # The static files will be served from the default "/static/" URI.
+            # Recommend to use `{{ static_url(filepath) }}` in the templates.
+            "static_path": os.path.join(os.path.dirname(__file__),
+                                        "static"),
+            "template_path": os.path.join(os.path.dirname(__file__),
+                                          "templates"),
+        }
+        settings.update(kwargs)
+        super().__init__(handlers, **settings)

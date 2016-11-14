@@ -26,7 +26,7 @@ from tornado.options import define, options, parse_command_line
 
 from fg21sim.configs import configs
 from fg21sim.utils import setup_logging
-from fg21sim.webui import make_application
+from fg21sim.webui import Application
 
 
 # Define options in the global namespace
@@ -60,7 +60,7 @@ def main():
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
-    application = make_application(debug=options.debug)
+    application = Application(debug=options.debug)
     application.listen(options.port)
     url = "http://localhost:{port}".format(port=options.port)
     logger.info("Tornado started")

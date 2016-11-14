@@ -26,7 +26,6 @@ from tornado.options import options
 
 from .consolehandler import ConsoleHandler
 from .utils import get_host_ip, ip_in_network
-from ..configs import ConfigManager
 from ..errors import ConfigError
 
 
@@ -101,7 +100,7 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         # FIXME:
         # * better to move to the `Application` class ??
         # * or create a ``ConfigsHandler`` similar to the ``ConsoleHandler``
-        self.configs = ConfigManager()
+        self.configs = self.application.configmanager
         self.console_handler = ConsoleHandler(websocket=self)
         #
         logger.info("WebSocket: {0}: opened".format(self.name))
