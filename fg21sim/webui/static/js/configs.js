@@ -199,7 +199,8 @@ var setFormConfigSingle = function (name, value) {
       $("input[name=workdir]").val(workdir);
       $("input[name=configfile]").val(configfile);
     } else {
-      console.warn("Value of 'userconfig' is invalid");
+      $("input[name=workdir]").val("");
+      $("input[name=configfile]").val("");
     }
   } else {
     var selector = "input[name='" + name + "']";
