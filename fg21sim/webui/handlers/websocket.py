@@ -46,8 +46,6 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     Attributes
     ----------
-    name : str
-        Name to distinguish this WebSocket handle.
     from_localhost : bool
         Set to ``True`` if the access is from the localhost,
         otherwise ``False``.
@@ -55,7 +53,6 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         A ``ConfigManager`` instance, for configuration manipulations when
         communicating with the Web UI.
     """
-    name = "fg21sim"
     from_localhost = None
 
     def check_origin(self, origin):
@@ -70,24 +67,23 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             127.0.0.1), otherwise ``False``.
         """
         self.from_localhost = False
-        logger.info("WebSocket: {0}: origin: {1}".format(self.name, origin))
+        logger.info("WebSocket: origin: {0}".format(origin))
         ip = get_host_ip(url=origin)
         network = options.hosts_allowed
         if ip == "127.0.0.1":
             self.from_localhost = True
             allow = True
-            logger.info("WebSocket: %s: origin is localhost" % self.name)
+            logger.info("WebSocket: origin is 'localhost'")
         elif network.upper() == "ANY":
             # Any hosts are allowed
             allow = True
-            logger.warning("WebSocket: %s: any hosts are allowed" % self.name)
+            logger.warning("WebSocket: ANY hosts are allowed")
         elif ip_in_network(ip, network):
             allow = True
-            logger.info("WebSocket: %s: " % self.name +
-                        "client is in the allowed network: %s" % network)
+            logger.info("WebSocket: client from allowed network: %s" % network)
         else:
             allow = False
-            logger.error("WebSocket: %s: " % self.name +
+            logger.error("WebSocket: " +
                          "client is NOT in the allowed network: %s" % network)
         return allow
 
@@ -95,23 +91,16 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         """Invoked when a new WebSocket is opened by the client."""
         # Add to the set of current connected clients
         self.application.ws_clients.add(self)
-        logger.info("Added new WebSocket client: {0}".format(self))
-        # FIXME:
-        # * better to move to the `Application` class ??
+        logger.info("Added new opened WebSocket client: {0}".format(self))
         self.configs = self.application.configmanager
         self.console_handler = ConsoleHandler(websocket=self)
         self.configs_handler = ConfigsHandler(configs=self.configs)
-        #
-        logger.info("WebSocket: {0}: opened".format(self.name))
-        logger.info("Allowed hosts: {0}".format(options.hosts_allowed))
         # Push current configurations to the client
         self._push_configs()
 
     def on_close(self):
         """Invoked when a new WebSocket is closed by the client."""
         # Remove from the set of current connected clients
-        self.application.ws_clients.remove(self)
-        logger.warning("Removed WebSocket client: {0}".format(self))
         code, reason = None, None
         if hasattr(self, "close_code"):
             code = self.close_code
@@ -119,6 +108,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             reason = self.close_reason
         logger.warning("WebSocket: {0}: closed by client: {1}, {2}".format(
             self.name, code, reason))
+        #
+        self.application.ws_clients.remove(self)
+        logger.warning("Removed closed WebSocket client: {0}".format(self))
 
     # FIXME/XXX:
     # * How to be non-blocking ??
@@ -150,18 +142,17 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         requested operation, and an ``error`` recording the error message
         if ``success=False``.
         """
-        logger.debug("WebSocket: %s: received: %s" % (self.name, message))
+        logger.debug("WebSocket: received message: {0}".format(message))
         try:
             msg = json.loads(message)
             msg_type = msg["type"]
         except json.JSONDecodeError:
-            logger.warning("WebSocket: {0}: ".format(self.name) +
-                           "message is not a valid JSON string")
+            logger.warning("WebSocket: message is not a valid JSON string")
             response = {"success": False,
                         "type": None,
                         "error": "message is not a valid JSON string"}
         except (KeyError, TypeError):
-            logger.warning("WebSocket: %s: skip invalid message" % self.name)
+            logger.warning("WebSocket: skip invalid message")
             response = {"success": False,
                         "type": None,
                         "error": "type is missing"}
@@ -180,7 +171,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 response = self._handle_results(msg)
             else:
                 # Message of unknown type
-                logger.warning("WebSocket: {0}: ".format(self.name) +
+                logger.warning("WebSocket: " +
                                "unknown message type: {0}".format(msg_type))
                 response = {"success": False,
                             "type": msg_type,
@@ -207,14 +198,16 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                "action": "push",
                "data": data,
                "errors": errors}
-        self.write_message(json.dumps(msg))
+        message = json.dumps(msg)
+        logger.debug("Message of current configurations: {0}".format(message))
+        self.write_message(message)
         logger.info("WebSocket: Pushed current configurations data " +
                     "and validation errors to the client")
 
     def _handle_results(self, msg):
         # Got a message of supported types
         msg_type = msg["type"]
-        logger.info("WebSocket: {0}: ".format(self.name) +
+        logger.info("WebSocket: " +
                     "handle message of type: {0}".format(msg_type))
         response = {"success": True, "type": msg_type}
         return response
