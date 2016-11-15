@@ -95,7 +95,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         """Invoked when a new WebSocket is opened by the client."""
         # Add to the set of current connected clients
         self.application.ws_clients.add(self)
-        logger.warning("Added new WebSocket client: {0}".format(self))
+        logger.info("Added new WebSocket client: {0}".format(self))
         # FIXME:
         # * better to move to the `Application` class ??
         self.configs = self.application.configmanager
@@ -104,6 +104,8 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         #
         logger.info("WebSocket: {0}: opened".format(self.name))
         logger.info("Allowed hosts: {0}".format(options.hosts_allowed))
+        # Push current configurations to the client
+        self._push_configs()
 
     def on_close(self):
         """Invoked when a new WebSocket is closed by the client."""
@@ -191,6 +193,23 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         """Broadcast/push the given message to all connected clients."""
         for ws in self.application.ws_clients:
             ws.write_message(message)
+
+    def _push_configs(self):
+        """
+        Get the current configurations as well as the validation status,
+        then push to the client to updates the configurations form.
+        """
+        data = self.configs.dump(flatten=True)
+        data["userconfig"] = self.configs.userconfig
+        __, errors = self.configs.check_all(raise_exception=False)
+        msg = {"success": True,
+               "type": "configs",
+               "action": "push",
+               "data": data,
+               "errors": errors}
+        self.write_message(json.dumps(msg))
+        logger.info("WebSocket: Pushed current configurations data " +
+                    "and validation errors to the client")
 
     def _handle_results(self, msg):
         # Got a message of supported types
