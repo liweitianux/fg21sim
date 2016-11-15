@@ -11,7 +11,11 @@
   <meta name="author" content="Weitian LI" />
   <meta name="description" content="fg21sim: Realistic Foregrounds Simulation for EoR 21cm Signal Detection" />
   <link rel="icon" type="image/png" href="{{ static_url('images/favicon.png') }}" />
-  <title>{% block title %}FG21sim Web UI{% end %}</title>
+  <title>
+    {% block title %}
+      {% block subtitle %}{% end %} FG21sim Web UI
+    {% end %}
+  </title>
   {% block extra_head %}{% end %}
 
   {% block css %}
@@ -31,7 +35,7 @@
     {% block page %}
     <header class="masthead" role="banner">
       {% block header %}
-        {% include "header-base.html" %}
+        {% include "header.html" %}
       {% end %}
     </header>
 
