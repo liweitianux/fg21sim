@@ -45,6 +45,9 @@ define("hosts_allowed", default="any", type=str,
              "'192.168.0.0/24'. "
              "Specify 'any' to allow any hosts. "
              "Note that the localhost/127.0.0.1 is always allowed."))
+define("password", type=str,
+       help=("Password authentication to access the Web UI. "
+             "If not specified, then all accesses are allowed."))
 
 
 def main():

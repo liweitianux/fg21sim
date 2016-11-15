@@ -14,14 +14,11 @@ using the WebSocket_ protocol.
 import os
 
 import tornado.web
+from tornado.web import url
 
-from .websocket import FG21simWSHandler
+from .handlers import IndexHandler, LoginHandler, FG21simWSHandler
+from .utils import gen_cookie_secret
 from ..configs import ConfigManager
-
-
-class IndexHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render("index.html")
 
 
 class Application(tornado.web.Application):
@@ -29,8 +26,9 @@ class Application(tornado.web.Application):
 
     def __init__(self, **kwargs):
         handlers = [
-            (r"/",   IndexHandler),
-            (r"/ws", FG21simWSHandler),
+            url(r"/", IndexHandler, name="index"),
+            url(r"/login", LoginHandler, name="login"),
+            url(r"/ws", FG21simWSHandler),
         ]
         settings = {
             # The static files will be served from the default "/static/" URI.
@@ -39,6 +37,12 @@ class Application(tornado.web.Application):
                                         "static"),
             "template_path": os.path.join(os.path.dirname(__file__),
                                           "templates"),
+            # URL to be redirected to if the user is not logged in
+            "login_url": r"/login",
+            # Secret key used to sign the cookies
+            "cookie_secret": gen_cookie_secret(),
+            # Enable "cross-site request forgery" (XSRF)
+            "xsrf_cookies": True,
         }
         settings.update(kwargs)
         super().__init__(handlers, **settings)
