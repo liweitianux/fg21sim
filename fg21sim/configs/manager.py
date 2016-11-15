@@ -17,6 +17,7 @@ import operator
 from functools import reduce
 from collections import MutableMapping
 import pkg_resources
+import copy
 
 from configobj import ConfigObj, ConfigObjError, flatten_errors
 from validate import Validator
@@ -144,13 +145,12 @@ class ConfigManager:
         configspec = _get_configspec()
         self._configspec = ConfigObj(configspec, interpolation=False,
                                      list_values=False, _inspec=True)
-        # FIXME/NOTE: The comments are LOST!
         configs_default = ConfigObj(interpolation=False,
                                     configspec=self._configspec)
         # Keep a copy of the default configurations
         self._config_default = self._validate(configs_default)
-        # NOTE: `_config_default.copy()` only returns a *shallow* copy.
-        self._config = ConfigObj(self._config_default, interpolation=False)
+        # NOTE: use ``copy.deepcopy``; see ``self.reset()`` for more details
+        self._config = copy.deepcopy(self._config_default)
         if userconfig:
             self.read_userconfig(userconfig)
 
@@ -226,8 +226,10 @@ class ConfigManager:
 
         NOTE: Also reset ``self.userconfig`` to ``None``.
         """
-        # NOTE: `_config_default.copy()` only returns a *shallow* copy.
-        self._config = ConfigObj(self._config_default, interpolation=False)
+        # NOTE:
+        # * ``_config_default.copy()`` only returns a *shallow* copy.
+        # * ``ConfigObj(_config_default)`` will lost all comments
+        self._config = copy.deepcopy(self._config_default)
         self.userconfig = None
         logger.warning("Reset the configurations to the copy of defaults!")
 
@@ -238,7 +240,11 @@ class ConfigManager:
         """
         validator = Validator()
         try:
-            results = config.validate(validator, preserve_errors=True)
+            # NOTE:
+            # Use the "copy" mode, which will copy both the default values
+            # and all the comments.
+            results = config.validate(validator, preserve_errors=True,
+                                      copy=True)
         except ConfigObjError as e:
             raise ConfigError(e)
         if results is not True:
