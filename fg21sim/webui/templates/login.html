@@ -1,0 +1,30 @@
+{#
+ # Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+ # MIT license
+ #
+ # Login page for the Web UI of "fg21sim"
+ #}
+
+{% extends "base.html" %}
+
+{% block subtitle %}Login |{% end %}
+
+{% block main %}
+<section id="login">
+  <h2><span class="fa fa-key" aria-hidden="true"></span> Login</h2>
+  <hr />
+
+  <form action="/login" method="post">
+    {% module xsrf_form_html() %}
+    <fieldset>
+      <label for="password">Password:
+        {% if (error != "") %}
+        <span class="label label-warning">{{ error }}</span>
+        {% end %}
+      </label>
+      <input class="form-control" type="password" id="password" name="password" required />
+      <button type="submit">Login</button>
+    </fieldset>
+  </form>
+</section>
+{% end %}
