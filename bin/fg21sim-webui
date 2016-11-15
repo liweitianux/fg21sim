@@ -31,6 +31,10 @@ from fg21sim.webui import Application
 
 # Define options in the global namespace
 # These options can also be used in other modules
+define("host", default="localhost", type=str,
+       help=("IP address or hostname the server will listen on. "
+             "Specify '0.0.0.0' or '' (empty string) to listen on "
+             "all available interfaces."))
 define("port", default=21127, type=int, help="Server listen port")
 define("debug", default=False, help="Enable the debug mode")
 define("no_browser", default=False,
@@ -54,6 +58,9 @@ def main():
         except ValueError as e:
             raise ValueError("Option 'hosts_allowed' invalid: " + str(e))
 
+    if options.host == "":
+        options.host = "0.0.0.0"
+
     loglevel = "DEBUG" if options.debug else None
     setup_logging(dict_config=configs.logging, level=loglevel)
     tool = os.path.basename(sys.argv[0])
@@ -61,13 +68,17 @@ def main():
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
     application = Application(debug=options.debug)
-    application.listen(options.port)
-    url = "http://localhost:{port}".format(port=options.port)
-    logger.info("Tornado started")
-    logger.info("You can use the Web UI by accessing:\n\t{0}".format(url))
+    application.listen(options.port, address=options.host)
+    listen_url = "http://{host}:{port}".format(host=options.host,
+                                               port=options.port)
+    access_url = "http://{host}:{port}".format(host="localhost",
+                                               port=options.port)
+    logger.info("Tornado started on: {0}".format(listen_url))
+    logger.info("You can use the Web UI by accessing:" +
+                "\n\t{0}".format(access_url))
     if not options.no_browser:
         # Open the Web UI in a new browser tab
-        webbrowser.open_new_tab(url)
+        webbrowser.open_new_tab(access_url)
 
     logger.info("Hosts allowed to access the Web UI: {0}".format(
         options.hosts_allowed))

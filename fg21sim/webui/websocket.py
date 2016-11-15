@@ -84,11 +84,11 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         elif network.upper() == "ANY":
             # Any hosts are allowed
             allow = True
-            logger.error("WebSocket: %s: any hosts are allowed" % self.name)
+            logger.warning("WebSocket: %s: any hosts are allowed" % self.name)
         elif ip_in_network(ip, network):
             allow = True
-            logger.error("WebSocket: %s: " % self.name +
-                         "client is in the allowed network: %s" % network)
+            logger.info("WebSocket: %s: " % self.name +
+                        "client is in the allowed network: %s" % network)
         else:
             allow = False
             logger.error("WebSocket: %s: " % self.name +
