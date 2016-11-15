@@ -59,18 +59,15 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
     from_localhost = None
 
     def check_origin(self, origin):
-        """Check the origin of the WebSocket access.
+        """
+        Check the origin of the WebSocket connection to determine whether
+        the access is allowed.
 
         Attributes
         ----------
         from_localhost : bool
-            Set to ``True`` if the access is from the localhost,
-            otherwise ``False``.
-
-        NOTE
-        ----
-        Currently, only allow access from the ``localhost``
-        (i.e., 127.0.0.1) and local LAN.
+            Set to ``True`` if the access is from the "localhost" (i.e.,
+            127.0.0.1), otherwise ``False``.
         """
         self.from_localhost = False
         logger.info("WebSocket: {0}: origin: {1}".format(self.name, origin))
@@ -96,9 +93,11 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
 
     def open(self):
         """Invoked when a new WebSocket is opened by the client."""
+        # Add to the set of current connected clients
+        self.application.ws_clients.add(self)
+        logger.warning("Added new WebSocket client: {0}".format(self))
         # FIXME:
         # * better to move to the `Application` class ??
-        # * or create a ``ConfigsHandler`` similar to the ``ConsoleHandler``
         self.configs = self.application.configmanager
         self.console_handler = ConsoleHandler(websocket=self)
         self.configs_handler = ConfigsHandler(configs=self.configs)
@@ -108,12 +107,15 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         """Invoked when a new WebSocket is closed by the client."""
+        # Remove from the set of current connected clients
+        self.application.ws_clients.remove(self)
+        logger.warning("Removed WebSocket client: {0}".format(self))
         code, reason = None, None
         if hasattr(self, "close_code"):
             code = self.close_code
         if hasattr(self, "close_reason"):
             reason = self.close_reason
-        logger.info("WebSocket: {0}: closed by client: {1}, {2}".format(
+        logger.warning("WebSocket: {0}: closed by client: {1}, {2}".format(
             self.name, code, reason))
 
     # FIXME/XXX:
@@ -123,7 +125,8 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
     # [1] https://stackoverflow.com/a/35543856/4856091
     # [2] https://stackoverflow.com/a/33724486/4856091
     def on_message(self, message):
-        """Handle incoming messages and dispatch task according to the
+        """
+        Handle incoming messages and dispatch task according to the
         message type.
 
         NOTE
@@ -183,6 +186,11 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         #
         msg_response = json.dumps(response)
         self.write_message(msg_response)
+
+    def broadcast(self, message):
+        """Broadcast/push the given message to all connected clients."""
+        for ws in self.application.ws_clients:
+            ws.write_message(message)
 
     def _handle_results(self, msg):
         # Got a message of supported types

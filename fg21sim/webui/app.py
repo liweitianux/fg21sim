@@ -22,14 +22,32 @@ from ..configs import ConfigManager
 
 
 class Application(tornado.web.Application):
-    configmanager = ConfigManager()
+    """
+    Application of the "fg21sim" Web UI.
+
+    Attributes
+    ----------
+    configmanager : `~fg21sim.configs.ConfigManager`
+        A ``ConfigManager`` instance, which saves the current configurations
+        status.  The configuration operations (e.g., "set", "get", "load")
+        are performed on this instance, which is also passed to the
+        foregrounds simulation programs.
+    ws_clients : set
+        Current connected clients through WebSocket.
+        When a new WebSocket connection established, it is added to this
+        list, which is also removed from this list when the connection lost.
+    """
 
     def __init__(self, **kwargs):
+        self.configmanager = ConfigManager()
+        self.ws_clients = set()
+        # URL handlers
         handlers = [
             url(r"/", IndexHandler, name="index"),
             url(r"/login", LoginHandler, name="login"),
             url(r"/ws", FG21simWSHandler),
         ]
+        # Application settings
         settings = {
             # The static files will be served from the default "/static/" URI.
             # Recommend to use `{{ static_url(filepath) }}` in the templates.
