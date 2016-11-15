@@ -13,12 +13,16 @@ get_local_ip :
 
 ip_in_network :
     Whether the IP address is contained in the network?
+
+gen_cookie_secret :
+    Generate the secret key for cookie signing from the local hostname.
 """
 
 
 import ipaddress
 import socket
 from urllib.parse import urlparse
+import base64
 
 
 def get_host_ip(url):
@@ -105,3 +109,12 @@ def ip_in_network(ip, network):
     if not isinstance(network, ipaddress.IPv4Network):
         network = ipaddress.IPv4Network(network)
     return ip in network
+
+
+def gen_cookie_secret():
+    """
+    Generate the secret key for cookie signing from the local hostname.
+    """
+    hostname = socket.gethostname()
+    secret = base64.b64encode(hostname.encode("utf-8")).decode("ascii")
+    return secret
