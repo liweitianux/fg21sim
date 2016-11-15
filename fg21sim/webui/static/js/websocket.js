@@ -13,7 +13,7 @@
  */
 var g_ws = null;  /* WebSocket */
 /* WebSocket reconnection settings */
-var g_ws_reconnect = {maxTry: 100, tried: 0, timeout: 3000};
+var g_ws_reconnect = {maxTry: 21, tried: 0, timeout: 3000};
 
 
 /**
@@ -167,7 +167,7 @@ $(document).ready(function () {
     // Manually reconnect the WebSocket after tried allowed maximum times
     $("#ws-reconnect").on("click", function () {
       console.log("WebSocket: reset the tried reconnection counter");
-      ws_reconnect.tried = 0;
+      g_ws_reconnect.tried = 0;
       console.log("Manually reconnect the WebSocket:", ws_url);
       connectWebSocket(ws_url);
     });

@@ -284,7 +284,7 @@ var updateFormConfigStatus = function () {
       .addClass("label-success");
     target.find(".icon").removeClass("fa-question-circle fa-warning")
       .addClass("fa-check-circle");
-    target.find(".text").text("Valid :)");
+    target.find(".text").text("OK");
     target.data("validity", true);
   }
 };
