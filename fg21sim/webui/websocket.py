@@ -352,7 +352,7 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
                 # Ignore "workdir" and "configfile"
                 continue
             elif key == "userconfig":
-                if os.path.isabs(value):
+                if os.path.isabs(os.path.expanduser(value)):
                     self.configs.userconfig = value
                 else:
                     errors[key] = "Not an absolute path"
@@ -390,7 +390,7 @@ class FG21simWSHandler(tornado.websocket.WebSocketHandler):
         """
         success = False
         error = None
-        if os.path.isabs(userconfig):
+        if os.path.isabs(os.path.expanduser(userconfig)):
             try:
                 self.configs.read_userconfig(userconfig)
                 success = True
