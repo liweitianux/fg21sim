@@ -3,4 +3,4 @@
 
 from .index import IndexHandler
 from .login import LoginHandler
-from .websocket import FG21simWSHandler
+from .websocket import WSHandler

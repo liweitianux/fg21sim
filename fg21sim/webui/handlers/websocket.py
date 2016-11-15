@@ -31,7 +31,7 @@ from ..utils import get_host_ip, ip_in_network
 logger = logging.getLogger(__name__)
 
 
-class FG21simWSHandler(tornado.websocket.WebSocketHandler):
+class WSHandler(tornado.websocket.WebSocketHandler):
     """
     WebSocket for bi-directional communication between the Web UI and
     the server, which can deal with the configurations and execute the

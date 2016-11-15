@@ -16,7 +16,7 @@ import os
 import tornado.web
 from tornado.web import url
 
-from .handlers import IndexHandler, LoginHandler, FG21simWSHandler
+from .handlers import IndexHandler, LoginHandler, WSHandler
 from .utils import gen_cookie_secret
 from ..configs import ConfigManager
 
@@ -45,7 +45,7 @@ class Application(tornado.web.Application):
         handlers = [
             url(r"/", IndexHandler, name="index"),
             url(r"/login", LoginHandler, name="login"),
-            url(r"/ws", FG21simWSHandler),
+            url(r"/ws", WSHandler),
         ]
         # Application settings
         settings = {
