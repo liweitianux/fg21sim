@@ -24,9 +24,9 @@ import logging
 import tornado.websocket
 from tornado.options import options
 
-from .consolehandler import ConsoleHandler
-from .utils import get_host_ip, ip_in_network
-from ..errors import ConfigError
+from .console import ConsoleHandler
+from ..utils import get_host_ip, ip_in_network
+from ...errors import ConfigError
 
 
 logger = logging.getLogger(__name__)

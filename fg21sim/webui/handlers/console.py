@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 import tornado.ioloop
 import tornado.gen
 
-from .loghandler import WebSocketLogHandler
+from .log import WebSocketLogHandler
 
 
 logger = logging.getLogger(__name__)
