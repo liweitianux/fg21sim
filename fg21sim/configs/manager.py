@@ -197,6 +197,8 @@ class ConfigManager:
         ----------
         userconfig : str
             Filename/path to the user configuration file.
+            Generally, an absolute path should be provided.
+            The prefix ``~`` (tilde) is also allowed and will be expanded.
 
         NOTE
         ----
@@ -204,6 +206,7 @@ class ConfigManager:
         configurations are *reset* before loading the supplied user
         configuration file.
         """
+        userconfig = os.path.expanduser(userconfig)
         try:
             config = open(userconfig).read().split("\n")
         except IOError:
