@@ -115,6 +115,7 @@ var toggleLogMessages = function (level) {
     logbox.data(level, status);
     console.log("Toggled", level, "logging messages:",
                 status ? "show" : "hide");
+    return status;
   }
 };
 

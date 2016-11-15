@@ -239,19 +239,24 @@ $(document).ready(function () {
 
     /* Logging messages controls */
     $("#log-toggle-debug").on("click", function () {
-      toggleLogMessages("debug");
+      var status = toggleLogMessages("debug");
+      $(this).fadeTo("fast", status ? 1.0 : 0.5);
     });
     $("#log-toggle-info").on("click", function () {
-      toggleLogMessages("info");
+      var status = toggleLogMessages("info");
+      $(this).fadeTo("fast", status ? 1.0 : 0.5);
     });
     $("#log-toggle-warning").on("click", function () {
-      toggleLogMessages("warning");
+      var status = toggleLogMessages("warning");
+      $(this).fadeTo("fast", status ? 1.0 : 0.5);
     });
     $("#log-toggle-error").on("click", function () {
-      toggleLogMessages("error");
+      var status = toggleLogMessages("error");
       toggleLogMessages("critical");
+      $(this).fadeTo("fast", status ? 1.0 : 0.5);
     });
     $("#log-delete").on("click", function () {
+      // TODO: add a confirmation dialog
       deleteLogMessages();
     });
 
