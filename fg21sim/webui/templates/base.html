@@ -8,7 +8,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>{% block title %}TITLE{% end %}</title>
+  <meta name="author" content="Weitian LI" />
+  <meta name="description" content="fg21sim: Realistic Foregrounds Simulation for EoR 21cm Signal Detection" />
+  <link rel="icon" type="image/png" href="{{ static_url('images/favicon.png') }}" />
+  <title>{% block title %}FG21sim Web UI{% end %}</title>
   {% block extra_head %}{% end %}
 
   {% block css %}
@@ -27,7 +30,9 @@
   <div class="page">
     {% block page %}
     <header class="masthead" role="banner">
-      {% block header %}{% end %}
+      {% block header %}
+        {% include "header-base.html" %}
+      {% end %}
     </header>
 
     <main class="container" role="main">
@@ -35,7 +40,9 @@
     </main>
 
     <footer class="footer" role="contentinfo">
-      {% block footer %}{% end %}
+      {% block footer %}
+        {% include "footer.html" %}
+      {% end %}
     </footer>
     {% end %}  {# block page #}
   </div>

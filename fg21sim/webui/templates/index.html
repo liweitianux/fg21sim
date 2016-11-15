@@ -7,26 +7,14 @@
 
 {% extends "base.html" %}
 
-{% block title %}fg21sim Web UI{% end %}
-
-{% block extra_head %}
-  <meta name="author" content="Weitian LI" />
-  <meta name="description" content="fg21sim: Realistic Foregrounds Simulation for EoR 21cm Signal Detection" />
-  <link rel="icon" type="image/png" href="{{ static_url('images/favicon.png') }}" />
-{% end %}
-
 {% block header %}
-  {% include "header.html" %}
+  {% include "header-index.html" %}
 {% end %}
 
 {% block main %}
   {% include "configs.html" %}
   {% include "console.html" %}
   {% include "results.html" %}
-{% end %}
-
-{% block footer %}
-  {% include "footer.html" %}
 {% end %}
 
 {% block extra_script %}
