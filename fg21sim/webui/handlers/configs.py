@@ -8,113 +8,126 @@ Handle the configurations operations with the client.
 import os
 import logging
 
+import tornado.web
+from tornado.escape import json_decode, json_encode
+
+from .base import BaseRequestHandler
 from ...errors import ConfigError
 
 
 logger = logging.getLogger(__name__)
 
 
-class ConfigsHandler:
+class ConfigsAJAXHandler(BaseRequestHandler):
     """
-    Handle the "configs" type of messages from the client.
+    Handle the AJAX requests from the client to manipulate the configurations.
     """
-    def __init__(self, configs):
-        self.configs = configs
+    def initialize(self):
+        """Hook for subclass initialization.  Called for each request."""
+        self.configs = self.application.configmanager
 
-    def handle_message(self, msg):
+    @tornado.web.authenticated
+    def get(self):
         """
-        Handle the message of type "configs", which request to get or
-        set some configurations by the client.
+        Handle the READ-ONLY configuration manipulations.
 
-        TODO:
-        * improve the description ...
-        * split these handling functions into a separate class in a module
+        Supported actions:
+        - get: Get the specified/all configuration values
+        - validate: Validate the configurations and response the errors
 
-        Parameters
-        ----------
-        msg : dict
-            A dictionary parsed from the incoming JSON message, which
-            generally has the following syntax:
-            ``{"type": "configs", "action": <action>, "data": <data>}``
-            where the ``<action>`` is ``set`` or ``get``, and the ``<data>``
-            is a list of config keys or a dict of config key-value pairs.
-
-        Returns
-        -------
-        response : dict
-            A dictionary parsed from the incoming JSON message, which
-            generally has the following syntax:
-            ``{"type": "configs", "action": <action>,
-               "data": <data>, "errors": <errors>}``
-            where the ``<action>`` is the same as input, the ``<data>`` is
-            a list of config keys or a dict of config key-value pairs, and
-            ``<errors>`` contains the error message for the invalid config
-            values.
+        NOTE
+        ----
+        READ-WRITE configuration manipulations should be handled by
+        the ``self.post()`` method.
         """
-        try:
-            msg_type = msg["type"]
-            msg_action = msg["action"]
-            response = {"type": msg_type, "action": msg_action}
-            logger.info("WebSocket: handle message: " +
-                        "type: {0}, action: {1}".format(msg_type, msg_action))
-            if msg_action == "get":
-                # Get the values of the specified options
-                try:
-                    data, errors = self._get_configs(keys=msg["keys"])
-                    response["success"] = True
-                    response["data"] = data
-                    response["errors"] = errors
-                except KeyError:
-                    response["success"] = False
-                    response["error"] = "'keys' is missing"
-            elif msg_action == "set":
-                # Set the values of the specified options
-                try:
-                    errors = self._set_configs(data=msg["data"])
-                    response["success"] = True
-                    response["data"] = {}  # be more consistent
-                    response["errors"] = errors
-                except KeyError:
-                    response["success"] = False
-                    response["error"] = "'data' is missing"
-            elif msg_action == "reset":
-                # Reset the configurations to the defaults
-                self._reset_configs()
-                response["success"] = True
-            elif msg_action == "load":
-                # Load the supplied user configuration file
-                try:
-                    success, error = self._load_configs(msg["userconfig"])
-                    response["success"] = success
-                    if not success:
-                        response["error"] = error
-                except KeyError:
-                    response["success"] = False
-                    response["error"] = "'userconfig' is missing"
-            elif msg_action == "save":
-                # Save current configurations to file
-                try:
-                    success, error = self._save_configs(msg["outfile"],
-                                                        msg["clobber"])
-                    response["success"] = success
-                    if not success:
-                        response["error"] = error
-                except KeyError:
-                    response["success"] = False
-                    response["error"] = "'outfile' or 'clobber' is missing"
-            else:
-                logger.warning("WebSocket: " +
-                               "unknown action: {0}".format(msg_action))
-                response["success"] = False
-                response["error"] = "unknown action: {0}".format(msg_action)
-        except KeyError:
-            # Received message has wrong syntax/format
-            response = {"success": False,
-                        "type": msg_type,
-                        "error": "no action specified"}
+        action = self.get_argument("action", "get")
+        data = {}
+        errors = {}
+        if action == "get":
+            keys = json_decode(self.get_argument("keys", "null"))
+            data, errors = self._get_configs(keys=keys)
+            success = True
+        elif action == "validate":
+            __, errors = self.configs.check_all(raise_exception=False)
+            success = True
+        else:
+            # ERROR: bad action
+            success = False
+            reason = "Bad request action: {0}".format(action)
         #
-        logger.debug("WebSocket: response: {0}".format(response))
-        return response
+        if success:
+            response = {"action": action,
+                        "data": data,
+                        "errors": errors}
+            logger.debug("Response: {0}".format(response))
+            self.set_header("Content-Type", "application/json; charset=UTF-8")
+            self.write(json_encode(response))
+        else:
+            logger.warning("Request failed: {0}".format(reason))
+            self.send_error(400, reason=reason)
+
+    @tornado.web.authenticated
+    def post(self):
+        """
+        Handle the READ-WRITE configuration manipulations.
+
+        Supported actions:
+        - set: Set the specified configuration(s) to the posted value(s)
+        - reset: Reset the configurations to its backup defaults
+        - load: Load the supplied user configuration file
+        - save: Save current configurations to file
+
+        NOTE
+        ----
+        READ-ONLY configuration manipulations should be handled by
+        the ``self.get()`` method.
+        """
+        request = json_decode(self.request.body)
+        logger.debug("Received request: {0}".format(request))
+        action = request.get("action")
+        data = {}
+        errors = {}
+        if action == "set":
+            # Set the values of the specified options
+            try:
+                errors = self._set_configs(data=request["data"])
+                success = True
+            except KeyError:
+                success = False
+                reason = "'data' is missing"
+        elif action == "reset":
+            # Reset the configurations to the defaults
+            success = self._reset_configs()
+        elif action == "load":
+            # Load the supplied user configuration file
+            try:
+                success, reason = self._load_configs(request["userconfig"])
+            except KeyError:
+                success = False
+                reason = "'userconfig' is missing"
+        elif action == "save":
+            # Save current configurations to file
+            try:
+                success, reason = self._save_configs(request["outfile"],
+                                                     request["clobber"])
+            except KeyError:
+                success = False
+                reason = "'outfile' or 'clobber' is missing"
+        else:
+            # ERROR: bad action
+            success = False
+            reason = "Bad request action: {0}".format(action)
+        #
+        if success:
+            response = {"action": action,
+                        "data": data,
+                        "errors": errors}
+            logger.debug("Response: {0}".format(response))
+            self.set_header("Content-Type", "application/json; charset=UTF-8")
+            self.write(json_encode(response))
+        else:
+            logger.warning("Request failed: {0}".format(reason))
+            self.send_error(400, reason=reason)
 
     def _get_configs(self, keys=None):
         """Get the values of the config options specified by the given keys.
@@ -134,10 +147,6 @@ class ConfigsHandler:
         errors : dict
             When error occurs (e.g., invalid key), then the specific errors
             with details are stored in this dictionary.
-
-        NOTE
-        ----
-        Do not forget the ``userconfig`` option.
         """
         if keys is None:
             # Dump all the configurations
@@ -159,7 +168,8 @@ class ConfigsHandler:
         return (data, errors)
 
     def _set_configs(self, data):
-        """Set the values of the config options specified by the given keys
+        """
+        Set the values of the config options specified by the given keys
         to the corresponding supplied data.
 
         NOTE
@@ -196,18 +206,15 @@ class ConfigsHandler:
             else:
                 try:
                     self.configs.setn(key, value)
-                except KeyError as e:
+                except (KeyError, ConfigError) as e:
                     errors[key] = str(e)
-        # NOTE:
-        # Check the whole configurations after all provided options are
-        # updated, and merge the validation errors.
-        __, cherr = self.configs.check_all(raise_exception=False)
-        errors.update(cherr)
+        #
         return errors
 
     def _reset_configs(self):
         """Reset the configurations to the defaults."""
         self.configs.reset()
+        return True
 
     def _load_configs(self, userconfig):
         """Load configurations from the provided user configuration file.
