@@ -17,14 +17,12 @@ References
   http://caniuse.com/#feat=websockets
 """
 
-import json
 import logging
 
 import tornado.websocket
+from tornado.escape import json_decode, json_encode
 from tornado.options import options
 
-from .console import ConsoleHandler
-from .configs import ConfigsHandler
 from ..utils import get_host_ip, ip_in_network
 
 
@@ -93,22 +91,12 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.application.ws_clients.add(self)
         logger.info("Added new opened WebSocket client: {0}".format(self))
         self.configs = self.application.configmanager
-        self.console_handler = ConsoleHandler(websocket=self)
-        self.configs_handler = ConfigsHandler(configs=self.configs)
         # Push current configurations to the client
         self._push_configs()
 
     def on_close(self):
         """Invoked when a new WebSocket is closed by the client."""
         # Remove from the set of current connected clients
-        code, reason = None, None
-        if hasattr(self, "close_code"):
-            code = self.close_code
-        if hasattr(self, "close_reason"):
-            reason = self.close_reason
-        logger.warning("WebSocket: {0}: closed by client: {1}, {2}".format(
-            self.name, code, reason))
-        #
         self.application.ws_clients.remove(self)
         logger.warning("Removed closed WebSocket client: {0}".format(self))
 
@@ -143,30 +131,16 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         if ``success=False``.
         """
         logger.debug("WebSocket: received message: {0}".format(message))
+        msg = json_decode(message)
         try:
-            msg = json.loads(message)
             msg_type = msg["type"]
-        except json.JSONDecodeError:
-            logger.warning("WebSocket: message is not a valid JSON string")
-            response = {"success": False,
-                        "type": None,
-                        "error": "message is not a valid JSON string"}
         except (KeyError, TypeError):
             logger.warning("WebSocket: skip invalid message")
             response = {"success": False,
                         "type": None,
                         "error": "type is missing"}
         else:
-            # Check the message type and dispatch task
-            if msg_type == "configs":
-                # Request or set the configurations
-                response = self.configs_handler.handle_message(msg)
-            elif msg_type == "console":
-                # Control the simulation tasks, or request logging messages
-                # FIXME/XXX:
-                # * How to make this asynchronously ??
-                response = self.console_handler.handle_message(msg)
-            elif msg_type == "results":
+            if msg_type == "results":
                 # Request the simulation results
                 response = self._handle_results(msg)
             else:
@@ -177,7 +151,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                             "type": msg_type,
                             "error": "unknown message type %s" % msg_type}
         #
-        msg_response = json.dumps(response)
+        msg_response = json_encode(response)
         self.write_message(msg_response)
 
     def broadcast(self, message):
@@ -198,11 +172,11 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                "action": "push",
                "data": data,
                "errors": errors}
-        message = json.dumps(msg)
+        message = json_encode(msg)
         logger.debug("Message of current configurations: {0}".format(message))
         self.write_message(message)
         logger.info("WebSocket: Pushed current configurations data " +
-                    "and validation errors to the client")
+                    "with validation errors to the client")
 
     def _handle_results(self, msg):
         # Got a message of supported types
