@@ -525,12 +525,15 @@ class ConfigManager:
 
         NOTE
         ----
-        The original option orders are missing.
+        * The original option orders are missing.
+        * The ``self.userconfig`` is also dumped.
         """
         if from_default:
             data = self._config_default.dict()
         else:
             data = self._config.dict()
+        # Also dump the "userconfig" value
+        data["userconfig"] = self.userconfig
         #
         if flatten:
             data = _flatten_dict(data)
