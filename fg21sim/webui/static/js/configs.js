@@ -169,13 +169,16 @@ var getFormConfigAll = function () {
   var names = $("#conf-form").find("input[name]").map(
     function () { return $(this).attr("name"); }).get();
   names = $.unique(names);
-  console.log("Collected", names.length, "configurations items");
   var data = {};
-  $.each(names, function (i, name) {
+  names.forEach(function (name) {
     data[name] = getFormConfigSingle(name);
   });
   // Do not forget the "userconfig"
   data["userconfig"] = getFormConfigSingle("userconfig");
+  // Delete unwanted items
+  ["workdir", "configfile", "_xsrf"].forEach(function (name) {
+    delete data[name];
+  });
   console.log("Collected form configurations data:", data);
   return data;
 };
@@ -260,7 +263,10 @@ var setFormConfigs = function (data, errors) {
 
 /**
  * Update the configuration form status indicator: "#conf-status"
- * Also store the validity status in a custom data attribute.
+ *
+ * NOTE:
+ * Also store the current validity status in a custom data attribute:
+ * `validity`, which has a boolean value.
  */
 var updateFormConfigStatus = function () {
   var target = $("#conf-status");
@@ -291,94 +297,266 @@ var updateFormConfigStatus = function () {
 
 
 /**
- * Reset the server-side configurations to the defaults.
+ * Compose the notification contents and shown in the "#modal-configs"
+ * modal box.
  *
- * @param {Object} ws - The opened WebSocket object, through which send
- *                      the request for configuration defaults.
+ * The input `data` may have the following attributes:
+ *   - `icon` : FontAwesome icon (specified without the beginning `fa-`)
+ *   - `message` : Main summary message
+ *   - `code` : Error code if it is an error notification
+ *   - `reason` : Reason of the error
  */
-var resetServerConfigs = function (ws) {
-  var msg = {type: "configs", action: "reset"};
-  ws.send(JSON.stringify(msg));
+var showConfigsModal = function (data) {
+  var modalBox = $("#modal-configs");
+  modalBox.html("");
+  var p1 = $("<p>");
+  if (data.icon) {
+    $("<span>").addClass("fa fa-2x").addClass("fa-" + data.icon).appendTo(p1);
+  }
+  if (data.message) {
+    $("<span>").text(" " + data.message).appendTo(p1);
+  }
+  modalBox.append(p1);
+  if (data.code) {
+    modalBox.append($("<p>Error Code: </p>")
+                    .append($("<span>")
+                            .addClass("label label-warning")
+                            .text(data.code)));
+  }
+  if (data.reason) {
+    modalBox.append($("<p>Reason: </p>")
+                    .append($("<span>")
+                            .addClass("label label-warning")
+                            .text(data.reason)));
+  }
+  // Show the modal box
+  modalBox.modal();
 };
 
 
 /**
- * Get the configurations from the server.
- * When the response arrived, the bound function will take appropriate
- * reactions (e.g., `setConfigForm()`) to update the form contents.
+ * Get the configurations from the server and update the client form
+ * to the newly received values.
  *
+ * NOTE:
+ * The configurations are not validated on the server, therefore,
+ * there is no validation error returned.
+ * For the validation, see function `validateServerConfigs()`.
+ *
+ * @param {String} url - The URL that handles the "configs" AJAX requests.
  * @param {Array} [keys=null] - List of keys whose values will be requested.
  *                              If `null` then request all configurations.
- *
  */
-var getServerConfigs = function (ws, keys) {
+var getServerConfigs = function (url, keys) {
   keys = typeof keys !== "undefined" ? keys : null;
-  var msg = {type: "configs", action: "get", keys: keys};
-  ws.send(JSON.stringify(msg));
+  return $.getJSON(url, {action: "get", keys: JSON.stringify(keys)},
+                   function (response) {
+                     setFormConfigs(response.data, {});
+                   });
+};
+
+
+/**
+ * Validate the server-side configurations to get the validation errors,
+ * and mark the corresponding form fields to be invalid with details.
+ */
+var validateServerConfigs = function (url) {
+  return $.getJSON(url, {action: "validate"},
+                   function (response) {
+                     setFormConfigs({}, response.errors);
+                   });
+};
+
+
+/**
+ * Reset the server-side configurations to the defaults, then sync back to
+ * the client-side form configurations.
+ */
+var resetConfigs = function (url) {
+  $.postJSON(url, {action: "reset"})
+    .done(function () {
+      // Server-side configurations already reset
+      resetFormConfigs();
+      // Sync server-side configurations back to the client
+      $.when(getServerConfigs(url),
+             validateServerConfigs(url))
+        .done(function () {
+          // Update the configuration status label
+          updateFormConfigStatus();
+          // Popup a modal notification
+          var modalData = {};
+          modalData.icon = "check-circle";
+          modalData.message = "Reset and synchronized the configurations.";
+          showConfigsModal(modalData);
+        });
+    })
+    .fail(function (error) {
+      var modalData = {};
+      modalData.icon = "times-circle";
+      modalData.message = "Failed to reset the configurations!";
+      modalData.code = error.status;
+      modalData.reason = error.statusText;
+      showConfigsModal(modalData);
+    });
 };
 
 
 /**
  * Set the server-side configurations using the sent data from the client.
  *
- * NOTE: The server will validate the values and further check the whole
- *       configurations, and response the config options with invalid values.
+ * NOTE:
+ * The supplied configuration data are validated on the server side, and
+ * the validation errors are sent back.
+ * However, the whole configurations is NOT checked, therefore, function
+ * `validateServerConfigs()` should be used if necessary.
  *
  * @param {Object} [data={}] - Group of key-value pairs that to be sent to
  *                             the server to update the configurations there.
  */
-var setServerConfigs = function (ws, data) {
+var setServerConfigs = function (url, data) {
   data = typeof data !== "undefined" ? data : {};
-  var msg = {type: "configs", action: "set", data: data};
-  ws.send(JSON.stringify(msg));
+  return $.postJSON(url, {action: "reset", data: data},
+                    function (response) {
+                      setFormConfigs({}, response.errors);
+                    })
+    .fail(function (error) {
+      var modalData = {};
+      modalData.icon = "times-circle";
+      modalData.message = "Failed to update/set the configuration data!";
+      modalData.code = error.status;
+      modalData.reason = error.statusText;
+      showConfigsModal(modalData);
+    });
 };
 
 
 /**
- * Request the server side configurations with user configuration file merged.
- * When the response arrived, the bound function will delegate an appropriate
- * function (i.e., `setConfigForm()`) to update the form contents.
+ * Request the server to load/merge the configurations from the specified
+ * user configuration file.
  *
  * @param {Object} userconfig - Absolute path to the user config file on the
  *                              server. If not specified, then determine from
  *                              the form fields "workdir" and "configfile".
  */
-var loadServerConfigFile = function (ws, userconfig) {
-  if (typeof userconfig === "undefined") {
+var loadServerConfigFile = function (url, userconfig) {
+  if (! userconfig) {
     userconfig = getFormConfigSingle("userconfig");
   }
-  var msg = {type: "configs", action: "load", userconfig: userconfig};
-  ws.send(JSON.stringify(msg));
+  return $.postJSON(url, {action: "load", userconfig: userconfig})
+    .fail(function (error) {
+      var modalData = {};
+      modalData.icon = "times-circle";
+      modalData.message = "Failed to load the user configuration file!";
+      modalData.code = error.status;
+      modalData.reason = error.statusText;
+      showConfigsModal(modalData);
+    });
 };
 
 
 /**
- * Request the server side configurations with user configuration file merged.
- * When the response arrived, the bound function will delegate an appropriate
- * function (i.e., `setConfigForm()`) to update the form contents.
+ * Request the server to save current configurations to the supplied output
+ * file.
  *
  * @param {Boolean} [clobber=false] - Whether overwrite the existing file.
  */
-var saveServerConfigFile = function (ws, clobber) {
+var saveServerConfigFile = function (url, clobber) {
   clobber = typeof clobber !== "undefined" ? clobber : false;
   var userconfig = getFormConfigSingle("userconfig");
-  var msg = {type: "configs",
-             action: "save",
-             outfile: userconfig,
-             clobber: clobber};
-  ws.send(JSON.stringify(msg));
+  var data = {action: "save",
+              outfile: userconfig,
+              clobber: clobber};
+  return $.postJSON(url, data)
+    .fail(function (error) {
+      var modalData = {};
+      modalData.icon = "times-circle";
+      modalData.message = "Failed to save the configurations!";
+      modalData.code = error.status;
+      modalData.reason = error.statusText;
+      showConfigsModal(modalData);
+    });
 };
 
 
 /**
- * Handle the received message of type "configs"
+ * Handle the received message of type "configs" pushed through the WebSocket
  */
-var handleMsgConfigs = function (msg) {
-  if (msg.success) {
+var handleWebSocketMsgConfigs = function (msg) {
+  if (msg.action === "push") {
+    // Pushed configurations (with validations) of current state on the server
     setFormConfigs(msg.data, msg.errors);
     updateFormConfigStatus();
   } else {
-    console.error("WebSocket 'configs' request failed with error:", msg.error);
-    // TODO: add error code support and handle each specific error ...
+    console.warn("WebSocket: received message:", msg);
   }
 };
+
+
+$(document).ready(function () {
+  // URL to handle the "configs" AJAX requests
+  var ajax_url = "/ajax/configs";
+
+  // Re-check/validate the whole form configurations
+  $("#conf-recheck").on("click", function () {
+    var data = getFormConfigAll();
+    setServerConfigs(ajax_url, data)
+      .then(function () { validateServerConfigs(ajax_url); })
+      .done(function () { updateFormConfigStatus(); });
+  });
+
+  // Reset both server-side and client-side configurations to the defaults
+  $("#reset-defaults").on("click", function () {
+    // TODO: add a confirmation dialog
+    resetConfigs(ajax_url);
+  });
+
+  // Load the configurations from the specified user configuration file
+  $("#load-configfile").on("click", function () {
+    var userconfig = getFormConfigSingle("userconfig");
+    resetFormConfigs();
+    $.when(loadServerConfigFile(ajax_url, userconfig),
+           getServerConfigs(ajax_url),
+           validateServerConfigs(ajax_url))
+      .done(function () {
+        // Update the configuration status label
+        updateFormConfigStatus();
+        // Popup a modal notification
+        var modalData = {};
+        modalData.icon = "check-circle";
+        modalData.message = "Loaded the configurations from file.";
+        showConfigsModal(modalData);
+      });
+  });
+
+  // Save the current configurations to file
+  $("#save-configfile").on("click", function () {
+    // TODO: add a confirmation on overwrite
+    saveServerConfigFile(ajax_url, true)
+      .done(function () {
+        var modalData = {};
+        if ($("#conf-status").data("validity")) {
+          // Form configurations is valid :)
+          modalData.icon = "check-circle";
+          modalData.message = "Configurations saved to file.";
+        } else {
+          // Configurations is currently invalid!
+          modalData.icon = "warning";
+          modalData.message = ("Configurations saved to file. " +
+                               "There exist some invalid values!");
+        }
+        showConfigsModal(modalData);
+      });
+  });
+
+  // Sync changed field to server, validate and update form
+  $("#conf-form input").on("change", function (e) {
+    console.log("Element changed:", e);
+    var name = $(e.target).attr("name");
+    var value = getFormConfigSingle(name);
+    // Synchronize the changed form configuration to the server
+    // NOTE: Use the "computed property names" available in ECMAScript 6
+    setServerConfigs(ajax_url, {[name]: value})
+      .then(function () { validateServerConfigs(ajax_url); })
+      .done(function () { updateFormConfigStatus(); });
+  });
+});

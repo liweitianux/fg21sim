@@ -132,7 +132,7 @@ var connectWebSocket = function (url) {
     console.log(msg);
     // Delegate appropriate actions to handle the received message
     if (msg.type === "configs") {
-      handleMsgConfigs(msg);
+      handleWebSocketMsgConfigs(msg);
     }
     else if (msg.type === "console") {
       handleMsgConsole(msg);
@@ -170,55 +170,6 @@ $(document).ready(function () {
       g_ws_reconnect.tried = 0;
       console.log("Manually reconnect the WebSocket:", ws_url);
       connectWebSocket(ws_url);
-    });
-
-    /**********************************************************************
-     * Configuration form
-     */
-
-    // Re-check/validate the whole form configurations
-    $("#conf-recheck").on("click", function () {
-      var data = getFormConfigAll();
-      setServerConfigs(g_ws, data);
-    });
-
-    // Reset the configurations to the defaults
-    $("#reset-defaults").on("click", function () {
-      // TODO:
-      // * add a confirmation dialog;
-      // * add pop up to indicate success/fail
-      resetFormConfigs();
-      resetServerConfigs(g_ws);
-      getServerConfigs(g_ws);
-    });
-
-    // Load the configurations from the specified user configuration file
-    $("#load-configfile").on("click", function () {
-      // TODO:
-      // * add pop up to indicate success/fail
-      var userconfig = getFormConfigSingle("userconfig");
-      resetFormConfigs();
-      loadServerConfigFile(g_ws, userconfig);
-      getServerConfigs(g_ws);
-    });
-
-    // Save the current configurations to file
-    $("#save-configfile").on("click", function () {
-      // TODO:
-      // * validate the whole configurations before save
-      // * add a confirmation on overwrite
-      // * add pop up to indicate success/fail
-      saveServerConfigFile(g_ws, true);  // clobber=true
-    });
-
-    // Sync changed field to server, validate and update form
-    $("#conf-form input").on("change", function (e) {
-      console.log("Element changed:", e);
-      var name = $(e.target).attr("name");
-      var value = getFormConfigSingle(name);
-      // Sync form configuration to the server
-      // NOTE: Use the "computed property names" available in ECMAScript 6
-      setServerConfigs(g_ws, {[name]: value});
     });
 
     /**********************************************************************
