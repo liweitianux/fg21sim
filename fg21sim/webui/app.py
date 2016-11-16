@@ -16,7 +16,11 @@ import os
 import tornado.web
 from tornado.web import url
 
-from .handlers import IndexHandler, LoginHandler, WSHandler
+from .handlers import (IndexHandler,
+                       LoginHandler,
+                       ConfigsAJAXHandler,
+                       ConsoleAJAXHandler,
+                       WSHandler)
 from .utils import gen_cookie_secret
 from ..configs import ConfigManager
 
@@ -45,6 +49,8 @@ class Application(tornado.web.Application):
         handlers = [
             url(r"/", IndexHandler, name="index"),
             url(r"/login", LoginHandler, name="login"),
+            url(r"/ajax/configs", ConfigsAJAXHandler),
+            url(r"/ajax/console", ConsoleAJAXHandler),
             url(r"/ws", WSHandler),
         ]
         # Application settings
@@ -59,7 +65,7 @@ class Application(tornado.web.Application):
             "login_url": r"/login",
             # Secret key used to sign the cookies
             "cookie_secret": gen_cookie_secret(),
-            # Enable "cross-site request forgery" (XSRF)
+            # Enable "cross-site request forgery" (XSRF) protection
             "xsrf_cookies": True,
         }
         settings.update(kwargs)
