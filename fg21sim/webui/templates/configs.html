@@ -29,6 +29,7 @@
 
   <!-- Configuration Form -->
   <form id="conf-form" class="form-inline" autocomplete="on">
+    {% module xsrf_form_html() %}
     <!-- General controlling configs -->
     <fieldset id="conf-control">
       <div class="row">
@@ -467,4 +468,6 @@
       </fieldset>
     </fieldset>
   </form>
+
+  <div id="modal-configs" class="modal" style="display: none;"></div>
 </section>
