@@ -18,6 +18,7 @@ from functools import reduce
 from collections import MutableMapping
 import pkg_resources
 import copy
+import shutil
 
 from configobj import ConfigObj, ConfigObjError, flatten_errors
 from validate import Validator
@@ -540,7 +541,7 @@ class ConfigManager:
         #
         return data
 
-    def save(self, outfile=None, clobber=False):
+    def save(self, outfile=None, clobber=False, backup=True):
         """Save the configurations to file.
 
         Parameters
@@ -549,9 +550,13 @@ class ConfigManager:
             The path to the output configuration file.
             If not provided, then use ``self.userconfig``, however, set
             ``clobber=True`` may be required.
-            NOTE: This must be an *absolute path*.
+            NOTE:
+            This must be an *absolute path*.
+            Prefix ``~`` (tilde) is allowed and will be expanded.
         clobber : bool, optional
             Overwrite the output file if already exists.
+        backup : bool, optional
+            Backup the output file with suffix ``.old`` if already exists.
 
         Raises
         ------
@@ -568,10 +573,16 @@ class ConfigManager:
                 outfile = self.userconfig
                 logger.warning("outfile not provided, " +
                                "use self.userconfig: {0}".format(outfile))
+        outfile = os.path.expanduser(outfile)
         if not os.path.isabs(outfile):
             raise ValueError("not an absolute path: {0}".format(outfile))
-        if os.path.exists(outfile) and not clobber:
-            raise OSError("outfile already exists: {0}".format(outfile))
+        if os.path.exists(outfile):
+            if clobber:
+                # Make a backup with suffix ``.old``
+                backfile = outfile + ".old"
+                shutil.copyfile(outfile, backfile)
+            else:
+                raise OSError("outfile already exists: {0}".format(outfile))
         # Write out the configurations
         # NOTE: need open the output file in *binary* mode
         with open(outfile, "wb") as f:
