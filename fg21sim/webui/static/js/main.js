@@ -8,23 +8,22 @@
 "use strict";
 
 
-$(document).ready(function () {
-  /**
-   * Offset the page to adjust for the fixed navigation banner
-   */
-  var nav_height = $("nav.navigation").outerHeight();
-
-  var scroll_target = function () {
-    if ($(":target").length) {
-      var offset = $(":target").offset();
-      var scroll_to = offset.top - nav_height * 1.2;
-      $("html, body").animate({scrollTop: scroll_to}, 0);
-    }
-  };
-
-  $(window).on("hashchange", scroll_target);
-  /* FIXME: This seems not work ... */
-  if (window.location.hash) {
-    scroll_target();
+/**
+ * Scroll the page to adjust for the fixed navigation banner
+ */
+var scrollTarget = function (height) {
+  if ($(":target").length) {
+    var offset = $(":target").offset();
+    var scroll_to = offset.top - height * 1.2;
+    $("html, body").animate({scrollTop: scroll_to}, 100);
   }
+};
+
+
+$(document).ready(function () {
+  // Scroll the page to adjust for the fixed navigation banner
+  $(window).on("hashchange", function () {
+    var nav_height = $("nav.navigation").outerHeight();
+    scrollTarget(nav_height);
+  });
 });
