@@ -135,7 +135,7 @@ var connectWebSocket = function (url) {
       handleWebSocketMsgConfigs(msg);
     }
     else if (msg.type === "console") {
-      handleMsgConsole(msg);
+      handleWebSocketMsgConsole(msg);
     }
     else if (msg.type === "results") {
       console.error("NotImplementedError");
