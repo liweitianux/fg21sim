@@ -266,7 +266,7 @@ input:focus {
     background-color: #d9534f;
 }
 
-.label .icon {
+.label > .icon {
     margin-right: 0.2rem;
 }
 
@@ -373,6 +373,18 @@ button,
     margin-bottom: 0;
     font-size: 1.6rem;
     font-weight: bold;
+}
+.panel-title > .icon {
+    margin-right: 0.2rem;
+}
+.panel-title > .toggle {
+    margin-left: 0.5rem;
+    opacity: 0.5;
+    vertical-align: middle;
+    cursor: pointer;
+}
+.panel-title > .toggle:hover {
+    opacity: 1.0;
 }
 .panel-control {
     float: right;

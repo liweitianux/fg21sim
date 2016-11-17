@@ -30,7 +30,11 @@
 
   <div class="panel panel-default">
     <div class="panel-heading">
-      <span class="panel-title"><span class="fa fa-comments" aria-hidden="true"></span> Logging Messages</span>
+      <span class="panel-title">
+        <span class="icon fa fa-comments" aria-hidden="true"></span>
+        <span class="text">Logging Messages</span>
+        <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+      </span>
       <span class="panel-control">
         <span id="log-toggle-debug" title="Toggle display of DEBUG messages" class="btn fa fa-comment" aria-hidden="true"></span>
         <span id="log-toggle-info" title="Toggle display of INFO messages" class="btn fa fa-info-circle" aria-hidden="true"></span>
@@ -42,4 +46,6 @@
     <div id="log-messages" class="panel-body">
     </div>
   </div>
+
+  <div id="modal-console" class="modal" style="display: none;"></div>
 </section>

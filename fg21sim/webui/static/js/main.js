@@ -82,4 +82,21 @@ $(document).ready(function () {
     var nav_height = $("nav.navigation").outerHeight();
     scrollTarget(nav_height);
   });
+
+  // Panel toggle control
+  $(".panel-title > .toggle").on("click", function () {
+    var toggle = $(this);
+    var body = toggle.closest(".panel").find(".panel-body");
+    if (body.is(":visible")) {
+      body.slideUp("fast");
+      toggle.removeClass("fa-chevron-circle-up")
+        .addClass("fa-chevron-circle-down")
+        .attr("title", "Expand contents");
+    } else {
+      body.slideDown("fast");
+      toggle.removeClass("fa-chevron-circle-down")
+        .addClass("fa-chevron-circle-up")
+        .attr("title", "Collapse contents");
+    }
+  });
 });
