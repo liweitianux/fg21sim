@@ -5,469 +5,544 @@
  # Configuration part
  #}
 <section id="configs">
-  <h2><span class="fa fa-wrench" aria-hidden="true"></span> Configurations</h2>
-  <hr />
+  <h2 class="heading">
+    <span class="icon fa fa-wrench" aria-hidden="true"></span>
+    <span class="text">Configurations</span>
+    <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+  </h2>
 
-  <p class="status"><strong>
-    <span class="fa fa-info-circle" aria-hidden="true"></span>
-    Configurations status:
-    <span id="conf-status" class="label label-default">
-      <span class="icon fa fa-question-circle" aria-hidden="true"></span>
-      <span class="text">N/A</span>
-    </span>
-    <span id="conf-recheck" class="btn fa fa-refresh" aria-hidden="true"></span>
-  </strong></p>
+  <div class="body">
+    <hr />
 
-  <p class="button-group">
-    <!-- NOTE: HTML5 "button" element has a default behavior of submit.
-         Credit: https://stackoverflow.com/a/10836076/4856091
-        -->
-    <button type="button" id="load-configfile"><span class="fa fa-download" aria-hidden="true"></span> Load Configurations</button>
-    <button type="button" id="save-configfile"><span class="fa fa-save" aria-hidden="true"></span> Save Configurations</button>
-    <button type="button" class="button-warning" id="reset-defaults"><span class="fa fa-undo" aria-hidden="true"></span> Reset to Defaults</button>
-  </p>
+    <p class="status"><strong>
+      <span class="fa fa-info-circle" aria-hidden="true"></span>
+      Configurations status:
+      <span id="conf-status" class="label label-default">
+        <span class="icon fa fa-question-circle" aria-hidden="true"></span>
+        <span class="text">N/A</span>
+      </span>
+      <span id="conf-recheck" class="btn fa fa-refresh" aria-hidden="true"></span>
+    </strong></p>
 
-  <!-- Configuration Form -->
-  <form id="conf-form" class="form-inline" autocomplete="on">
-    {% module xsrf_form_html() %}
-    <!-- General controlling configs -->
-    <fieldset id="conf-control">
-      <div class="row">
-        <div class="column column-50 form-group">
-          <label for="conf-workdir">Working Directory:</label>
-          <input class="form-control code" type="text" id="conf-workdir" name="workdir" required />
-        </div>
-        <div class="column column-40 form-group">
-          <label for="conf-configfile">Configuration File:</label>
-          <input class="form-control code" type="text" id="conf-configfile" name="configfile" required />
-        </div>
-      </div>
-    </fieldset>
+    <p class="button-group">
+      <!-- NOTE: HTML5 "button" element has a default behavior of submit.
+          Credit: https://stackoverflow.com/a/10836076/4856091
+          -->
+      <button type="button" id="load-configfile"><span class="fa fa-download" aria-hidden="true"></span> Load Configurations</button>
+      <button type="button" id="save-configfile"><span class="fa fa-save" aria-hidden="true"></span> Save Configurations</button>
+      <button type="button" class="button-warning" id="reset-defaults"><span class="fa fa-undo" aria-hidden="true"></span> Reset to Defaults</button>
+    </p>
 
-    <!-- Configuration section "[common]" -->
-    <fieldset id="conf-common">
-      <h4><span class="fa fa-asterisk" aria-hidden="true"></span> Common</h4>
-      <hr class="hr-thin hr-condensed hr-dashed" />
-      <div class="row">
-        <div class="column column-30 form-group">
-          <label for="conf-common-nside"><i>N</i><sub>side</sub>:</label>
-          <input class="form-control" type="number" id="conf-common-nside" name="common/nside" min="1" required />
-        </div>
-        <div class="column column-30 form-group">
-          <label for="conf-common-lmin"><i>l</i><sub>min</sub>:</label>
-          <input class="form-control" type="number" id="conf-common-lmin" name="common/lmin" min="0" required />
-        </div>
-        <div class="column column-30 form-group">
-          <label for="conf-common-lmax"><i>l</i><sub>max</sub>:</label>
-          <input class="form-control" type="number" id="conf-common-lmax" name="common/lmax" min="1" required />
-        </div>
-      </div>
-      <div class="row">
-        <fieldset id="conf-common-components" class="column checkboxes">
-          <!-- XXX: cannot inline if use "legend" tag -->
-          <label class="legend">Components:</label>
-          <div class="form-group">
-            <input class="form-control" type="checkbox" id="conf-common-components-gsync" name="common/components" value="galactic/synchrotron" />
-            <label for="conf-common-components-gsync">galactic/synchrotron</label>
-          </div>
-          <div class="form-group">
-            <input class="form-control" type="checkbox" id="conf-common-components-gfree" name="common/components" value="galactic/freefree" />
-            <label for="conf-common-components-gsync">galactic/freefree</label>
-          </div>
-          <div class="form-group">
-            <input class="form-control" type="checkbox" id="conf-common-components-gsnr" name="common/components" value="galactic/snr" />
-            <label for="conf-common-components-gsync">galactic/snr</label>
-          </div>
-          <div class="form-group">
-            <input class="form-control" type="checkbox" id="conf-common-components-egcluster" name="common/components" value="extragalactic/clusters" />
-            <label for="conf-common-components-gsync">extragalactic/clusters</label>
-          </div>
-        </fieldset>
-      </div>
-    </fieldset>
-
-    <!-- Configuration section "[frequency]" -->
-    <fieldset id="conf-frequency">
-      <h4><span class="fa fa-asterisk" aria-hidden="true"></span> Frequency</h4>
-      <hr class="hr-thin hr-condensed hr-dashed" />
-      <div class="row">
-        <fieldset id="conf-frequency-unit" class="column radios">
-          <!-- XXX: cannot inline if use "legend" tag -->
-          <label class="legend">Unit:</label>
-          <div class="form-group">
-            <input class="form-control" type="radio" id="conf-frequency-unit-mhz" name="frequency/unit" value="MHz" checked />
-            <label for="conf-frequency-unit-mhz">MHz</label>
-          </div>
-        </fieldset>
-      </div>
-      <div class="row">
-        <fieldset id="conf-frequency-type" class="column radios">
-          <!-- XXX: cannot inline if use "legend" tag -->
-          <label class="legend">Type:</label>
-          <div class="form-group">
-            <input class="form-control" type="radio" id="conf-frequency-type-custom" name="frequency/type" value="custom" checked />
-            <label for="conf-frequency-type-custom">custom</label>
-          </div>
-          <div class="form-group">
-            <input class="form-control" type="radio" id="conf-frequency-type-calc" name="frequency/type" value="calc" />
-            <label for="conf-frequency-type-calc">calculate</label>
-          </div>
-        </fieldset>
-      </div>
-      <div class="row">
-        <div class="column form-group">
-          <label for="conf-frequency-frequencies">Custom Frequencies:</label>
-          <input class="form-control" type="text" id="conf-frequency-frequencies" name="frequency/frequencies" placeholder="comma-separated list of frequencies" data-type="array" />
-        </div>
-      </div>
-      <div class="row">
-        <fieldset id="conf-frequency-calc" class="column">
-          <!-- XXX: cannot inline if use "legend" tag -->
-          <label class="legend">Calculate Frequencies:</label>
-          <div class="form-group">
-            <label class="sr-only" for="conf-frequency-strat">Start</label>
-            <input class="form-control" type="number" id="conf-frequency-start" name="frequency/start" placeholder="start frequency" step="any" min="0" />
-          </div>
-          <div class="form-group">
-            <label class="sr-only" for="conf-frequency-stop">Stop</label>
-            <input class="form-control" type="number" id="conf-frequency-stop" name="frequency/stop" placeholder="stop frequency" step="any" min="0" />
-          </div>
-          <div class="form-group">
-            <label class="sr-only" for="conf-frequency-step">Step</label>
-            <input class="form-control" type="number" id="conf-frequency-step" name="frequency/step" placeholder="frequency step" step="any" min="0" />
-          </div>
-        </fieldset>
-      </div>
-    </fieldset>
-
-    <!-- Configuration section "[output]" -->
-    <fieldset id="conf-output">
-      <h4><span class="fa fa-asterisk" aria-hidden="true"></span> Output</h4>
-      <hr class="hr-thin hr-condensed hr-dashed" />
-      <div class="row">
-        <fieldset id="conf-output-unit" class="column radios">
-          <!-- XXX: cannot inline if use "legend" tag -->
-          <label class="legend">Unit:</label>
-          <div class="form-group">
-            <input class="form-control" type="radio" id="conf-output-unit-k" name="output/unit" value="K" checked />
-            <label for="conf-output-unit-k">K</label>
-          </div>
-        </fieldset>
-      </div>
-      <div class="row">
-        <fieldset id="conf-output-filetype" class="column radios">
-          <!-- XXX: cannot inline if use "legend" tag -->
-          <label class="legend">File Type:</label>
-          <div class="form-group">
-            <input class="form-control" type="radio" id="conf-output-filetype-fits" name="output/filetype" value="fits" checked />
-            <label for="conf-output-filetype-fits">FITS</label>
-          </div>
-        </fieldset>
-      </div>
-      <div class="row">
-        <div class="column form-group">
-          <label for="conf-output-filename-pattern">Filename Pattern:</label>
-          <input class="form-control code" type="text" id="conf-output-filename-pattern" name="output/filename_pattern" required />
-        </div>
-      </div>
-      <div class="row">
-        <div class="column form-group">
-          <input class="form-control" type="checkbox" id="conf-output-use-float" name="output/use_float" value="true" data-type="boolean" checked />
-          <label for="conf-output-use-float">Use single-precision float instead of double</label>
-        </div>
-      </div>
-      <div class="row">
-        <div class="column form-group">
-          <input class="form-control" type="checkbox" id="conf-output-checksum" name="output/checksum" value="true" data-type="boolean" />
-          <label for="conf-output-checksum">Calculate the checksum for output files</label>
-        </div>
-      </div>
-      <div class="row">
-        <div class="column form-group">
-          <input class="form-control" type="checkbox" id="conf-output-clobber" name="output/clobber" value="true" data-type="boolean" />
-          <label for="conf-output-clobber">Overwrite existing files</label>
-        </div>
-      </div>
-      <div class="row">
-        <div class="column form-group">
-          <input class="form-control" type="checkbox" id="conf-output-combine" name="output/combine" value="true" data-type="boolean" />
-          <label for="conf-output-combine">Add all components and save the combined maps</label>
-        </div>
-      </div>
-      <div class="row">
-        <div class="column form-group">
-          <label for="conf-output-combine-prefix">Combined Filename Prefix:</label>
-          <input class="form-control code" type="text" id="conf-output-combine-prefix" name="output/combine_prefix" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="column form-group">
-          <label for="conf-output-outdir">Combined Files Output Directory:</label>
-          <input class="form-control code" type="text" id="conf-output-outdir" name="output/output_dir" />
-        </div>
-      </div>
-    </fieldset>
-
-    <!-- Configuration section "[cosmology]" -->
-    <fieldset id="conf-cosmology">
-      <h4><span class="fa fa-asterisk" aria-hidden="true"></span> Cosmology</h4>
-      <hr class="hr-thin hr-condensed hr-dashed" />
-      <div class="row">
-        <div class="column column-50 form-group">
-          <label for="conf-cosmology-h0">Hubble Parameter (<i>H</i><sub>0</sub>):</label>
-          <input class="form-control" type="number" id="conf-cosmology-h0" name="cosmology/H0" step="any" min="0" required />
-        </div>
-        <div class="column column-50 form-group">
-          <label for="conf-cosmology-omegam0">Matter Density (<i>Ω</i><sub>M0</sub>):</label>
-          <input class="form-control" type="number" id="conf-cosmology-omegam0" name="cosmology/OmegaM0" step="any" min="0" max="1" required />
-        </div>
-      </div>
-    </fieldset>
-
-    <!-- Configuration section "[logging]" -->
-    <fieldset id="conf-logging">
-      <h4><span class="fa fa-asterisk" aria-hidden="true"></span> Logging</h4>
-      <hr class="hr-thin hr-condensed hr-dashed" />
-      <div class="row">
-        <fieldset id="conf-logging-level" class="column radios">
-          <!-- XXX: cannot inline if use "legend" tag -->
-          <label class="legend">Level:</label>
-          <div class="form-group">
-            <input class="form-control" type="radio" id="conf-logging-level-debug" name="logging/level" value="DEBUG" />
-            <label for="conf-logging-level-debug">debug</label>
-          </div>
-          <div class="form-group">
-            <input class="form-control" type="radio" id="conf-logging-level-info" name="logging/level" value="INFO" checked />
-            <label for="conf-logging-level-info">info</label>
-          </div>
-          <div class="form-group">
-            <input class="form-control" type="radio" id="conf-logging-level-warning" name="logging/level" value="WARNING" />
-            <label for="conf-logging-level-warning">warning</label>
-          </div>
-          <div class="form-group">
-            <input class="form-control" type="radio" id="conf-logging-level-error" name="logging/level" value="ERROR" />
-            <label for="conf-logging-level-error">error</label>
-          </div>
-          <div class="form-group">
-            <input class="form-control" type="radio" id="conf-logging-level-critical" name="logging/level" value="CRITICAL" />
-            <label for="conf-logging-level-critical">critical</label>
-          </div>
-        </fieldset>
-      </div>
-      <div class="row">
-        <div class="column form-group">
-          <label for="conf-logging-format">Message Format:</label>
-          <input class="form-control code" type="text" id="conf-logging-format" name="logging/format" required />
-        </div>
-      </div>
-      <div class="row">
-        <div class="column form-group">
-          <label for="conf-logging-datefmt">Date/time Format:</label>
-          <input class="form-control code" type="text" id="conf-logging-datefmt" name="logging/datefmt" required />
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          <div class="form-group">
-            <label for="conf-logging-logfile">Log File:</label>
-            <input class="form-control code" type="text" id="conf-logging-logfile" name="logging/filename" />
-          </div>
-          <div class="form-group">
-            <input class="form-control" type="checkbox" id="conf-logging-logfile-append" name="logging/appendmode" value="true" data-type="boolean" checked />
-            <label for="conf-logging-logfile-append">Append mode</label>
-          </div>
-        </div>
-      </div>
-    </fieldset>
-
-    <!-- Configuration section "[galactic]" -->
-    <fieldset id="conf-g">
-      <h4><span class="fa fa-asterisk" aria-hidden="true"></span> Galactic Components</h4>
-      <hr class="hr-thin hr-condensed hr-dashed" />
-
-      <!-- Configuration sub-section "[galactic][synchrotron]" -->
-      <fieldset id="conf-g-synchrotron">
-        <h5><span class="fa fa-circle-o" aria-hidden="true"></span> Synchrotron Emission</h5>
+    <!-- Configuration Form -->
+    <form id="conf-form" class="form-inline" autocomplete="on">
+      {% module xsrf_form_html() %}
+      <!-- General controlling configs -->
+      <fieldset id="conf-control">
         <div class="row">
+          <div class="column column-50 form-group">
+            <label for="conf-workdir">Working Directory:</label>
+            <input class="form-control code" type="text" id="conf-workdir" name="workdir" required />
+          </div>
           <div class="column column-40 form-group">
-            <label for="conf-g-synchrotron-template">Template Map:</label>
-            <input class="form-control code" type="text" id="conf-g-synchrotron-template" name="galactic/synchrotron/template" required />
-          </div>
-          <div class="column column-30 form-group">
-            <label for="conf-g-synchrotron-template-freq">Frequency:</label>
-            <input class="form-control" type="number" id="conf-g-synchrotron-template-freq" name="galactic/synchrotron/template_freq" placeholder="MHz" step="any" min="0" required />
-          </div>
-          <div class="column column-30 form-group">
-            <label for="conf-g-synchrotron-template-unit">Unit:</label>
-            <input class="form-control" type="text" id="conf-g-synchrotron-template-unit" name="galactic/synchrotron/template_unit" required />
-          </div>
-        </div>
-        <div class="row">
-          <div class="column column-40 form-group">
-            <label for="conf-g-synchrotron-indexmap">Spectral Index Map:</label>
-            <input class="form-control code" type="text" id="conf-g-synchrotron-indexmap" name="galactic/synchrotron/indexmap" required />
-          </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <input class="form-control" type="checkbox" id="conf-g-synchrotron-smallscales" name="galactic/synchrotron/add_smallscales" value="true" data-type="boolean" checked />
-            <label for="conf-g-synchrotron-smallscales">Add fluctuations on the small scales based on the angular power spectrum</label>
-          </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <input class="form-control" type="checkbox" id="conf-g-synchrotron-save" name="galactic/synchrotron/save" value="true" data-type="boolean" checked />
-            <label for="conf-g-synchrotron-save">Save this component standalone</label>
-          </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-g-synchrotron-prefix">Filename Prefix:</label>
-            <input class="form-control code" type="text" id="conf-g-synchrotron-prefix" name="galactic/synchrotron/prefix" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-g-synchrotron-outdir">Output Directory:</label>
-            <input class="form-control code" type="text" id="conf-g-synchrotron-outdir" name="galactic/synchrotron/output_dir" />
+            <label for="conf-configfile">Configuration File:</label>
+            <input class="form-control code" type="text" id="conf-configfile" name="configfile" required />
           </div>
         </div>
       </fieldset>
 
-      <!-- Configuration sub-section "[galactic][freefree]" -->
-      <fieldset id="conf-g-freefree">
-        <h5><span class="fa fa-circle-o" aria-hidden="true"></span> Free-free Emission</h5>
-        <div class="row">
-          <div class="column column-40 form-group">
-            <label for="conf-g-freefree-halphamap">Hα Template Map:</label>
-            <input class="form-control code" type="text" id="conf-g-freefree-halphapam" name="galactic/freefree/halphamap" required />
+      <!-- Configuration section "[common]" -->
+      <fieldset id="conf-common">
+        <h4 class="heading">
+          <span class="icon fa fa-asterisk" aria-hidden="true"></span>
+          <span class="text">Common</span>
+          <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+        </h4>
+        <div class="body">
+          <hr class="hr-thin hr-condensed hr-dashed" />
+          <div class="row">
+            <div class="column column-30 form-group">
+              <label for="conf-common-nside"><i>N</i><sub>side</sub>:</label>
+              <input class="form-control" type="number" id="conf-common-nside" name="common/nside" min="1" required />
+            </div>
+            <div class="column column-30 form-group">
+              <label for="conf-common-lmin"><i>l</i><sub>min</sub>:</label>
+              <input class="form-control" type="number" id="conf-common-lmin" name="common/lmin" min="0" required />
+            </div>
+            <div class="column column-30 form-group">
+              <label for="conf-common-lmax"><i>l</i><sub>max</sub>:</label>
+              <input class="form-control" type="number" id="conf-common-lmax" name="common/lmax" min="1" required />
+            </div>
           </div>
-          <div class="column column-30 form-group">
-            <label for="conf-g-freefree-halphamap-unit">Unit:</label>
-            <input class="form-control" type="text" id="conf-g-freefree-halphamap-unit" name="galactic/freefree/halphamap_unit" required />
+          <div class="row">
+            <fieldset id="conf-common-components" class="column checkboxes">
+              <!-- XXX: cannot inline if use "legend" tag -->
+              <label class="legend">Components:</label>
+              <div class="form-group">
+                <input class="form-control" type="checkbox" id="conf-common-components-gsync" name="common/components" value="galactic/synchrotron" />
+                <label for="conf-common-components-gsync">galactic/synchrotron</label>
+              </div>
+              <div class="form-group">
+                <input class="form-control" type="checkbox" id="conf-common-components-gfree" name="common/components" value="galactic/freefree" />
+                <label for="conf-common-components-gsync">galactic/freefree</label>
+              </div>
+              <div class="form-group">
+                <input class="form-control" type="checkbox" id="conf-common-components-gsnr" name="common/components" value="galactic/snr" />
+                <label for="conf-common-components-gsync">galactic/snr</label>
+              </div>
+              <div class="form-group">
+                <input class="form-control" type="checkbox" id="conf-common-components-egcluster" name="common/components" value="extragalactic/clusters" />
+                <label for="conf-common-components-gsync">extragalactic/clusters</label>
+              </div>
+            </fieldset>
           </div>
-        </div>
-        <div class="row">
-          <div class="column column-40 form-group">
-            <label for="conf-g-freefree-dustmap">Dust Template Map:</label>
-            <input class="form-control code" type="text" id="conf-g-freefree-dustmap" name="galactic/freefree/dustmap" required />
-          </div>
-          <div class="column column-30 form-group">
-            <label for="conf-g-freefree-dustmap-unit">Unit:</label>
-            <input class="form-control" type="text" id="conf-g-freefree-dustmap-unit" name="galactic/freefree/dustmap_unit" required />
-          </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <input class="form-control" type="checkbox" id="conf-g-freefree-save" name="galactic/freefree/save" value="true" data-type="boolean" checked />
-            <label for="conf-g-freefree-save">Save this component standalone</label>
-          </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-g-freefree-prefix">Filename Prefix:</label>
-            <input class="form-control code" type="text" id="conf-g-freefree-prefix" name="galactic/freefree/prefix" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-g-freefree-outdir">Output Directory:</label>
-            <input class="form-control code" type="text" id="conf-g-freefree-outdir" name="galactic/freefree/output_dir" />
-          </div>
-        </div>
-      </fieldset>
+        </div>  <!-- h4: body -->
+      </fieldset>  <!--  id="conf-common" -->
 
-      <!-- Configuration sub-section "[galactic][snr]" -->
-      <fieldset id="conf-g-snr">
-        <h5><span class="fa fa-circle-o" aria-hidden="true"></span> Supernova Remnants Emission</h5>
-        <div class="row">
-          <div class="column column-50 form-group">
-            <label for="conf-g-snr-catalog">Input Catalog:</label>
-            <input class="form-control code" type="text" id="conf-g-snr-catalog" name="galactic/snr/catalog" required />
+      <!-- Configuration section "[frequency]" -->
+      <fieldset id="conf-frequency">
+        <h4 class="heading">
+          <span class="icon fa fa-asterisk" aria-hidden="true"></span>
+          <span class="text">Frequency</span>
+          <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+        </h4>
+        <div class="body">
+          <hr class="hr-thin hr-condensed hr-dashed" />
+          <div class="row">
+            <fieldset id="conf-frequency-unit" class="column radios">
+              <!-- XXX: cannot inline if use "legend" tag -->
+              <label class="legend">Unit:</label>
+              <div class="form-group">
+                <input class="form-control" type="radio" id="conf-frequency-unit-mhz" name="frequency/unit" value="MHz" checked />
+                <label for="conf-frequency-unit-mhz">MHz</label>
+              </div>
+            </fieldset>
           </div>
-          <div class="column column-50 form-group">
-            <label for="conf-g-snr-catalog-out">Output Catalog:</label>
-            <input class="form-control code" type="text" id="conf-g-snr-catalog-out" name="galactic/snr/catalog_outfile" />
+          <div class="row">
+            <fieldset id="conf-frequency-type" class="column radios">
+              <!-- XXX: cannot inline if use "legend" tag -->
+              <label class="legend">Type:</label>
+              <div class="form-group">
+                <input class="form-control" type="radio" id="conf-frequency-type-custom" name="frequency/type" value="custom" checked />
+                <label for="conf-frequency-type-custom">custom</label>
+              </div>
+              <div class="form-group">
+                <input class="form-control" type="radio" id="conf-frequency-type-calc" name="frequency/type" value="calc" />
+                <label for="conf-frequency-type-calc">calculate</label>
+              </div>
+            </fieldset>
           </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-g-snr-resolution">Grid Resolution:</label>
-            <input class="form-control" type="number" id="conf-g-snr-resolution" name="galactic/snr/resolution" placeholder="arcmin" step="any" min="0" required />
+          <div class="row">
+            <div class="column form-group">
+              <label for="conf-frequency-frequencies">Custom Frequencies:</label>
+              <input class="form-control" type="text" id="conf-frequency-frequencies" name="frequency/frequencies" placeholder="comma-separated list of frequencies" data-type="array" />
+            </div>
           </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <input class="form-control" type="checkbox" id="conf-g-snr-save" name="galactic/snr/save" value="true" data-type="boolean" checked />
-            <label for="conf-g-snr-save">Save this component standalone</label>
+          <div class="row">
+            <fieldset id="conf-frequency-calc" class="column">
+              <!-- XXX: cannot inline if use "legend" tag -->
+              <label class="legend">Calculate Frequencies:</label>
+              <div class="form-group">
+                <label class="sr-only" for="conf-frequency-strat">Start</label>
+                <input class="form-control" type="number" id="conf-frequency-start" name="frequency/start" placeholder="start frequency" step="any" min="0" />
+              </div>
+              <div class="form-group">
+                <label class="sr-only" for="conf-frequency-stop">Stop</label>
+                <input class="form-control" type="number" id="conf-frequency-stop" name="frequency/stop" placeholder="stop frequency" step="any" min="0" />
+              </div>
+              <div class="form-group">
+                <label class="sr-only" for="conf-frequency-step">Step</label>
+                <input class="form-control" type="number" id="conf-frequency-step" name="frequency/step" placeholder="frequency step" step="any" min="0" />
+              </div>
+            </fieldset>
           </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-g-snr-prefix">Filename Prefix:</label>
-            <input class="form-control code" type="text" id="conf-g-snr-prefix" name="galactic/snr/prefix" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-g-snr-outdir">Output Directory:</label>
-            <input class="form-control code" type="text" id="conf-g-snr-outdir" name="galactic/snr/output_dir" />
-          </div>
-        </div>
-      </fieldset>
-    </fieldset>
+        </div>  <!-- h4: body -->
+      </fieldset>  <!-- id="conf-frequency" -->
 
-    <!-- Configuration section "[extragalactic]" -->
-    <fieldset id="conf-eg">
-      <h4><span class="fa fa-asterisk" aria-hidden="true"></span> Extragalactic Components</h4>
-      <hr class="hr-thin hr-condensed hr-dashed" />
+      <!-- Configuration section "[output]" -->
+      <fieldset id="conf-output">
+        <h4 class="heading">
+          <span class="icon fa fa-asterisk" aria-hidden="true"></span>
+          <span class="text">Output</span>
+          <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+        </h4>
+        <div class="body">
+          <hr class="hr-thin hr-condensed hr-dashed" />
+          <div class="row">
+            <fieldset id="conf-output-unit" class="column radios">
+              <!-- XXX: cannot inline if use "legend" tag -->
+              <label class="legend">Unit:</label>
+              <div class="form-group">
+                <input class="form-control" type="radio" id="conf-output-unit-k" name="output/unit" value="K" checked />
+                <label for="conf-output-unit-k">K</label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="row">
+            <fieldset id="conf-output-filetype" class="column radios">
+              <!-- XXX: cannot inline if use "legend" tag -->
+              <label class="legend">File Type:</label>
+              <div class="form-group">
+                <input class="form-control" type="radio" id="conf-output-filetype-fits" name="output/filetype" value="fits" checked />
+                <label for="conf-output-filetype-fits">FITS</label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="row">
+            <div class="column form-group">
+              <label for="conf-output-filename-pattern">Filename Pattern:</label>
+              <input class="form-control code" type="text" id="conf-output-filename-pattern" name="output/filename_pattern" required />
+            </div>
+          </div>
+          <div class="row">
+            <div class="column form-group">
+              <input class="form-control" type="checkbox" id="conf-output-use-float" name="output/use_float" value="true" data-type="boolean" checked />
+              <label for="conf-output-use-float">Use single-precision float instead of double</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="column form-group">
+              <input class="form-control" type="checkbox" id="conf-output-checksum" name="output/checksum" value="true" data-type="boolean" />
+              <label for="conf-output-checksum">Calculate the checksum for output files</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="column form-group">
+              <input class="form-control" type="checkbox" id="conf-output-clobber" name="output/clobber" value="true" data-type="boolean" />
+              <label for="conf-output-clobber">Overwrite existing files</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="column form-group">
+              <input class="form-control" type="checkbox" id="conf-output-combine" name="output/combine" value="true" data-type="boolean" />
+              <label for="conf-output-combine">Add all components and save the combined maps</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="column form-group">
+              <label for="conf-output-combine-prefix">Combined Filename Prefix:</label>
+              <input class="form-control code" type="text" id="conf-output-combine-prefix" name="output/combine_prefix" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="column form-group">
+              <label for="conf-output-outdir">Combined Files Output Directory:</label>
+              <input class="form-control code" type="text" id="conf-output-outdir" name="output/output_dir" />
+            </div>
+          </div>
+        </div>  <!-- h4: body -->
+      </fieldset>  <!-- id="conf-output" -->
 
-      <!-- Configuration sub-section "[extragalactic][clusters]" -->
-      <fieldset id="conf-eg-clusters">
-        <h5><span class="fa fa-circle-o" aria-hidden="true"></span> Clusters of Galaxies Emission</h5>
-        <div class="row">
-          <div class="column column-50 form-group">
-            <label for="conf-eg-clusters-catalog">Input Catalog:</label>
-            <input class="form-control code" type="text" id="conf-eg-clusters-catalog" name="extragalactic/clusters/catalog" required />
+      <!-- Configuration section "[cosmology]" -->
+      <fieldset id="conf-cosmology">
+        <h4 class="heading">
+          <span class="icon fa fa-asterisk" aria-hidden="true"></span>
+          <span class="text">Cosmology</span>
+          <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+        </h4>
+        <div class="body">
+          <hr class="hr-thin hr-condensed hr-dashed" />
+          <div class="row">
+            <div class="column column-50 form-group">
+              <label for="conf-cosmology-h0">Hubble Parameter (<i>H</i><sub>0</sub>):</label>
+              <input class="form-control" type="number" id="conf-cosmology-h0" name="cosmology/H0" step="any" min="0" required />
+            </div>
+            <div class="column column-50 form-group">
+              <label for="conf-cosmology-omegam0">Matter Density (<i>Ω</i><sub>M0</sub>):</label>
+              <input class="form-control" type="number" id="conf-cosmology-omegam0" name="cosmology/OmegaM0" step="any" min="0" max="1" required />
+            </div>
           </div>
-          <div class="column column-50 form-group">
-            <label for="conf-eg-clusters-catalog-out">Output Catalog:</label>
-            <input class="form-control code" type="text" id="conf-eg-clusters-catalog-out" name="extragalactic/clusters/catalog_outfile" />
+        </div>  <!-- h4: body -->
+      </fieldset>  <!-- id="conf-cosmology" -->
+
+      <!-- Configuration section "[logging]" -->
+      <fieldset id="conf-logging">
+        <h4 class="heading">
+          <span class="icon fa fa-asterisk" aria-hidden="true"></span>
+          <span class="text">Logging</span>
+          <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+        </h4>
+        <div class="body">
+          <hr class="hr-thin hr-condensed hr-dashed" />
+          <div class="row">
+            <fieldset id="conf-logging-level" class="column radios">
+              <!-- XXX: cannot inline if use "legend" tag -->
+              <label class="legend">Level:</label>
+              <div class="form-group">
+                <input class="form-control" type="radio" id="conf-logging-level-debug" name="logging/level" value="DEBUG" />
+                <label for="conf-logging-level-debug">debug</label>
+              </div>
+              <div class="form-group">
+                <input class="form-control" type="radio" id="conf-logging-level-info" name="logging/level" value="INFO" checked />
+                <label for="conf-logging-level-info">info</label>
+              </div>
+              <div class="form-group">
+                <input class="form-control" type="radio" id="conf-logging-level-warning" name="logging/level" value="WARNING" />
+                <label for="conf-logging-level-warning">warning</label>
+              </div>
+              <div class="form-group">
+                <input class="form-control" type="radio" id="conf-logging-level-error" name="logging/level" value="ERROR" />
+                <label for="conf-logging-level-error">error</label>
+              </div>
+              <div class="form-group">
+                <input class="form-control" type="radio" id="conf-logging-level-critical" name="logging/level" value="CRITICAL" />
+                <label for="conf-logging-level-critical">critical</label>
+              </div>
+            </fieldset>
           </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-eg-clusters-halo-fraction">Halo Fraction:</label>
-            <input class="form-control" type="number" id="conf-eg-clusters-halo-fraction" name="extragalactic/clusters/halo_fraction" step="any" min="0" max="1" required />
+          <div class="row">
+            <div class="column form-group">
+              <label for="conf-logging-format">Message Format:</label>
+              <input class="form-control code" type="text" id="conf-logging-format" name="logging/format" required />
+            </div>
           </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-eg-clusters-resolution">Grid Resolution:</label>
-            <input class="form-control" type="number" id="conf-eg-clusters-resolution" name="extragalactic/clusters/resolution" placeholder="arcmin" step="any" min="0" required />
+          <div class="row">
+            <div class="column form-group">
+              <label for="conf-logging-datefmt">Date/time Format:</label>
+              <input class="form-control code" type="text" id="conf-logging-datefmt" name="logging/datefmt" required />
+            </div>
           </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <input class="form-control" type="checkbox" id="conf-eg-clusters-save" name="extragalactic/clusters/save" value="true" data-type="boolean" checked />
-            <label for="conf-eg-clusters-save">Save this component standalone</label>
+          <div class="row">
+            <div class="column">
+              <div class="form-group">
+                <label for="conf-logging-logfile">Log File:</label>
+                <input class="form-control code" type="text" id="conf-logging-logfile" name="logging/filename" />
+              </div>
+              <div class="form-group">
+                <input class="form-control" type="checkbox" id="conf-logging-logfile-append" name="logging/appendmode" value="true" data-type="boolean" checked />
+                <label for="conf-logging-logfile-append">Append mode</label>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-eg-clusters-prefix">Filename Prefix:</label>
-            <input class="form-control code" type="text" id="conf-eg-clusters-prefix" name="extragalactic/clusters/prefix" />
-          </div>
-        </div>
-        <div class="row">
-          <div class="column form-group">
-            <label for="conf-eg-clusters-outdir">Output Directory:</label>
-            <input class="form-control code" type="text" id="conf-eg-clusters-outdir" name="extragalactic/clusters/output_dir" />
-          </div>
-        </div>
-      </fieldset>
-    </fieldset>
-  </form>
+        </div>  <!-- h4: body -->
+      </fieldset>  <!-- id="conf-logging" -->
+
+      <!-- Configuration section "[galactic]" -->
+      <fieldset id="conf-g">
+        <h4 class="heading">
+          <span class="icon fa fa-asterisk" aria-hidden="true"></span>
+          <span class="text">Galactic Components</span>
+          <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+        </h4>
+
+        <div class="body">
+          <hr class="hr-thin hr-condensed hr-dashed" />
+
+          <!-- Configuration sub-section "[galactic][synchrotron]" -->
+          <fieldset id="conf-g-synchrotron">
+            <h5 class="heading">
+              <span class="icon fa fa-circle-o" aria-hidden="true"></span>
+              <span class="text">Synchrotron Emission</span>
+              <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+            </h5>
+            <div class="body">
+              <div class="row">
+                <div class="column column-40 form-group">
+                  <label for="conf-g-synchrotron-template">Template Map:</label>
+                  <input class="form-control code" type="text" id="conf-g-synchrotron-template" name="galactic/synchrotron/template" required />
+                </div>
+                <div class="column column-30 form-group">
+                  <label for="conf-g-synchrotron-template-freq">Frequency:</label>
+                  <input class="form-control" type="number" id="conf-g-synchrotron-template-freq" name="galactic/synchrotron/template_freq" placeholder="MHz" step="any" min="0" required />
+                </div>
+                <div class="column column-30 form-group">
+                  <label for="conf-g-synchrotron-template-unit">Unit:</label>
+                  <input class="form-control" type="text" id="conf-g-synchrotron-template-unit" name="galactic/synchrotron/template_unit" required />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column column-40 form-group">
+                  <label for="conf-g-synchrotron-indexmap">Spectral Index Map:</label>
+                  <input class="form-control code" type="text" id="conf-g-synchrotron-indexmap" name="galactic/synchrotron/indexmap" required />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <input class="form-control" type="checkbox" id="conf-g-synchrotron-smallscales" name="galactic/synchrotron/add_smallscales" value="true" data-type="boolean" checked />
+                  <label for="conf-g-synchrotron-smallscales">Add fluctuations on the small scales based on the angular power spectrum</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <input class="form-control" type="checkbox" id="conf-g-synchrotron-save" name="galactic/synchrotron/save" value="true" data-type="boolean" checked />
+                  <label for="conf-g-synchrotron-save">Save this component standalone</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-g-synchrotron-prefix">Filename Prefix:</label>
+                  <input class="form-control code" type="text" id="conf-g-synchrotron-prefix" name="galactic/synchrotron/prefix" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-g-synchrotron-outdir">Output Directory:</label>
+                  <input class="form-control code" type="text" id="conf-g-synchrotron-outdir" name="galactic/synchrotron/output_dir" />
+                </div>
+              </div>
+            </div>  <!-- h5: body -->
+          </fieldset>  <!-- id="conf-g-synchrotron" -->
+
+          <!-- Configuration sub-section "[galactic][freefree]" -->
+          <fieldset id="conf-g-freefree">
+            <h5 class="heading">
+              <span class="icon fa fa-circle-o" aria-hidden="true"></span>
+              <span class="text">Free-free Emission</span>
+              <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+            </h5>
+            <div class="body">
+              <div class="row">
+                <div class="column column-40 form-group">
+                  <label for="conf-g-freefree-halphamap">Hα Template Map:</label>
+                  <input class="form-control code" type="text" id="conf-g-freefree-halphapam" name="galactic/freefree/halphamap" required />
+                </div>
+                <div class="column column-30 form-group">
+                  <label for="conf-g-freefree-halphamap-unit">Unit:</label>
+                  <input class="form-control" type="text" id="conf-g-freefree-halphamap-unit" name="galactic/freefree/halphamap_unit" required />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column column-40 form-group">
+                  <label for="conf-g-freefree-dustmap">Dust Template Map:</label>
+                  <input class="form-control code" type="text" id="conf-g-freefree-dustmap" name="galactic/freefree/dustmap" required />
+                </div>
+                <div class="column column-30 form-group">
+                  <label for="conf-g-freefree-dustmap-unit">Unit:</label>
+                  <input class="form-control" type="text" id="conf-g-freefree-dustmap-unit" name="galactic/freefree/dustmap_unit" required />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <input class="form-control" type="checkbox" id="conf-g-freefree-save" name="galactic/freefree/save" value="true" data-type="boolean" checked />
+                  <label for="conf-g-freefree-save">Save this component standalone</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-g-freefree-prefix">Filename Prefix:</label>
+                  <input class="form-control code" type="text" id="conf-g-freefree-prefix" name="galactic/freefree/prefix" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-g-freefree-outdir">Output Directory:</label>
+                  <input class="form-control code" type="text" id="conf-g-freefree-outdir" name="galactic/freefree/output_dir" />
+                </div>
+              </div>
+            </div>  <!-- h5: body -->
+          </fieldset>  <!-- id="conf-g-freefree" -->
+
+          <!-- Configuration sub-section "[galactic][snr]" -->
+          <fieldset id="conf-g-snr">
+            <h5 class="heading">
+              <span class="icon fa fa-circle-o" aria-hidden="true"></span>
+              <span class="text">Supernova Remnants Emission</span>
+              <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+            </h5>
+            <div class="body">
+              <div class="row">
+                <div class="column column-50 form-group">
+                  <label for="conf-g-snr-catalog">Input Catalog:</label>
+                  <input class="form-control code" type="text" id="conf-g-snr-catalog" name="galactic/snr/catalog" required />
+                </div>
+                <div class="column column-50 form-group">
+                  <label for="conf-g-snr-catalog-out">Output Catalog:</label>
+                  <input class="form-control code" type="text" id="conf-g-snr-catalog-out" name="galactic/snr/catalog_outfile" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-g-snr-resolution">Grid Resolution:</label>
+                  <input class="form-control" type="number" id="conf-g-snr-resolution" name="galactic/snr/resolution" placeholder="arcmin" step="any" min="0" required />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <input class="form-control" type="checkbox" id="conf-g-snr-save" name="galactic/snr/save" value="true" data-type="boolean" checked />
+                  <label for="conf-g-snr-save">Save this component standalone</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-g-snr-prefix">Filename Prefix:</label>
+                  <input class="form-control code" type="text" id="conf-g-snr-prefix" name="galactic/snr/prefix" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-g-snr-outdir">Output Directory:</label>
+                  <input class="form-control code" type="text" id="conf-g-snr-outdir" name="galactic/snr/output_dir" />
+                </div>
+              </div>
+            </div>  <!-- h5: body -->
+          </fieldset>  <!-- id="conf-g-snr" -->
+        </div>  <!-- h4: body -->
+      </fieldset>  <!-- id="conf-g" -->
+
+      <!-- Configuration section "[extragalactic]" -->
+      <fieldset id="conf-eg">
+        <h4 class="heading">
+          <span class="icon fa fa-asterisk" aria-hidden="true"></span>
+          <span class="text">Extragalactic Components</span>
+          <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+        </h4>
+
+        <div class="body">
+          <hr class="hr-thin hr-condensed hr-dashed" />
+
+          <!-- Configuration sub-section "[extragalactic][clusters]" -->
+          <fieldset id="conf-eg-clusters">
+            <h5 class="heading">
+              <span class="icon fa fa-circle-o" aria-hidden="true"></span>
+              <span class="text">Clusters of Galaxies Emission</span>
+              <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+            </h5>
+            <div class="body">
+              <div class="row">
+                <div class="column column-50 form-group">
+                  <label for="conf-eg-clusters-catalog">Input Catalog:</label>
+                  <input class="form-control code" type="text" id="conf-eg-clusters-catalog" name="extragalactic/clusters/catalog" required />
+                </div>
+                <div class="column column-50 form-group">
+                  <label for="conf-eg-clusters-catalog-out">Output Catalog:</label>
+                  <input class="form-control code" type="text" id="conf-eg-clusters-catalog-out" name="extragalactic/clusters/catalog_outfile" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-eg-clusters-halo-fraction">Halo Fraction:</label>
+                  <input class="form-control" type="number" id="conf-eg-clusters-halo-fraction" name="extragalactic/clusters/halo_fraction" step="any" min="0" max="1" required />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-eg-clusters-resolution">Grid Resolution:</label>
+                  <input class="form-control" type="number" id="conf-eg-clusters-resolution" name="extragalactic/clusters/resolution" placeholder="arcmin" step="any" min="0" required />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <input class="form-control" type="checkbox" id="conf-eg-clusters-save" name="extragalactic/clusters/save" value="true" data-type="boolean" checked />
+                  <label for="conf-eg-clusters-save">Save this component standalone</label>
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-eg-clusters-prefix">Filename Prefix:</label>
+                  <input class="form-control code" type="text" id="conf-eg-clusters-prefix" name="extragalactic/clusters/prefix" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="column form-group">
+                  <label for="conf-eg-clusters-outdir">Output Directory:</label>
+                  <input class="form-control code" type="text" id="conf-eg-clusters-outdir" name="extragalactic/clusters/output_dir" />
+                </div>
+              </div>
+            </div>  <!-- h5: body -->
+          </fieldset>  <!-- id="conf-eg-clusters" -->
+        </div>  <!-- h4: body -->
+      </fieldset>  <!-- id="conf-eg" -->
+    </form>
+  </div>  <!-- h2: body -->
 
   <div id="modal-configs" class="modal" style="display: none;"></div>
 </section>
