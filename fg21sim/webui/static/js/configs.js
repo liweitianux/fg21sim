@@ -299,7 +299,7 @@ var updateFormConfigStatus = function () {
 /**
  * Show notification contents in the "#modal-configs" modal box.
  */
-var showConfigsModal = function (data) {
+var showModalConfigs = function (data) {
   var modalBox = $("#modal-configs");
   showModal(modalBox, data);
 };
@@ -358,7 +358,7 @@ var resetConfigs = function (url) {
           var modalData = {};
           modalData.icon = "check-circle";
           modalData.message = "Reset and synchronized the configurations.";
-          showConfigsModal(modalData);
+          showModalConfigs(modalData);
         });
     })
     .fail(function (error) {
@@ -367,7 +367,7 @@ var resetConfigs = function (url) {
       modalData.message = "Failed to reset the configurations!";
       modalData.code = error.status;
       modalData.reason = error.statusText;
-      showConfigsModal(modalData);
+      showModalConfigs(modalData);
     });
 };
 
@@ -396,7 +396,7 @@ var setServerConfigs = function (url, data) {
       modalData.message = "Failed to update/set the configuration data!";
       modalData.code = error.status;
       modalData.reason = error.statusText;
-      showConfigsModal(modalData);
+      showModalConfigs(modalData);
     });
 };
 
@@ -420,7 +420,7 @@ var loadServerConfigFile = function (url, userconfig) {
       modalData.message = "Failed to load the user configuration file!";
       modalData.code = error.status;
       modalData.reason = error.statusText;
-      showConfigsModal(modalData);
+      showModalConfigs(modalData);
     });
 };
 
@@ -450,7 +450,7 @@ var saveServerConfigFile = function (url, clobber) {
         modalData.message = ("Configurations saved to file. " +
                              "But there exist some invalid values!");
       }
-      showConfigsModal(modalData);
+      showModalConfigs(modalData);
     })
     .fail(function (error) {
       var modalData = {};
@@ -458,7 +458,7 @@ var saveServerConfigFile = function (url, clobber) {
       modalData.message = "Failed to save the configurations!";
       modalData.code = error.status;
       modalData.reason = error.statusText;
-      showConfigsModal(modalData);
+      showModalConfigs(modalData);
     });
 };
 
@@ -477,7 +477,7 @@ var existsServerFile = function (url, filepath, callback) {
                            "of the user configuration file!");
       modalData.code = error.status;
       modalData.reason = error.statusText;
-      showConfigsModal(modalData);
+      showModalConfigs(modalData);
     });
 };
 
@@ -527,7 +527,7 @@ $(document).ready(function () {
         }
       },
     ];
-    showConfigsModal(modalData);
+    showModalConfigs(modalData);
   });
 
   // Load the configurations from the specified user configuration file
@@ -544,7 +544,7 @@ $(document).ready(function () {
         var modalData = {};
         modalData.icon = "check-circle";
         modalData.message = "Loaded the configurations from file.";
-        showConfigsModal(modalData);
+        showModalConfigs(modalData);
       });
   });
 
@@ -574,7 +574,7 @@ $(document).ready(function () {
             }
           },
         ];
-        showConfigsModal(modalData);
+        showModalConfigs(modalData);
       } else {
         saveServerConfigFile(ajax_url, false);
       }
