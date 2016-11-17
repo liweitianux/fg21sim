@@ -34,6 +34,7 @@ class ConfigsAJAXHandler(BaseRequestHandler):
         Supported actions:
         - get: Get the specified/all configuration values
         - validate: Validate the configurations and response the errors
+        - exists: Whether the file already exists
 
         NOTE
         ----
@@ -50,6 +51,15 @@ class ConfigsAJAXHandler(BaseRequestHandler):
         elif action == "validate":
             __, errors = self.configs.check_all(raise_exception=False)
             success = True
+        elif action == "exists":
+            filepath = json_decode(self.get_argument("filepath", "null"))
+            exists, error = self._exists_file(filepath)
+            if exists is None:
+                success = False
+                reason = error
+            else:
+                success = True
+                data["exists"] = exists
         else:
             # ERROR: bad action
             success = False
@@ -270,3 +280,33 @@ class ConfigsAJAXHandler(BaseRequestHandler):
         except (ValueError, OSError) as e:
             error = str(e)
         return (success, error)
+
+    @staticmethod
+    def _exists_file(filepath):
+        """Check whether the given filepath already exists?
+
+        Parameters
+        ----------
+        filepath: str
+            The input filepath to check its existence, must be
+            an *absolute path*.
+
+        Returns
+        -------
+        exists : bool
+            ``True`` if the filepath already exists, ``False`` if not exists,
+            and ``None`` if error occurs.
+        error : str
+            The error information, and ``None`` if no errors.
+        """
+        exists = None
+        error = None
+        try:
+            filepath = os.path.expanduser(filepath)
+            if os.path.isabs(filepath):
+                exists = os.path.exists(filepath)
+            else:
+                error = "Not an absolute path: {0}".format(filepath)
+        except AttributeError:
+            error = "Invalid input filepath: {0}".format(filepath)
+        return (exists, error)
