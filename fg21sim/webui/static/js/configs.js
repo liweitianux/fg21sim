@@ -305,18 +305,19 @@ var updateFormConfigStatus = function () {
  *   - `message` : Main summary message
  *   - `code` : Error code if it is an error notification
  *   - `reason` : Reason of the error
+ *   - `buttons` : A list of buttons
  */
 var showConfigsModal = function (data) {
   var modalBox = $("#modal-configs");
   modalBox.html("");
-  var p1 = $("<p>");
+  var p = $("<p>");
   if (data.icon) {
-    $("<span>").addClass("fa fa-2x").addClass("fa-" + data.icon).appendTo(p1);
+    $("<span>").addClass("fa fa-2x").addClass("fa-" + data.icon).appendTo(p);
   }
   if (data.message) {
-    $("<span>").text(" " + data.message).appendTo(p1);
+    $("<span>").text(" " + data.message).appendTo(p);
   }
-  modalBox.append(p1);
+  modalBox.append(p);
   if (data.code) {
     modalBox.append($("<p>Error Code: </p>")
                     .append($("<span>")
@@ -329,6 +330,15 @@ var showConfigsModal = function (data) {
                             .addClass("label label-warning")
                             .text(data.reason)));
   }
+  if (data.buttons) {
+    p = $("<p>").addClass("button-group");
+    data.buttons.forEach(function (btn) {
+      $("<button>").text(btn.text).addClass(btn["class"])
+        .attr("type", "button").attr("rel", btn.rel)
+        .on("click", btn.click).appendTo(p);
+    });
+  }
+  modalBox.append(p);
   // Show the modal box
   modalBox.modal();
 };
@@ -467,10 +477,43 @@ var saveServerConfigFile = function (url, clobber) {
               outfile: userconfig,
               clobber: clobber};
   return $.postJSON(url, data)
+    .done(function () {
+      var modalData = {};
+      if ($("#conf-status").data("validity")) {
+        // Form configurations is valid :)
+        modalData.icon = "check-circle";
+        modalData.message = "Configurations saved to file.";
+      } else {
+        // Configurations is currently invalid!
+        modalData.icon = "warning";
+        modalData.message = ("Configurations saved to file. " +
+                             "But there exist some invalid values!");
+      }
+      showConfigsModal(modalData);
+    })
     .fail(function (error) {
       var modalData = {};
       modalData.icon = "times-circle";
       modalData.message = "Failed to save the configurations!";
+      modalData.code = error.status;
+      modalData.reason = error.statusText;
+      showConfigsModal(modalData);
+    });
+};
+
+
+/**
+ * Check whether the specified file already exists on the server?
+ */
+var existsServerFile = function (url, filepath, callback) {
+  var data = {action: "exists",
+              filepath: JSON.stringify(filepath)};
+  return $.getJSON(url, data, callback)
+    .fail(function (error) {
+      var modalData = {};
+      modalData.icon = "times-circle";
+      modalData.message = ("Failed to check the existence " +
+                           "of the user configuration file!");
       modalData.code = error.status;
       modalData.reason = error.statusText;
       showConfigsModal(modalData);
@@ -530,22 +573,35 @@ $(document).ready(function () {
 
   // Save the current configurations to file
   $("#save-configfile").on("click", function () {
-    // TODO: add a confirmation on overwrite
-    saveServerConfigFile(ajax_url, true)
-      .done(function () {
+    var userconfig = getFormConfigSingle("userconfig");
+    existsServerFile(ajax_url, userconfig, function (response) {
+      if (response.data.exists) {
+        // The specified configuration file already exists
+        // Confirm to overwrite
         var modalData = {};
-        if ($("#conf-status").data("validity")) {
-          // Form configurations is valid :)
-          modalData.icon = "check-circle";
-          modalData.message = "Configurations saved to file.";
-        } else {
-          // Configurations is currently invalid!
-          modalData.icon = "warning";
-          modalData.message = ("Configurations saved to file. " +
-                               "There exist some invalid values!");
-        }
+        modalData.icon = "warning";
+        modalData.message = ("Configuration file already exists! Overwrite?");
+        modalData.buttons = [
+          {
+            text: "Cancel",
+            rel: "modal:close",
+            click: function () { $.modal.close(); }
+          },
+          {
+            text: "Overwrite!",
+            "class": "button-warning",
+            rel: "modal:close",
+            click: function () {
+              $.modal.close();
+              saveServerConfigFile(ajax_url, true);
+            }
+          },
+        ];
         showConfigsModal(modalData);
-      });
+      } else {
+        saveServerConfigFile(ajax_url, false);
+      }
+    });
   });
 
   // Sync changed field to server, validate and update form
