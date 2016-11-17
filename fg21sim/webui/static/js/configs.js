@@ -549,8 +549,26 @@ $(document).ready(function () {
 
   // Reset both server-side and client-side configurations to the defaults
   $("#reset-defaults").on("click", function () {
-    // TODO: add a confirmation dialog
-    resetConfigs(ajax_url);
+    var modalData = {};
+    modalData.icon = "warning";
+    modalData.message = ("Are you sure to reset the configurations?");
+    modalData.buttons = [
+      {
+        text: "Cancel",
+        rel: "modal:close",
+        click: function () { $.modal.close(); }
+      },
+      {
+        text: "Reset!",
+        "class": "button-warning",
+        rel: "modal:close",
+        click: function () {
+          $.modal.close();
+          resetConfigs(ajax_url);
+        }
+      },
+    ];
+    showConfigsModal(modalData);
   });
 
   // Load the configurations from the specified user configuration file
