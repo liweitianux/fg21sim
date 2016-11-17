@@ -15,33 +15,33 @@ import json
 
 class WebSocketLogHandler(logging.Handler):
     """
-    Send logging messages to the WebSocket as JSON-encoded string.
+    Push the logging messages to the client(s) through the WebSocket(s)
+    as JSON-encoded strings.
 
     Parameters
     ----------
-    websocket : `~tornado.websocket.WebSocketHandler`
-        An `~tornado.websocket.WebSocketHandler` instance, which has
-        the ``write_message()`` method that will be used to send the
-        logging messages.
+    websockets : set of `~tornado.websocket.WebSocketHandler`
+        Set of opened websockets, through which the logging messages will
+        be pushed.
     msg_type : str, optional
-        Set the type of the sent back message, for easier processing
+        Set the type of the pushed logging messages, for easier handling
         by the client.
 
     NOTE
     ----
-    The message sent through the WebSocket is a JSON-encoded string
-    from a dictionary, e.g.,
+    The pushed logging message is a JSON-encoded string from a dictionary:
     ``{"type": self.msg_type,
-       "action": "log",
+       "subtype": "log",
+       "action": "push",
        "levelname": record.levelname,
        "levelno": record.levelno,
        "name": record.name,
        "asctime": record.asctime,
        "message": <formatted-message>}``
     """
-    def __init__(self, websocket, msg_type=None):
+    def __init__(self, websockets, msg_type=None):
         super().__init__()
-        self.websocket = websocket
+        self.websockets = websockets
         self.msg_type = msg_type
 
     def emit(self, record):
@@ -49,13 +49,15 @@ class WebSocketLogHandler(logging.Handler):
             message = self.format(record)
             msg = json.dumps({
                 "type": self.msg_type,
-                "action": "log",
+                "subtype": "log",
+                "action": "push",
                 "levelname": record.levelname,
                 "levelno": record.levelno,
                 "name": record.name,
                 "asctime": record.asctime,
                 "message": message,
             })
-            self.websocket.write_message(msg)
+            for ws in self.websockets:
+                ws.write_message(msg)
         except Exception:
             self.handleError(record)
