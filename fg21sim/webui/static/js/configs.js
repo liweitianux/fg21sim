@@ -587,8 +587,13 @@ $(document).ready(function () {
     var name = $(e.target).attr("name");
     var value = getFormConfigSingle(name);
     // Synchronize the changed form configuration to the server
-    // NOTE: Use the "computed property names" available in ECMAScript 6
-    setServerConfigs(ajax_url, {[name]: value})
+    // NOTE:
+    // Use the "computed property names" available in ECMAScript 6
+    // (IE 11 not support this!)
+    // var data = {[name]: value};
+    var data = {};
+    data[name] = value;
+    setServerConfigs(ajax_url, data)
       .then(function () { validateServerConfigs(ajax_url); })
       .done(function () { updateFormConfigStatus(); });
   });
