@@ -5,47 +5,52 @@
  # Console part
  #}
 <section id="console">
-  <h2><span class="fa fa-gamepad" aria-hidden="true"></span> Console</h2>
-  <hr />
-
-  <p class="status"><strong>
-    <span class="fa fa-dashboard" aria-hidden="true"></span>
-    Simulation status:
-    <span id="task-status" class="label label-default">
-      <span class="icon fa fa-coffee" aria-hidden="true"></span>
-      <span class="text">Not started</span>
-    </span>
-  </strong></p>
-  <div id="console-invalid-configs" class="modal" style="display: none;">
-    <p>There exist some <strong>invalid</strong> configuration values!</p>
-    <p>Please correct the configurations before starting the simulations</p>
-  </div>
-
-  <p class="button-group">
-    <button type="button" id="task-start"><span class="fa fa-play" aria-hidden="true"></span> Start</button>
-    <!-- TODO/FIXME: how to kill a running thread/process?
-    <button type="button" class="button button-warning" id="task-stop" disabled="disabled"><span class="fa fa-stop" aria-hidden="true"></span> Stop</button>
-       -->
-  </p>
-
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <span class="panel-title">
-        <span class="icon fa fa-comments" aria-hidden="true"></span>
-        <span class="text">Logging Messages</span>
-        <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+  <h2 class="heading">
+    <span class="icon fa fa-gamepad" aria-hidden="true"></span>
+    <span class="text">Console</span>
+    <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+  </h2>
+  <div class="body">
+    <hr />
+    <p class="status"><strong>
+      <span class="fa fa-dashboard" aria-hidden="true"></span>
+      Simulation status:
+      <span id="task-status" class="label label-default">
+        <span class="icon fa fa-coffee" aria-hidden="true"></span>
+        <span class="text">Not started</span>
       </span>
-      <span class="panel-control">
-        <span id="log-toggle-debug" title="Toggle display of DEBUG messages" class="btn fa fa-comment" aria-hidden="true"></span>
-        <span id="log-toggle-info" title="Toggle display of INFO messages" class="btn fa fa-info-circle" aria-hidden="true"></span>
-        <span id="log-toggle-warning" title="Toggle display of WARNING messages" class="btn fa fa-warning" aria-hidden="true"></span>
-        <span id="log-toggle-error" title="Toggle display of ERROR messages" class="btn fa fa-times-circle" aria-hidden="true"></span>
-        <span id="log-delete" title="Delete all messages" class="btn fa fa-trash" aria-hidden="true"></span>
-      </span>
+    </strong></p>
+    <div id="console-invalid-configs" class="modal" style="display: none;">
+      <p>There exist some <strong>invalid</strong> configuration values!</p>
+      <p>Please correct the configurations before starting the simulations</p>
     </div>
-    <div id="log-messages" class="panel-body">
-    </div>
-  </div>
+
+    <p class="button-group">
+      <button type="button" id="task-start"><span class="fa fa-play" aria-hidden="true"></span> Start</button>
+      <!-- TODO/FIXME: how to kill a running thread/process?
+      <button type="button" class="button button-warning" id="task-stop" disabled="disabled"><span class="fa fa-stop" aria-hidden="true"></span> Stop</button>
+        -->
+    </p>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <span class="panel-title">
+          <span class="icon fa fa-comments" aria-hidden="true"></span>
+          <span class="text">Logging Messages</span>
+          <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+        </span>
+        <span class="panel-control">
+          <span id="log-toggle-debug" title="Toggle display of DEBUG messages" class="btn fa fa-comment" aria-hidden="true"></span>
+          <span id="log-toggle-info" title="Toggle display of INFO messages" class="btn fa fa-info-circle" aria-hidden="true"></span>
+          <span id="log-toggle-warning" title="Toggle display of WARNING messages" class="btn fa fa-warning" aria-hidden="true"></span>
+          <span id="log-toggle-error" title="Toggle display of ERROR messages" class="btn fa fa-times-circle" aria-hidden="true"></span>
+          <span id="log-delete" title="Delete all messages" class="btn fa fa-trash" aria-hidden="true"></span>
+        </span>
+      </div>
+      <div id="log-messages" class="panel-body">
+      </div>
+    </div>  <!-- panel -->
+  </div>  <!-- body -->
 
   <div id="modal-console" class="modal" style="display: none;"></div>
 </section>
