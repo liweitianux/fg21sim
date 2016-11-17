@@ -94,6 +94,61 @@ var toggleBlock = function (toggle, targetBlock) {
 };
 
 
+/**
+ * Compose the notification contents and shown them in the modal box.
+ *
+ * The input `modalBox` may be a jQuery object or a jQuery selector of the
+ * target modal box.
+ *
+ * The input `data` may have the following attributes:
+ *   - `icon` : FontAwesome icon (specified without the beginning `fa-`)
+ *   - `message` : Main summary message
+ *   - `code` : Error code if it is an error notification
+ *   - `reason` : Reason of the error
+ *   - `buttons` : A list of buttons, which have these attributes:
+ *                 + `text` : Button name
+ *                 + `class` : {String} Button classes
+ *                 + `click` : {Function} Function called on click.
+ *                             To close the modal, use `$.modal.close()`
+ */
+var showModal = function (modalBox, data) {
+  modalBox = $(modalBox);
+  // Empty previous contents
+  modalBox.html("");
+  var p = $("<p>");
+  if (data.icon) {
+    $("<span>").addClass("fa fa-2x").addClass("fa-" + data.icon).appendTo(p);
+  }
+  if (data.message) {
+    $("<span>").text(" " + data.message).appendTo(p);
+  }
+  modalBox.append(p);
+  if (data.code) {
+    modalBox.append($("<p>Error Code: </p>")
+                    .append($("<span>")
+                            .addClass("label label-warning")
+                            .text(data.code)));
+  }
+  if (data.reason) {
+    modalBox.append($("<p>Reason: </p>")
+                    .append($("<span>")
+                            .addClass("label label-warning")
+                            .text(data.reason)));
+  }
+  if (data.buttons) {
+    p = $("<p>").addClass("button-group");
+    data.buttons.forEach(function (btn) {
+      $("<button>").text(btn.text).addClass(btn["class"])
+        .attr("type", "button")
+        .on("click", btn.click).appendTo(p);
+    });
+  }
+  modalBox.append(p);
+  // Show the modal box
+  modalBox.modal();
+};
+
+
 $(document).ready(function () {
   // Scroll the page to adjust for the fixed navigation banner
   $(window).on("hashchange", function () {

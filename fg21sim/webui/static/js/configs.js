@@ -297,50 +297,11 @@ var updateFormConfigStatus = function () {
 
 
 /**
- * Compose the notification contents and shown in the "#modal-configs"
- * modal box.
- *
- * The input `data` may have the following attributes:
- *   - `icon` : FontAwesome icon (specified without the beginning `fa-`)
- *   - `message` : Main summary message
- *   - `code` : Error code if it is an error notification
- *   - `reason` : Reason of the error
- *   - `buttons` : A list of buttons
+ * Show notification contents in the "#modal-configs" modal box.
  */
 var showConfigsModal = function (data) {
   var modalBox = $("#modal-configs");
-  modalBox.html("");
-  var p = $("<p>");
-  if (data.icon) {
-    $("<span>").addClass("fa fa-2x").addClass("fa-" + data.icon).appendTo(p);
-  }
-  if (data.message) {
-    $("<span>").text(" " + data.message).appendTo(p);
-  }
-  modalBox.append(p);
-  if (data.code) {
-    modalBox.append($("<p>Error Code: </p>")
-                    .append($("<span>")
-                            .addClass("label label-warning")
-                            .text(data.code)));
-  }
-  if (data.reason) {
-    modalBox.append($("<p>Reason: </p>")
-                    .append($("<span>")
-                            .addClass("label label-warning")
-                            .text(data.reason)));
-  }
-  if (data.buttons) {
-    p = $("<p>").addClass("button-group");
-    data.buttons.forEach(function (btn) {
-      $("<button>").text(btn.text).addClass(btn["class"])
-        .attr("type", "button").attr("rel", btn.rel)
-        .on("click", btn.click).appendTo(p);
-    });
-  }
-  modalBox.append(p);
-  // Show the modal box
-  modalBox.modal();
+  showModal(modalBox, data);
 };
 
 
@@ -555,13 +516,11 @@ $(document).ready(function () {
     modalData.buttons = [
       {
         text: "Cancel",
-        rel: "modal:close",
         click: function () { $.modal.close(); }
       },
       {
         text: "Reset!",
         "class": "button-warning",
-        rel: "modal:close",
         click: function () {
           $.modal.close();
           resetConfigs(ajax_url);
