@@ -83,6 +83,23 @@ $(document).ready(function () {
     scrollTarget(nav_height);
   });
 
+  // Toggle section contents/body
+  $(".heading > .toggle").on("click", function () {
+    var toggle = $(this);
+    var body = toggle.closest(".heading").next(".body");
+    if (body.is(":visible")) {
+      body.slideUp("fast");
+      toggle.removeClass("fa-chevron-circle-up")
+        .addClass("fa-chevron-circle-down")
+        .attr("title", "Expand contents");
+    } else {
+      body.slideDown("fast");
+      toggle.removeClass("fa-chevron-circle-down")
+        .addClass("fa-chevron-circle-up")
+        .attr("title", "Collapse contents");
+    }
+  });
+
   // Panel toggle control
   $(".panel-title > .toggle").on("click", function () {
     var toggle = $(this);

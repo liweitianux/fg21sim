@@ -79,6 +79,24 @@ header.masthead {
 
 
 /**
+ * Section headings
+ */
+.heading > .icon {
+    margin-right: 0.2rem;
+}
+.heading > .toggle {
+    opacity: 0.2;
+    color: #606c76;
+    font-size: 65%;
+    vertical-align: middle;
+    margin-left: 1rem;
+    cursor: pointer;
+}
+.heading > .toggle:hover {
+    opacity: 0.9;
+}
+
+/**
  * Navigation
  */
 .navigation {
@@ -378,13 +396,13 @@ button,
     margin-right: 0.2rem;
 }
 .panel-title > .toggle {
-    margin-left: 0.5rem;
-    opacity: 0.5;
+    opacity: 0.2;
     vertical-align: middle;
+    margin-left: 0.5rem;
     cursor: pointer;
 }
 .panel-title > .toggle:hover {
-    opacity: 1.0;
+    opacity: 0.9;
 }
 .panel-control {
     float: right;
