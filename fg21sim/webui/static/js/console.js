@@ -83,8 +83,9 @@ var appendLogMessage = function (msg) {
   var ele = $("<p>").addClass("code log log-" + level);
   ele.append($(log_icons[level]));
   ele.append($("<span>").addClass("asctime").text(msg.asctime));
-  ele.append($("<span>").addClass("levelname").text(msg.levelname));
-  ele.append($("<span>").addClass("name").text(msg.name));
+  ele.append($("<span>").addClass("levelname")
+             .text("[" + msg.levelname + "]"));
+  ele.append($("<span>").addClass("name").text("<" + msg.name + ">"));
   ele.append($("<span>").addClass("message").text(msg.message));
   ele.appendTo("#log-messages");
 };
@@ -206,6 +207,11 @@ $(document).ready(function () {
           getServerTaskStatus(ajax_url)
             .done(function (response) {
               updateTaskStatus(response.status);
+              // Popup a modal notification
+              var modalData = {};
+              modalData.icon = "check-circle";
+              modalData.message = "Simulation task successfully finished.";
+              showModalConfigs(modalData);
             });
         });
     } else {

@@ -108,7 +108,7 @@ OmegaM0 = float(default=0.27, min=0.0, max=1.0)
 level = option("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", default="INFO")
 
 # Set the format of displayed messages
-format = string(default="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+format = string(default="%(asctime)s [%(levelname)s] <%(name)s> %(message)s")
 
 # Set the date/time format in messages
 datefmt = string(default="%Y-%m-%dT%H:%M:%S")
