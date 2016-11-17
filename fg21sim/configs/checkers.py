@@ -151,6 +151,23 @@ def check_galactic_snr(configs):
     return results
 
 
+def check_extragalactic_clusters(configs):
+    """
+    Check the "[extragalactic][clusters]" section of the configurations.
+    """
+    comp = "extragalactic/clusters"
+    comp_enabled = configs.getn("common/components")
+    results = {}
+    if comp in comp_enabled:
+        # Only validate the configs if this component is enabled
+        results.update(
+            _check_existence(configs, comp+"/catalog")
+        )
+        if configs.getn(comp+"/save"):
+            results.update(_check_missing(configs, comp+"/output_dir"))
+    return results
+
+
 # Available checkers to validate the configurations
 _CHECKERS = [
     check_common,
@@ -159,11 +176,13 @@ _CHECKERS = [
     check_galactic_synchrotron,
     check_galactic_freefree,
     check_galactic_snr,
+    check_extragalactic_clusters,
 ]
 
 
 def check_configs(configs, raise_exception=True, checkers=_CHECKERS):
-    """Check/validate the whole configurations through all the supplied
+    """
+    Check/validate the whole configurations through all the supplied
     checker functions.
 
     These checker functions may check one config option against its context
@@ -183,30 +202,30 @@ def check_configs(configs, raise_exception=True, checkers=_CHECKERS):
 
     Returns
     -------
-    result : bool
+    validity : bool
         ``True`` if the configurations pass all checker functions.
     errors : dict
         An dictionary containing the details about the invalid config options,
         with the keys identifying the config options and values indicating
         the error message.
-        If above ``result=True``, then this is an empty dictionary ``{}``.
+        If above ``validity=True``, then this is an empty dictionary ``{}``.
 
     Raises
     ------
-    ConfigError
-        If any config option failed to pass any of the checkers, a
-        ``ConfigError`` with details is raised.
+    ConfigError :
+        With ``raise_exception=True``, if any configuration option failed
+        to pass all checkers, the ``ConfigError`` with details is raised.
     """
     errors = {}
     for checker in checkers:
         errors.update(checker(configs))
     #
     if errors == {}:
-        result = True
+        validity = True
     else:
-        result = False
+        validity = False
         if raise_exception:
             msg = "\n".join(['Config "{key}": {val}'.format(key=key, val=val)
                              for key, val in errors.items()])
             raise ConfigError(msg)
-    return (result, errors)
+    return (validity, errors)
