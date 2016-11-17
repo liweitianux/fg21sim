@@ -172,45 +172,6 @@ $(document).ready(function () {
       connectWebSocket(ws_url);
     });
 
-    /**********************************************************************
-     * Console operations
-     */
-
-    // Start the task on the server
-    $("#task-start").on("click", function () {
-      if ($("#conf-status").data("validity")) {
-        updateTaskStatus({running: true, finished: false});
-        startServerTask(g_ws);
-        getServerTaskStatus(g_ws);
-      } else {
-        $("#console-invalid-configs").modal();
-        console.error("Exist invalid configuration values!");
-      }
-    });
-
-    /* Logging messages controls */
-    $("#log-toggle-debug").on("click", function () {
-      var status = toggleLogMessages("debug");
-      $(this).fadeTo("fast", status ? 1.0 : 0.5);
-    });
-    $("#log-toggle-info").on("click", function () {
-      var status = toggleLogMessages("info");
-      $(this).fadeTo("fast", status ? 1.0 : 0.5);
-    });
-    $("#log-toggle-warning").on("click", function () {
-      var status = toggleLogMessages("warning");
-      $(this).fadeTo("fast", status ? 1.0 : 0.5);
-    });
-    $("#log-toggle-error").on("click", function () {
-      var status = toggleLogMessages("error");
-      toggleLogMessages("critical");
-      $(this).fadeTo("fast", status ? 1.0 : 0.5);
-    });
-    $("#log-delete").on("click", function () {
-      // TODO: add a confirmation dialog
-      deleteLogMessages();
-    });
-
   } else {
     // WebSocket NOT supported
     console.error("Oops, WebSocket is NOT supported!");

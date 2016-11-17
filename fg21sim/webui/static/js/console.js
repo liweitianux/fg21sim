@@ -10,6 +10,15 @@
 
 
 /**
+ * Show notification contents in the "#modal-console" modal box.
+ */
+var showModalConsole = function (data) {
+  var modalBox = $("#modal-console");
+  showModal(modalBox, data);
+};
+
+
+/**
  * Update the task status "#task-status" on the page.
  *
  * @param {Object} status - The status pushed from the server is an object
@@ -68,7 +77,7 @@ var appendLogMessage = function (msg) {
     info: "<span class='icon fa fa-info-circle'></span>",
     warning: "<span class='icon fa fa-warning'></span>",
     error: "<span class='icon fa fa-times-circle'></span>",
-    critical: "<span class='icon fa fa-times-circle'></span>",
+    critical: "<span class='icon fa fa-times-circle'></span>"
   };
   var level = msg.levelname.toLowerCase();
   var ele = $("<p>").addClass("code log log-" + level);
@@ -180,3 +189,51 @@ var handleMsgConsole = function (msg) {
     // TODO: add error code support and handle each specific error ...
   }
 };
+
+
+$(document).ready(function () {
+  /**
+   * Start the simulation task on the server
+   */
+  $("#task-start").on("click", function () {
+    if ($("#conf-status").data("validity")) {
+      updateTaskStatus({running: true, finished: false});
+      startServerTask(g_ws);
+      getServerTaskStatus(g_ws);
+    } else {
+      $("#console-invalid-configs").modal();
+      var modalData = {};
+      modalData.icon = "times-circle";
+      modalData.message = ("Exist invalid configuration values! " +
+                           "Please correct the configurations " +
+                           "before starting the task");
+      showModalConsole(modalData);
+      console.error("Exist invalid configuration values!");
+    }
+  });
+
+  /**
+   * Logging messages controls
+   */
+  $("#log-toggle-debug").on("click", function () {
+    var status = toggleLogMessages("debug");
+    $(this).fadeTo("fast", status ? 1.0 : 0.5);
+  });
+  $("#log-toggle-info").on("click", function () {
+    var status = toggleLogMessages("info");
+    $(this).fadeTo("fast", status ? 1.0 : 0.5);
+  });
+  $("#log-toggle-warning").on("click", function () {
+    var status = toggleLogMessages("warning");
+    $(this).fadeTo("fast", status ? 1.0 : 0.5);
+  });
+  $("#log-toggle-error").on("click", function () {
+    var status = toggleLogMessages("error");
+    toggleLogMessages("critical");
+    $(this).fadeTo("fast", status ? 1.0 : 0.5);
+  });
+  $("#log-delete").on("click", function () {
+    // TODO: add a confirmation dialog
+    deleteLogMessages();
+  });
+});
