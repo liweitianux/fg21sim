@@ -142,8 +142,8 @@ var showModal = function (modalBox, data) {
         .attr("type", "button")
         .on("click", btn.click).appendTo(p);
     });
+    modalBox.append(p);
   }
-  modalBox.append(p);
   // Show the modal box
   modalBox.modal();
 };

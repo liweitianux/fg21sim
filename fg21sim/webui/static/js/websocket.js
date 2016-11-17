@@ -127,27 +127,17 @@ var connectWebSocket = function (url) {
   };
   g_ws.onmessage = function (e) {
     var msg = JSON.parse(e.data);
-    console.log("WebSocket received message: type:", msg.type,
-                ", success:", msg.success);
-    console.log(msg);
+    console.log("WebSocket received message:", msg);
     // Delegate appropriate actions to handle the received message
     if (msg.type === "configs") {
       handleWebSocketMsgConfigs(msg);
-    }
-    else if (msg.type === "console") {
+    } else if (msg.type === "console") {
       handleWebSocketMsgConsole(msg);
-    }
-    else if (msg.type === "results") {
+    } else if (msg.type === "results") {
       console.error("NotImplementedError");
-      // handleMsgResults(msg);
-    }
-    else {
+    } else {
       // Unknown/unsupported message type
-      console.error("WebSocket received message of unknown type:", msg.type);
-      if (! msg.success) {
-        console.error("WebSocket request failed with error:", msg.error);
-        // TODO: add error codes support and handle each specific error
-      }
+      console.warn("WebSocket: unknown message type:", msg.type);
     }
   };
 };
