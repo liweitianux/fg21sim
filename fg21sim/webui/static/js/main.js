@@ -76,6 +76,24 @@ var scrollTarget = function (height) {
 };
 
 
+/**
+ * Toggle the display of the target block
+ */
+var toggleBlock = function (toggle, targetBlock) {
+  if (targetBlock.is(":visible")) {
+    targetBlock.slideUp("fast");
+    toggle.removeClass("fa-chevron-circle-up")
+      .addClass("fa-chevron-circle-down")
+      .attr("title", "Expand contents");
+  } else {
+    targetBlock.slideDown("fast");
+    toggle.removeClass("fa-chevron-circle-down")
+      .addClass("fa-chevron-circle-up")
+      .attr("title", "Collapse contents");
+  }
+};
+
+
 $(document).ready(function () {
   // Scroll the page to adjust for the fixed navigation banner
   $(window).on("hashchange", function () {
@@ -87,33 +105,13 @@ $(document).ready(function () {
   $(".heading > .toggle").on("click", function () {
     var toggle = $(this);
     var body = toggle.closest(".heading").next(".body");
-    if (body.is(":visible")) {
-      body.slideUp("fast");
-      toggle.removeClass("fa-chevron-circle-up")
-        .addClass("fa-chevron-circle-down")
-        .attr("title", "Expand contents");
-    } else {
-      body.slideDown("fast");
-      toggle.removeClass("fa-chevron-circle-down")
-        .addClass("fa-chevron-circle-up")
-        .attr("title", "Collapse contents");
-    }
+    toggleBlock(toggle, body);
   });
 
   // Panel toggle control
   $(".panel-title > .toggle").on("click", function () {
     var toggle = $(this);
     var body = toggle.closest(".panel").find(".panel-body");
-    if (body.is(":visible")) {
-      body.slideUp("fast");
-      toggle.removeClass("fa-chevron-circle-up")
-        .addClass("fa-chevron-circle-down")
-        .attr("title", "Expand contents");
-    } else {
-      body.slideDown("fast");
-      toggle.removeClass("fa-chevron-circle-down")
-        .addClass("fa-chevron-circle-up")
-        .attr("title", "Collapse contents");
-    }
+    toggleBlock(toggle, body);
   });
 });
