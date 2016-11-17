@@ -20,7 +20,7 @@ References
 import logging
 
 import tornado.websocket
-from tornado.escape import json_decode, json_encode
+from tornado.escape import json_encode
 from tornado.options import options
 
 from ..utils import get_host_ip, ip_in_network
@@ -31,25 +31,40 @@ logger = logging.getLogger(__name__)
 
 class WSHandler(tornado.websocket.WebSocketHandler):
     """
-    WebSocket for bi-directional communication between the Web UI and
-    the server, which can deal with the configurations and execute the
-    simulation task.
+    Push messages (e.g., logging messages, configurations) to the client.
 
-    Generally, WebSocket send and receive data as *string*.  Therefore,
-    the more complex data are stringified as JSON string before sending,
-    which will be parsed after receive.
+    NOTE
+    ----
+    WebSocket is a bi-directional and real-time communication protocol, which
+    is great for active messages pushing.
+    However, WebSocket is a rather low-level protocol.  It receives and sends
+    messages independently, so it does not provide any support of
+    request-response operations, RPC (remote-procedure call), etc.
+    Therefore, it is hard/problematic to implement some interactions similar
+    to the traditional AJAX techniques.
 
-    Each message (as a JSON object or Python dictionary) has a ``type``
-    field which will be used to determine the following action to take.
+    There exists some high-level sub-protocols built upon the WebSocket, e.g.,
+    WAMP [1]_, which provides better features and are easier to use, allowing
+    to fully replace the AJAX etc. techniques.
+    However, the Tornado (v4.3) currently does not support them, and the
+    corresponding client JavaScript tool is also required.
+
+    XXX/WARNING
+    -----------
+    ``WebSocket.on_message()``: may NOT be a coroutine at the moment (v4.3).
+    See [2]_ and [3]_ .
 
     Attributes
     ----------
     from_localhost : bool
         Set to ``True`` if the access is from the localhost,
         otherwise ``False``.
-    configs : `~ConfigManager`
-        A ``ConfigManager`` instance, for configuration manipulations when
-        communicating with the Web UI.
+
+    References
+    ----------
+    .. _[1] WAMP: Web Application Messaging Protocl, http://wamp-proto.org/
+    .. _[2] https://stackoverflow.com/a/35543856/4856091
+    .. _[3] https://stackoverflow.com/a/33724486/4856091
     """
     from_localhost = None
 
@@ -100,63 +115,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.application.ws_clients.remove(self)
         logger.warning("Removed closed WebSocket client: {0}".format(self))
 
-    # FIXME/XXX:
-    # * How to be non-blocking ??
-    # NOTE: WebSocket.on_message: may NOT be a coroutine at the moment (v4.3)
-    # References:
-    # [1] https://stackoverflow.com/a/35543856/4856091
-    # [2] https://stackoverflow.com/a/33724486/4856091
-    def on_message(self, message):
-        """
-        Handle incoming messages and dispatch task according to the
-        message type.
-
-        NOTE
-        ----
-        The received message (parsed to a Python dictionary) has a ``type``
-        item which will be used to determine the following action to take.
-
-        Currently supported message types are:
-        ``configs``:
-            Request or set the configurations
-        ``console``:
-            Control the simulation tasks, or request logging messages
-        ``results``:
-            Request the simulation results
-
-        The sent message also has a ``type`` item of same value, which the
-        client can be used to figure out the proper actions.
-        There is a ``success`` item which indicates the status of the
-        requested operation, and an ``error`` recording the error message
-        if ``success=False``.
-        """
-        logger.debug("WebSocket: received message: {0}".format(message))
-        msg = json_decode(message)
-        try:
-            msg_type = msg["type"]
-        except (KeyError, TypeError):
-            logger.warning("WebSocket: skip invalid message")
-            response = {"success": False,
-                        "type": None,
-                        "error": "type is missing"}
-        else:
-            if msg_type == "results":
-                # Request the simulation results
-                response = self._handle_results(msg)
-            else:
-                # Message of unknown type
-                logger.warning("WebSocket: " +
-                               "unknown message type: {0}".format(msg_type))
-                response = {"success": False,
-                            "type": msg_type,
-                            "error": "unknown message type %s" % msg_type}
-        #
-        msg_response = json_encode(response)
-        self.write_message(msg_response)
-
     def broadcast(self, message):
         """Broadcast/push the given message to all connected clients."""
-        for ws in self.application.ws_clients:
+        for ws in self.application.websockets:
             ws.write_message(message)
 
     def _push_configs(self):
@@ -177,11 +138,3 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.write_message(message)
         logger.info("WebSocket: Pushed current configurations data " +
                     "with validation errors to the client")
-
-    def _handle_results(self, msg):
-        # Got a message of supported types
-        msg_type = msg["type"]
-        logger.info("WebSocket: " +
-                    "handle message of type: {0}".format(msg_type))
-        response = {"success": True, "type": msg_type}
-        return response
