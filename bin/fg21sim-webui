@@ -29,8 +29,8 @@ from fg21sim.utils import setup_logging
 from fg21sim.webui import Application
 
 
-# Define options in the global namespace
-# These options can also be used in other modules
+# Each module can defines its own options, which are added to the global
+# namespace.  Therefore the defined options can also be used by other modules.
 define("host", default="localhost", type=str,
        help=("IP address or hostname the server will listen on. "
              "Specify '0.0.0.0' or '' (empty string) to listen on "
@@ -45,9 +45,6 @@ define("hosts_allowed", default="any", type=str,
              "'192.168.0.0/24'. "
              "Specify 'any' to allow any hosts. "
              "Note that the localhost/127.0.0.1 is always allowed."))
-define("password", type=str,
-       help=("Password authentication to access the Web UI. "
-             "If not specified, then all accesses are allowed."))
 
 
 def main():

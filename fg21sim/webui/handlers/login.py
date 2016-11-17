@@ -3,12 +3,20 @@
 
 """
 Login handler
+
+Currently, the login is simply authenticated by a plain password.
 """
 
-from tornado.options import options
+from tornado.options import define, options
 from tornado.escape import xhtml_escape
 
 from .base import BaseRequestHandler
+
+
+# Each module defines its own options, which are added to the global namespace
+define("password", type=str,
+       help=("Password authentication to access the Web UI. "
+             "If not specified, then all accesses are allowed."))
 
 
 class LoginHandler(BaseRequestHandler):
