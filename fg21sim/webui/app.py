@@ -2,19 +2,17 @@
 # MIT license
 
 """
-Web user interface (UI) of "fg21sim" based upon Tornado_ web server and
-using the WebSocket_ protocol.
+Web user interface (UI) of "fg21sim" based upon Tornado_ web server.
 
 .. _Tornado: http://www.tornadoweb.org/
-
-.. _WebSocket: https://en.wikipedia.org/wiki/WebSocket ,
-   http://caniuse.com/#feat=websockets
 """
 
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 import tornado.web
 from tornado.web import url
+from tornado.options import define, options
 
 from .handlers import (IndexHandler,
                        LoginHandler,
@@ -23,6 +21,11 @@ from .handlers import (IndexHandler,
                        WSHandler)
 from .utils import gen_cookie_secret
 from ..configs import ConfigManager
+
+
+# Each module defines its own options, which are added to the global namespace
+define("max_workers", default=1, type=int,
+       help="Maximum number of threads to execute the submitted tasks")
 
 
 class Application(tornado.web.Application):
@@ -36,15 +39,26 @@ class Application(tornado.web.Application):
         status.  The configuration operations (e.g., "set", "get", "load")
         are performed on this instance, which is also passed to the
         foregrounds simulation programs.
-    ws_clients : set
-        Current connected clients through WebSocket.
+    websockets : set of `~tornado.websocket.WebSocketHandler`
+        Current active WebSockets opened by clients.
         When a new WebSocket connection established, it is added to this
         list, which is also removed from this list when the connection lost.
+    executor : `~concurrent.futures.ThreadPoolExecutor`
+        An executor that uses a pool of threads to execute the submitted
+        tasks asynchronously.
+    task_status : dict
+        Whether the task is running and/or finished?
+        1. running=False, finished=False: not started
+        2. running=False, finished=True:  finished
+        3. running=True,  finished=False: running
+        4. running=True,  finished=True:  ?? error ??
     """
 
     def __init__(self, **kwargs):
         self.configmanager = ConfigManager()
-        self.ws_clients = set()
+        self.websockets = set()
+        self.executor = ThreadPoolExecutor(max_workers=options.max_workers)
+        self.task_status = {"running": False, "finished": False}
         # URL handlers
         handlers = [
             url(r"/", IndexHandler, name="index"),

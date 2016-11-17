@@ -103,7 +103,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):
         """Invoked when a new WebSocket is opened by the client."""
         # Add to the set of current connected clients
-        self.application.ws_clients.add(self)
+        self.application.websockets.add(self)
         logger.info("Added new opened WebSocket client: {0}".format(self))
         self.configs = self.application.configmanager
         # Push current configurations to the client
@@ -112,7 +112,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def on_close(self):
         """Invoked when a new WebSocket is closed by the client."""
         # Remove from the set of current connected clients
-        self.application.ws_clients.remove(self)
+        self.application.websockets.remove(self)
         logger.warning("Removed closed WebSocket client: {0}".format(self))
 
     def broadcast(self, message):
