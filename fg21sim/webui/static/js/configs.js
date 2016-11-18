@@ -361,12 +361,12 @@ var resetConfigs = function (url) {
           showModalConfigs(modalData);
         });
     })
-    .fail(function (error) {
+    .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
       modalData.message = "Failed to reset the configurations!";
-      modalData.code = error.status;
-      modalData.reason = error.statusText;
+      modalData.code = jqxhr.status;
+      modalData.reason = jqxhr.statusText;
       showModalConfigs(modalData);
     });
 };
@@ -390,12 +390,12 @@ var setServerConfigs = function (url, data) {
                     function (response) {
                       setFormConfigs({}, response.errors);
                     })
-    .fail(function (error) {
+    .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
       modalData.message = "Failed to update/set the configuration data!";
-      modalData.code = error.status;
-      modalData.reason = error.statusText;
+      modalData.code = jqxhr.status;
+      modalData.reason = jqxhr.statusText;
       showModalConfigs(modalData);
     });
 };
@@ -414,12 +414,12 @@ var loadServerConfigFile = function (url, userconfig) {
     userconfig = getFormConfigSingle("userconfig");
   }
   return $.postJSON(url, {action: "load", userconfig: userconfig})
-    .fail(function (error) {
+    .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
       modalData.message = "Failed to load the user configuration file!";
-      modalData.code = error.status;
-      modalData.reason = error.statusText;
+      modalData.code = jqxhr.status;
+      modalData.reason = jqxhr.statusText;
       showModalConfigs(modalData);
     });
 };
@@ -452,12 +452,12 @@ var saveServerConfigFile = function (url, clobber) {
       }
       showModalConfigs(modalData);
     })
-    .fail(function (error) {
+    .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
       modalData.message = "Failed to save the configurations!";
-      modalData.code = error.status;
-      modalData.reason = error.statusText;
+      modalData.code = jqxhr.status;
+      modalData.reason = jqxhr.statusText;
       showModalConfigs(modalData);
     });
 };
@@ -470,13 +470,13 @@ var existsServerFile = function (url, filepath, callback) {
   var data = {action: "exists",
               filepath: JSON.stringify(filepath)};
   return $.getJSON(url, data, callback)
-    .fail(function (error) {
+    .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
       modalData.message = ("Failed to check the existence " +
                            "of the user configuration file!");
-      modalData.code = error.status;
-      modalData.reason = error.statusText;
+      modalData.code = jqxhr.status;
+      modalData.reason = jqxhr.statusText;
       showModalConfigs(modalData);
     });
 };

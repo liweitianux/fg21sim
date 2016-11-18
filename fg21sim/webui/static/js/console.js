@@ -146,12 +146,12 @@ var deleteLogMessages = function () {
  */
 var getServerTaskStatus = function (url) {
   return $.getJSON(url)
-    .fail(function (error) {
+    .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
       modalData.message = "Failed to get the task status!";
-      modalData.code = error.status;
-      modalData.reason = error.statusText;
+      modalData.code = jqxhr.status;
+      modalData.reason = jqxhr.statusText;
       showModalConsole(modalData);
     });
 };
@@ -169,12 +169,12 @@ var startServerTask = function (url, task, kwargs) {
   kwargs = typeof kwargs !== "undefined" ? kwargs : {};
   var data = {action: "start", task: task, kwargs: kwargs};
   return $.postJSON(url, data)
-    .fail(function (error) {
+    .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
       modalData.message = "Failed to start the task!";
-      modalData.code = error.status;
-      modalData.reason = error.statusText;
+      modalData.code = jqxhr.status;
+      modalData.reason = jqxhr.statusText;
       showModalConsole(modalData);
     });
 };
