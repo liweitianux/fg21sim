@@ -26,8 +26,23 @@ $(document).ajaxError(function (event, jqxhr, settings, exception) {
 
 
 /**
- * Common functions that will be used by other scripts
+ * Extend jQuery with the `disable()` function to enable/disable buttons,
+ * input, etc.
+ *
+ * Credit: https://stackoverflow.com/a/16788240/4856091
  */
+jQuery.fn.extend({
+  disable: function (state) {
+    return this.each(function () {
+      if ($(this).is("input, button, textarea, select")) {
+        this.disabled = state;
+      } else {
+        $(this).toggleClass("disabled", state);
+      }
+    });
+  }
+});
+
 
 /**
  * Get the value of a key stored in the cookie
