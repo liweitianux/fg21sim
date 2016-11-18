@@ -9,12 +9,19 @@
 
 
 /**
- * jQuery settings
+ * jQuery AJAX global callbacks using the global AJAX event handler methods
+ *
+ * NOTE:
+ * It is NOT recommended to use `jQuery.ajaxSetup` which will affect ALL calls
+ * to `jQuery.ajax` or AJAX-based derivatives.
  */
-jQuery.ajaxSetup({
-  error: function (error) {
-    console.error("AJAX request failed: code:", error.status,
-                  ", reason:", error.statusText); }
+$(document).ajaxError(function (event, jqxhr, settings, exception) {
+  console.error("AJAX request failed: code:", jqxhr.status,
+                ", reason:", jqxhr.statusText);
+  if (jqxhr.status === 403) {
+    // Forbidden error: redirect to login page
+    window.location.href = "/login";
+  }
 });
 
 
@@ -36,6 +43,7 @@ var getCookie = function (name) {
   var m = document.cookie.match("\\b" + name + "=([^;]*)\\b");
   return m ? m[1] : undefined;
 };
+
 
 /**
  * jQuery extension for easier AJAX JSON post

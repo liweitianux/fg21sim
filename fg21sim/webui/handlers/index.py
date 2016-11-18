@@ -2,10 +2,8 @@
 # MIT license
 
 """
-Login handler
+Index page handler
 """
-
-import tornado.web
 
 from .base import BaseRequestHandler
 
@@ -14,6 +12,5 @@ class IndexHandler(BaseRequestHandler):
     """
     Index page handler of the Web UI.
     """
-    @tornado.web.authenticated
     def get(self):
         self.render("index.html")

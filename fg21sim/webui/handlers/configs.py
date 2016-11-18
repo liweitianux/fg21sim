@@ -26,7 +26,6 @@ class ConfigsAJAXHandler(BaseRequestHandler):
         """Hook for subclass initialization.  Called for each request."""
         self.configs = self.application.configmanager
 
-    @tornado.web.authenticated
     def get(self):
         """
         Handle the READ-ONLY configuration manipulations.

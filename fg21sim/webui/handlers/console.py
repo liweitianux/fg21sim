@@ -9,7 +9,6 @@ import logging
 import time
 
 import tornado.ioloop
-import tornado.gen
 from tornado.escape import json_decode, json_encode
 
 from .base import BaseRequestHandler
@@ -36,7 +35,6 @@ class ConsoleAJAXHandler(BaseRequestHandler):
         # from another thread, which executes the submitted task.
         self.io_loop = tornado.ioloop.IOLoop.instance()
 
-    @tornado.web.authenticated
     def get(self):
         """
         Handle the READ-ONLY tasks operations.
