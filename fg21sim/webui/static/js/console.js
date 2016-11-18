@@ -200,9 +200,16 @@ $(document).ready(function () {
    * Start the simulation task on the server
    */
   $("#task-start").on("click", function () {
+    var button = $(this);
     if ($("#conf-status").data("validity")) {
+      button.disable(true);
+      console.log("Disable button:", button[0]);
       updateTaskStatus({running: true, finished: false});
       startServerTask(ajax_url)
+        .always(function () {
+          button.disable(false);
+          console.log("Enable button:", button[0]);
+        })
         .done(function () {
           getServerTaskStatus(ajax_url)
             .done(function (response) {
