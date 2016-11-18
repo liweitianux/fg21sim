@@ -6,6 +6,7 @@ Handle the "console" type of messages from the client.
 """
 
 import logging
+import time
 
 import tornado.ioloop
 import tornado.gen
@@ -168,19 +169,26 @@ class ConsoleAJAXHandler(BaseRequestHandler):
         References:
         [1] https://stackoverflow.com/a/32164711/4856091
         """
+        t1_start = time.perf_counter()
+        t2_start = time.process_time()
         logger.info("Console DEFAULT task: START ...")
         logger.info("Preparing to start foregrounds simulations ...")
+        logger.info("Checking the configurations ...")
+        self.configs.check_all()
+        #
         logger.info("Importing modules + Numba JIT, waiting ...")
         from ..foregrounds import Foregrounds
         #
-        logger.info("Checking the configurations ...")
-        self.configs.check_all()
         fg = Foregrounds(self.configs)
         fg.preprocess()
         fg.simulate()
         fg.postprocess()
         logger.info("Foregrounds simulations DONE!")
         logger.info("Console DEFAULT task: DONE!")
+        t1_stop = time.perf_counter()
+        t2_stop = time.process_time()
+        logger.info("Elapsed time: {0:.3f} (s)".format(t1_stop - t1_start))
+        logger.info("Process time: {0:.3f} (s)".format(t2_stop - t2_start))
         # NOTE: always return a tuple of (success, error)
         return (True, None)
 
@@ -189,11 +197,17 @@ class ConsoleAJAXHandler(BaseRequestHandler):
         Test task ...
         """
         import time
+        t1_start = time.perf_counter()
+        t2_start = time.process_time()
         logger.info("Console TEST task: START ...")
         for i in range(kwargs["time"]):
             logger.info("Console TEST task: slept {0} seconds ...".format(i))
             time.sleep(1)
         logger.info("Console TEST task: DONE!")
+        t1_stop = time.perf_counter()
+        t2_stop = time.process_time()
+        logger.info("Elapsed time: {0:.3f} (s)".format(t1_stop - t1_start))
+        logger.info("Process time: {0:.3f} (s)".format(t2_stop - t2_start))
         return (True, None)
 
     def _task_callback(self, future):
