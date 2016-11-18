@@ -175,7 +175,7 @@ class ConsoleAJAXHandler(BaseRequestHandler):
         self.configs.check_all()
         #
         logger.info("Importing modules + Numba JIT, waiting ...")
-        from ..foregrounds import Foregrounds
+        from ...foregrounds import Foregrounds
         #
         fg = Foregrounds(self.configs)
         fg.preprocess()
