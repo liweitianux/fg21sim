@@ -12,9 +12,9 @@ import os
 import sys
 import argparse
 import logging
+import time
 
-from fg21sim.foregrounds import Foregrounds
-from fg21sim.configs import configs, check_configs
+from fg21sim.configs import configs
 from fg21sim.utils import setup_logging
 
 
@@ -32,11 +32,14 @@ def main():
                         help="be quiet so do not log messages to screen")
     args = parser.parse_args()
 
+    t1_start = time.perf_counter()
+    t2_start = time.process_time()
+
     configs.read_userconfig(args.config)
     if os.environ.get("DEBUG_FG21SIM"):
         print("DEBUG: Current configurations:", configs._config,
               sep="\n", file=sys.stderr)
-    check_configs(configs)
+    configs.check_all()
 
     log_stream = "" if args.quiet else None
     setup_logging(dict_config=configs.logging,
@@ -47,10 +50,22 @@ def main():
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
+    # Save/backup current configurations
+    configfile_dump = os.path.splitext(configs.userconfig)[0] + "_dump.conf"
+    configs.save(configfile_dump, clobber=True, backup=True)
+    logger.info("Saved current configurations to file: %s" % configfile_dump)
+
+    logger.info("Importing modules + Numba JIT, waiting ...")
+    from fg21sim.foregrounds import Foregrounds
     fg = Foregrounds(configs)
     fg.preprocess()
     fg.simulate()
     fg.postprocess()
+
+    t1_stop = time.perf_counter()
+    t2_stop = time.process_time()
+    logger.info("Elapsed time: {0:.3f} (s)".format(t1_stop - t1_start))
+    logger.info("Process time: {0:.3f} (s)".format(t2_stop - t2_start))
 
 
 if __name__ == "__main__":
