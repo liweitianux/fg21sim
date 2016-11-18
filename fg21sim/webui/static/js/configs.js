@@ -386,7 +386,7 @@ var resetConfigs = function (url) {
  */
 var setServerConfigs = function (url, data) {
   data = typeof data !== "undefined" ? data : {};
-  return $.postJSON(url, {action: "reset", data: data},
+  return $.postJSON(url, {action: "set", data: data},
                     function (response) {
                       setFormConfigs({}, response.errors);
                     })
@@ -594,7 +594,7 @@ $(document).ready(function () {
     var data = {};
     data[name] = value;
     setServerConfigs(ajax_url, data)
-      .then(function () { validateServerConfigs(ajax_url); })
+      .then(function () { return validateServerConfigs(ajax_url); })
       .done(function () { updateFormConfigStatus(); });
   });
 });
