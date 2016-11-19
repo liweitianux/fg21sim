@@ -133,7 +133,7 @@ var connectWebSocket = function (url) {
       handleWebSocketMsgConfigs(msg);
     } else if (msg.type === "console") {
       handleWebSocketMsgConsole(msg);
-    } else if (msg.type === "results") {
+    } else if (msg.type === "products") {
       console.error("NotImplementedError");
     } else {
       // Unknown/unsupported message type
