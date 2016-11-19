@@ -2,7 +2,7 @@
 # MIT license
 
 """
-Handle the "console" type of messages from the client.
+Handle the AJAX requests from the client to control the tasks.
 """
 
 import logging

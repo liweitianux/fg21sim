@@ -2,7 +2,7 @@
 # MIT license
 
 """
-Base handler for other handlers
+Base web request handler for other handlers
 """
 
 
@@ -11,6 +11,10 @@ from tornado.options import options
 
 
 class BaseRequestHandler(tornado.web.RequestHandler):
+    """
+    Base web request handler with user authentication support.
+    """
+
     def get_current_user(self):
         """
         Override the ``get_current_user()`` method to implement user
