@@ -2,13 +2,15 @@
 # MIT license
 
 """
-Interface o the simulations of various supported foreground components.
+Interface to the simulations of various supported foreground components.
 
 Currently supported foregrounds:
 
 - Galactic synchrotron
 - Galactic free-free
 - Galactic supernova remnants
+- Extragalactic clusters of galaxies (radio halos)
+- Extragalactic point sources (multiple types)
 """
 
 import os
@@ -24,8 +26,8 @@ import healpy as hp
 from .galactic import (Synchrotron as GalacticSynchrotron,
                        FreeFree as GalacticFreeFree,
                        SuperNovaRemnants as GalacticSNR)
-from .extragalactic import GalaxyClusters as EGGalaxyClusters
-from .extragalactic import PointSources as ExtragalacticPointSources
+from .extragalactic import (GalaxyClusters as EGGalaxyClusters,
+                            PointSources as EGPointSources)
 from .utils.fits import write_fits_healpix
 
 
@@ -64,14 +66,11 @@ class Foregrounds:
     """
     # All supported foreground components
     COMPONENTS_ALL = OrderedDict([
-        ("galactic/synchrotron",   GalacticSynchrotron),
-        ("galactic/freefree",      GalacticFreeFree),
-        ("galactic/snr",           GalacticSNR),
-        ("extragalactic/clusters", EGGalaxyClusters),
-        ("galactic/synchrotron", GalacticSynchrotron),
-        ("galactic/freefree",    GalacticFreeFree),
-        ("galactic/snr",         GalacticSNR),
-        ("extragalactic/pointsources", ExtragalacticPointSources),
+        ("galactic/synchrotron",       GalacticSynchrotron),
+        ("galactic/freefree",          GalacticFreeFree),
+        ("galactic/snr",               GalacticSNR),
+        ("extragalactic/clusters",     EGGalaxyClusters),
+        ("extragalactic/pointsources", EGPointSources),
     ])
 
     def __init__(self, configs):
