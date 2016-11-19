@@ -60,16 +60,19 @@
         <div class="body">
           <hr class="hr-thin hr-condensed hr-dashed" />
           <div class="row">
-            <div class="column column-30 form-group">
-              <label for="conf-common-nside"><i>N</i><sub>side</sub>:</label>
+            <div class="column form-group">
+              <label for="conf-common-nside">HEALPix <i>N</i><sub>side</sub>:</label>
               <input class="form-control" type="number" id="conf-common-nside" name="common/nside" min="1" required />
+              <span class="note">(resolution: <span class="value">?</span> arcmin/pixel)</span>
             </div>
-            <div class="column column-30 form-group">
-              <label for="conf-common-lmin"><i>l</i><sub>min</sub>:</label>
+          </div>
+          <div class="row">
+            <div class="column column-50 form-group">
+              <label for="conf-common-lmin">Multipole <i>l</i><sub>min</sub>:</label>
               <input class="form-control" type="number" id="conf-common-lmin" name="common/lmin" min="0" required />
             </div>
-            <div class="column column-30 form-group">
-              <label for="conf-common-lmax"><i>l</i><sub>max</sub>:</label>
+            <div class="column column-50 form-group">
+              <label for="conf-common-lmax">Multipole <i>l</i><sub>max</sub>:</label>
               <input class="form-control" type="number" id="conf-common-lmax" name="common/lmax" min="1" required />
             </div>
           </div>

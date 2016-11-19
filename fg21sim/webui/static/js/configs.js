@@ -597,4 +597,28 @@ $(document).ready(function () {
       .then(function () { return validateServerConfigs(ajax_url); })
       .done(function () { updateFormConfigStatus(); });
   });
+
+  // When field "common/nside" changed, update the resolution note, as well
+  // as the maximum multiple "common/lmax"
+  $("#conf-form input[name='common/nside']").on("change", function (e) {
+    var nside = parseInt($(this).val());
+    // Update the resolution note (unit: arcmin)
+    var resolution = Math.sqrt(3/Math.PI) * 3600 / nside;
+    $(this).closest(".form-group").find(".note > .value")
+      .text(resolution.toFixed(2));
+    // Also update the maximum multipole "common/lmax"
+    if (! isNaN(nside)) {
+      var lmax = 3 * nside - 1;
+      $("#conf-form input[name='common/lmax']").val(lmax).trigger("change");
+    }
+  });
+  $("#conf-form input[name='common/nside']").keypress(function (e) {
+    if (e.which === 13) {
+      var nside = parseInt($(this).val());
+      // Update the resolution note (unit: arcmin)
+      var resolution = Math.sqrt(3/Math.PI) * 3600 / nside;
+      $(this).closest(".form-group").find(".note > .value")
+        .text(resolution.toFixed(2));
+    }
+  });
 });
