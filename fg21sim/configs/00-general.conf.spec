@@ -84,6 +84,9 @@ combine_prefix = string(default="fg")
 #       if above "combine=True".
 output_dir = string(default=None)
 
+# Filename of the simulation products manifest (JSON format)
+manifest = string(default="products_manifest.json")
+
 
 # Cosmological parameters
 [cosmology]
