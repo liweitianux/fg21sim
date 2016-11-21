@@ -120,6 +120,48 @@ class Products:
             # Frequencies currently not set
             return None
 
+    def add_product(self, comp_id, freq_id, filepath):
+        """
+        Add one single simulation product to the manifest.
+
+        The metadata (file path, size and MD5 checksum) of simulation
+        products are stored in the manifest.
+
+        Parameters
+        ----------
+        comp_id : str
+            ID of the component to be added.
+        freq_id : int
+            Frequency ID
+        filepath : str
+            File path of the product (HEALPix maps).
+
+        Raises
+        ------
+        ManifestError :
+            * The attribute ``self.manifestfile`` is not set.
+        """
+        if self.manifestfile is None:
+            raise ManifestError("'self.manifestfile' is not set")
+        #
+        frequencies = self.frequencies["frequencies"]
+        if comp_id not in self.manifest.keys():
+            # Initialize the manifest array for this component
+            self.manifest[comp_id] = [{} for i in range(len(frequencies))]
+        #
+        curdir = os.path.dirname(self.manifestfile)
+        self.manifest[comp_id][freq_id] = {
+            "frequency": frequencies[freq_id],
+            "healpix": {
+                # Relative path to the HEALPix map file from this manifest
+                "path": os.path.relpath(filepath, curdir),
+                # File size in bytes
+                "size": os.path.getsize(filepath),
+                "md5": hashlib.md5(filepath).hexdigest(),
+            }
+        }
+        logger.info("Added one product to the manifest: {0}".format(filepath))
+
     def add_component(self, comp_id, paths):
         """
         Add a simulation component to the manifest.
@@ -136,6 +178,7 @@ class Products:
             The number of the paths must equal to the number of frequencies.
 
         Raises
+        ------
         ManifestError :
             * The attribute ``self.manifestfile`` is not set.
             * Number of input paths dose NOT equal to number of frequencies
@@ -148,17 +191,8 @@ class Products:
             raise ManifestError("Number of paths (%d) != " % len(paths) +
                                 "number of frequencies")
         #
-        curdir = os.path.dirname(self.manifestfile)
-        self.manifest[comp_id] = [{
-            "frequency": freq,
-            "healpix": {
-                # Relative path to the HEALPix map file from this manifest
-                "path": os.path.relpath(fp, curdir),
-                # File size in bytes
-                "size": os.path.getsize(fp),
-                "md5": hashlib.md5(fp).hexdigest(),
-            }
-        } for freq, fp in zip(frequencies, paths)]
+        for freq_id, filepath in enumerate(paths):
+            self.add_product(comp_id, freq_id, filepath)
         logger.info("Added component '{0}' to the manifest".format(comp_id))
 
     def checksum(self, comp_id=None, freq_id=None):
