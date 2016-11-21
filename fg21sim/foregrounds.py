@@ -28,6 +28,7 @@ from .galactic import (Synchrotron as GalacticSynchrotron,
                        SuperNovaRemnants as GalacticSNR)
 from .extragalactic import (GalaxyClusters as EGGalaxyClusters,
                             PointSources as EGPointSources)
+from .products import Products
 from .utils.fits import write_fits_healpix
 
 
@@ -76,6 +77,10 @@ class Foregrounds:
     def __init__(self, configs):
         self.configs = configs
         self._set_configs()
+        # Initialize the products manifest
+        logger.info("Initialize the products manifest ...")
+        manifestfile = self.configs.getn("output/manifest")
+        self.products = Products(manifestfile)
         # Initialize enabled components
         self.components = OrderedDict()
         for comp in self.components_id:
@@ -92,7 +97,7 @@ class Foregrounds:
         logger.info("Enabled components: {0}".format(
             ", ".join(self.components_id)))
         #
-        self.frequencies = np.array(self.configs.frequencies, ndmin=1)
+        self.frequencies = self.configs.frequencies
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
         logger.info("Simulation frequencies: "
                     "{min:.2f} - {max:.2f} {unit} (#{num:d})".format(
@@ -173,9 +178,11 @@ class Foregrounds:
         write_fits_healpix(filepath, hpmap, header=header,
                            clobber=self.clobber)
         logger.info("Write combined foreground to file: {0}".format(filepath))
+        return filepath
 
     def preprocess(self):
         """Perform the preparation procedures for the final simulations."""
+        self.products.frequencies = self.frequencies
         logger.info("Perform preprocessing for all enabled components ...")
         for comp_obj in self.components.values():
             comp_obj.preprocess()
@@ -195,20 +202,26 @@ class Foregrounds:
         """
         npix = hp.nside2npix(self.nside)
         nfreq = len(self.frequencies)
-        for i, f in enumerate(self.frequencies):
-            logger.info("[#{0}/{1}] ".format(i+1, nfreq) +
+        for freqid, freq in enumerate(self.frequencies):
+            logger.info("[#{0}/{1}] ".format(freqid+1, nfreq) +
                         "Simulating components at {freq} {unit} ...".format(
-                            freq=f, unit=self.freq_unit))
-            hpmap_f = np.zeros(npix)
-            for comp_obj in self.components.values():
-                hpmap_f += comp_obj.simulate_frequency(f)
-            #
-                hpmap, filepath = comp_obj.simulate_frequency(freq)
+                            freq=freq, unit=self.freq_unit))
             if self.combine:
-                self._output(hpmap_f, f)
+                hpmap_comb = np.zeros(npix)
+            for comp_id, comp_obj in self.components.items():
+                hpmap, filepath = comp_obj.simulate_frequency(freq)
+                if filepath is not None:
+                    self.products.add_product(comp_id, freqid, filepath)
+                if self.combine:
+                    hpmap_comb += hpmap
+            if self.combine:
+                filepath_comb = self._output(hpmap_comb, freq)
+                self.products.add_product("combined", freqid, filepath_comb)
 
     def postprocess(self):
         """Perform the post-simulation operations before the end."""
         logger.info("Perform postprocessing for all enabled components ...")
         for comp_obj in self.components.values():
             comp_obj.postprocess()
+        # Save the products manifest
+        self.products.dump(clobber=self.clobber, backup=True)
