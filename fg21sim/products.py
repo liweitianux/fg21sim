@@ -82,8 +82,8 @@ class Products:
         Each frequency has an ID (also its index in the frequencies list).
         """
         self.manifest["frequency"] = {
-            "frequencies": value,
-            "id": range(len(value)),
+            "frequencies": list(value),
+            "id": list(range(len(value))),
         }
         logger.info("Number of frequencies: {0}".format(len(value)))
 
@@ -233,13 +233,13 @@ class Products:
         """
         raise NotImplementedError("TODO")
 
-    def dump(self, outfile, clobber=False, backup=True):
+    def dump(self, outfile=None, clobber=False, backup=True):
         """
         Dump the manifest as a JSON file.
 
         Parameters
         ----------
-        outfile : str
+        outfile : str, optional
             The path to the output manifest file.
             If not provided, then use ``self.manifestfile``.
             NOTE:
@@ -260,7 +260,7 @@ class Products:
             If the target filename already exists and ``clobber=False``.
         """
         if outfile is None:
-            if self.userconfig is None:
+            if self.manifestfile is None:
                 raise ValueError("outfile is missing and " +
                                  "self.manifestfile is None")
             else:
