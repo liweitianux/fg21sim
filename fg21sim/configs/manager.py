@@ -581,6 +581,7 @@ class ConfigManager:
                 # Make a backup with suffix ``.old``
                 backfile = outfile + ".old"
                 shutil.copyfile(outfile, backfile)
+                logger.info("Backed up old configuration file as: " + backfile)
             else:
                 raise OSError("outfile already exists: {0}".format(outfile))
         # Write out the configurations

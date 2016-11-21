@@ -275,6 +275,7 @@ class Products:
                 # Make a backup with suffix ``.old``
                 backfile = outfile + ".old"
                 shutil.copyfile(outfile, backfile)
+                logger.info("Backed up old manifest file as: " + backfile)
             else:
                 raise OSError("File already exists: {0}".format(outfile))
         #
