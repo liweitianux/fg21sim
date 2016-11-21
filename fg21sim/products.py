@@ -7,7 +7,6 @@ Manage and manipulate the simulation products.
 
 import os
 import shutil
-import hashlib
 import json
 import logging
 from collections import OrderedDict
@@ -15,6 +14,7 @@ from collections import OrderedDict
 import numpy as np
 
 from .errors import ManifestError
+from .utils.hashutil import md5
 
 
 logger = logging.getLogger(__name__)
@@ -157,7 +157,7 @@ class Products:
                 "path": os.path.relpath(filepath, curdir),
                 # File size in bytes
                 "size": os.path.getsize(filepath),
-                "md5": hashlib.md5(filepath).hexdigest(),
+                "md5": md5(filepath),
             }
         }
         logger.info("Added one product to the manifest: {0}".format(filepath))
@@ -219,7 +219,7 @@ class Products:
         metadata = self.manifest[comp_id][freq_id]
         filepath = os.path.join(curdir, metadata["healpix"]["path"])
         hash_true = metadata["healpix"]["md5"]
-        hash_ondisk = hashlib.md5(filepath).hexdigest()
+        hash_ondisk = md5(filepath)
         if hash_ondisk == hash_true:
             match = True
         else:
