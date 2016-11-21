@@ -60,7 +60,7 @@ class Products:
     """
     def __init__(self, manifestfile=None):
         self.manifest = OrderedDict()
-        self.manifestfile = None
+        self.manifestfile = manifestfile
         if manifestfile is not None:
             try:
                 self.load(manifestfile)

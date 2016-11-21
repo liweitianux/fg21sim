@@ -79,7 +79,7 @@ class Foregrounds:
         self._set_configs()
         # Initialize the products manifest
         logger.info("Initialize the products manifest ...")
-        manifestfile = self.configs.getn("output/manifest")
+        manifestfile = self.configs.get_path("output/manifest")
         self.products = Products(manifestfile)
         # Initialize enabled components
         self.components = OrderedDict()
@@ -101,8 +101,8 @@ class Foregrounds:
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
         logger.info("Simulation frequencies: "
                     "{min:.2f} - {max:.2f} {unit} (#{num:d})".format(
-                        min=self.frequencies.min(),
-                        max=self.frequencies.max(),
+                        min=min(self.frequencies),
+                        max=max(self.frequencies),
                         num=len(self.frequencies),
                         unit=self.freq_unit))
         #
@@ -202,8 +202,8 @@ class Foregrounds:
         """
         npix = hp.nside2npix(self.nside)
         nfreq = len(self.frequencies)
-        for freqid, freq in enumerate(self.frequencies):
-            logger.info("[#{0}/{1}] ".format(freqid+1, nfreq) +
+        for freq_id, freq in enumerate(self.frequencies):
+            logger.info("[#{0}/{1}] ".format(freq_id+1, nfreq) +
                         "Simulating components at {freq} {unit} ...".format(
                             freq=freq, unit=self.freq_unit))
             if self.combine:
@@ -211,12 +211,12 @@ class Foregrounds:
             for comp_id, comp_obj in self.components.items():
                 hpmap, filepath = comp_obj.simulate_frequency(freq)
                 if filepath is not None:
-                    self.products.add_product(comp_id, freqid, filepath)
+                    self.products.add_product(comp_id, freq_id, filepath)
                 if self.combine:
                     hpmap_comb += hpmap
             if self.combine:
                 filepath_comb = self._output(hpmap_comb, freq)
-                self.products.add_product("combined", freqid, filepath_comb)
+                self.products.add_product("combined", freq_id, filepath_comb)
 
     def postprocess(self):
         """Perform the post-simulation operations before the end."""
