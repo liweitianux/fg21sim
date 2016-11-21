@@ -149,6 +149,11 @@ class Foregrounds:
     def _output(self, hpmap, frequency):
         """Write the simulated free-free map to disk with proper header
         keywords and history.
+
+        Returns
+        -------
+        filepath : str
+            The (absolute) path to the output HEALPix map file.
         """
         if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
@@ -198,6 +203,7 @@ class Foregrounds:
             for comp_obj in self.components.values():
                 hpmap_f += comp_obj.simulate_frequency(f)
             #
+                hpmap, filepath = comp_obj.simulate_frequency(freq)
             if self.combine:
                 self._output(hpmap_f, f)
 

@@ -176,6 +176,11 @@ class Synchrotron:
     def output(self, hpmap, frequency):
         """Write the simulated synchrotron map to disk with proper
         header keywords and history.
+
+        Returns
+        -------
+        filepath : str
+            The (absolute) path to the output HEALPix map file.
         """
         if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
@@ -195,6 +200,7 @@ class Synchrotron:
         write_fits_healpix(filepath, hpmap, header=header,
                            clobber=self.clobber, checksum=self.checksum)
         logger.info("Write simulated map to file: {0}".format(filepath))
+        return filepath
 
     def preprocess(self):
         """Perform the preparation procedures for the final simulations.
@@ -219,6 +225,14 @@ class Synchrotron:
     def simulate_frequency(self, frequency):
         """Transform the template map to the requested frequency,
         according to the spectral model and using an spectral index map.
+
+        Returns
+        -------
+        hpmap_f : 1D `~numpy.ndarray`
+            The HEALPix map (RING ordering) at the input frequency.
+        filepath : str
+            The (absolute) path to the output HEALPix file if saved,
+            otherwise ``None``.
         """
         self.preprocess()
         #
@@ -228,16 +242,28 @@ class Synchrotron:
                    (frequency / self.template_freq) ** self.indexmap)
         #
         if self.save:
-            self.output(hpmap_f, frequency)
-        return hpmap_f
+            filepath = self.output(hpmap_f, frequency)
+        else:
+            filepath = None
+        return (hpmap_f, filepath)
 
     def simulate(self, frequencies):
-        """Simulate the synchrotron map at the specified frequencies."""
+        """Simulate the synchrotron map at the specified frequencies.
+
+        Returns
+        -------
+        hpmaps : list[1D `~numpy.ndarray`]
+            List of HEALPix maps (in RING ordering) at each frequency.
+        paths : list[str]
+            List of (absolute) path to the output HEALPix maps.
+        """
         hpmaps = []
+        paths = []
         for f in np.array(frequencies, ndmin=1):
-            hpmap_f = self.simulate_frequency(f)
+            hpmap_f, filepath = self.simulate_frequency(f)
             hpmaps.append(hpmap_f)
-        return hpmaps
+            paths.append(filepath)
+        return (hpmaps, paths)
 
     def postprocess(self):
         """Perform the post-simulation operations before the end."""
