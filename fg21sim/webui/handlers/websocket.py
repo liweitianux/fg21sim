@@ -108,6 +108,8 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.configs = self.application.configmanager
         # Push current configurations to the client
         self._push_configs()
+        # Also push the current task status
+        self._push_task_status()
 
     def on_close(self):
         """Invoked when a new WebSocket is closed by the client."""
@@ -138,3 +140,17 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.write_message(message)
         logger.info("WebSocket: Pushed current configurations data " +
                     "with validation errors to the client")
+
+    def _push_task_status(self):
+        """
+        Push to the current task status to the client.
+        """
+        msg = {"success": True,
+               "action": "push",
+               "type": "console",
+               "subtype": "status",
+               "status": self.application.task_status}
+        message = json_encode(msg)
+        logger.debug("Message of current task status: {0}".format(message))
+        self.write_message(message)
+        logger.info("WebSocket: Pushed current task status to the client")

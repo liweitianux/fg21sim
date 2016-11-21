@@ -186,6 +186,8 @@ var startServerTask = function (url, task, kwargs) {
 var handleWebSocketMsgConsole = function (msg) {
   if (msg.subtype === "log") {
     appendLogMessage(msg);
+  } else if (msg.subtype === "status") {
+      updateTaskStatus(msg.status);
   } else {
     console.warn("WebSocket: received message:", msg);
   }
