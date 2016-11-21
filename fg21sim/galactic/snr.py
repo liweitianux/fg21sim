@@ -257,9 +257,10 @@ class SuperNovaRemnants:
         """
         templates = {}
         resolution = self.resolution.to(au.deg).value
+        logger.info("Simulate HEALPix template for each SNR")
         for row in self.catalog.itertuples():
             name = row.name
-            logger.info("Simulate HEALPix template for SNR: {0}".format(name))
+            logger.debug("Simulate HEALPix template for SNR: {0}".format(name))
             center = (row.glon, row.glat)
             size = ((row.size_major * self.units["size"]).to(au.deg).value,
                     (row.size_minor * self.units["size"]).to(au.deg).value)
