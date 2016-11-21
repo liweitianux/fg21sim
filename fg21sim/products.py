@@ -139,7 +139,7 @@ class Products:
         Raises
         ------
         ManifestError :
-            * The attribute ``self.manifestfile`` is not set.
+            The attribute ``self.manifestfile`` is not set.
         """
         if self.manifestfile is None:
             raise ManifestError("'self.manifestfile' is not set")
@@ -195,7 +195,7 @@ class Products:
             self.add_product(comp_id, freq_id, filepath)
         logger.info("Added component '{0}' to the manifest".format(comp_id))
 
-    def checksum(self, comp_id=None, freq_id=None):
+    def checksum(self, comp_id, freq_id):
         """
         Calculate the checksum for products and compare with the existing
         manifest.
@@ -216,7 +216,7 @@ class Products:
             The MD5 checksum value of the on-disk product.
         """
         curdir = os.path.dirname(self.manifestfile)
-        metadata = self.manifest[comp_id][freq_id]
+        metadata = self.get_product(comp_id, freq_id)
         filepath = os.path.join(curdir, metadata["healpix"]["path"])
         hash_true = metadata["healpix"]["md5"]
         hash_ondisk = md5(filepath)
@@ -226,12 +226,47 @@ class Products:
             match = False
         return (match, hash_ondisk)
 
-    def convert_hpx(self, comp_id, freq_id):
+    def get_product(self, comp_id, freq_id):
+        return self.manifest[comp_id][freq_id]
+
+    def convert_hpx(self, comp_id, freq_id, clobber=False):
         """
         Convert the specified HEALPix map product to HPX projected FITS image.
         Also add the metadata of the HPX image to the manifest.
+
+        Raises
+        ------
+        IOError :
+            Output HPX image already exists and ``clobber=False``
         """
-        raise NotImplementedError("TODO")
+        from astropy.io import fits
+        from .utils.healpix import healpix2hpx
+        #
+        curdir = os.path.dirname(self.manifestfile)
+        metadata = self.get_product(comp_id, freq_id)
+        infile = os.path.join(curdir, metadata["healpix"]["path"])
+        outfile = os.path.splitext(infile)[0] + "_hpx.fits"
+        if os.path.exists(outfile):
+            if clobber:
+                os.remove(outfile)
+                logger.warning("Removed existing HPX image: %s" % outfile)
+            else:
+                raise IOError("Output HPX image already exists: %s" % outfile)
+        # Convert HEALPix map to HPX projected FITS image
+        logger.info("Converting HEALPix map to HPX image: %s" % infile)
+        hpx_data, hpx_header = healpix2hpx(infile)
+        hdu = fits.PrimaryHDU(data=hpx_data, header=hpx_header)
+        hdu.writeto(outfile)
+        logger.info("Converted HEALPix map to HPX image: %s" % outfile)
+        #
+        size = os.path.getsize(outfile)
+        md5sum = md5(outfile)
+        metadata["hpx"] = {
+            "path": os.path.relpath(outfile, curdir),
+            "size": size,
+            "md5": md5sum,
+        }
+        return (outfile, size, md5sum)
 
     def dump(self, outfile=None, clobber=False, backup=True):
         """
@@ -307,4 +342,5 @@ class Products:
             raise ValueError("Not an absolute path: {0}".format(infile))
         # Keep the order of keys
         self.manifest = json.load(open(infile), object_pairs_hook=OrderedDict)
+        self.manifestfile = infile
         logger.info("Loaded manifest from file: {0}".format(infile))
