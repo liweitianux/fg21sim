@@ -92,8 +92,10 @@ class PointSources:
         for pscomp_obj in self.pscomps.values():
             hpmap_f += pscomp_obj.draw_single_ps(freq)
         logger.info("Generating PS hpmaps done!")
-
-        return hpmap_f
+        # XXX/TODO:
+        # * Output the HEALPix map to file
+        # * Also return the path to the output file
+        return (hpmap_f, None)
 
     def simulate(self, frequencies):
         """Simulate the emission (HEALPix) maps of all Galactic SNRs for
