@@ -186,7 +186,7 @@ class ConsoleAJAXHandler(BaseRequestHandler):
         t1_stop = time.perf_counter()
         t2_stop = time.process_time()
         logger.info("Elapsed time: {0:.3f} (s)".format(t1_stop - t1_start))
-        logger.info("Process time: {0:.3f} (s)".format(t2_stop - t2_start))
+        logger.info("CPU process time: {0:.3f} (s)".format(t2_stop - t2_start))
         # NOTE: always return a tuple of (success, error)
         return (True, None)
 
@@ -205,7 +205,7 @@ class ConsoleAJAXHandler(BaseRequestHandler):
         t1_stop = time.perf_counter()
         t2_stop = time.process_time()
         logger.info("Elapsed time: {0:.3f} (s)".format(t1_stop - t1_start))
-        logger.info("Process time: {0:.3f} (s)".format(t2_stop - t2_start))
+        logger.info("CPU process time: {0:.3f} (s)".format(t2_stop - t2_start))
         return (True, None)
 
     def _task_callback(self, future):
