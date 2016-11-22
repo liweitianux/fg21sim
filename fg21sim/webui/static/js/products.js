@@ -44,7 +44,7 @@ var makeManifestTableCell = function (data, localhost) {
   cell.append($("<span>").attr("title", "Show product information")
               .addClass("info btn btn-small fa fa-info-circle"));
   cell.append($("<span>").attr("title", "Download HEALPix map")
-              .addClass("healpix btn btn-small fa fa-file"));
+              .addClass("healpix healpix-download btn btn-small fa fa-file"));
   if (data.hpx) {
     cell.data("hpx-image", true)
       .data("hpx-path", data.hpx.path)
@@ -53,7 +53,9 @@ var makeManifestTableCell = function (data, localhost) {
     cell.append($("<span>").attr("title", localhost
                                  ? "Open HPX FITS image"
                                  : "Download HPX FITS image")
-                .addClass("hpx btn btn-small fa fa-image"));
+                .addClass("hpx")
+                .addClass(localhost ? "hpx-open" : "hpx-download")
+                .addClass("btn btn-small fa fa-image"));
   } else {
     cell.data("hpx-image", false);
     cell.append($("<span>").attr("title", "Generate HPX image")
@@ -111,15 +113,15 @@ var loadManifestToTable = function (manifest, localhost) {
 
 /**
  * Update the content of one single cell in the manifest table
+ *
+ * @param {Object} cell - The table cell DOM/jQuery object
  */
-var updateManifestTableCell = function (compID, freqID, data) {
-  var tr = $("table#products-manifest").find("tr.frequency.freqid-" + freqID);
-  tr.find("td").each(function () {
-    if ($(this).data("compID") === compID) {
-      // Found the target table cell
-      $(this).html(makeManifestTableCell(data));
-    }
-  });
+var updateManifestTableCell = function (cell, data) {
+  cell = $(cell);
+  var cell_new = makeManifestTableCell(data, cell.data("localhost"));
+  cell_new.data("compID", cell.data("compID"))
+    .data("freqID", cell.data("freqID"));
+  cell.replaceWith(cell_new);
 };
 
 
@@ -193,7 +195,7 @@ var getServerManifest = function (url) {
  * Reset the products manifest on both the server side and client side
  */
 var resetManifest = function (url) {
-  $.postJSON(url, {action: "reset"})
+  return $.postJSON(url, {action: "reset"})
     .done(function () {
       resetManifestTable();
       // Popup a modal notification
@@ -220,7 +222,15 @@ var resetManifest = function (url) {
  * @param {Integer} freqID - Frequency ID
  */
 var convertProductHPX = function (url, compID, freqID) {
-  ;
+  return $.postJSON(url, {action: "convert", compID: compID, freqID: freqID})
+    .fail(function (jqxhr) {
+      var modalData = {};
+      modalData.icon = "times-circle";
+      modalData.contents = "Failed to convert the HEALPix map to HPX image!";
+      modalData.code = jqxhr.status;
+      modalData.reason = jqxhr.statusText;
+      showModalProducts(modalData);
+    });
 };
 
 
@@ -286,5 +296,24 @@ $(document).ready(function () {
       modalData.contents.push(p);
     }
     showModalProducts(modalData);
+  });
+
+  // Convert HEALPix map of a product to HPX projected FITS image.
+  $(document).on("click", "td.product > .hpx.hpx-convert", function () {
+    var cell = $(this).closest("td");
+    var compID = cell.data("compID");
+    var freqID = cell.data("freqID");
+    // Replace the icon with a spinner when converting
+    $(this).removeClass("fa-image").addClass("fa-spinner fa-pulse")
+      .fadeTo("fast", 1.0).css({"font-size": "2em"})
+      .attr("title", "Generating HPX image ...");
+    convertProductHPX(ajax_url, compID, freqID)
+      .done(function (response) {
+        updateManifestTableCell(cell, response.data);
+        showModalProducts({
+          icon: "check-circle",
+          contents: "Generated HPX projected FITS image."
+        });
+      });
   });
 });

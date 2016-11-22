@@ -33,7 +33,7 @@ var updateTaskStatus = function (status) {
     $("#task-status").removeClass("label-success label-warning label-danger")
       .addClass("label-default");
     $("#task-status .icon").removeClass("fa-check-circle fa-question-circle")
-      .removeClass("fa-spin fa-spinner")
+      .removeClass("fa-cog fa-spinner")
       .addClass("fa-coffee");
   }
   else if (!running && finished) {
@@ -41,7 +41,7 @@ var updateTaskStatus = function (status) {
     $("#task-status").removeClass("label-default label-warning label-danger")
       .addClass("label-success");
     $("#task-status .icon").removeClass("fa-coffee fa-question-circle")
-      .removeClass("fa-spin fa-spinner")
+      .removeClass("fa-cog fa-spinner")
       .addClass("fa-check-circle");
   }
   else if (running && !finished) {
@@ -50,7 +50,7 @@ var updateTaskStatus = function (status) {
       .addClass("label-warning");
     $("#task-status .icon").removeClass("fa-coffee fa-check-circle")
       .removeClass("fa-question-circle")
-      .addClass("fa-spin fa-spinner");
+      .addClass("fa-cog fa-spinner");
   }
   else {
     // Unknown status: ERROR ??
@@ -58,7 +58,7 @@ var updateTaskStatus = function (status) {
     $("#task-status").removeClass("label-default label-success label-warning")
       .addClass("label-danger");
     $("#task-status .icon").removeClass("fa-coffee fa-check-circle")
-      .removeClass("fa-spin fa-spinner")
+      .removeClass("fa-cog fa-spinner")
       .addClass("fa-question-circle");
   }
   console.log("Task status:", ts);

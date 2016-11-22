@@ -78,6 +78,7 @@ class ProductsAJAXHandler(BaseRequestHandler):
         request = json_decode(self.request.body)
         logger.debug("Received request: {0}".format(request))
         action = request.get("action")
+        response = {"action": action}
         if action == "load":
             # Load the manifest from supplied file
             try:
@@ -98,14 +99,22 @@ class ProductsAJAXHandler(BaseRequestHandler):
             success = self._reset_products()
         elif action == "convert":
             # Convert the product from HEALPix map to HPX image
-            raise NotImplementedError("TODO")
+            try:
+                comp_id = request["compID"]
+                freq_id = request["freqID"]
+                success, reason = self._convert_hpx(comp_id, freq_id)
+                data = self.products.get_product(comp_id, freq_id)
+                response["data"] = data
+            except KeyError:
+                success = False
+                reason = "'compID' or 'freqID' is missing"
         else:
             # ERROR: bad action
             success = False
             reason = "Bad request action: {0}".format(action)
         #
         if success:
-            response = {"action": action, "success": success}
+            response["success"] = success
             logger.debug("Response: {0}".format(response))
             self.set_header("Content-Type", "application/json; charset=UTF-8")
             self.write(json_encode(response))
@@ -169,5 +178,20 @@ class ProductsAJAXHandler(BaseRequestHandler):
             self.products.dump(outfile, clobber=clobber)
             success = True
         except (ValueError, OSError) as e:
+            error = str(e)
+        return (success, error)
+
+    def _convert_hpx(self, comp_id, freq_id):
+        """
+        Convert the HEALPix map of the product to HPX projected FITS image.
+
+        FIXME/TODO: make this non-blocking!
+        """
+        success = False
+        error = None
+        try:
+            self.products.convert_hpx(comp_id, freq_id, clobber=True)
+            success = True
+        except IOError as e:
             error = str(e)
         return (success, error)
