@@ -171,7 +171,8 @@ var toggleBlock = function (toggle, targetBlock) {
  *
  * The input `data` may have the following attributes:
  *   - `icon` : FontAwesome icon (specified without the beginning `fa-`)
- *   - `message` : Main summary message
+ *   - `title` : Notification title/summary
+ *   - `contents` : Notification detail contents, may be a list of paragraphs
  *   - `code` : Error code if it is an error notification
  *   - `reason` : Reason of the error
  *   - `buttons` : A list of buttons, which have these attributes:
@@ -186,12 +187,22 @@ var showModal = function (modalBox, data) {
   modalBox.html("");
   var p = $("<p>");
   if (data.icon) {
-    $("<span>").addClass("fa fa-2x").addClass("fa-" + data.icon).appendTo(p);
+    $("<span>").addClass("icon fa fa-2x")
+      .addClass("fa-" + data.icon).appendTo(p);
   }
-  if (data.message) {
-    $("<span>").text(" " + data.message).appendTo(p);
+  if (data.title) {
+    $("<span>").addClass("title").text(data.title).appendTo(p);
   }
   modalBox.append(p);
+  if (data.contents) {
+    if ($.isArray(data.contents)) {
+      data.contents.forEach(function (p) {
+        modalBox.append($("<p class='contents'>").html(p));
+      });
+    } else {
+      modalBox.append($("<p class='contents'>").html(data.contents));
+    }
+  }
   if (data.code) {
     modalBox.append($("<p>Error Code: </p>")
                     .append($("<span>")
