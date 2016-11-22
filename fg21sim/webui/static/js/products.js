@@ -274,14 +274,15 @@ $(document).ready(function () {
       title: ("Product: " + product.data("compID") + " @ " +
               product.data("frequency") + " (#" + product.data("freqID") + ")"),
       contents: [
-        ("<strong>HEALPix map:</strong> " + product.data("path") + ", size: " +
-         product.data("size") + " bytes, MD5: " + product.data("md5"))
+        ("<strong>HEALPix map:</strong> " + product.data("path") +
+         ", size: " + (product.data("size")/1024/1024).toFixed(1) +
+         " MB, MD5: " + product.data("md5"))
       ]
     };
     if (product.data("hpx-image")) {
       var p = ("HPX image: " + product.data("hpx-path") + ", size: " +
-               product.data("hpx-size") + "bytes, MD5: " +
-               product.data("hpx-md5"));
+               (product.data("hpx-size")/1024/1024).toFixed(1) +
+               " MB, MD5: " + product.data("hpx-md5"));
       modalData.contents.push(p);
     }
     showModalProducts(modalData);
