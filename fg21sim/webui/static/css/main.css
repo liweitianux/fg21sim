@@ -30,6 +30,10 @@ p {
     margin-bottom: 1rem;
 }
 
+td, th {
+    text-align: center;
+}
+
 .text-center {
     text-align: center;
 }
@@ -358,9 +362,12 @@ button,
 .btn {
     margin-left: 0.5rem;
     margin-right: 0.5rem;
-    font-size: 2.2rem;
+    font-size: 150%;
     vertical-align: middle;
     cursor: pointer;
+}
+.btn.btn-small {
+    font-size: 100%;
 }
 
 
@@ -462,4 +469,15 @@ hr.hr-dashed {
 }
 hr.hr-dotted {
     border-top-style: dotted;
+}
+
+
+/**
+ * "products" page specific styles
+ */
+td.product > .hpx.hpx-convert {
+    opacity: 0.4;
+}
+td.product > .hpx.hpx-convert:hover {
+    opacity: 0.9;
 }
