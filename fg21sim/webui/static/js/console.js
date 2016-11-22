@@ -149,7 +149,7 @@ var getServerTaskStatus = function (url) {
     .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
-      modalData.message = "Failed to get the task status!";
+      modalData.contents = "Failed to get the task status!";
       modalData.code = jqxhr.status;
       modalData.reason = jqxhr.statusText;
       showModalConsole(modalData);
@@ -172,7 +172,7 @@ var startServerTask = function (url, task, kwargs) {
     .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
-      modalData.message = "Failed to start the task!";
+      modalData.contents = "Failed to start the task!";
       modalData.code = jqxhr.status;
       modalData.reason = jqxhr.statusText;
       showModalConsole(modalData);
@@ -219,14 +219,14 @@ $(document).ready(function () {
               // Popup a modal notification
               var modalData = {};
               modalData.icon = "check-circle";
-              modalData.message = "Simulation task successfully finished.";
+              modalData.contents = "Simulation task successfully finished.";
               showModalConfigs(modalData);
             });
         });
     } else {
       var modalData = {};
       modalData.icon = "times-circle";
-      modalData.message = ("Exist invalid configuration values! " +
+      modalData.contents = ("Exist invalid configuration values! " +
                            "Please correct the configurations " +
                            "before starting the task");
       showModalConsole(modalData);
@@ -257,7 +257,7 @@ $(document).ready(function () {
   $("#log-delete").on("click", function () {
     var modalData = {};
     modalData.icon = "warning";
-    modalData.message = ("Are you sure to delete all logging messages?");
+    modalData.contents = "Are you sure to delete all logging messages?";
     modalData.buttons = [
       {
         text: "Cancel",

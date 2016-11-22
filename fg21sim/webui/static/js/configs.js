@@ -316,14 +316,14 @@ var resetConfigs = function (url) {
           // Popup a modal notification
           var modalData = {};
           modalData.icon = "check-circle";
-          modalData.message = "Reset and synchronized the configurations.";
+          modalData.contents = "Reset and synchronized the configurations.";
           showModalConfigs(modalData);
         });
     })
     .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
-      modalData.message = "Failed to reset the configurations!";
+      modalData.contents = "Failed to reset the configurations!";
       modalData.code = jqxhr.status;
       modalData.reason = jqxhr.statusText;
       showModalConfigs(modalData);
@@ -352,7 +352,7 @@ var setServerConfigs = function (url, data) {
     .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
-      modalData.message = "Failed to update/set the configuration data!";
+      modalData.contents = "Failed to update/set the configuration data!";
       modalData.code = jqxhr.status;
       modalData.reason = jqxhr.statusText;
       showModalConfigs(modalData);
@@ -376,7 +376,7 @@ var loadServerConfigFile = function (url, userconfig) {
     .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
-      modalData.message = "Failed to load the user configuration file!";
+      modalData.contents = "Failed to load the user configuration file!";
       modalData.code = jqxhr.status;
       modalData.reason = jqxhr.statusText;
       showModalConfigs(modalData);
@@ -402,11 +402,11 @@ var saveServerConfigFile = function (url, clobber) {
       if ($("#conf-status").data("validity")) {
         // Form configurations is valid :)
         modalData.icon = "check-circle";
-        modalData.message = "Configurations saved to file.";
+        modalData.contents = "Configurations saved to file.";
       } else {
         // Configurations is currently invalid!
         modalData.icon = "warning";
-        modalData.message = ("Configurations saved to file. " +
+        modalData.contents = ("Configurations saved to file. " +
                              "But there exist some invalid values!");
       }
       showModalConfigs(modalData);
@@ -414,7 +414,7 @@ var saveServerConfigFile = function (url, clobber) {
     .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
-      modalData.message = "Failed to save the configurations!";
+      modalData.contents = "Failed to save the configurations!";
       modalData.code = jqxhr.status;
       modalData.reason = jqxhr.statusText;
       showModalConfigs(modalData);
@@ -432,7 +432,7 @@ var existsServerFile = function (url, filepath, callback) {
     .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
-      modalData.message = ("Failed to check the existence " +
+      modalData.contents = ("Failed to check the existence " +
                            "of the user configuration file!");
       modalData.code = jqxhr.status;
       modalData.reason = jqxhr.statusText;
@@ -471,7 +471,7 @@ $(document).ready(function () {
   $("#reset-defaults").on("click", function () {
     var modalData = {};
     modalData.icon = "warning";
-    modalData.message = ("Are you sure to reset the configurations?");
+    modalData.contents = ("Are you sure to reset the configurations?");
     modalData.buttons = [
       {
         text: "Cancel",
@@ -502,7 +502,7 @@ $(document).ready(function () {
         // Popup a modal notification
         var modalData = {};
         modalData.icon = "check-circle";
-        modalData.message = "Loaded the configurations from file.";
+        modalData.contents = "Loaded the configurations from file.";
         showModalConfigs(modalData);
       });
   });
@@ -516,7 +516,7 @@ $(document).ready(function () {
         // Confirm to overwrite
         var modalData = {};
         modalData.icon = "warning";
-        modalData.message = ("Configuration file already exists! Overwrite?");
+        modalData.contents = ("Configuration file already exists! Overwrite?");
         modalData.buttons = [
           {
             text: "Cancel",
