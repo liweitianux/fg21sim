@@ -37,5 +37,5 @@ Unless otherwise declared:
   licenses.  See also ``LICENSE-3RDPARTY``.
 
 
-.. _`MIT license`: https://opensource.org/licenses/mit-license.html
+.. _`MIT license`: https://opensource.org/licenses/MIT
 .. _`Creative Commons Attribution 3.0 license`: https://creativecommons.org/licenses/by/3.0/us/deed.en_US
