@@ -18,9 +18,11 @@ from .handlers import (IndexHandler,
                        LoginHandler,
                        ConfigsAJAXHandler,
                        ConsoleAJAXHandler,
+                       ProductsAJAXHandler,
                        WSHandler)
 from .utils import gen_cookie_secret
 from ..configs import ConfigManager
+from ..products import Products
 
 
 # Each module defines its own options, which are added to the global namespace
@@ -52,6 +54,8 @@ class Application(tornado.web.Application):
         2. running=False, finished=True:  finished
         3. running=True,  finished=False: running
         4. running=True,  finished=True:  ?? error ??
+    products : `~fg21sim.products.Products`
+        Manage and manipulate the simulation products
     """
 
     def __init__(self, **kwargs):
@@ -59,12 +63,14 @@ class Application(tornado.web.Application):
         self.websockets = set()
         self.executor = ThreadPoolExecutor(max_workers=options.max_workers)
         self.task_status = {"running": False, "finished": False}
+        self.products = Products()
         # URL handlers
         handlers = [
             url(r"/", IndexHandler, name="index"),
             url(r"/login", LoginHandler, name="login"),
             url(r"/ajax/configs", ConfigsAJAXHandler),
             url(r"/ajax/console", ConsoleAJAXHandler),
+            url(r"/ajax/products", ProductsAJAXHandler),
             url(r"/ws", WSHandler),
         ]
         if options.debug:

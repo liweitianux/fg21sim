@@ -5,4 +5,5 @@ from .index import IndexHandler
 from .login import LoginHandler
 from .configs import ConfigsAJAXHandler
 from .console import ConsoleAJAXHandler
+from .products import ProductsAJAXHandler
 from .websocket import WSHandler
