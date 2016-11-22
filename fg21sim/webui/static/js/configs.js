@@ -3,56 +3,10 @@
  * MIT license
  *
  * Web UI of "fg21sim"
- * Configuration form manipulations using the WebSocket communications
+ * Configuration form manipulations
  */
 
 "use strict";
-
-
-/**
- * Generic utilities
- */
-
-/**
- * Get the basename of a path
- * FIXME: only support "/" as the path separator
- */
-var basename = function (path) {
-  return path.replace(/^.*\//, "");
-};
-
-/**
- * Get the dirname of a path
- * FIXME: only support "/" as the path separator
- */
-var dirname = function (path) {
-  var dir = path.replace(/\/[^\/]*\/?$/, "");
-  if (dir === "") {
-    dir = "/";
-  }
-  return dir;
-};
-
-/**
- * Join the two path
- * FIXME: only support "/" as the path separator
- */
-var joinPath = function (path1, path2) {
-  var p = null;
-  // Strip the trailing path separator
-  path1 = path1.replace(/\/$/, "");
-  if (path1 === "") {
-    p = path2;
-  } else {
-    p = path1 + "/" + path2;
-  }
-  // Both "path1" and "path2" are empty
-  if (p === "/") {
-    console.error("Both 'path1' and 'path2' are empty");
-    p = null;
-  }
-  return p;
-};
 
 
 /**
