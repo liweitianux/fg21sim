@@ -5,9 +5,42 @@
  # Products part
  #}
 <section id="products">
-  <h2><span class="fa fa-files-o" aria-hidden="true"></span> Products</h2>
-  <hr />
+  <h2 class="heading">
+    <span class="icon fa fa-files-o" aria-hidden="true"></span>
+    <span class="text">Products</span>
+    <span class="toggle fa fa-chevron-circle-up" title="Collapse contents"></span>
+  </h2>
 
-  <p>Simulation products go here :)</p>
-  <p>TODO :(</p>
+  <div class="body">
+    <hr />
+
+    <p class="button-group">
+      <button type="button" id="load-products"><span class="fa fa-download" aria-hidden="true"></span> Load Products</button>
+      <button type="button" id="save-products"><span class="fa fa-save" aria-hidden="true"></span> Save Products</button>
+    </p>
+    <form id="products-form" class="form-inline" autocomplete="on">
+      <div class="row">
+        <div class="column form-group">
+          <label for="products-manifest">Products Manifest:</label>
+          <input class="form-control code" type="text" id="products-manifest" required />
+        </div>
+      </div>
+      <div class="row">
+        <div class="column form-group">
+          <label for="products-ds9">DS9 Executable Path:</label>
+          <input class="form-control code" type="text" id="products-ds9" value="ds9" />
+        </div>
+      </div>
+    </form>
+
+    <hr class="hr-thin hr-condensed hr-dashed" />
+
+    <table id="products-manifest">
+      <caption>No products manifest loaded yet.</caption>
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>  <!-- h2: body -->
+
+  <div id="modal-products" class="modal" style="display: none;"></div>
 </section>
