@@ -182,7 +182,7 @@ class Foregrounds:
 
     def preprocess(self):
         """Perform the preparation procedures for the final simulations."""
-        self.products.frequencies = self.frequencies
+        self.products.frequencies = (self.frequencies, str(self.freq_unit))
         logger.info("Perform preprocessing for all enabled components ...")
         for comp_obj in self.components.values():
             comp_obj.preprocess()

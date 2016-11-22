@@ -37,6 +37,7 @@ class Products:
         "frequency" : {
             "frequencies" : [ <list of frequencies> ],
             "id" : [ <id/index of each frequency> ],
+            "unit": <frequency unit>,
         },
         <component> : [
             {
@@ -80,12 +81,26 @@ class Products:
         Set the frequencies of the products and store in the manifest.
 
         Each frequency has an ID (also its index in the frequencies list).
+
+        Parameters
+        ----------
+        value : list[float], or tuple(list[float], str)
+            The list of simulation frequencies, or a tuple of the frequencies
+            and its unit (default: MHz).
         """
+        if isinstance(value, tuple) and len(value) == 2:
+            frequencies, unit = value
+        else:
+            frequencies = value
+            unit = "MHz"
+        #
         self.manifest["frequency"] = {
-            "frequencies": list(value),
-            "id": list(range(len(value))),
+            "frequencies": list(frequencies),
+            "id": list(range(len(frequencies))),
+            "unit": unit,
         }
-        logger.info("Number of frequencies: {0}".format(len(value)))
+        logger.info("Number of frequencies: {0}, ".format(len(frequencies)) +
+                    "unit: {0}".format(unit))
 
     def find_frequency_id(self, frequency, atol=1e-3):
         """
@@ -268,6 +283,11 @@ class Products:
         }
         return (outfile, size, md5sum)
 
+    def reset(self):
+        self.manifest = OrderedDict()
+        self.manifestfile = None
+        logger.warning("Reset products manifest")
+
     def dump(self, outfile=None, clobber=False, backup=True):
         """
         Dump the manifest as a JSON file.
@@ -340,6 +360,8 @@ class Products:
         infile = os.path.expanduser(infile)
         if not os.path.isabs(infile):
             raise ValueError("Not an absolute path: {0}".format(infile))
+        # Reset existing manifest
+        self.reset()
         # Keep the order of keys
         self.manifest = json.load(open(infile), object_pairs_hook=OrderedDict)
         self.manifestfile = infile
