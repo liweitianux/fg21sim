@@ -99,7 +99,7 @@ class ConfigsAJAXHandler(BaseRequestHandler):
         if action == "set":
             # Set the values of the specified options
             try:
-                errors = self._set_configs(data=request["data"])
+                data, errors = self._set_configs(request["data"])
                 success = True
             except KeyError:
                 success = False
@@ -198,10 +198,15 @@ class ConfigsAJAXHandler(BaseRequestHandler):
 
         Returns
         -------
+        data_orig : dict
+            When the supplied value failed to pass the specification
+            validation, then its original value was returned to the client
+            to reset its value.
         errors : dict
             When error occurs (e.g., invalid key, invalid values), then the
             specific errors with details are stored in this dictionary.
         """
+        data_orig = {}
         errors = {}
         for key, value in data.items():
             if key in ["workdir", "configfile"]:
@@ -215,10 +220,13 @@ class ConfigsAJAXHandler(BaseRequestHandler):
             else:
                 try:
                     self.configs.setn(key, value)
-                except (KeyError, ConfigError) as e:
+                except KeyError as e:
+                    errors[key] = str(e)
+                except ConfigError as e:
+                    data_orig[key] = self.configs.getn(key)
                     errors[key] = str(e)
         #
-        return errors
+        return (data_orig, errors)
 
     def _reset_configs(self):
         """Reset the configurations to the defaults."""

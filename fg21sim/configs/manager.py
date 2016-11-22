@@ -344,7 +344,7 @@ class ConfigManager:
 
     def setn(self, key, value):
         """Set the value of config option specified by a list of keys or a
-        "sep"-separated keys string.
+        "/"-separated keys string.
 
         The supplied key-value config pair is first used to create a
         temporary ``ConfigObj`` instance, which is then validated against
@@ -379,10 +379,9 @@ class ConfigManager:
         ConfigError :
             The value fails to pass the validation against specifications.
         """
-        try:
-            val_old = self.getn(key)
-        except KeyError as e:
-            raise KeyError(e)
+        # NOTE:
+        # May raise ``KeyError`` if the key does not exists
+        val_old = self.getn(key)
         if val_old == value:
             # No need to set this option value
             return
@@ -396,6 +395,8 @@ class ConfigManager:
         # Create the temporary ``ConfigObj`` instance and validate it
         config_new = ConfigObj(d, interpolation=False,
                                configspec=self._configspec)
+        # NOTE:
+        # May raise ``ConfigError`` if fails to pass the validation
         config_new = self._validate(config_new)
         # NOTE:
         # The validated ``config_new`` is populated with all other options

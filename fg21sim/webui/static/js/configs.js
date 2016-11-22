@@ -118,8 +118,9 @@ var resetFormConfigs = function () {
  *
  * @param {String} name - The name of filed name
  *
- * @returns value - value of the option field
- *                  + `null` if the field not exists or empty (no value)
+ * @returns value - value of the configuration option field
+ *                  + `null` if the field is empty (no value)
+ *                  + `undefined` if the field does not exists
  */
 var getFormConfigSingle = function (name) {
   var value = null;
@@ -143,8 +144,11 @@ var getFormConfigSingle = function (name) {
         value = target.filter(":checked").map(
           function () { return $(this).val(); }).get();
       } else if (target.is(":text") && target.data("type") === "array") {
-        // Convert back to Array
+        // Convert comma-separated string back to Array
         value = target.val().split(/\s*,\s*/);
+        if (value.length === 1 && value[0] === "") {
+          value = [];  // Empty Array
+        }
       } else {
         value = target.val();
       }
@@ -153,6 +157,7 @@ var getFormConfigSingle = function (name) {
         value = null;
       }
     } else {
+      value = undefined;
       console.error("No such element:", selector);
     }
   }
@@ -241,11 +246,11 @@ var setFormConfigSingle = function (name, value) {
 var setFormConfigs = function (data, errors) {
   // Set the values of form field to the input configurations data
   $.each(data, function (name, value) {
-    if (value == null) {
+    if (value === null) {
       value = "";  // Default to empty string
     }
     var val_old = getFormConfigSingle(name);
-    if (val_old !== value) {
+    if (typeof val_old !== "undefined" && val_old !== value) {
       setFormConfigSingle(name, value);
       console.log("Set input '" + name + "' to:", value, " <-", val_old);
     }
@@ -388,7 +393,7 @@ var setServerConfigs = function (url, data) {
   data = typeof data !== "undefined" ? data : {};
   return $.postJSON(url, {action: "set", data: data},
                     function (response) {
-                      setFormConfigs({}, response.errors);
+                      setFormConfigs(response.data, response.errors);
                     })
     .fail(function (jqxhr) {
       var modalData = {};
