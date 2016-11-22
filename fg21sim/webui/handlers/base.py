@@ -14,6 +14,13 @@ class BaseRequestHandler(tornado.web.RequestHandler):
     """
     Base web request handler with user authentication support.
     """
+    def get(self):
+        """
+        Show the original HTTP request.  DEBUG use.
+
+        Credit: https://stackoverflow.com/a/3111656/4856091
+        """
+        self.write(repr(self.request))
 
     def get_current_user(self):
         """

@@ -67,6 +67,9 @@ class Application(tornado.web.Application):
             url(r"/ajax/console", ConsoleAJAXHandler),
             url(r"/ws", WSHandler),
         ]
+        if options.debug:
+            from .handlers.base import BaseRequestHandler
+            handlers.append(url(r"/debug", BaseRequestHandler, name="debug"))
         # Application settings
         settings = {
             # The static files will be served from the default "/static/" URI.
