@@ -67,13 +67,17 @@
             </div>
           </div>
           <div class="row">
-            <div class="column column-50 form-group">
-              <label for="conf-common-lmin">Multipole <i>l</i><sub>min</sub>:</label>
-              <input class="form-control" type="number" id="conf-common-lmin" name="common/lmin" min="0" required />
-            </div>
-            <div class="column column-50 form-group">
-              <label for="conf-common-lmax">Multipole <i>l</i><sub>max</sub>:</label>
-              <input class="form-control" type="number" id="conf-common-lmax" name="common/lmax" min="1" required />
+            <div class="column">
+              <span>Power Spectrum Multiple:</span>
+              <div class="form-group">
+                <label class="sr-only" for="conf-common-lmin">Multipole <i>l</i><sub>min</sub>:</label>
+                <input class="form-control" type="number" id="conf-common-lmin" name="common/lmin" min="0" title="Minimum multipole" required />
+              </div>
+              <span> &mdash; </span>
+              <div class="form-group">
+                <label class="sr-only" for="conf-common-lmax">Multipole <i>l</i><sub>max</sub>:</label>
+                <input class="form-control" type="number" id="conf-common-lmax" name="common/lmax" min="1" title="Maximum multipole" required />
+              </div>
             </div>
           </div>
           <div class="row">
@@ -345,17 +349,19 @@
             </h5>
             <div class="body">
               <div class="row">
-                <div class="column column-40 form-group">
-                  <label for="conf-g-synchrotron-template">Template Map:</label>
-                  <input class="form-control code" type="text" id="conf-g-synchrotron-template" name="galactic/synchrotron/template" required />
-                </div>
-                <div class="column column-30 form-group">
-                  <label for="conf-g-synchrotron-template-freq">Frequency:</label>
-                  <input class="form-control" type="number" id="conf-g-synchrotron-template-freq" name="galactic/synchrotron/template_freq" placeholder="MHz" step="any" min="0" required />
-                </div>
-                <div class="column column-30 form-group">
-                  <label for="conf-g-synchrotron-template-unit">Unit:</label>
-                  <input class="form-control" type="text" id="conf-g-synchrotron-template-unit" name="galactic/synchrotron/template_unit" required />
+                <div class="column">
+                  <div class="form-group">
+                    <label for="conf-g-synchrotron-template">Template Map:</label>
+                    <input class="form-control code" type="text" id="conf-g-synchrotron-template" name="galactic/synchrotron/template" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="sr-only" for="conf-g-synchrotron-template-freq">Frequency:</label>
+                    <input class="form-control" type="number" id="conf-g-synchrotron-template-freq" name="galactic/synchrotron/template_freq" placeholder="frequency (MHz)" step="any" min="0" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="sr-only" for="conf-g-synchrotron-template-unit">Unit:</label>
+                    <input class="form-control" type="text" id="conf-g-synchrotron-template-unit" name="galactic/synchrotron/template_unit" placeholder="unit" required />
+                  </div>
                 </div>
               </div>
               <div class="row">
@@ -400,23 +406,27 @@
             </h5>
             <div class="body">
               <div class="row">
-                <div class="column column-40 form-group">
-                  <label for="conf-g-freefree-halphamap">Hα Template Map:</label>
-                  <input class="form-control code" type="text" id="conf-g-freefree-halphapam" name="galactic/freefree/halphamap" required />
-                </div>
-                <div class="column column-30 form-group">
-                  <label for="conf-g-freefree-halphamap-unit">Unit:</label>
-                  <input class="form-control" type="text" id="conf-g-freefree-halphamap-unit" name="galactic/freefree/halphamap_unit" required />
+                <div class="column">
+                  <div class="form-group">
+                    <label for="conf-g-freefree-halphamap">Hα Template Map:</label>
+                    <input class="form-control code" type="text" id="conf-g-freefree-halphapam" name="galactic/freefree/halphamap" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="sr-only" for="conf-g-freefree-halphamap-unit">Unit:</label>
+                    <input class="form-control" type="text" id="conf-g-freefree-halphamap-unit" name="galactic/freefree/halphamap_unit" placeholder="unit" required />
+                  </div>
                 </div>
               </div>
               <div class="row">
-                <div class="column column-40 form-group">
-                  <label for="conf-g-freefree-dustmap">Dust Template Map:</label>
-                  <input class="form-control code" type="text" id="conf-g-freefree-dustmap" name="galactic/freefree/dustmap" required />
-                </div>
-                <div class="column column-30 form-group">
-                  <label for="conf-g-freefree-dustmap-unit">Unit:</label>
-                  <input class="form-control" type="text" id="conf-g-freefree-dustmap-unit" name="galactic/freefree/dustmap_unit" required />
+                <div class="column">
+                  <div class="form-group">
+                    <label for="conf-g-freefree-dustmap">Dust Template Map:</label>
+                    <input class="form-control code" type="text" id="conf-g-freefree-dustmap" name="galactic/freefree/dustmap" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="sr-only" for="conf-g-freefree-dustmap-unit">Unit:</label>
+                    <input class="form-control" type="text" id="conf-g-freefree-dustmap-unit" name="galactic/freefree/dustmap_unit" placeholder="unit" required />
+                  </div>
                 </div>
               </div>
               <div class="row">

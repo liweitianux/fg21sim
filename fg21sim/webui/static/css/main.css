@@ -221,13 +221,19 @@ label, legend {
 .form-inline .form-control {
     display: inline-block;
     width: auto;
-    margin-bottom: 0;
+    margin-bottom: 0.3rem;
     vertical-align: middle;
 }
 .form-inline .checkboxes {
     display: inline-block;
     margin-bottom: 0;
     vertical-align: middle;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
 }
 
 /* Checkboxes & Radios */
