@@ -11,6 +11,7 @@ import logging
 import shutil
 
 import tornado.ioloop
+import tornado.process
 from tornado.escape import json_decode, json_encode
 
 from .base import BaseRequestHandler
@@ -44,17 +45,18 @@ class ProductsAJAXHandler(BaseRequestHandler):
         - get: Get the current products manifest
         - which: Locate the command/program (check whether the command/program
                  can be found in PATH and is executable)
-        - download: TODO
-        - open: TODO
+        - download: Download the specified product (HEALPix map / HPX image)
+        - open: Open the HPX image of a specified product using a sub-process
+                NOTE: Only allowed when accessing from the localhost
         """
         action = self.get_argument("action", "get")
         if action == "get":
             # Get current products manifest
+            success = True
             response = {
                 "manifest": self.products.manifest,
                 "localhost": self.from_localhost,
             }
-            success = True
         elif action == "which":
             # Locate (and check) the command/program
             cmd = json_decode(self.get_argument("cmd"))
@@ -68,6 +70,18 @@ class ProductsAJAXHandler(BaseRequestHandler):
             else:
                 success = False
                 reason = "Cannot locate the executable for: {0}".format(cmd)
+        elif action == "open":
+            # Open the HPX image of a specified product using a sub-process
+            comp_id = json_decode(self.get_argument("compID"))
+            freq_id = json_decode(self.get_argument("freqID"))
+            viewer = json_decode(self.get_argument("viewer"))
+            pid, error = self._open_hpx(comp_id, freq_id, viewer)
+            if pid is not None:
+                success = True
+                response = {"pid": pid}
+            else:
+                success = False
+                reason = error
         else:
             # ERROR: bad action
             success = False
@@ -212,3 +226,45 @@ class ProductsAJAXHandler(BaseRequestHandler):
         except IOError as e:
             error = str(e)
         return (success, error)
+
+    def _open_hpx(self, comp_id, freq_id, viewer):
+        """
+        Open the HPX image of a specified product using a sub-process
+
+        NOTE
+        ----
+        Only allowed when accessing from the localhost
+
+        Parameters
+        ----------
+        comp_id : str
+            ID of the component whose product will be checksum'ed
+        freq_id : int
+            The frequency ID of the specific product within the component.
+        viewer : str
+            The executable name or path to the FITS viewer.
+
+        Returns
+        -------
+        pid : int
+            ID of the sub process which opened the HPX image.
+            ``None`` if failed to open the image.
+        error : str
+            If failed, this ``error`` saves the details, otherwise, ``None``.
+        """
+        pid = None
+        error = None
+        if self.from_localhost:
+            try:
+                filepath = self.products.get_product_abspath(
+                    comp_id, freq_id, ptype="hpx")
+                cmd = [viewer, filepath]
+                p = tornado.process.Subprocess(cmd)
+                pid = p.pid
+                logger.info("(PID: {0}) ".format(pid) +
+                            "Opened HPX image: {0}".format(" ".join(cmd)))
+            except (ValueError, KeyError) as e:
+                error = str(e)
+        else:
+            error = "Action 'open' only allowed from localhost"
+        return (pid, error)
