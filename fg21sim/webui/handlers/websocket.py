@@ -21,9 +21,6 @@ import logging
 
 import tornado.websocket
 from tornado.escape import json_encode
-from tornado.options import options
-
-from ..utils import get_host_ip, ip_in_network
 
 
 logger = logging.getLogger(__name__)
@@ -54,52 +51,12 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     ``WebSocket.on_message()``: may NOT be a coroutine at the moment (v4.3).
     See [2]_ and [3]_ .
 
-    Attributes
-    ----------
-    from_localhost : bool
-        Set to ``True`` if the access is from the localhost,
-        otherwise ``False``.
-
     References
     ----------
     .. _[1] WAMP: Web Application Messaging Protocl, http://wamp-proto.org/
     .. _[2] https://stackoverflow.com/a/35543856/4856091
     .. _[3] https://stackoverflow.com/a/33724486/4856091
     """
-    from_localhost = None
-
-    def check_origin(self, origin):
-        """
-        Check the origin of the WebSocket connection to determine whether
-        the access is allowed.
-
-        Attributes
-        ----------
-        from_localhost : bool
-            Set to ``True`` if the access is from the "localhost" (i.e.,
-            127.0.0.1), otherwise ``False``.
-        """
-        self.from_localhost = False
-        logger.info("WebSocket: origin: {0}".format(origin))
-        ip = get_host_ip(url=origin)
-        network = options.hosts_allowed
-        if ip == "127.0.0.1":
-            self.from_localhost = True
-            allow = True
-            logger.info("WebSocket: origin is 'localhost'")
-        elif network.upper() == "ANY":
-            # Any hosts are allowed
-            allow = True
-            logger.warning("WebSocket: ANY hosts are allowed")
-        elif ip_in_network(ip, network):
-            allow = True
-            logger.info("WebSocket: client from allowed network: %s" % network)
-        else:
-            allow = False
-            logger.error("WebSocket: " +
-                         "client is NOT in the allowed network: %s" % network)
-        return allow
-
     def open(self):
         """Invoked when a new WebSocket is opened by the client."""
         # Add to the set of current connected clients

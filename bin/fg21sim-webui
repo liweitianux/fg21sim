@@ -18,7 +18,6 @@ which is built using the Tornado_ web server and WebSocket_ protocol.
 import os
 import sys
 import logging
-import ipaddress
 import webbrowser
 
 import tornado.ioloop
@@ -39,24 +38,11 @@ define("port", default=21127, type=int, help="Server listen port")
 define("debug", default=False, help="Enable the debug mode")
 define("no_browser", default=False,
        help="Do not open the Web UI in a browser after startup")
-define("hosts_allowed", default="any", type=str,
-       help=("Hosts allowed to access the Web UI. "
-             "The network addresses should be given in CIDR format, e.g., "
-             "'192.168.0.0/24'. "
-             "Specify 'any' to allow any hosts. "
-             "Note that the localhost/127.0.0.1 is always allowed."))
 
 
 def main():
     options.logging = None
     parse_command_line()
-
-    # Validate the value of ``options.hosts_allowed``
-    if options.hosts_allowed.upper() != "ANY":
-        try:
-            ipaddress.ip_network(options.hosts_allowed)
-        except ValueError as e:
-            raise ValueError("Option 'hosts_allowed' invalid: " + str(e))
 
     if options.host == "":
         options.host = "0.0.0.0"
@@ -80,8 +66,6 @@ def main():
         # Open the Web UI in a new browser tab
         webbrowser.open_new_tab(access_url)
 
-    logger.info("Hosts allowed to access the Web UI: {0}".format(
-        options.hosts_allowed))
     tornado.ioloop.IOLoop.current().start()
 
 
