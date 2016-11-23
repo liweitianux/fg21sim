@@ -25,12 +25,14 @@
           <input class="form-control code" type="text" id="products-manifest" required />
         </div>
       </div>
+      {% if from_localhost %}
       <div class="row">
         <div class="column form-group">
           <label for="products-ds9">DS9 Executable Path:</label>
           <input class="form-control code" type="text" id="products-ds9" value="ds9" />
         </div>
       </div>
+      {% end %}
     </form>
 
     <hr class="hr-thin hr-condensed hr-dashed" />
