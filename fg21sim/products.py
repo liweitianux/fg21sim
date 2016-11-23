@@ -244,6 +244,40 @@ class Products:
     def get_product(self, comp_id, freq_id):
         return self.manifest[comp_id][freq_id]
 
+    def get_product_abspath(self, comp_id, freq_id, ptype="healpix"):
+        """
+        Get the absolute path to the specified product.
+
+        Parameters
+        ----------
+        comp_id : str
+            ID of the component whose product will be checksum'ed
+        freq_id : int
+            The frequency ID of the specific product within the component.
+        ptype : str, optional
+            The type of product whose path will be retrieved.
+            Valid values: ``healpix`` (default), ``hpx``.
+
+        Returns
+        -------
+        abspath : str
+            The absolute path to the specified product
+
+        Raises
+        ------
+        ValueError :
+            Invalid ``ptype`` other than ``healpix`` and ``hpx``.
+        KeyError :
+            The requested product type not available (e.g., the HPX
+            image is not generated yet)
+        """
+        if ptype not in ["healpix", "hpx"]:
+            raise ValueError("Invalid ptype: {0}".format(ptype))
+        curdir = os.path.dirname(self.manifestfile)
+        metadata = self.get_product(comp_id, freq_id)
+        abspath = os.path.join(curdir, metadata[ptype]["path"])
+        return abspath
+
     def convert_hpx(self, comp_id, freq_id, clobber=False):
         """
         Convert the specified HEALPix map product to HPX projected FITS image.
