@@ -198,15 +198,7 @@ var getServerManifest = function (url) {
  * @param {String} cmd - The command name or path.
  */
 var whichExecutable = function (url, cmd) {
-  return $.getJSON(url, {action: "which", cmd: JSON.stringify(cmd)})
-    .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Cannot locate the command in PATH!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalProducts(modalData);
-    });
+  return $.getJSON(url, {action: "which", cmd: JSON.stringify(cmd)});
 };
 
 
@@ -253,6 +245,32 @@ var convertProductHPX = function (url, compID, freqID) {
 };
 
 
+/**
+ * Open the HPX FITS image of the specified product
+ *
+ * NOTE: This request is only allowed when using the Web UI on the localhost
+ *
+ * @param {String} viewer - The command name or path for the FITS viewer.
+ */
+var openProductHPX = function (url, compID, freqID, viewer) {
+  var data = {
+    action: "open",
+    compID: JSON.stringify(compID),
+    freqID: JSON.stringify(freqID),
+    viewer: JSON.stringify(viewer)
+  };
+  return $.getJSON(url, data)
+    .fail(function (jqxhr) {
+      showModalProducts({
+        icon: "times-circle",
+        contents: "Failed to open the HPX image!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
+    });
+};
+
+
 $(document).ready(function () {
   // URL to handle the "products" AJAX requests
   var ajax_url = "/ajax/products";
@@ -264,6 +282,21 @@ $(document).ready(function () {
       var manifest = $("#conf-form input[name='output/manifest']").val();
       $("input#products-manifest").val(joinPath(workdir, manifest));
   });
+
+  // Validate the FITS viewer executable on change
+  $("input#products-fitsviewer").on("change", function () {
+    var target = $(this);
+    var cmd = target.val();
+    whichExecutable(ajax_url, cmd)
+      .done(function (response) {
+        target[0].setCustomValidity("");
+        target.removeClass("error").data("validity", true);
+      })
+      .fail(function (jqxhr) {
+        target[0].setCustomValidity(jqxhr.statusText);
+        target.addClass("error").data("validity", false);
+      });
+  }).trigger("change");  // Manually trigger the "change" after loading
 
   // Get and load products manifest into table
   $("#load-products").on("click", function () {
@@ -309,8 +342,8 @@ $(document).ready(function () {
       ]
     };
     if (product.data("hpx-image")) {
-      var p = ("HPX image: " + product.data("hpx-path") + ", size: " +
-               (product.data("hpx-size")/1024/1024).toFixed(1) +
+      var p = ("<strong>HPX image:</strong> " + product.data("hpx-path") +
+               ", size: " + (product.data("hpx-size")/1024/1024).toFixed(1) +
                " MB, MD5: " + product.data("hpx-md5"));
       modalData.contents.push(p);
     }
@@ -334,5 +367,29 @@ $(document).ready(function () {
           contents: "Generated HPX projected FITS image."
         });
       });
+  });
+
+  // Open the HPX FITS image
+  // NOTE: Only allowed when accessing the Web UI from localhost
+  $(document).on("click", "td.product > .hpx.hpx-open", function () {
+    var input_viewer = $("input#products-fitsviewer");
+    if (input_viewer.data("validity")) {
+      var cell = $(this).closest("td");
+      var compID = cell.data("compID");
+      var freqID = cell.data("freqID");
+      var viewer = input_viewer.val();
+      openProductHPX(ajax_url, compID, freqID, viewer)
+        .done(function (response) {
+          showModalProducts({
+            icon: "check-circle",
+            contents: "Opened HPX FITS image. (PID: " + response.pid + ")"
+          });
+        });
+    } else {
+      showModalProducts({
+        icon: "times-circle",
+        contents: "Invalid name/path for the FITS viewer executable!"
+      });
+    }
   });
 });
