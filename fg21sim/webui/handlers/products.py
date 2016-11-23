@@ -8,6 +8,7 @@ Handle the AJAX requests from the client to manage the simulation products.
 
 import os
 import logging
+import shutil
 
 import tornado.ioloop
 from tornado.escape import json_decode, json_encode
@@ -41,16 +42,32 @@ class ProductsAJAXHandler(BaseRequestHandler):
 
         Supported actions:
         - get: Get the current products manifest
+        - which: Locate the command/program (check whether the command/program
+                 can be found in PATH and is executable)
         - download: TODO
         - open: TODO
         """
         action = self.get_argument("action", "get")
         if action == "get":
+            # Get current products manifest
             response = {
                 "manifest": self.products.manifest,
                 "localhost": self.from_localhost,
             }
             success = True
+        elif action == "which":
+            # Locate (and check) the command/program
+            cmd = json_decode(self.get_argument("cmd"))
+            cmdpath = shutil.which(cmd)
+            if cmdpath:
+                success = True
+                response = {
+                    "isExecutable": True,
+                    "cmdPath": cmdpath,
+                }
+            else:
+                success = False
+                reason = "Cannot locate the executable for: {0}".format(cmd)
         else:
             # ERROR: bad action
             success = False

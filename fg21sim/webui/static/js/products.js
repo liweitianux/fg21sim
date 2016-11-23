@@ -192,6 +192,25 @@ var getServerManifest = function (url) {
 
 
 /**
+ * Locate the command in the `$PATH` on the server, which checks
+ * whether the command can be called.
+ *
+ * @param {String} cmd - The command name or path.
+ */
+var whichExecutable = function (url, cmd) {
+  return $.getJSON(url, {action: "which", cmd: JSON.stringify(cmd)})
+    .fail(function (jqxhr) {
+      var modalData = {};
+      modalData.icon = "times-circle";
+      modalData.contents = "Cannot locate the command in PATH!";
+      modalData.code = jqxhr.status;
+      modalData.reason = jqxhr.statusText;
+      showModalProducts(modalData);
+    });
+};
+
+
+/**
  * Reset the products manifest on both the server side and client side
  */
 var resetManifest = function (url) {
@@ -270,7 +289,7 @@ $(document).ready(function () {
 
   // Save current products manifest
   $("#save-products").on("click", function () {
-    saveServerManifest(ajax_url);
+    saveServerManifest(ajax_url, true);
   });
 
   // Show product information (metadata)
