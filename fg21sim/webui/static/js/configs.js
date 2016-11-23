@@ -557,20 +557,7 @@ $(document).ready(function () {
       .done(function () { updateFormConfigStatus(); });
   });
 
-  // When field "common/nside" changed, update the resolution note, as well
-  // as the maximum multiple "common/lmax"
-  $("#conf-form input[name='common/nside']").on("change", function (e) {
-    var nside = parseInt($(this).val());
-    // Update the resolution note (unit: arcmin)
-    var resolution = Math.sqrt(3/Math.PI) * 3600 / nside;
-    $(this).closest(".form-group").find(".note > .value")
-      .text(resolution.toFixed(2));
-    // Also update the maximum multipole "common/lmax"
-    if (! isNaN(nside)) {
-      var lmax = 3 * nside - 1;
-      $("#conf-form input[name='common/lmax']").val(lmax).trigger("change");
-    }
-  });
+  // Update the resolution note for field "common/nside" when press "Enter"
   $("#conf-form input[name='common/nside']").keypress(function (e) {
     if (e.which === 13) {
       var nside = parseInt($(this).val());
@@ -578,6 +565,20 @@ $(document).ready(function () {
       var resolution = Math.sqrt(3/Math.PI) * 3600 / nside;
       $(this).closest(".form-group").find(".note > .value")
         .text(resolution.toFixed(2));
+    }
+  }).trigger(
+    // Manually trigger the "Enter" keypress event after loading page
+    $.Event("keypress", {which: 13})
+  );
+
+  // Update the maximum multiple "common/lmax" when "common/nside" changed
+  $("#conf-form input[name='common/nside']").on("change", function (e) {
+    // Update the resolution note
+    $(this).trigger($.Event("keypress", {which: 13}));
+    var nside = parseInt($(this).val());
+    if (! isNaN(nside)) {
+      var lmax = 3 * nside - 1;
+      $("#conf-form input[name='common/lmax']").val(lmax).trigger("change");
     }
   });
 });
