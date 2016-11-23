@@ -39,6 +39,19 @@ td, th {
 }
 
 /**
+ * Hide the spinner in "number" input
+ * Credit: https://stackoverflow.com/a/23374725/4856091
+ */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/**
  * Screen reader only
  * Credit: refs.(2, 3)
  */
