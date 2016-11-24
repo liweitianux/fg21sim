@@ -19,6 +19,7 @@ from .handlers import (IndexHandler,
                        ConfigsAJAXHandler,
                        ConsoleAJAXHandler,
                        ProductsAJAXHandler,
+                       ProductsDownloadHandler,
                        WSHandler)
 from .utils import gen_cookie_secret
 from ..configs import ConfigManager
@@ -71,6 +72,7 @@ class Application(tornado.web.Application):
             url(r"/ajax/configs", ConfigsAJAXHandler),
             url(r"/ajax/console", ConsoleAJAXHandler),
             url(r"/ajax/products", ProductsAJAXHandler),
+            url(r"/products/download/(.*)", ProductsDownloadHandler),
             url(r"/ws", WSHandler),
         ]
         if options.debug:
