@@ -147,7 +147,11 @@ var getFormConfigAll = function () {
  * Set the value of one single form field according to the given
  * name and value.
  *
- * NOTE: Do NOT manually trigger the "change" event.
+ * NOTE:
+ * - Do NOT trigger the "change" event, which leads to recursive
+ *   request/response between the client and server.
+ * - Trigger the "Enter keypress" event, to update the related contents,
+ *   e.g., the pixel resolution note w.r.t. "common/nside"
  *
  * @param {String} name - The name of filed name
  * @param {String|Number|Array} value - The value to be set for the field
@@ -183,6 +187,8 @@ var setFormConfigSingle = function (name, value) {
       } else {
         target.val(value);
       }
+      // Manually trigger the "Enter keypress" event to update related contents
+      target.trigger($.Event("keypress", {which: 13}));
     } else {
       console.error("No such element:", selector);
     }
@@ -558,7 +564,7 @@ $(document).ready(function () {
   });
 
   // Update the resolution note for field "common/nside" when press "Enter"
-  $("#conf-form input[name='common/nside']").keypress(function (e) {
+  $("#conf-form input[name='common/nside']").on("keypress", function (e) {
     if (e.which === 13) {
       var nside = parseInt($(this).val());
       // Update the resolution note (unit: arcmin)
@@ -566,10 +572,7 @@ $(document).ready(function () {
       $(this).closest(".form-group").find(".note > .value")
         .text(resolution.toFixed(2));
     }
-  }).trigger(
-    // Manually trigger the "Enter" keypress event after loading page
-    $.Event("keypress", {which: 13})
-  );
+  });
 
   // Update the maximum multiple "common/lmax" when "common/nside" changed
   $("#conf-form input[name='common/nside']").on("change", function (e) {
