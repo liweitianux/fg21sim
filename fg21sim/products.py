@@ -29,6 +29,8 @@ class Products:
     manifest : dict
         The manifest of the simulation products.
         See the below "Manifest Format" section for more details.
+    manifestfile : str
+        The absolute path to the loaded manifest file.
 
     Manifest Format
     ---------------
@@ -164,12 +166,12 @@ class Products:
             # Initialize the manifest array for this component
             self.manifest[comp_id] = [{} for i in range(len(frequencies))]
         #
-        curdir = os.path.dirname(self.manifestfile)
+        root_dir = self.get_root_dir()
         self.manifest[comp_id][freq_id] = {
             "frequency": frequencies[freq_id],
             "healpix": {
                 # Relative path to the HEALPix map file from this manifest
-                "path": os.path.relpath(filepath, curdir),
+                "path": os.path.relpath(filepath, root_dir),
                 # File size in bytes
                 "size": os.path.getsize(filepath),
                 "md5": md5(filepath),
@@ -230,9 +232,9 @@ class Products:
         hash : str
             The MD5 checksum value of the on-disk product.
         """
-        curdir = os.path.dirname(self.manifestfile)
+        root_dir = self.get_root_dir()
         metadata = self.get_product(comp_id, freq_id)
-        filepath = os.path.join(curdir, metadata["healpix"]["path"])
+        filepath = os.path.join(root_dir, metadata["healpix"]["path"])
         hash_true = metadata["healpix"]["md5"]
         hash_ondisk = md5(filepath)
         if hash_ondisk == hash_true:
@@ -240,6 +242,27 @@ class Products:
         else:
             match = False
         return (match, hash_ondisk)
+
+    def get_root_dir(self):
+        """
+        Get the root directory where the products locate, which is also
+        the directory where the manifest file locates.
+
+        Returns
+        -------
+        root_dir : str
+            The absolute path of the products root directory.
+
+        Raises
+        ------
+        ManifestError :
+            The manifest currently not loaded, thus unable to determine
+            the products root directory.
+        """
+        try:
+            return os.path.dirname(self.manifestfile)
+        except AttributeError:
+            raise ManifestError("Manifest currently not loaded!")
 
     def get_product(self, comp_id, freq_id):
         return self.manifest[comp_id][freq_id]
@@ -273,9 +296,9 @@ class Products:
         """
         if ptype not in ["healpix", "hpx"]:
             raise ValueError("Invalid ptype: {0}".format(ptype))
-        curdir = os.path.dirname(self.manifestfile)
+        root_dir = self.get_root_dir()
         metadata = self.get_product(comp_id, freq_id)
-        abspath = os.path.join(curdir, metadata[ptype]["path"])
+        abspath = os.path.join(root_dir, metadata[ptype]["path"])
         return abspath
 
     def convert_hpx(self, comp_id, freq_id, clobber=False):
@@ -291,9 +314,9 @@ class Products:
         from astropy.io import fits
         from .utils.healpix import healpix2hpx
         #
-        curdir = os.path.dirname(self.manifestfile)
+        root_dir = self.get_root_dir()
         metadata = self.get_product(comp_id, freq_id)
-        infile = os.path.join(curdir, metadata["healpix"]["path"])
+        infile = os.path.join(root_dir, metadata["healpix"]["path"])
         outfile = os.path.splitext(infile)[0] + "_hpx.fits"
         if os.path.exists(outfile):
             if clobber:
@@ -311,7 +334,7 @@ class Products:
         size = os.path.getsize(outfile)
         md5sum = md5(outfile)
         metadata["hpx"] = {
-            "path": os.path.relpath(outfile, curdir),
+            "path": os.path.relpath(outfile, root_dir),
             "size": size,
             "md5": md5sum,
         }
