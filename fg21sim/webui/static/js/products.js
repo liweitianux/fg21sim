@@ -181,7 +181,7 @@ var saveServerManifest = function (url, clobber) {
  * Get the products manifest from server
  */
 var getServerManifest = function (url) {
-  return $.getJSON(url)
+  return $.getJSONUncached(url)
     .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
@@ -200,7 +200,7 @@ var getServerManifest = function (url) {
  * @param {String} cmd - The command name or path.
  */
 var whichExecutable = function (url, cmd) {
-  return $.getJSON(url, {action: "which", cmd: JSON.stringify(cmd)});
+  return $.getJSONUncached(url, {action: "which", cmd: JSON.stringify(cmd)});
 };
 
 
@@ -261,7 +261,7 @@ var openProductHPX = function (url, compID, freqID, viewer) {
     freqID: JSON.stringify(freqID),
     viewer: JSON.stringify(viewer)
   };
-  return $.getJSON(url, data)
+  return $.getJSONUncached(url, data)
     .fail(function (jqxhr) {
       showModalProducts({
         icon: "times-circle",

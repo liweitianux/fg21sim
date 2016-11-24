@@ -145,7 +145,7 @@ var deleteLogMessages = function () {
  * @param {String} url - The URL that handles the "console" AJAX requests.
  */
 var getServerTaskStatus = function (url) {
-  return $.getJSON(url)
+  return $.getJSONUncached(url)
     .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";

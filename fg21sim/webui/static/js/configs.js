@@ -285,7 +285,7 @@ var showModalConfigs = function (data) {
  */
 var getServerConfigs = function (url, keys) {
   keys = typeof keys !== "undefined" ? keys : null;
-  return $.getJSON(url, {action: "get", keys: JSON.stringify(keys)},
+  return $.getJSONUncached(url, {action: "get", keys: JSON.stringify(keys)},
                    function (response) {
                      setFormConfigs(response.data, {});
                    });
@@ -297,7 +297,7 @@ var getServerConfigs = function (url, keys) {
  * and mark the corresponding form fields to be invalid with details.
  */
 var validateServerConfigs = function (url) {
-  return $.getJSON(url, {action: "validate"},
+  return $.getJSONUncached(url, {action: "validate"},
                    function (response) {
                      setFormConfigs({}, response.errors);
                    });
@@ -434,7 +434,7 @@ var saveServerConfigFile = function (url, clobber) {
 var existsServerFile = function (url, filepath, callback) {
   var data = {action: "exists",
               filepath: JSON.stringify(filepath)};
-  return $.getJSON(url, data, callback)
+  return $.getJSONUncached(url, data, callback)
     .fail(function (jqxhr) {
       var modalData = {};
       modalData.icon = "times-circle";
