@@ -249,4 +249,13 @@ $(document).ready(function () {
     var body = toggle.closest(".panel").find(".panel-body");
     toggleBlock(toggle, body);
   });
+
+  // Prevent from submitting form by "Enter"
+  // Credit; https://stackoverflow.com/a/11235672/4856091
+  $("form").on("keypress", function (e) {
+    if (e.which === 13) {
+      e.preventDefault();
+      return false;
+    }
+  });
 });
