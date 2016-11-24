@@ -314,8 +314,8 @@ var resetConfigs = function (url) {
       // Server-side configurations already reset
       resetFormConfigs();
       // Sync server-side configurations back to the client
-      $.when(getServerConfigs(url),
-             validateServerConfigs(url))
+      getServerConfigs(url)
+        .then(function () { return validateServerConfigs(url); })
         .done(function () {
           // Update the configuration status label
           updateFormConfigStatus();
@@ -499,9 +499,9 @@ $(document).ready(function () {
   $("#load-configfile").on("click", function () {
     var userconfig = getFormConfigSingle("userconfig");
     resetFormConfigs();
-    $.when(loadServerConfigFile(ajax_url, userconfig),
-           getServerConfigs(ajax_url),
-           validateServerConfigs(ajax_url))
+    loadServerConfigFile(ajax_url, userconfig)
+      .then(function () { return getServerConfigs(ajax_url); })
+      .then(function () { return validateServerConfigs(ajax_url); })
       .done(function () {
         // Update the configuration status label
         updateFormConfigStatus();
