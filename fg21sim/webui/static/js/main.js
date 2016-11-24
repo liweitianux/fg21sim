@@ -187,7 +187,7 @@ var showModal = function (modalBox, data) {
   modalBox.html("");
   var p = $("<p>");
   if (data.icon) {
-    $("<span>").addClass("icon fa fa-2x")
+    $("<span>").addClass("icon fa")
       .addClass("fa-" + data.icon).appendTo(p);
   }
   if (data.title) {
@@ -204,16 +204,16 @@ var showModal = function (modalBox, data) {
     }
   }
   if (data.code) {
-    modalBox.append($("<p>Error Code: </p>")
-                    .append($("<span>")
-                            .addClass("label label-warning")
-                            .text(data.code)));
+    modalBox.append($("<p>")
+                    .append($("<span>").text("Code:")
+                            .addClass("label label-warning"))
+                    .append($("<span>").text(data.code)));
   }
   if (data.reason) {
-    modalBox.append($("<p>Reason: </p>")
-                    .append($("<span>")
-                            .addClass("label label-warning")
-                            .text(data.reason)));
+    modalBox.append($("<p>")
+                    .append($("<span>").text("Reason:")
+                            .addClass("label label-warning"))
+                    .append($("<span>").text(data.reason)));
   }
   if (data.buttons) {
     p = $("<p>").addClass("button-group");

@@ -439,27 +439,17 @@ button,
 
 
 /**
- * Logging messages styles
+ * Modal box styles
  */
-p.log {
-    font-size: 1.3rem;
-    margin-bottom: 0;
+.modal .icon {
+    font-size: 200%;
+    vertical-align: middle;
+    margin-right: 0.5rem;
 }
-p.log span {
-    margin-right: 0.8rem;
-}
-p.log.log-debug {
-    color: inherit;
-}
-p.log.log-info {
-    color: #398439;
-}
-p.log.log-warning {
-    color: #d58512;
-}
-p.log.log-error,
-p.log.log-critical {
-    color: #ac2925;
+.modal .title {
+    font-size: 120%;
+    font-weight: bold;
+    vertical-align: middle;
 }
 
 
@@ -488,6 +478,31 @@ hr.hr-dashed {
 }
 hr.hr-dotted {
     border-top-style: dotted;
+}
+
+
+/**
+ * Logging messages styles
+ */
+p.log {
+    font-size: 1.3rem;
+    margin-bottom: 0;
+}
+p.log span {
+    margin-right: 0.8rem;
+}
+p.log.log-debug {
+    color: inherit;
+}
+p.log.log-info {
+    color: #398439;
+}
+p.log.log-warning {
+    color: #d58512;
+}
+p.log.log-error,
+p.log.log-critical {
+    color: #ac2925;
 }
 
 
