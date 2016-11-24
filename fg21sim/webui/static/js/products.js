@@ -38,12 +38,13 @@ var makeManifestTableCell = function (data, localhost) {
   var cell = $("<td>").addClass("product");
   cell.data("localhost", localhost)
     .data("frequency", data.frequency)
-    .data("path", data.healpix.path)
-    .data("size", data.healpix.size)
-    .data("md5", data.healpix.md5);
+    .data("healpix-path", data.healpix.path)
+    .data("healpix-size", data.healpix.size)
+    .data("healpix-md5", data.healpix.md5);
   cell.append($("<span>").attr("title", "Show product information")
               .addClass("info btn btn-small fa fa-info-circle"));
   cell.append($("<span>").attr("title", "Download HEALPix map")
+              .data("ptype", "healpix")
               .addClass("healpix healpix-download btn btn-small fa fa-file"));
   if (data.hpx) {
     cell.data("hpx-image", true)
@@ -53,6 +54,7 @@ var makeManifestTableCell = function (data, localhost) {
     cell.append($("<span>").attr("title", localhost
                                  ? "Open HPX FITS image"
                                  : "Download HPX FITS image")
+                .data("ptype", "hpx")
                 .addClass("hpx")
                 .addClass(localhost ? "hpx-open" : "hpx-download")
                 .addClass("btn btn-small fa fa-image"));
@@ -274,6 +276,8 @@ var openProductHPX = function (url, compID, freqID, viewer) {
 $(document).ready(function () {
   // URL to handle the "products" AJAX requests
   var ajax_url = "/ajax/products";
+  // URL to download the products (NOTE the trailing slash "/")
+  var download_url = "/products/download/";
 
   // Update the products manifest file path
   $("#conf-form input[name='workdir'], " +
@@ -336,9 +340,9 @@ $(document).ready(function () {
       title: ("Product: " + product.data("compID") + " @ " +
               product.data("frequency") + " (#" + product.data("freqID") + ")"),
       contents: [
-        ("<strong>HEALPix map:</strong> " + product.data("path") +
-         ", size: " + (product.data("size")/1024/1024).toFixed(1) +
-         " MB, MD5: " + product.data("md5"))
+        ("<strong>HEALPix map:</strong> " + product.data("healpix-path") +
+         ", size: " + (product.data("healpix-size")/1024/1024).toFixed(1) +
+         " MB, MD5: " + product.data("healpix-md5"))
       ]
     };
     if (product.data("hpx-image")) {
@@ -391,5 +395,20 @@ $(document).ready(function () {
         contents: "Invalid name/path for the FITS viewer executable!"
       });
     }
+  });
+
+  // Download the HEALPix maps and HPX images
+  $(document).on(
+    "click",
+    ("td.product > .healpix.healpix-download, " +
+     "td.product > .hpx.hpx-download"),
+    function () {
+      var cell = $(this).closest("td");
+      var ptype = $(this).data("ptype");
+      var filepath = cell.data(ptype + "-path");
+      var url = download_url + filepath;
+      console.log("Download", ptype, "product at URL:", url);
+      // Open the download URL in a new window
+      window.open(url, "_blank");
   });
 });
