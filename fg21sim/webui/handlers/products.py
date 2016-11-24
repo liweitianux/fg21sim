@@ -2,19 +2,28 @@
 # MIT license
 
 """
-Handle the AJAX requests from the client to manage the simulation products.
+Products-related handlers
+
+ProductsAJAXHandler :
+    Handle the AJAX requests to manipulate the simulation products.
+
+ProductsDownloadHandler :
+    Handle the download request for the simulation products.
 """
 
 
 import os
 import logging
 import shutil
+import mimetypes
 
 import tornado.ioloop
 import tornado.process
+from tornado.web import StaticFileHandler, HTTPError
 from tornado.escape import json_decode, json_encode
 
 from .base import BaseRequestHandler
+from ...errors import ManifestError
 
 
 logger = logging.getLogger(__name__)
@@ -268,3 +277,67 @@ class ProductsAJAXHandler(BaseRequestHandler):
         else:
             error = "Action 'open' only allowed from localhost"
         return (pid, error)
+
+
+class ProductsDownloadHandler(StaticFileHandler):
+    """
+    Handle the download request for the simulation products.
+    """
+    def initialize(self):
+        """Hook for subclass initialization.  Called for each request."""
+        try:
+            self.root = self.application.products.get_root_dir()
+        except ManifestError as e:
+            self.root = None
+            logger.warning(str(e))
+
+    @classmethod
+    def get_absolute_path(cls, root, path):
+        """
+        Return the absolute location of ``path`` relative to ``root``.
+
+        ``root`` is the path configured for this handler,
+        which is ``self.root``
+        """
+        if root is None:
+            reason = "Manifest currently not loaded!"
+            logger.error(reason)
+            raise HTTPError(400, reason=reason)
+        else:
+            return os.path.join(root, path)
+
+    def validate_absolute_path(self, root, absolute_path):
+        """
+        Validate and return the absolute path.
+
+        Credit:
+        https://github.com/tornadoweb/tornado/blob/master/tornado/web.py
+        """
+        root = os.path.abspath(root)
+        if not root.endswith(os.path.sep):
+            root += os.path.sep
+        if not (absolute_path + os.path.sep).startswith(root):
+            # Only files under the specified root can be accessed
+            raise HTTPError(403, "%s is not in the root directory", self.path)
+        if not os.path.exists(absolute_path):
+            raise HTTPError(404)
+        if not os.path.isfile(absolute_path):
+            raise HTTPError(403, "%s is not a file", self.path)
+        return absolute_path
+
+    @classmethod
+    def make_static_url(cls):
+        """
+        This method originally constructs a versioned URL for the given
+        path, which is not applicable here, so disable it.
+        """
+        raise RuntimeError("Not supported!")
+
+    def get_content_type(self):
+        """
+        Returns the ``Content-Type`` header to be used for this request.
+        """
+        # Add MIME types support used here
+        mimetypes.add_type("application/fits", ".fits")
+        mimetypes.add_type("text/plain", ".conf")
+        return super().get_content_type()
