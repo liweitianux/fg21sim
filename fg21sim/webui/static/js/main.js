@@ -107,7 +107,7 @@ var getCookie = function (name) {
 
 
 /**
- * jQuery extension for easier AJAX JSON post
+ * jQuery extension for handy AJAX POST request using JSON
  *
  * NOTE: The XSRF token is extracted from the cookie and posted together.
  *
@@ -124,11 +124,32 @@ jQuery.postJSON = function (url, data, callback) {
     // Credit: https://stackoverflow.com/a/28924601/4856091
     headers: {"X-XSRFToken": getCookie("_xsrf")},
     data: JSON.stringify(data),
-    success: function (response) {
-      if (callback) {
-        callback(response);
-      }
-    }
+    success: callback
+  });
+};
+
+
+/**
+ * jQuery extension for *uncached* AJAX GET request using JSON
+ *
+ * NOTE:
+ * IE will by default cache the GET request even the contents has changed.
+ *
+ * Credit: https://stackoverflow.com/a/35130770/4856091
+ *
+ * @param {String} url - The URL that handles the AJAX requests
+ * @param {Object} data - Data object sent to the server with the request
+ * @param {Function} callback - Function to be called when AJAX succeeded
+ */
+jQuery.getJSONUncached = function (url, data, callback) {
+  return jQuery.ajax({
+    url: url,
+    type: "GET",
+    dataType: "json",
+    data: data,
+    // Force the requested page NOT to be cached by the browser!
+    cache: false,
+    success: callback
   });
 };
 
