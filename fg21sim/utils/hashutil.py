@@ -11,7 +11,7 @@ md5 :
 import hashlib
 
 
-def md5(filepath, blocksize=65536):
+def calc_md5(filepath, blocksize=65536):
     """
     Calculate the MD5 checksum/digest of the file data.
 

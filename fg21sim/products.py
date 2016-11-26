@@ -14,7 +14,7 @@ from collections import OrderedDict
 import numpy as np
 
 from .errors import ManifestError
-from .utils.hashutil import md5
+from .utils.hashutil import calc_md5
 
 
 logger = logging.getLogger(__name__)
@@ -174,7 +174,7 @@ class Products:
                 "path": os.path.relpath(filepath, root_dir),
                 # File size in bytes
                 "size": os.path.getsize(filepath),
-                "md5": md5(filepath),
+                "md5": calc_md5(filepath),
             }
         }
         logger.info("Added one product to the manifest: {0}".format(filepath))
@@ -236,7 +236,7 @@ class Products:
         metadata = self.get_product(comp_id, freq_id)
         filepath = os.path.join(root_dir, metadata["healpix"]["path"])
         hash_true = metadata["healpix"]["md5"]
-        hash_ondisk = md5(filepath)
+        hash_ondisk = calc_md5(filepath)
         if hash_ondisk == hash_true:
             match = True
         else:
@@ -332,13 +332,13 @@ class Products:
         logger.info("Converted HEALPix map to HPX image: %s" % outfile)
         #
         size = os.path.getsize(outfile)
-        md5sum = md5(outfile)
+        md5 = calc_md5(outfile)
         metadata["hpx"] = {
             "path": os.path.relpath(outfile, root_dir),
             "size": size,
-            "md5": md5sum,
+            "md5": md5,
         }
-        return (outfile, size, md5sum)
+        return (outfile, size, md5)
 
     def reset(self):
         self.manifest = OrderedDict()
