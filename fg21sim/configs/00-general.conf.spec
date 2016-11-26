@@ -26,6 +26,11 @@ lmax = integer(min=1, default=3071)
 #       Diffuse Galactic free-free emission
 # + galactic/snr:
 #       Galactic supernova remnants emission
+# + extragalactic/clusters:
+#       Extragalactic clusters of galaxies emission
+# + extragalactic/pointsources:
+#       Emission from multiple types of extragalactic point sources
+#       NOTE: This component is not well integrated and tested at the moment
 components = force_list(default=list("galactic/synchrotron", "galactic/freefree", "galactic/snr", "extragalactic/clusters"))
 
 
