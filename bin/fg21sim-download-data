@@ -7,4 +7,52 @@
 Download the required data (e.g., template maps) for simulations.
 """
 
-raise NotImplementedError("TODO")
+import os
+import sys
+import argparse
+import logging
+import json
+
+from fg21sim.configs import configs
+from fg21sim.utils import setup_logging
+from fg21sim.utils.download import download_file
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Retrieve required input templates and catalogs")
+    parser.add_argument("manifest", help="data manifest file")
+    parser.add_argument("outdir", nargs="?", default=".",
+                        help="output directory to save the downloaded data " +
+                        "(default: .)")
+    parser.add_argument("-C", "--clobber", action="store_true",
+                        help="overwrite the existing output file")
+    args = parser.parse_args()
+
+    tool = os.path.basename(sys.argv[0])
+    setup_logging(dict_config=configs.logging)
+    logger = logging.getLogger(tool)
+    logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
+    if not os.path.exists(args.outdir):
+        os.mkdir(args.outdir)
+        logger.info("Created output directory: {0}".format(args.outdir))
+
+    manifest = json.load(open(args.manifest))
+    logger.info("Loaded data manifest from file: {0}".format(args.manifest))
+    nfile = len(manifest)
+    for i, fdata in enumerate(manifest):
+        filename = fdata["filename"]
+        outfile = os.path.join(args.outdir, filename)
+        size = fdata["size"]
+        md5 = fdata["md5"]
+        url = fdata["url"]
+        logger.info("[#{0}/{1}] Downloading file: {2} ...".format(
+            (i+1), nfile, filename))
+        download_file(url, outfile=outfile, size=size, md5=md5,
+                      clobber=args.clobber)
+    logger.info("Finished downloading data!")
+
+
+if __name__ == "__main__":
+    main()
