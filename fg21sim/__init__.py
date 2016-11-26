@@ -7,7 +7,7 @@ Realistic Foregrounds Simulation for EoR 21cm Signal Detection
 """
 
 __pkgname__ = "fg21sim"
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 __author__ = "Weitian LI"
 __author_email__ = "liweitianux@live.com"
 __license__ = "MIT"
