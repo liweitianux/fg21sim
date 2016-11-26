@@ -36,11 +36,11 @@ Features
 
     Current supported point sources types:
 
-    - star-forming galaxies
-    - star-bursting galaxies
-    - radio-quiet AGNs
-    - Fanaroff-Riley type I (FRI) AGNs
-    - Fanaroff-Riley type II (FRII) AGNs
+    - Star-forming galaxies
+    - Star-bursting galaxies
+    - Radio-quiet AGNs
+    - Fanaroff-Riley type I (FR-I) AGNs
+    - Fanaroff-Riley type II (FR-II) AGNs
 
 * All-sky simulation
   (*Note:* partial-sky simulation not supported yet)
@@ -58,8 +58,7 @@ Requirements
 * `Python <https://www.python.org/>`_: >= 3.4
 * `CFITSIO <https://heasarc.gsfc.nasa.gov/fitsio/fitsio.html>`_
 * `HEALPix <http://healpix.sourceforge.net/>`_:
-  only the C++ library (e.g., package ``libhealpix-cxx0`` on Debian Linux)
-  required by `healpy <https://github.com/healpy/healpy>`_.
+  only the C++ library required by `healpy <https://github.com/healpy/healpy>`_.
 * `LLVM <http://llvm.org/>`_: = 3.8
   (required by `llvmlite <http://llvmlite.pydata.org/>`_ which is a
   dependency of `Numba <http://numba.pydata.org/>`_)
@@ -71,10 +70,10 @@ Installation
 
    $ git clone https://github.com/liweitianux/fg21sim
 
-2. Install the system requirements: CFITSIO, HEALPix, and LLVM.
+2. Install the above system requirements: CFITSIO, HEALPix, and LLVM.
 
 3. Install the required third-party Python packages.
-   And it is recommended to use the *virtual environment*::
+   And it is recommended to use the `virtual environment`_::
 
    $ cd fg21sim/
    $ make venv
@@ -87,11 +86,15 @@ Installation
 
    $ python3 setup.py install
 
-5. Great!  You are ready to use this package.
-   Just have a look, e.g.::
+5. You are ready to use this package. Just have a look, e.g.::
 
    $ fg21sim --help
    $ fg21sim-webui --help
+
+
+Documentations
+--------------
+To get started, read the `User Guide`_.
 
 
 Contributions
@@ -127,12 +130,16 @@ Unless otherwise declared:
 
 .. |fg21sim| replace:: **fg21sim**
 .. _fg21sim: https://github.com/liweitianux/fg21sim
+.. _`User Guide`:
+   https://github.com/liweitianux/fg21sim/blob/master/docs/guide.rst
 .. |CONTRIBUTING.md| replace:: ``CONTRIBUTING.md``
 .. _CONTRIBUTING.md:
    https://github.com/liweitianux/fg21sim/blob/master/CONTRIBUTING.md
 .. |LICENSE-3RDPARTY| replace:: ``LICENSE-3RDPARTY``
 .. _LICENSE-3RDPARTY:
    https://github.com/liweitianux/fg21sim/blob/master/LICENSE-3RDPARTY
+.. _`virtual environment`:
+   https://docs.python.org/3/library/venv.html
 .. _`MIT License`: https://opensource.org/licenses/MIT
 .. _`Creative Commons Attribution 3.0 License`:
    https://creativecommons.org/licenses/by/3.0/us/deed.en_US
