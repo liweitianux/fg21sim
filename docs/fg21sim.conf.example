@@ -1,0 +1,333 @@
+# Example configuration file for "fg21sim"
+# -*- mode: conf -*-
+#
+# Syntax: `ConfigObj`, https://github.com/DiffSK/configobj
+#
+# This file contains all the configuration options accepted by "fg21sim",
+# which control the simulation parameters, inputs data and outputs products,
+# as well as some general behaviors.
+#
+# Some options already have a default value been set in the bundled
+# configuration specifications, which will be further described below with
+# their default values and be commented out.
+#
+# However, there is not a sensible default value for other options,
+# therefore, users should explicitly set their values before carrying out
+# the simulations.  These options are also explained in details below, and
+# marked with "REQUIRED".
+#
+# NOTE:
+# - The input templates for simulations should be HEALPix full-sky maps.
+# - The input catalog should be in CSV format.
+
+
+# Common/general configurations for the simulation
+[common]
+# HEALPix Nside value, i.e., pixel resolution
+# NOTE: also update "lmax" below.
+#nside = 1024
+
+# Range of multipole monents (l) of the angular power spectrum.
+# The power spectrum will be cut off to a constant for multipole l < lmin.
+# Generally, lmax = 3 * nside - 1
+#lmin = 10
+#lmax = 3071
+
+# List of foreground components to be simulated:
+# + galactic/synchrotron:
+#       Diffuse Galactic synchrotron emission (unpolarized)
+# + galactic/freefree:
+#       Diffuse Galactic free-free emission
+# + galactic/snr:
+#       Galactic supernova remnants emission
+# + extragalactic/clusters:
+#       Extragalactic clusters of galaxies emission
+# + extragalactic/pointsources:
+#       Emission from multiple types of extragalactic point sources
+#       NOTE: This component is not well integrated and tested at the moment
+# NOTE:
+# If only one component is enabled, do NOT omit the trailing comma ","
+# e.g., components = "galaxies/synchrotron",
+#components = "galactic/synchrotron", "galactic/freefree", "galactic/snr", "extragalactic/clusters"
+
+
+# Frequencies specification of the simulation products
+[frequency]
+# Unit of the frequency value
+#unit = "MHz"
+
+# How to specify the frequencies
+# + custom:
+#       directly specify the frequency values using the "frequencies" config
+# + calc:
+#       calculate the frequency values by "start", "stop", and "step"
+#type = "custom"
+
+# The frequency values to be simulated if above "type" is "custom".
+# [REQUIRED: if "frequency/type" = "custom"]
+#frequencies =
+
+# Parameters to calculate the frequencies
+# start and stop frequency value (both inclusive)
+# [REQUIRED: if "frequency/type" = "calc"]
+#start =
+#stop =
+#step =
+
+
+# Configuration for output products
+[output]
+# Unit of the sky map pixel value
+#unit = "K"
+
+# Use single-precision float instead of double (also save spaces)
+#use_float = True
+
+# Filetype used to store the products (default: fits)
+#filetype = "fits"
+
+# Filename pattern (without extension) for the output products, which will
+# be finally formatted using `str.format()`.
+#filename_pattern = "{prefix}_{frequency:05.1f}"
+
+# Whether calculate the checksum for the output file (e.g., "CHECKSUM"
+# keyword in FITS header)?
+# NOTE:
+# FITS checksum calculation may account for half the time to output the data.
+#checksum = False
+
+# Whether overwrite existing files
+#clobber = False
+
+# Whether combine all components and output
+#combine = True
+
+# Prefix for the combined files
+#combine_prefix = "fg"
+
+# Output directory to place the combined products
+# NOTE: This config is mandatory and should be provided by the user
+#       if above "combine=True".
+# [REQUIRED: if "output/combine" = True]
+#output_dir =
+
+# Filename of the simulation products manifest (JSON format)
+#manifest = "products_manifest.json"
+
+
+# Cosmological parameters
+[cosmology]
+# Hubble constant at z=0 [ km/s/Mpc ]
+#H0 = 71.0
+
+# Density of non-relativistic matter in units of the critical density at z=0
+#OmegaM0 = 0.27
+
+
+# Configurations for initialization/reconfiguration of the `logging` module
+[logging]
+# DEBUG:    Detailed information, typically of interest only when diagnosing
+#           problems.
+# INFO:     Confirmation that things are working as expected.
+# WARNING:  An dinciation that something unexpected happended, or indicative
+#           of some problem in the near future (e.g., "disk space low").
+#           The software is still working as expected.
+# ERROR:    Due to a more serious problem, the software has not been able to
+#           perform some function.
+# CRITICAL: A serious error, indicating that the program itself may be unable
+#           to continue running.
+#level = "DEBUG"
+
+# Set the format of displayed messages
+#format = "%(asctime)s [%(levelname)s] <%(name)s> %(message)s"
+
+# Set the date/time format in messages
+#datefmt = "%Y-%m-%dT%H:%M:%S"
+
+# Set the logging filename (will create a `FileHandler`)
+# If set to "" (empty string), then the `FileHandler` will be disabled.
+#filename = ""
+
+# Whether append messages to the above logging file instead of overwrite
+#appendmode = True
+
+# Set the stream used to initialize the `StreamHandler`
+# If set to "" (empty string), then the `StreamHandler` will be disabled.
+#stream = "stderr"
+
+
+# Options corresponding the Galactic emission components, which currently
+# includes the following components:
+# - synchrotron : Galactic synchrotron emission (unpolarized)
+# - freefree : Galactic free-free emission
+# - snr : Galactic supernovae remnants
+[galactic]
+
+  # Synchrotron emission component (unpolarized)
+  [[synchrotron]]
+  # The template map for the simulation.
+  # [REQUIRED]
+  #template =
+
+  # The frequency of the template map (same unit as in [frequency] section)
+  # [REQUIRED]
+  #template_freq =
+
+  # The unit of the template map pixel
+  # [REQUIRED]
+  #template_unit =
+
+  # Spectral index map
+  # [REQUIRED]
+  #indexmap =
+
+  # Whether add fluctuations on the small scales
+  #add_smallscales = True
+
+  # Filename prefix for this component
+  #prefix = "gsync"
+
+  # Whether save this component to disk
+  #save = True
+
+  # Output directory to save the simulated results
+  # [REQUIRED: if "galactic/synchrotron/save" = True]
+  #output_dir =
+
+  # Free-free bremsstrahlung emission component
+  [[freefree]]
+  # The H{\alpha} map used as the free-free emission template
+  # [REQUIRED]
+  #halphamap =
+
+  # The unit of the H{\alpha} template (e.g., "Rayleigh")
+  # [REQUIRED]
+  #halphamap_unit =
+
+  # The 100-{\mu}m dust map used for dust absorption correction
+  # [REQUIRED]
+  #dustmap =
+
+  # The unit of the above dust map (e.g., "MJy/sr")
+  # [REQUIRED]
+  #dustmap_unit =
+
+  # Filename prefix for this component
+  #prefix = "gfree"
+
+  # Whether save this component to disk
+  #save = True
+
+  # Output directory to save the simulated results
+  # [REQUIRED: if "galactic/freefree/save" = True]
+  #output_dir =
+
+  # Supernova remnants emission
+  [[snr]]
+  # The Galactic SNRs catalog data (CSV file)
+  # [REQUIRED]
+  #catalog =
+
+  # Output the effective/inuse SNRs catalog data (CSV file)
+  # NOTE: if not specified, then do not save the effective/inuse catalog
+  #catalog_outfile =
+
+  # Resolution (unit: arcmin) for simulating each SNR, which are finally
+  # mapped to the HEALPix map of Nside specified in "[common]" section.
+  #resolution = 1.0
+
+  # Filename prefix for this component
+  #prefix = "gsnr"
+
+  # Whether save this component to disk
+  #save = True
+
+  # Output directory to save the simulated results
+  # [REQUIRED: if "galactic/snr/save" = True]
+  #output_dir =
+
+
+# Options corresponding the extragalactic emission components, which
+# currently includes the following components:
+# - clusters : clusters of galaxies
+# - pointsources : multiple types of discrete point sources
+[extragalactic]
+
+  # Emissions from the clusters of galaxies
+  [[clusters]]
+  # The clusters catalog derived from the Hubble Volume Project (CSV file)
+  # [REQUIRED]
+  #catalog =
+
+  # Output the effective/inuse clusters catalog data (CSV file)
+  # NOTE: if not specified, then do not save the effective/inuse catalog
+  #catalog_outfile =
+
+  # The fraction that a cluster hosts a radio halo
+  # [REQUIRED]
+  #halo_fraction =
+
+  # Resolution (unit: arcmin) for simulating each cluster, which are finally
+  # mapped to the HEALPix map of Nside specified in "[common]" section.
+  #resolution = 0.5
+
+  # Filename prefix for this component
+  #prefix = "egcluster"
+
+  # Whether save this component to disk
+  #save = True
+
+  # Output directory to save the simulated results
+  # [REQUIRED: if "extragalactic/clusters/save" = True]
+  #output_dir =
+
+  # Extragalactic point sources
+  [[pointsources]]
+  # Whether save this point source catelogue to disk
+  #save = True
+
+  # Output directory to save the simulated catelogues
+  #output_dir = "PS_tables"
+
+  # PS components to be simulated
+  # [REQUIRED]
+  #pscomponents =
+
+  # Resolution [arcmin]
+  #resolution = 0.6
+
+    # Star forming
+    [[[starforming]]]
+    # Number of samples
+    #numps = 1000
+
+    # Prefix
+    #prefix = "SF"
+
+    [[[starbursting]]]
+    # Number of samples
+    #numps = 1000
+
+    # Prefix
+    #prefix = "SB"
+
+    [[[radioquiet]]]
+    # Number of samples
+    #numps = 1000
+
+    # Prefix
+    #prefix = "RQ"
+
+    [[[FRI]]]
+    # Number of samples
+    #numps = 1000
+
+    # Prefix
+    #prefix = "FRI"
+
+    [[[FRII]]]
+    # Number of samples
+    #numps = 1000
+
+    # Prefix
+    #prefix = "FRII"
