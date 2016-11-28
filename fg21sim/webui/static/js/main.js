@@ -9,8 +9,9 @@
 
 
 /**
- * Generic utilities
+ * GLOBAL variable, mainly for debugging
  */
+var FG21SIM = {};
 
 /**
  * Get the basename of a path
