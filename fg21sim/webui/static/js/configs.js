@@ -262,15 +262,6 @@ var updateFormConfigStatus = function () {
 
 
 /**
- * Show notification contents in the "#modal-configs" modal box.
- */
-var showModalConfigs = function (data) {
-  var modalBox = $("#modal-configs");
-  showModal(modalBox, data);
-};
-
-
-/**
  * Get the configurations from the server and update the client form
  * to the newly received values.
  *
@@ -322,14 +313,14 @@ var resetConfigs = function (url) {
           // Update the configuration status label
           updateFormConfigStatus();
           // Popup a modal notification
-          showModalConfigs({
+          showModal({
             icon: "check-circle",
             contents: "Reset and synchronized the configurations."
           });
         });
     })
     .fail(function (jqxhr) {
-      showModalConfigs({
+      showModal({
         icon: "times-circle",
         contents: "Failed to reset the configurations!",
         code: jqxhr.status,
@@ -359,7 +350,7 @@ var setServerConfigs = function (url, data) {
       setFormConfigs(response.data, response.errors);
     })
     .fail(function (jqxhr) {
-      showModalConfigs({
+      showModal({
         icon: "times-circle",
         contents: "Failed to update/set the configuration data!",
         code: jqxhr.status,
@@ -383,7 +374,7 @@ var loadServerConfigFile = function (url, userconfig) {
   }
   return $.postJSON(url, {action: "load", userconfig: userconfig})
     .fail(function (jqxhr) {
-      showModalConfigs({
+      showModal({
         icon: "times-circle",
         contents: "Failed to load the user configuration file!",
         code: jqxhr.status,
@@ -420,10 +411,10 @@ var saveServerConfigFile = function (url, clobber) {
         modalData.contents = ("Configurations saved to file. " +
                               "But there exist some invalid values!");
       }
-      showModalConfigs(modalData);
+      showModal(modalData);
     })
     .fail(function (jqxhr) {
-      showModalConfigs({
+      showModal({
         icon: "times-circle",
         contents: "Failed to save the configurations!",
         code: jqxhr.status,
@@ -443,7 +434,7 @@ var existsServerFile = function (url, filepath, callback) {
   };
   return $.getJSONUncached(url, data, callback)
     .fail(function (jqxhr) {
-      showModalConfigs({
+      showModal({
         icon: "times-circle",
         contents: ("Failed to check the existence " +
                    "of the user configuration file!"),
@@ -482,7 +473,7 @@ $(document).ready(function () {
 
   // Reset both server-side and client-side configurations to the defaults
   $("#reset-defaults").on("click", function () {
-    showModalConfigs({
+    showModal({
       icon: "warning",
       contents: "Are you sure to reset the configurations?",
       buttons: [
@@ -513,7 +504,7 @@ $(document).ready(function () {
         // Update the configuration status label
         updateFormConfigStatus();
         // Popup a modal notification
-        showModalConfigs({
+        showModal({
           icon: "check-circle",
           contents: "Loaded the configurations from file."
         });
@@ -527,7 +518,7 @@ $(document).ready(function () {
       if (response.data.exists) {
         // The specified configuration file already exists
         // Confirm to overwrite
-        showModalConfigs({
+        showModal({
           icon: "warning",
           contents: "Configuration file already exists! Overwrite?",
           buttons: [

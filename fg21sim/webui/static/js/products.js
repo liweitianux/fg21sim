@@ -10,15 +10,6 @@
 
 
 /**
- * Show notification contents in the "#modal-products" modal box.
- */
-var showModalProducts = function (data) {
-  var modalBox = $("#modal-products");
-  showModal(modalBox, data);
-};
-
-
-/**
  * Reset the manifest table
  */
 var resetManifestTable = function () {
@@ -139,7 +130,7 @@ var loadServerManifest = function (url, manifestfile) {
   var data = {action: "load", manifestfile: manifestfile};
   return $.postJSON(url, data)
     .fail(function (jqxhr) {
-      showModalProducts({
+      showModal({
         icon: "times-circle",
         contents: "Failed to load the products manifest!",
         code: jqxhr.status,
@@ -164,13 +155,13 @@ var saveServerManifest = function (url, clobber) {
   };
   return $.postJSON(url, data)
     .done(function () {
-      showModalProducts({
+      showModal({
         icon: "check-circle",
         contents: "Current products manifest saved."
       });
     })
     .fail(function (jqxhr) {
-      showModalProducts({
+      showModal({
         icon: "times-circle",
         contents: "Failed to save current products manifest!",
         code: jqxhr.status,
@@ -186,7 +177,7 @@ var saveServerManifest = function (url, clobber) {
 var getServerManifest = function (url) {
   return $.getJSONUncached(url)
     .fail(function (jqxhr) {
-      showModalProducts({
+      showModal({
         icon: "times-circle",
         contents: "Failed to load the products manifest!",
         code: jqxhr.status,
@@ -214,13 +205,13 @@ var resetManifest = function (url) {
   return $.postJSON(url, {action: "reset"})
     .done(function () {
       resetManifestTable();
-      showModalProducts({
+      showModal({
         icon: "check-circle",
         contents: "Reset the products manifest."
       });
     })
     .fail(function (jqxhr) {
-      showModalProducts({
+      showModal({
         icon: "times-circle",
         contents: "Failed to reset the products manifest on server!",
         code: jqxhr.status,
@@ -239,7 +230,7 @@ var resetManifest = function (url) {
 var convertProductHPX = function (url, compID, freqID) {
   return $.postJSON(url, {action: "convert", compID: compID, freqID: freqID})
     .fail(function (jqxhr) {
-      showModalProducts({
+      showModal({
         icon: "times-circle",
         contents: "Failed to convert the HEALPix map to HPX image!",
         code: jqxhr.status,
@@ -265,7 +256,7 @@ var openProductHPX = function (url, compID, freqID, viewer) {
   };
   return $.getJSONUncached(url, data)
     .fail(function (jqxhr) {
-      showModalProducts({
+      showModal({
         icon: "times-circle",
         contents: "Failed to open the HPX image!",
         code: jqxhr.status,
@@ -312,13 +303,13 @@ $(document).ready(function () {
       .done(function (response) {
         console.log("GET products response:", response);
         if ($.isEmptyObject(response.manifest)) {
-          showModalProducts({
+          showModal({
             icon: "warning",
             contents: "Products manifest not loaded on the server."
           });
         } else {
           loadManifestToTable(response.manifest, response.localhost);
-          showModalProducts({
+          showModal({
             icon: "check-circle",
             contents: "Loaded products manifest to table."
           });
@@ -353,7 +344,7 @@ $(document).ready(function () {
                " MB, MD5: " + product.data("hpx-md5"));
       modalData.contents.push(p);
     }
-    showModalProducts(modalData);
+    showModal(modalData);
   });
 
   // Convert HEALPix map of a product to HPX projected FITS image.
@@ -368,7 +359,7 @@ $(document).ready(function () {
     convertProductHPX(ajax_url, compID, freqID)
       .done(function (response) {
         updateManifestTableCell(cell, response.data);
-        showModalProducts({
+        showModal({
           icon: "check-circle",
           contents: "Generated HPX projected FITS image."
         });
@@ -387,13 +378,13 @@ $(document).ready(function () {
       viewer = input_viewer.val();
       openProductHPX(ajax_url, compID, freqID, viewer)
         .done(function (response) {
-          showModalProducts({
+          showModal({
             icon: "check-circle",
             contents: "Opened HPX FITS image. (PID: " + response.pid + ")"
           });
         });
     } else {
-      showModalProducts({
+      showModal({
         icon: "times-circle",
         contents: "Invalid name/path for the FITS viewer executable!"
       });

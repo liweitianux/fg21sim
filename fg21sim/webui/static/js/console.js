@@ -10,15 +10,6 @@
 
 
 /**
- * Show notification contents in the "#modal-console" modal box.
- */
-var showModalConsole = function (data) {
-  var modalBox = $("#modal-console");
-  showModal(modalBox, data);
-};
-
-
-/**
  * Update the task status "#task-status" on the page.
  *
  * @param {Object} status - The status pushed from the server is an object
@@ -147,7 +138,7 @@ var deleteLogMessages = function () {
 var getServerTaskStatus = function (url) {
   return $.getJSONUncached(url)
     .fail(function (jqxhr) {
-      showModalConsole({
+      showModal({
         icon: "times-circle",
         contents: "Failed to get the task status!",
         code: jqxhr.status,
@@ -170,7 +161,7 @@ var startServerTask = function (url, task, kwargs) {
   var data = {action: "start", task: task, kwargs: kwargs};
   return $.postJSON(url, data)
     .fail(function (jqxhr) {
-      showModalConsole({
+      showModal({
         icon: "times-circle",
         contents: "Failed to start the task!",
         code: jqxhr.status,
@@ -212,14 +203,14 @@ $(document).ready(function () {
           getServerTaskStatus(ajax_url)
             .done(function (response) {
               updateTaskStatus(response.status);
-              showModalConsole({
+              showModal({
                 icon: "check-circle",
                 contents: "Simulation task successfully finished."
               });
             });
         });
     } else {
-      showModalConsole({
+      showModal({
         icon: "times-circle",
         contents: ("Exist invalid configuration values! " +
                    "Please correct the configurations " +
@@ -250,7 +241,7 @@ $(document).ready(function () {
     $(this).fadeTo("fast", status ? 1.0 : 0.5);
   });
   $("#log-delete").on("click", function () {
-    showModalConsole({
+    showModal({
       icon: "warning",
       contents: "Are you sure to delete all logging messages?",
       buttons: [

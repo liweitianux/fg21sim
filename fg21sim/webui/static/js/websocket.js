@@ -200,10 +200,7 @@ $(document).ready(function () {
     // WebSocket NOT supported
     console.warn("Oops, WebSocket is NOT supported!");
     updateWSStatus("unsupported");
-    // Create a modal box and show a warning
-    var modalBox = $("<div>").addClass("modal").attr("id", "modal-websocket");
-    $("body").append(modalBox);
-    showModal(modalBox, {
+    showModal({
       icon: "warning",
       title: "WebSocket is NOT supported by the browser!",
       contents: ("The <strong>necessary functionalities</strong> do NOT " +

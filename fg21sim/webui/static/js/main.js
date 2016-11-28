@@ -188,9 +188,6 @@ var toggleBlock = function (toggle, targetBlock) {
 /**
  * Compose the notification contents and shown them in the modal box.
  *
- * The input `modalBox` may be a jQuery object or a jQuery selector of the
- * target modal box.
- *
  * The input `data` may have the following attributes:
  *   - `icon` : FontAwesome icon (specified without the beginning `fa-`)
  *   - `title` : Notification title/summary
@@ -203,9 +200,11 @@ var toggleBlock = function (toggle, targetBlock) {
  *                 + `click` : {Function} Function called on click.
  *                             To close the modal, use `$.modal.close()`
  */
-var showModal = function (modalBox, data) {
+var showModal = function (data, box) {
+  var modalBox = typeof box !== "undefined"
+        ? $(modalBox)
+        : $("#modal-box");
   var p;
-  modalBox = $(modalBox);
   // Empty previous contents
   modalBox.html("");
   p = $("<p>");
