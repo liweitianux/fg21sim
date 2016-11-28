@@ -37,7 +37,7 @@ var dirname = function (path) {
  * FIXME: only support "/" as the path separator
  */
 var joinPath = function (path1, path2) {
-  var p = null;
+  var p;
   // Strip the trailing path separator
   path1 = path1.replace(/\/$/, "");
   if (path1 === "") {
@@ -47,8 +47,8 @@ var joinPath = function (path1, path2) {
   }
   // Both "path1" and "path2" are empty
   if (p === "/") {
-    console.error("Both 'path1' and 'path2' are empty");
     p = null;
+    console.error("Both 'path1' and 'path2' are empty");
   }
   return p;
 };
@@ -203,10 +203,11 @@ var toggleBlock = function (toggle, targetBlock) {
  *                             To close the modal, use `$.modal.close()`
  */
 var showModal = function (modalBox, data) {
+  var p;
   modalBox = $(modalBox);
   // Empty previous contents
   modalBox.html("");
-  var p = $("<p>");
+  p = $("<p>");
   if (data.icon) {
     $("<span>").addClass("icon fa")
       .addClass("fa-" + data.icon).appendTo(p);
@@ -271,10 +272,11 @@ $(document).ready(function () {
     toggleBlock(toggle, body);
   });
 
-  // Prevent from submitting form by "Enter"
+  // Prevent from submitting form on "Enter" keypress
   // Credit; https://stackoverflow.com/a/11235672/4856091
   $("form").on("keypress", function (e) {
     if (e.which === 13) {
+      // Disable the default submit action
       e.preventDefault();
       return false;
     }

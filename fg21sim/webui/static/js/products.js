@@ -76,17 +76,16 @@ var makeManifestTableCell = function (data, localhost) {
 var loadManifestToTable = function (manifest, localhost) {
   localhost = typeof localhost !== "undefined" ? localhost : false;
 
-  var frequency = manifest.frequency;
-  var components = Object.keys(manifest);
+  var frequency, components, table, row, cell, tbody;
+  frequency = manifest.frequency;
+  components = Object.keys(manifest);
   // Remove the `frequency` element
   components.splice(components.indexOf("frequency"), 1);
 
   // Reset the table first
   resetManifestTable();
 
-  var table = $("table#products-manifest");
-  var row;
-  var cell;
+  table = $("table#products-manifest");
   // Table head
   row = $("<tr>");
   row.append($("<th scope='col'>").text("Frequency (" + frequency.unit + ")"));
@@ -96,7 +95,7 @@ var loadManifestToTable = function (manifest, localhost) {
   table.children("thead").append(row);
 
   // Table body
-  var tbody = table.children("tbody");
+  tbody = table.children("tbody");
   frequency.id.forEach(function (freqID) {
     // One table row for each frequency
     row = $("<tr>");
@@ -140,12 +139,12 @@ var loadServerManifest = function (url, manifestfile) {
   var data = {action: "load", manifestfile: manifestfile};
   return $.postJSON(url, data)
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to load the products manifest!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalProducts(modalData);
+      showModalProducts({
+        icon: "times-circle",
+        contents: "Failed to load the products manifest!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -158,21 +157,25 @@ var loadServerManifest = function (url, manifestfile) {
 var saveServerManifest = function (url, clobber) {
   clobber = typeof clobber !== "undefined" ? clobber : false;
   var outfile = $("input#products-manifest").val();
-  var data = {action: "save", outfile: outfile, clobber: clobber};
+  var data = {
+    action: "save",
+    outfile: outfile,
+    clobber: clobber
+  };
   return $.postJSON(url, data)
     .done(function () {
-      var modalData = {};
-      modalData.icon = "check-circle";
-      modalData.contents = "Current products manifest saved.";
-      showModalProducts(modalData);
+      showModalProducts({
+        icon: "check-circle",
+        contents: "Current products manifest saved."
+      });
     })
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to save current products manifest!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalProducts(modalData);
+      showModalProducts({
+        icon: "times-circle",
+        contents: "Failed to save current products manifest!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -183,12 +186,12 @@ var saveServerManifest = function (url, clobber) {
 var getServerManifest = function (url) {
   return $.getJSONUncached(url)
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to load the products manifest!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalProducts(modalData);
+      showModalProducts({
+        icon: "times-circle",
+        contents: "Failed to load the products manifest!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -211,19 +214,18 @@ var resetManifest = function (url) {
   return $.postJSON(url, {action: "reset"})
     .done(function () {
       resetManifestTable();
-      // Popup a modal notification
-      var modalData = {};
-      modalData.icon = "check-circle";
-      modalData.contents = "Reset the products manifest.";
-      showModalProducts(modalData);
+      showModalProducts({
+        icon: "check-circle",
+        contents: "Reset the products manifest."
+      });
     })
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to reset the products manifest on server!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalProducts(modalData);
+      showModalProducts({
+        icon: "times-circle",
+        contents: "Failed to reset the products manifest on server!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -237,12 +239,12 @@ var resetManifest = function (url) {
 var convertProductHPX = function (url, compID, freqID) {
   return $.postJSON(url, {action: "convert", compID: compID, freqID: freqID})
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to convert the HEALPix map to HPX image!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalProducts(modalData);
+      showModalProducts({
+        icon: "times-circle",
+        contents: "Failed to convert the HEALPix map to HPX image!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -281,7 +283,8 @@ $(document).ready(function () {
 
   // Update the products manifest file path
   $("#conf-form input[name='workdir'], " +
-    "#conf-form input[name='common/manifest']").on("change", function (e) {
+    "#conf-form input[name='common/manifest']")
+    .on("change", function (e) {
       var workdir = $("#conf-form input[name='workdir']").val();
       var manifest = $("#conf-form input[name='output/manifest']").val();
       $("input#products-manifest").val(joinPath(workdir, manifest));
@@ -305,21 +308,20 @@ $(document).ready(function () {
   // Get and load products manifest into table
   $("#load-products").on("click", function () {
     loadServerManifest(ajax_url)
-      .then(function () {
-        return getServerManifest(ajax_url);
-      })
+      .then(function () { return getServerManifest(ajax_url); })
       .done(function (response) {
         console.log("GET products response:", response);
-        var modalData = {};
         if ($.isEmptyObject(response.manifest)) {
-          modalData.icon = "warning";
-          modalData.contents = "Products manifest not loaded on the server.";
-          showModalProducts(modalData);
+          showModalProducts({
+            icon: "warning",
+            contents: "Products manifest not loaded on the server."
+          });
         } else {
           loadManifestToTable(response.manifest, response.localhost);
-          modalData.icon = "check-circle";
-          modalData.contents = "Loaded products manifest to table.";
-          showModalProducts(modalData);
+          showModalProducts({
+            icon: "check-circle",
+            contents: "Loaded products manifest to table."
+          });
         }
       });
   });
@@ -376,12 +378,13 @@ $(document).ready(function () {
   // Open the HPX FITS image
   // NOTE: Only allowed when accessing the Web UI from localhost
   $(document).on("click", "td.product > .hpx.hpx-open", function () {
+    var cell = $(this).closest("td");
+    var compID = cell.data("compID");
+    var freqID = cell.data("freqID");
     var input_viewer = $("input#products-fitsviewer");
+    var viewer;
     if (input_viewer.data("validity")) {
-      var cell = $(this).closest("td");
-      var compID = cell.data("compID");
-      var freqID = cell.data("freqID");
-      var viewer = input_viewer.val();
+      viewer = input_viewer.val();
       openProductHPX(ajax_url, compID, freqID, viewer)
         .done(function (response) {
           showModalProducts({

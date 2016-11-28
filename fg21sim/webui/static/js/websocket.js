@@ -29,6 +29,24 @@ var getWebSocketURL = function (uri) {
 
 
 /**
+ * Toggle the visibility of element "#ws-status".
+ */
+var toggleWSReconnect = function (action) {
+  action = typeof action !== "undefined" ? action : "toggle";
+  var target = $("#ws-reconnect");
+  if (action === "toggle") {
+    target.toggle();
+  } else if (action === "show") {
+    target.show();
+  } else if (action === "hide") {
+    target.hide();
+  } else {
+    console.error("toggleWSReconnect: Unknown action:", action);
+  }
+};
+
+
+/**
  * Update the contents of element "#ws-status" according to the current
  * WebSocket status.
  */
@@ -66,31 +84,10 @@ var updateWSStatus = function (action) {
     $("#ws-status .icon").removeClass("fa-question-circle")
       .addClass("fa-times-circle");
     $("#ws-status .text").text("Unsupported!!");
+    toggleWSReconnect("hide");
   }
   else {
     console.error("updateWSStatus: Unknown action:", action);
-  }
-};
-
-
-/**
- * Toggle the visibility of element "#ws-status".
- */
-var toggleWSReconnect = function (action) {
-  /**
-   * Function default parameters: https://stackoverflow.com/a/894877/4856091
-   */
-  action = typeof action !== "undefined" ? action : "toggle";
-
-  var target = $("#ws-reconnect");
-  if (action === "toggle") {
-    target.toggle();
-  } else if (action === "show") {
-    target.show();
-  } else if (action === "hide") {
-    target.hide();
-  } else {
-    console.error("toggleWSReconnect: Unknown action:", action);
   }
 };
 
@@ -145,7 +142,7 @@ var connectWebSocket = function (url) {
 
 $(document).ready(function () {
   /**
-   * Check `WebSocket` support
+   * Check "WebSocket" support
    */
   if (window.WebSocket) {
     // WebSocket supported
@@ -161,10 +158,19 @@ $(document).ready(function () {
       console.log("Manually reconnect the WebSocket:", ws_url);
       connectWebSocket(ws_url);
     });
-
   } else {
     // WebSocket NOT supported
-    console.error("Oops, WebSocket is NOT supported!");
+    console.warn("Oops, WebSocket is NOT supported!");
     updateWSStatus("unsupported");
+    // Create a modal box and show a warning
+    var modalBox = $("<div>").addClass("modal").attr("id", "modal-websocket");
+    $("body").append(modalBox);
+    showModal(modalBox, {
+      icon: "warning",
+      title: "WebSocket is NOT supported by the browser!",
+      contents: ("The <strong>necessary functionalities</strong> do NOT " +
+                 "depend on WebSocket. However, the user experience may be " +
+                 "affected due to the missing WebSocket functionalities.")
+    });
   }
 });

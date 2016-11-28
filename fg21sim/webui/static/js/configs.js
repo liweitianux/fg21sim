@@ -22,7 +22,7 @@
  * @param {String} error - The custom error message to be set for the field
  */
 var setFormConfigErrorSingle = function (name, error) {
-  var selector = null;
+  var selector;
   if (name === "userconfig") {
     selector = "input[name=configfile]";
   } else {
@@ -57,11 +57,11 @@ var clearFormConfigErrors = function () {
 
 /**
  * Reset the configuration form to its defaults as written in the HTML.
+ *
+ * Credit: http://stackoverflow.com/a/6364313
  */
 var resetFormConfigs = function () {
-  // Credit: http://stackoverflow.com/a/6364313
   $("#conf-form")[0].reset();
-
   // Clear previously marked errors
   clearFormConfigErrors();
 };
@@ -77,9 +77,9 @@ var resetFormConfigs = function () {
  *                  + `undefined` if the field does not exists
  */
 var getFormConfigSingle = function (name) {
-  var value = null;
+  var value = undefined;
   if (! name) {
-    // do nothing
+    console.error("Invalid name:", name);
   } else if (name === "userconfig") {
     value = joinPath($("input[name=workdir]").val(),
                      $("input[name=configfile]").val());
@@ -285,10 +285,11 @@ var showModalConfigs = function (data) {
  */
 var getServerConfigs = function (url, keys) {
   keys = typeof keys !== "undefined" ? keys : null;
-  return $.getJSONUncached(url, {action: "get", keys: JSON.stringify(keys)},
-                   function (response) {
-                     setFormConfigs(response.data, {});
-                   });
+  return $.getJSONUncached(
+    url, {action: "get", keys: JSON.stringify(keys)},
+    function (response) {
+      setFormConfigs(response.data, {});
+    });
 };
 
 
@@ -297,10 +298,11 @@ var getServerConfigs = function (url, keys) {
  * and mark the corresponding form fields to be invalid with details.
  */
 var validateServerConfigs = function (url) {
-  return $.getJSONUncached(url, {action: "validate"},
-                   function (response) {
-                     setFormConfigs({}, response.errors);
-                   });
+  return $.getJSONUncached(
+    url, {action: "validate"},
+    function (response) {
+      setFormConfigs({}, response.errors);
+    });
 };
 
 
@@ -320,19 +322,19 @@ var resetConfigs = function (url) {
           // Update the configuration status label
           updateFormConfigStatus();
           // Popup a modal notification
-          var modalData = {};
-          modalData.icon = "check-circle";
-          modalData.contents = "Reset and synchronized the configurations.";
-          showModalConfigs(modalData);
+          showModalConfigs({
+            icon: "check-circle",
+            contents: "Reset and synchronized the configurations."
+          });
         });
     })
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to reset the configurations!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalConfigs(modalData);
+      showModalConfigs({
+        icon: "times-circle",
+        contents: "Failed to reset the configurations!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -351,17 +353,18 @@ var resetConfigs = function (url) {
  */
 var setServerConfigs = function (url, data) {
   data = typeof data !== "undefined" ? data : {};
-  return $.postJSON(url, {action: "set", data: data},
-                    function (response) {
-                      setFormConfigs(response.data, response.errors);
-                    })
+  return $.postJSON(
+    url, {action: "set", data: data},
+    function (response) {
+      setFormConfigs(response.data, response.errors);
+    })
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to update/set the configuration data!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalConfigs(modalData);
+      showModalConfigs({
+        icon: "times-circle",
+        contents: "Failed to update/set the configuration data!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -380,12 +383,12 @@ var loadServerConfigFile = function (url, userconfig) {
   }
   return $.postJSON(url, {action: "load", userconfig: userconfig})
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to load the user configuration file!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalConfigs(modalData);
+      showModalConfigs({
+        icon: "times-circle",
+        contents: "Failed to load the user configuration file!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -399,9 +402,11 @@ var loadServerConfigFile = function (url, userconfig) {
 var saveServerConfigFile = function (url, clobber) {
   clobber = typeof clobber !== "undefined" ? clobber : false;
   var userconfig = getFormConfigSingle("userconfig");
-  var data = {action: "save",
-              outfile: userconfig,
-              clobber: clobber};
+  var data = {
+    action: "save",
+    outfile: userconfig,
+    clobber: clobber
+  };
   return $.postJSON(url, data)
     .done(function () {
       var modalData = {};
@@ -413,17 +418,17 @@ var saveServerConfigFile = function (url, clobber) {
         // Configurations is currently invalid!
         modalData.icon = "warning";
         modalData.contents = ("Configurations saved to file. " +
-                             "But there exist some invalid values!");
+                              "But there exist some invalid values!");
       }
       showModalConfigs(modalData);
     })
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to save the configurations!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalConfigs(modalData);
+      showModalConfigs({
+        icon: "times-circle",
+        contents: "Failed to save the configurations!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -432,17 +437,19 @@ var saveServerConfigFile = function (url, clobber) {
  * Check whether the specified file already exists on the server?
  */
 var existsServerFile = function (url, filepath, callback) {
-  var data = {action: "exists",
-              filepath: JSON.stringify(filepath)};
+  var data = {
+    action: "exists",
+    filepath: JSON.stringify(filepath)
+  };
   return $.getJSONUncached(url, data, callback)
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = ("Failed to check the existence " +
-                           "of the user configuration file!");
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalConfigs(modalData);
+      showModalConfigs({
+        icon: "times-circle",
+        contents: ("Failed to check the existence " +
+                   "of the user configuration file!"),
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -469,30 +476,30 @@ $(document).ready(function () {
   $("#conf-recheck").on("click", function () {
     var data = getFormConfigAll();
     setServerConfigs(ajax_url, data)
-      .then(function () { validateServerConfigs(ajax_url); })
+      .then(function () { return validateServerConfigs(ajax_url); })
       .done(function () { updateFormConfigStatus(); });
   });
 
   // Reset both server-side and client-side configurations to the defaults
   $("#reset-defaults").on("click", function () {
-    var modalData = {};
-    modalData.icon = "warning";
-    modalData.contents = ("Are you sure to reset the configurations?");
-    modalData.buttons = [
-      {
-        text: "Cancel",
-        click: function () { $.modal.close(); }
-      },
-      {
-        text: "Reset!",
-        "class": "button-warning",
-        click: function () {
-          $.modal.close();
-          resetConfigs(ajax_url);
+    showModalConfigs({
+      icon: "warning",
+      contents: "Are you sure to reset the configurations?",
+      buttons: [
+        {
+          text: "Cancel",
+          click: function () { $.modal.close(); }
+        },
+        {
+          text: "Reset!",
+          "class": "button-warning",  // NOTE: "class" is a preserved keyword
+          click: function () {
+            $.modal.close();
+            resetConfigs(ajax_url);
+          }
         }
-      },
-    ];
-    showModalConfigs(modalData);
+      ]
+    });
   });
 
   // Load the configurations from the specified user configuration file
@@ -506,10 +513,10 @@ $(document).ready(function () {
         // Update the configuration status label
         updateFormConfigStatus();
         // Popup a modal notification
-        var modalData = {};
-        modalData.icon = "check-circle";
-        modalData.contents = "Loaded the configurations from file.";
-        showModalConfigs(modalData);
+        showModalConfigs({
+          icon: "check-circle",
+          contents: "Loaded the configurations from file."
+        });
       });
   });
 
@@ -520,26 +527,26 @@ $(document).ready(function () {
       if (response.data.exists) {
         // The specified configuration file already exists
         // Confirm to overwrite
-        var modalData = {};
-        modalData.icon = "warning";
-        modalData.contents = ("Configuration file already exists! Overwrite?");
-        modalData.buttons = [
-          {
-            text: "Cancel",
-            rel: "modal:close",
-            click: function () { $.modal.close(); }
-          },
-          {
-            text: "Overwrite!",
-            "class": "button-warning",
-            rel: "modal:close",
-            click: function () {
-              $.modal.close();
-              saveServerConfigFile(ajax_url, true);
+        showModalConfigs({
+          icon: "warning",
+          contents: "Configuration file already exists! Overwrite?",
+          buttons: [
+            {
+              text: "Cancel",
+              rel: "modal:close",
+              click: function () { $.modal.close(); }
+            },
+            {
+              text: "Overwrite!",
+              "class": "button-warning",
+              rel: "modal:close",
+              click: function () {
+                $.modal.close();
+                saveServerConfigFile(ajax_url, true);
+              }
             }
-          },
-        ];
-        showModalConfigs(modalData);
+          ]
+        });
       } else {
         saveServerConfigFile(ajax_url, false);
       }
@@ -548,8 +555,7 @@ $(document).ready(function () {
 
   // Sync changed field to server, validate and update form
   $("#conf-form input").on("change", function (e) {
-    console.log("Element changed:", e);
-    var name = $(e.target).attr("name");
+    var name = e.target.name;
     var value = getFormConfigSingle(name);
     // Synchronize the changed form configuration to the server
     // NOTE:
@@ -565,10 +571,11 @@ $(document).ready(function () {
 
   // Update the resolution note for field "common/nside" when press "Enter"
   $("#conf-form input[name='common/nside']").on("keypress", function (e) {
+    var nside, resolution;
     if (e.which === 13) {
-      var nside = parseInt($(this).val());
+      nside = parseInt($(this).val(), 10);
       // Update the resolution note (unit: arcmin)
-      var resolution = Math.sqrt(3/Math.PI) * 3600 / nside;
+      resolution = Math.sqrt(3/Math.PI) * 3600 / nside;
       $(this).closest(".form-group").find(".note > .value")
         .text(resolution.toFixed(2));
     }
@@ -576,11 +583,12 @@ $(document).ready(function () {
 
   // Update the maximum multiple "common/lmax" when "common/nside" changed
   $("#conf-form input[name='common/nside']").on("change", function (e) {
+    var nside, lmax;
     // Update the resolution note
     $(this).trigger($.Event("keypress", {which: 13}));
-    var nside = parseInt($(this).val());
-    if (! isNaN(nside)) {
-      var lmax = 3 * nside - 1;
+    nside = parseInt($(this).val(), 10);
+    if (isFinite(nside)) {
+      lmax = 3 * nside - 1;
       $("#conf-form input[name='common/lmax']").val(lmax).trigger("change");
     }
   });

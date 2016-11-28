@@ -27,7 +27,7 @@ var showModalConsole = function (data) {
 var updateTaskStatus = function (status) {
   var running = status.running;
   var finished = status.finished;
-  var ts = null;
+  var ts;
   if (!running && !finished) {
     ts = "Not started";
     $("#task-status").removeClass("label-success label-warning label-danger")
@@ -102,14 +102,14 @@ var appendLogMessage = function (msg) {
  */
 var toggleLogMessages = function (level) {
   var valid_levels = ["debug", "info", "warning", "error", "critical"];
-  var status = null;
+  var status, logbox;
   if (! level) {
     console.error("toggleLogMessages: level not specified");
   } else if ($.inArray(level.toLowerCase(), valid_levels) == -1) {
     console.error("toggleLogMessages: invalid level:", level);
   } else {
     level = level.toLowerCase();
-    var logbox = $("#log-messages");
+    logbox = $("#log-messages");
     if (typeof logbox.data(level) === "undefined") {
       // No stored display status, assuming true: show
       status = true;
@@ -147,12 +147,12 @@ var deleteLogMessages = function () {
 var getServerTaskStatus = function (url) {
   return $.getJSONUncached(url)
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to get the task status!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalConsole(modalData);
+      showModalConsole({
+        icon: "times-circle",
+        contents: "Failed to get the task status!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -170,12 +170,12 @@ var startServerTask = function (url, task, kwargs) {
   var data = {action: "start", task: task, kwargs: kwargs};
   return $.postJSON(url, data)
     .fail(function (jqxhr) {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = "Failed to start the task!";
-      modalData.code = jqxhr.status;
-      modalData.reason = jqxhr.statusText;
-      showModalConsole(modalData);
+      showModalConsole({
+        icon: "times-circle",
+        contents: "Failed to start the task!",
+        code: jqxhr.status,
+        reason: jqxhr.statusText
+      });
     });
 };
 
@@ -205,31 +205,26 @@ $(document).ready(function () {
     var button = $(this);
     if ($("#conf-status").data("validity")) {
       button.disable(true);
-      console.log("Disable button:", button[0]);
       updateTaskStatus({running: true, finished: false});
       startServerTask(ajax_url)
-        .always(function () {
-          button.disable(false);
-          console.log("Enable button:", button[0]);
-        })
+        .always(function () { button.disable(false); })
         .done(function () {
           getServerTaskStatus(ajax_url)
             .done(function (response) {
               updateTaskStatus(response.status);
-              // Popup a modal notification
-              var modalData = {};
-              modalData.icon = "check-circle";
-              modalData.contents = "Simulation task successfully finished.";
-              showModalConfigs(modalData);
+              showModalConsole({
+                icon: "check-circle",
+                contents: "Simulation task successfully finished."
+              });
             });
         });
     } else {
-      var modalData = {};
-      modalData.icon = "times-circle";
-      modalData.contents = ("Exist invalid configuration values! " +
-                           "Please correct the configurations " +
-                           "before starting the task");
-      showModalConsole(modalData);
+      showModalConsole({
+        icon: "times-circle",
+        contents: ("Exist invalid configuration values! " +
+                   "Please correct the configurations " +
+                   "before starting the task")
+      });
       console.error("Exist invalid configuration values!");
     }
   });
@@ -255,23 +250,23 @@ $(document).ready(function () {
     $(this).fadeTo("fast", status ? 1.0 : 0.5);
   });
   $("#log-delete").on("click", function () {
-    var modalData = {};
-    modalData.icon = "warning";
-    modalData.contents = "Are you sure to delete all logging messages?";
-    modalData.buttons = [
-      {
-        text: "Cancel",
-        click: function () { $.modal.close(); }
-      },
-      {
-        text: "Delete!",
-        "class": "button-warning",
-        click: function () {
-          $.modal.close();
-          deleteLogMessages();
+    showModalConsole({
+      icon: "warning",
+      contents: "Are you sure to delete all logging messages?",
+      buttons: [
+        {
+          text: "Cancel",
+          click: function () { $.modal.close(); }
+        },
+        {
+          text: "Delete!",
+          "class": "button-warning",
+          click: function () {
+            $.modal.close();
+            deleteLogMessages();
+          }
         }
-      },
-    ];
-    showModalConsole(modalData);
+      ]
+    });
   });
 });
