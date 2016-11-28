@@ -8,15 +8,6 @@
 "use strict";
 
 /**
- * Global variable
- * FIXME: try to avoid this ...
- */
-var g_ws = null;  /* WebSocket */
-/* WebSocket reconnection settings */
-var g_ws_reconnect = {maxTry: 21, tried: 0, timeout: 3000};
-
-
-/**
  * Get the full WebSocket URL from the given URI
  */
 var getWebSocketURL = function (uri) {
@@ -92,54 +83,6 @@ var updateWSStatus = function (action) {
 };
 
 
-/**
- * Connect to WebSocket and bind functions to events
- */
-var connectWebSocket = function (url) {
-  g_ws = new WebSocket(url);
-  g_ws.onopen = function () {
-    console.log("Opened WebSocket:", g_ws.url);
-    updateWSStatus("open");
-    toggleWSReconnect("hide");
-  };
-  g_ws.onclose = function (e) {
-    console.log("WebSocket closed: code:", e.code, ", reason:", e.reason);
-    updateWSStatus("close");
-    // Reconnect
-    if (g_ws_reconnect.tried < g_ws_reconnect.maxTry) {
-      g_ws_reconnect.tried++;
-      console.log("Try reconnect the WebSocket: No." + g_ws_reconnect.tried);
-      setTimeout(function () { connectWebSocket(url); },
-                 g_ws_reconnect.timeout);
-    } else {
-      console.error("WebSocket already tried allowed maximum times:",
-                    g_ws_reconnect.maxTry);
-      toggleWSReconnect("show");
-    }
-  };
-  g_ws.onerror = function (e) {
-    console.error("WebSocket encountered error:", e.message);
-    updateWSStatus("error");
-    toggleWSReconnect("show");
-  };
-  g_ws.onmessage = function (e) {
-    var msg = JSON.parse(e.data);
-    console.log("WebSocket received message:", msg);
-    // Delegate appropriate actions to handle the received message
-    if (msg.type === "configs") {
-      handleWebSocketMsgConfigs(msg);
-    } else if (msg.type === "console") {
-      handleWebSocketMsgConsole(msg);
-    } else if (msg.type === "products") {
-      console.error("NotImplementedError");
-    } else {
-      // Unknown/unsupported message type
-      console.warn("WebSocket: unknown message type:", msg.type);
-    }
-  };
-};
-
-
 $(document).ready(function () {
   /**
    * Check "WebSocket" support
@@ -148,15 +91,110 @@ $(document).ready(function () {
     // WebSocket supported
     console.log("Great, WebSocket is supported!");
 
-    var ws_url = getWebSocketURL("/ws");
-    connectWebSocket(ws_url);
+    // Custom object for WebSocket handling
+    var websocket = {
+      // URL for the WebSocket connection
+      url: getWebSocketURL("/ws"),
+
+      // Allowed maximum number of reconnection times
+      reconnectionMaxTry: 21,
+      // Current number of tried reconnection times
+      reconnectionTried: 0,
+      // Wait time (unit: ms) before trying to reconnect
+      reconnectionWaitTime: 3000,
+
+      // Events handlers will be bound to the opened WebSocket object
+      onopen: function () {
+        console.log("Opened WebSocket:", this.url);
+        updateWSStatus("open");
+        toggleWSReconnect("hide");
+      },
+      onclose: function (e) {
+        var self = this;
+        console.log("WebSocket closed: code:", e.code, ", reason:", e.reason);
+        updateWSStatus("close");
+        // Try to reconnect
+        if (self.reconnectionTried < self.reconnectionMaxTry) {
+          self.reconnectionTried++;
+          console.log("Try reconnect the WebSocket: No." +
+                      self.reconnectionTried);
+          setTimeout(function () { self.connect(); },
+                     self.reconnectionWaitTime);
+        } else {
+          console.error("WebSocket already tried allowed maximum times:",
+                        self.reconnectionMaxTry);
+          toggleWSReconnect("show");
+        }
+      },
+      onerror: function (e) {
+        console.error("WebSocket encountered error:", e.message);
+        updateWSStatus("error");
+        toggleWSReconnect("show");
+      },
+      onmessage: function (e) {
+        var msg = JSON.parse(e.data);
+        console.log("WebSocket received message:", msg);
+        // Delegate appropriate actions to handle the received message
+        if (msg.type === "configs") {
+          handleWebSocketMsgConfigs(msg);
+        } else if (msg.type === "console") {
+          handleWebSocketMsgConsole(msg);
+        } else {
+          // Unknown/unsupported message type
+          console.warn("WebSocket: unknown message type:", msg.type);
+        }
+      },
+
+      // Open the WebSocket and bind the events handlers
+      connect: function () {
+        var self = this;
+        var ws = new WebSocket(self.url);
+        ws.onopen = function (e) { self.onopen.call(self, e); };
+        ws.onclose = function (e) { self.onclose.call(self, e); };
+        ws.onerror = function (e) { self.onerror.call(self, e); };
+        ws.onmessage = function (e) { self.onmessage.call(self, e); };
+        this._websocket_ = ws;
+      },
+
+      // Force reconnect the WebSocket
+      forceReconnect: function () {
+        console.log("WebSocket: reset the tried reconnection counter");
+        this.reconnectionTried = 0;
+        console.log("Force reconnect the WebSocket:", this.url);
+        this.connect();
+      },
+
+      // Close the WebSocket
+      disconnect: function() {
+        if (this._websocket_) {
+          console.log("Disconnect the WebSocket:", this.url);
+          this._websocket_.close();
+          this._websocket_ = null;
+        } else {
+          console.warn("WebSocket already disconnected!");
+        }
+      },
+
+      // Force disconnect the WebSocket
+      forceDisconnect: function () {
+        this.reconnectionTried = this.reconnectionMaxTry;
+        console.log("Force disconnect the WebSocket:", this.url);
+        this.disconnect();
+      },
+
+      // The opened WebSocket object
+      _websocket_: null
+    };
+
+    // Add to the global "FG21SIM"
+    FG21SIM.websocket = websocket;
+
+    // Open the WebSocket connection
+    websocket.connect();
 
     // Manually reconnect the WebSocket after tried allowed maximum times
     $("#ws-reconnect").on("click", function () {
-      console.log("WebSocket: reset the tried reconnection counter");
-      g_ws_reconnect.tried = 0;
-      console.log("Manually reconnect the WebSocket:", ws_url);
-      connectWebSocket(ws_url);
+      websocket.forceReconnect();
     });
   } else {
     // WebSocket NOT supported
