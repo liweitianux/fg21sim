@@ -24,6 +24,13 @@ class Products:
     """
     Manage and manipulate the simulation products.
 
+    Parameters
+    ----------
+    manifestfile : str, optional
+        The absolute path to the manifest file for loading.
+    load : bool, optional
+        Load the specified manifest file if ``True``.
+
     Attributes
     ----------
     manifest : dict
@@ -61,14 +68,11 @@ class Products:
     }
     ``
     """
-    def __init__(self, manifestfile=None):
+    def __init__(self, manifestfile=None, load=True):
         self.manifest = OrderedDict()
         self.manifestfile = manifestfile
-        if manifestfile is not None:
-            try:
-                self.load(manifestfile)
-            except FileNotFoundError:
-                pass
+        if (manifestfile is not None) and load:
+            self.load(manifestfile)
 
     @property
     def frequencies(self):

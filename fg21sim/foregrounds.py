@@ -80,7 +80,7 @@ class Foregrounds:
         # Initialize the products manifest
         logger.info("Initialize the products manifest ...")
         manifestfile = self.configs.get_path("output/manifest")
-        self.products = Products(manifestfile)
+        self.products = Products(manifestfile, load=False)
         # Initialize enabled components
         self.components = OrderedDict()
         for comp in self.components_id:
