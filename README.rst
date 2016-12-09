@@ -13,7 +13,7 @@ This |fg21sim|_ package provides the tools to simulate the
 *realistic* low-frequency radio foregrounds, which can be further
 used to test various foreground removal or separation methods, for the
 purpose of successfully detecting the 21cm cosmological signal arising
-from the netrual hydrogen (HI) at epoch of reionization (EoR).
+from the neutral hydrogen (HI) at epoch of reionization (EoR).
 
 
 Features
