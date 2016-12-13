@@ -16,7 +16,7 @@ import healpy as hp
 import pandas as pd
 
 from ..utils.fits import write_fits_healpix
-from ..utils.convert import Fnu_to_Tb
+from ..utils.convert import Fnu_to_Tb_fast
 from ..utils.grid import make_grid_ellipse, map_grid_to_healpix
 
 
@@ -67,7 +67,7 @@ class SuperNovaRemnants:
        http://www.mrao.cam.ac.uk/surveys/snrs/
     """
     # Component name
-    name = "Galactic supernova remnants"
+    name = "Galactic SNRs"
 
     def __init__(self, configs):
         self.configs = configs
@@ -108,7 +108,7 @@ class SuperNovaRemnants:
             "flux": au.Jy,
         }
         # The flux densities are given at 1 GHz
-        self.catalog_flux_freq = 1.0 * au.GHz
+        self.catalog_flux_freq = (1.0*au.GHz).to(self.freq_unit).value
 
     def _save_catalog_inuse(self):
         """Save the effective/inuse SNRs catalog data to a CSV file.
@@ -121,7 +121,7 @@ class SuperNovaRemnants:
         - The unnecessary columns are striped.
         """
         if self.catalog_outfile is None:
-            logger.warning("Catalog output file not set, so do NOT save.")
+            logger.warning("Catalog output file not set; skipped!")
             return
         # Create directory if necessary
         dirname = os.path.dirname(self.catalog_outfile)
@@ -134,15 +134,15 @@ class SuperNovaRemnants:
                     "specindex", "rotation"]
         if os.path.exists(self.catalog_outfile):
             if self.clobber:
-                logger.warning("Remove existing catalog file: {0}".format(
-                    self.catalog_outfile))
                 os.remove(self.catalog_outfile)
+                logger.warning("Removed existing catalog file: {0}".format(
+                    self.catalog_outfile))
             else:
                 raise OSError("Output file already exists: {0}".format(
                     self.catalog_outfile))
         self.catalog.to_csv(self.catalog_outfile, columns=colnames,
                             header=True, index=False)
-        logger.info("Save SNRs catalog in use to: %s" % self.catalog_outfile)
+        logger.info("Saved SNRs catalog in use to: %s" % self.catalog_outfile)
 
     def _filter_catalog(self):
         """Filter the catalog data to remove the objects with incomplete
@@ -172,7 +172,7 @@ class SuperNovaRemnants:
         self.catalog_filtered = True
         logger.info("SNRs catalog: filtered out " +
                     "{0:d} ({1:.1f}%) objects".format(n_delete, n_delete_p))
-        logger.info("SNRs catalog: remaining {0} objects".format(n_remain))
+        logger.info("Filtered SNRs catalog: {0} objects".format(n_remain))
 
     def _add_random_rotation(self):
         """Add random rotation angles for each SNR as column "rotation"
@@ -197,15 +197,15 @@ class SuperNovaRemnants:
         Parameters
         ----------
         flux : float
-            The flux density (unit: `self.units["flux"]`) at the reference
+            The flux density (unit: [ Jy ]) at the reference
             frequency (i.e., `self.catalog_flux_freq`).
         specindex : float
             The spectral index of the power-law spectrum
         frequency : float
-            The frequency (unit: `self.freq_unit`) where the brightness
+            The frequency (unit: [ MHz ]) where the brightness
             temperature requested.
         size : 2-float tuple
-            The (major, minor) axes of the SNR (unit: `self.units["size"]`).
+            The (major, minor) axes of the SNR (unit: [ deg ]).
             The order of major and minor can be arbitrary.
 
         Returns
@@ -221,12 +221,11 @@ class SuperNovaRemnants:
         be calculated by extrapolating the spectrum, then convert the flux
         density to derive the brightness temperature.
         """
-        freq = frequency * self.freq_unit
-        flux = flux * self.units["flux"]
-        Fnu = flux * float(freq / self.catalog_flux_freq) ** (-specindex)
-        omega = size[0]*self.units["size"] * size[1]*self.units["size"]
-        Tb = Fnu_to_Tb(Fnu, omega, freq)
-        return Tb.value
+        freq_ref = self.catalog_flux_freq  # [ MHz ]
+        Fnu = flux * (frequency / freq_ref) ** (-specindex)  # [ Jy ]
+        omega = size[0] * size[1]  # [ deg^2 ]
+        Tb = Fnu_to_Tb_fast(Fnu, omega, frequency)
+        return Tb
 
     def _simulate_templates(self):
         """Simulate the template (HEALPix) images for each SNR, and cache
@@ -302,7 +301,9 @@ class SuperNovaRemnants:
         # Calculate the brightness temperature
         flux = data.flux
         specindex = data.specindex
-        size = (data.size_major, data.size_minor)
+        coef_size2deg = self.units["size"].to(au.deg)
+        size = (data.size_major * coef_size2deg,
+                data.size_minor * coef_size2deg)  # [ deg ]
         Tb = self._calc_Tb(flux, specindex, frequency, size)
         hpval = hpval * Tb
         return (hpidx, hpval)
