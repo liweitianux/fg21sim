@@ -88,8 +88,9 @@ class SuperNovaRemnants:
         self.checksum = self.configs.getn("output/checksum")
         self.clobber = self.configs.getn("output/clobber")
         self.nside = self.configs.getn("common/nside")
+        self.pixsize = hp.nside2resol(self.nside, arcmin=True) / 60.0
+        self.pixarea = self.pixsize ** 2  # [ deg^2 ]
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
-        #
         logger.info("Loaded and set up configurations")
 
     def _load_catalog(self):
@@ -224,6 +225,9 @@ class SuperNovaRemnants:
         freq_ref = self.catalog_flux_freq  # [ MHz ]
         Fnu = flux * (frequency / freq_ref) ** (-specindex)  # [ Jy ]
         omega = size[0] * size[1]  # [ deg^2 ]
+        if omega < self.pixarea:
+            # The object is smaller than a pixel, so round up to a pixel area
+            omega = self.pixarea
         Tb = Fnu_to_Tb_fast(Fnu, omega, frequency)
         return Tb
 
