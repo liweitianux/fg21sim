@@ -23,8 +23,6 @@ import logging
 import fg21sim
 from fg21sim.configs import configs
 from fg21sim.utils import setup_logging
-from fg21sim.utils.reproject import zea2healpix
-from fg21sim.utils.fits import write_fits_healpix
 
 
 def main():
@@ -85,6 +83,9 @@ def main():
         else:
             raise OSError("Output file already exists: %s" % args.outfile)
 
+    logger.info("Importing modules + Numba JIT, waiting ...")
+    from fg21sim.utils.reproject import zea2healpix
+    from fg21sim.utils.fits import write_fits_healpix
     hp_data, hp_header, __ = zea2healpix(args.infile1, args.infile2,
                                          nside=args.nside,
                                          order=args.interp_order,

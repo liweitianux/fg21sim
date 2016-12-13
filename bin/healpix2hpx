@@ -13,12 +13,9 @@ import sys
 import argparse
 import logging
 
-from astropy.io import fits
-
 import fg21sim
 from fg21sim.configs import configs
 from fg21sim.utils import setup_logging
-from fg21sim.utils.healpix import healpix2hpx
 
 
 def main():
@@ -70,6 +67,9 @@ def main():
         else:
             raise OSError("Output file already exists: %s" % args.outfile)
 
+    logger.info("Importing modules + Numba JIT, waiting ...")
+    from astropy.io import fits
+    from fg21sim.utils.healpix import healpix2hpx
     hpx_data, hpx_header = healpix2hpx(args.infile,
                                        append_history=history,
                                        append_comment=comments)
