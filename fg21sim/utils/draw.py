@@ -42,9 +42,9 @@ def _ellipse_in_shape(shape, center, radii):
     r_o, c_o = center
     r_r, c_r = radii
     distances = (((r_lim-r_o) / r_r) * ((r_lim-r_o) / r_r) +
-                 ((c_lim-c_o) / c_r) * ((c_lim-c_o / c_r)))
     xi, yi = np.nonzero(distances < 1.0)
     return (xi, yi)
+                 ((c_lim-c_o) / c_r) * ((c_lim-c_o) / c_r))
 
 
 @nb.jit(nb.types.UniTuple(nb.int64[:], 2)(nb.int64, nb.int64,
