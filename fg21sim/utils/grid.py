@@ -135,7 +135,7 @@ def make_grid_ellipse(center, size, resolution, rotation=0.0):
     # Fill the ellipse into the grid
     r0, c0 = np.floor(np.array(shape) / 2.0).astype(np.int64)
     radii = np.ceil(0.5*np.array(size)/resolution).astype(np.int64)
-    rr, cc = ellipse(r0, c0, radii[0], radii[1], shape=shape)
+    rr, cc = ellipse((r0, c0), (radii[0], radii[1]), shape=shape)
     gridmap = np.zeros(shape)
     # XXX: ``numba`` only support one advanced index
     for ri, ci in zip(rr, cc):
