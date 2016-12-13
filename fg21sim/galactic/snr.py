@@ -261,12 +261,13 @@ class SuperNovaRemnants:
         templates = {}
         resolution = self.resolution.to(au.deg).value
         logger.info("Simulate HEALPix template for each SNR")
+        coef_size2deg = self.units["size"].to(au.deg)
         for row in self.catalog.itertuples():
             name = row.name
             logger.debug("Simulate HEALPix template for SNR: {0}".format(name))
             center = (row.glon, row.glat)
-            size = ((row.size_major * self.units["size"]).to(au.deg).value,
-                    (row.size_minor * self.units["size"]).to(au.deg).value)
+            size = (row.size_major * coef_size2deg,
+                    row.size_minor * coef_size2deg)
             rotation = row.rotation
             grid = make_grid_ellipse(center, size, resolution, rotation)
             hpidx, hpval = map_grid_to_healpix(grid, self.nside)

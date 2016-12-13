@@ -71,7 +71,7 @@
 
   # Resolution (unit: arcmin) for simulating each SNR, which are finally
   # mapped to the HEALPix map of Nside specified in "[common]" section.
-  resolution = float(default=1.0, min=0.0)
+  resolution = float(default=0.5, min=0.0)
 
   # Filename prefix for this component
   prefix = string(default="gsnr")
