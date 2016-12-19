@@ -2,4 +2,3 @@
 # MIT license
 
 from .clusters import GalaxyClusters
-from .pointsources import PointSources
