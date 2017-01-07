@@ -16,7 +16,7 @@ from astropy.cosmology import LambdaCDM, z_at_value
 logger = logging.getLogger(__name__)
 
 
-class Cosmo:
+class Cosmology:
     """
     Cosmological model.
 
@@ -34,17 +34,23 @@ class Cosmo:
         * closed : Om0 > 1, Ode0 = 0
         * EdS (Einstein-de Sitter) : Om0 = 1, Ode0 = 0
         * flatLambdaCDM : Om0 + Ode0 = 1, Ode0 > 0
+
+    References
+    ----------
+    [1] https://astro.uni-bonn.de/~pavel/WIKIPEDIA/Lambda-CDM_model.html
+    [2] https://en.wikipedia.org/wiki/Lambda-CDM_model
     """
 
-    def __init__(self, H0=71.0, Om0=0.27, Ode0=None, sigma8=None):
+    def __init__(self, H0=71.0, Om0=0.27, Ob0=0.046, Ode0=None, sigma8=None):
         Ode0 = 1.0 - Om0 if Ode0 is None else Ode0
         if (Ode0 > 0) and abs(Om0 + Ode0 - 1) > 1e-5:
             raise ValueError("non-flat LambdaCDM model not supported!")
         self.H0 = H0  # [km/s/Mpc]
         self.Om0 = Om0
+        self.Ob0 = Ob0
         self.Ode0 = Ode0
         self._sigma8 = sigma8
-        self.cosmo = LambdaCDM(H0=H0, Om0=Om0, Ode0=Ode0)
+        self.cosmo = LambdaCDM(H0=H0, Om0=Om0, Ob0=Ob0, Ode0=Ode0)
         logger.info("Cosmological model: {0}".format(self.model))
 
     @property
@@ -119,6 +125,15 @@ class Cosmo:
             Unit: [Gyr]
         """
         return self.cosmo.age(z).value
+
+    @property
+    def age0(self):
+        """
+        Present age of the universe.
+        """
+        if not hasattr(self, "_age0"):
+            self._age0 = self.age(0)
+        return self._age0
 
     def redshift(self, age):
         """
