@@ -98,17 +98,27 @@ class FokkerPlanckSolver:
     @property
     def dx(self):
         """
-        Values of delta X on the grid.
+        Values of dx[i] on the grid.
 
         dx[i] = (x[i+1] - x[i-1]) / 2
-        Thus the first and last element is NaN.
+
+        NOTE:
+        Extrapolate the x grid by 1 point beyond each side, therefore
+        avoid NaN for the first and last element of dx[i].
+        Otherwise, the following calculation of tridiagonal coefficients
+        may be invalid on the boundary elements.
 
         References: Ref.[1],Eq.(8)
         """
         x = self.x
-        dx_ = (x[2:] - x[:-2]) / 2
-        grid = np.concatenate([[np.nan], dx_, [np.nan]])
-        return grid
+        # Extrapolate the x grid by 1 point beyond each side
+        x2 = np.concatenate([
+            [x[0]**2/x[1]],
+            x,
+            [x[-1]**2/x[-2]],
+        ])
+        dx_ = (x2[2:] - x2[:-2]) / 2
+        return dx_
 
     @property
     def dx_phalf(self):
