@@ -98,6 +98,7 @@ class HaloSingle:
         self.pmin = self.configs.getn(comp+"/pmin")
         self.pmax = self.configs.getn(comp+"/pmax")
         self.pgrid_num = self.configs.getn(comp+"/pgrid_num")
+        self.buffer_np = self.configs.getn(comp+"/buffer_np")
         self.time_step = self.configs.getn(comp+"/time_step")
         self.injection_index = self.configs.getn(comp+"/injection_index")
         # Cosmology model
@@ -121,6 +122,7 @@ class HaloSingle:
         fpsolver = FokkerPlanckSolver(
             xmin=self.pmin, xmax=self.pmax,
             grid_num=self.pgrid_num,
+            buffer_np=self.buffer_np,
             tstep=self.time_step,
             f_advection=self.fp_advection,
             f_diffusion=self.fp_diffusion,

@@ -77,6 +77,11 @@
   # equation to calculate the electron spectrum.
   pgrid_num = integer(default=100, min=10)
 
+  # Number of grid points used as the buffer region near the lower
+  # boundary, and the value within this buffer region will be fixed to
+  # avoid unphysical pile-up of low-energy electrons.
+  buffer_np = integer(default=5, min=0)
+
   # Time step for solving the Fokker-Planck equation (unit: Gyr)
   time_step = float(default=0.01, min=1e-5, max=1.0)
 
