@@ -165,9 +165,11 @@ class FokkerPlanckSolver:
     @staticmethod
     def W(w):
         # References: Ref.[1],Eqs.(27,35)
-        w = np.abs(w)
+        with np.errstate(invalid="ignore"):
+            # Ignore NaN's
+            w = np.abs(w)
+            mask = (w < 0.1)  # Comparison on NaN gives False, as expected
         W = np.zeros(w.shape) * np.nan
-        mask = (w < 0.1)
         W[mask] = 1.0 / (1 + w[mask]**2/24 + w[mask]**4/1920)
         W[~mask] = (w[~mask] * np.exp(-w[~mask]/2) /
                     (1 - np.exp(-w[~mask])))
