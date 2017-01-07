@@ -11,6 +11,8 @@
 # This file contains the options corresponding the extragalactic emission
 # components, which currently includes the following components:
 # - clusters
+# - halos
+# - pointsources
 #
 # NOTE:
 # - The input templates for simulations should be HEALPix full-sky maps.
@@ -39,6 +41,48 @@
   save = boolean(default=True)
   # Output directory to save the simulated results
   output_dir = string(default=None)
+
+
+  # Emission of giant radio halos from galaxy clusters
+  [[halos]]
+  # Maximum redshift until where to tracing the cluster merging history
+  # (e.g., when calculating the electron spectrum)
+  zmax = float(default=3.0, min=0.0)
+
+  # Mass threshold of the sub-cluster to be regarded as a significant
+  # merger. (unit: Msun)
+  merger_mass_th = float(default=1e13, min=1e12)
+
+  # Radius of the giant radio halo in clusters (unit: kpc)
+  # XXX: currently only support a constant radius of halos
+  radius_halo = float(default=500, min=100)
+
+  # Magnetic field assumed for the cluster (unit: uG)
+  # XXX: currently only support a constant magnetic field
+  magnetic_field = float(default=0.5, min=0.1, max=10)
+
+  # Fraction of the turbulence energy in the form of magneto-sonic waves.
+  eta_t = float(default=0.3, min=0.0, max=1.0)
+
+  # Ratio of the total energy injected in cosmic-ray electrons during the
+  # cluster life to the present-day total thermal energy of the cluster.
+  eta_e = float(default=0.003, min=0.0, max=0.1)
+
+  # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
+  # electron spectrum.
+  pmin = float(default=1.0)
+  pmax = float(default=1e4)
+
+  # Number of points for the grid used during solving the Fokker-Planck
+  # equation to calculate the electron spectrum.
+  pgrid_num = integer(default=100, min=10)
+
+  # Time step for solving the Fokker-Planck equation (unit: Gyr)
+  time_step = float(default=0.01, min=1e-5, max=1.0)
+
+  # Index of the power-law spectrum assumed for the injected electrons.
+  injection_index = float(default=2.5)
+
 
   # Extragalactic point sources
   [[pointsources]]
