@@ -216,6 +216,16 @@ class FokkerPlanckSolver:
         C_mhalf = self.X_mhalf(C)
         w_phalf = dx_phalf * B_phalf / C_phalf
         w_mhalf = dx_mhalf * B_mhalf / C_mhalf
+        # Avoid overflow when w is too large
+        w_max = 300
+        with np.errstate(invalid="ignore"):
+            mask_phalf = (np.abs(w_phalf) > w_max)
+            mask_mhalf = (np.abs(w_mhalf) > w_max)
+        w_phalf[mask_phalf] = w_max * (np.sign(w_phalf[mask_phalf]))
+        w_mhalf[mask_mhalf] = w_max * (np.sign(w_mhalf[mask_mhalf]))
+        logger.warning("Fixed too large w values: " +
+                       "%d+%d" % (len(mask_phalf), len(mask_mhalf)))
+        #
         W_phalf = self.W(w_phalf)
         W_mhalf = self.W(w_mhalf)
         Wplus_phalf = W_phalf * np.exp(w_phalf/2)
