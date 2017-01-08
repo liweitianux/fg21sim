@@ -434,8 +434,7 @@ class HaloSingle:
     def _coef_acceleration(self, z):
         """
         Calculate the electron-acceleration coefficient at arbitrary
-        redshift, by interpolating the coefficients calculated at every
-        merger redshifts.
+        redshift.
 
         Parameters
         ----------
@@ -448,6 +447,13 @@ class HaloSingle:
             The calculated electron-acceleration coefficient.
             (unit: Gyr^-1)
 
+        Attributes
+        ----------
+        _coef_acceleration_data : (`~numpy.ndarray`, `~numpy.ndarray`)
+            (zgrid, chigrid) tuple with ``zgrid`` the array of redshifts
+            grid with even spacing ``zbs``, and ``chigrid`` the array
+            of acceleration coefficients at each redshift.
+
         XXX/NOTE
         --------
         This coefficient may be very small and even zero, then the
@@ -458,20 +464,38 @@ class HaloSingle:
         coefficient to be 1/(10*t0), which t0 is the present-day age
         of the universe.
         """
-        if not hasattr(self, "_coef_acceleration_interp"):
+        # Redshift bin size
+        zbs = 0.01
+
+        if not hasattr(self, "_coef_acceleration_data"):
             # Order the merger events by decreasing redshifts
             mevents = list(reversed(self.merger_events))
-            redshifts = np.array([ev["z"] for ev in mevents])
-            chis = np.array([self._chi_at_zidx(zidx, mevents)
-                             for zidx in range(len(redshifts))])
-            # XXX: force a minimal value instead of zero or too small
-            chi_min = 1.0 / (10 * self.cosmo.age0)
-            chis[chis < chi_min] = chi_min
-            self._coef_acceleration_interp = scipy.interpolate.interp1d(
-                    redshifts, chis, kind="linear",
-                    bounds_error=False, fill_value=chi_min)
-            logger.info("Interpolated acceleration coefficients w.r.t. z")
-        return self._coef_acceleration_interp(z)
+            chi_z = [self._chi_at_zidx(zidx, mevents)
+                     for zidx in range(len(mevents))]
+            zgrid = np.arange(0.0, self.zmax+zbs, step=zbs)
+            chigrid = np.zeros(zgrid.shape)
+            for (chi_, zbegin, zend) in chi_z:
+                # NOTE: zbegin > zend
+                mask = (zgrid <= zbegin) & (zgrid >= zend)
+                chigrid[mask] += chi_
+            self._coef_acceleration_data = (zgrid, chigrid)
+
+        zgrid, chigrid = self._coef_acceleration_data
+        # XXX: force a minimal value instead of zero or too small
+        chi_min = 1 / (10 * self.cosmo.age0)
+
+        try:
+            zi = np.where(z < zgrid)[0][0]
+            slope = (chigrid[zi]-chigrid[zi-1]) / (zgrid[zi]-zgrid[zi-1])
+            chi = (z-zgrid[zi]) * slope + chigrid[zi]
+        except IndexError:
+            # Given z >= zgrid[-1]
+            chi = 0.0
+
+        if chi > chi_min:
+            return chi
+        else:
+            return chi_min
 
     def _chi_at_zidx(self, zidx, mevents):
         """
@@ -494,6 +518,11 @@ class HaloSingle:
         chi : float
             The calculated electron-acceleration coefficient.
             (unit: Gyr^-1)
+        zbegin : float
+            The redshift when the merger begins
+        zend : float
+            The redshift when the merger ends
+            NOTE: zbegin > zend
 
         References
         ----------
@@ -530,7 +559,7 @@ class HaloSingle:
             else:
                 term3 = (self.radius_halo/rs) ** 2
             chi += coef * term1 * term2 * term3
-        return chi
+        return (chi, zbegin, zend)
 
     def fp_injection(self, p, t=None):
         """
