@@ -7,8 +7,9 @@ Flat ΛCDM cosmological model.
 
 import numpy as np
 from scipy import integrate
-import astropy.units as au
 from astropy.cosmology import FlatLambdaCDM
+
+from .units import (UnitConversions as AUC, Constants as AC)
 
 
 class Cosmology:
@@ -57,9 +58,10 @@ class Cosmology:
         Mass contained in a sphere of radius of 8 h^-1 Mpc.
         Unit: [Msun]
         """
-        r = 8 * au.Mpc.to(au.cm) / self.h  # [cm]
-        M8 = (4*np.pi/3) * r**3 * self.rho_crit(0)
-        return (M8 * au.g.to(au.solMass))
+        r = 8 * AUC.Mpc2cm / self.h  # [cm]
+        M8 = (4*np.pi/3) * r**3 * self.rho_crit(0)  # [g]
+        M8 *= AUC.g2Msun  # [Msun]
+        return M8
 
     def E(self, z):
         """
@@ -79,8 +81,7 @@ class Cosmology:
         Hubble time.
         Unit: [Gyr]
         """
-        # uconv = au.Mpc.to(au.km) * au.s.to(au.Gyr)
-        uconv = 977.7922216731284
+        uconv = AUC.Mpc2km * AUC.s2Gyr
         t_H = (1.0/self.H0) * uconv  # [Gyr]
         return t_H
 
@@ -143,11 +144,8 @@ class Cosmology:
         Critical density at redshift z.
         Unit: [g/cm^3]
         """
-        G = 6.67384e-08  # [cm^3/g/s^2]
-        rho = 3 * self.H(z)**2 / (8*np.pi * G)
-        # uconv = au.km.to(au.Mpc)**2
-        uconv = 1.0502650403056094e-39
-        rho *= uconv
+        rho = 3 * self.H(z)**2 / (8*np.pi * AC.G)
+        rho *= AUC.km2Mpc**2
         return rho
 
     def Om(self, z):

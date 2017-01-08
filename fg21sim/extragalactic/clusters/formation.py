@@ -202,7 +202,7 @@ class ClusterFormation:
         # Current properties
         w2 = self.f_delta_c(z=z)
         S2 = self.f_sigma(M) ** 2
-        dw = 0.5 * self.f_dw_max(M, dMc)
+        dw = 0.5 * self.f_dw_max(M)
         dS = self.gen_dS(dw)
         # Progenitor properties
         z1 = self.calc_z(w2 + dw)

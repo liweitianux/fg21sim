@@ -14,14 +14,13 @@ References
 import logging
 
 import numpy as np
-import astropy.units as au
-import astropy.constants as ac
 import scipy.interpolate
 import scipy.integrate
 import scipy.optimize
 
 from .cosmology import Cosmology
 from .solver import FokkerPlanckSolver
+from .units import (Units as AU, UnitConversions as AUC, Constants as AC)
 
 
 logger = logging.getLogger(__name__)
@@ -62,21 +61,10 @@ class HaloSingle:
     mtree : `~MergerTree`
         Merging history of this cluster.
     """
+    # Unit for electron momentum (p), thus its value is the Lorentz factor
+    mec = AU.mec  # [g cm / s]
     # Merger tree (i.e., merging history) of this cluster
     mtree = None
-    # Unit for electron momentum (p), thus its value is the Lorentz factor
-    mec = ac.m_e.cgs.value*ac.c.cgs.value  # [g cm / s]
-    # Mean molecular weight
-    # Ref.: Ettori et al, 2013, Space Science Review, 177, 119-154, Eq.(6)
-    mu = 0.6
-    # Atomic mass unit (i.e., a.m.u.)
-    m_atom = ac.u.cgs.value  # [g]
-    # Common units conversion
-    # TODO: move these to a separate module/class
-    Msun2g = au.solMass.to(au.g)
-    kpc2cm = au.kpc.to(au.cm)
-    keV2erg = au.keV.to(au.erg)
-    Gyr2s = au.Gyr.to(au.s)
 
     def __init__(self, M0, configs):
         self.M0 = M0  # [Msun]
@@ -180,8 +168,8 @@ class HaloSingle:
         """
         Dc = self.cosmo.overdensity_virial(z)
         rho = self.cosmo.rho_crit(z)  # [g/cm^3]
-        R_vir = (3*mass*self.Msun2g / (4*np.pi * Dc * rho))**(1/3)  # [cm]
-        R_vir /= self.kpc2cm  # [kpc]
+        R_vir = (3*mass*AUC.Msun2g / (4*np.pi * Dc * rho))**(1/3)  # [cm]
+        R_vir *= AUC.cm2kpc  # [kpc]
         return R_vir
 
     def _radius_stripping(self, mass, M_main, z):
@@ -216,8 +204,8 @@ class HaloSingle:
             Eq.(11)
         """
         vi = self._velocity_impact(M_main, mass, z) * 1e5  # [cm/s]
-        kT = self.kT_mass(mass) * self.keV2erg  # [erg]
-        coef = kT / (self.mu * self.m_atom * vi**2)  # dimensionless
+        kT = self.kT_mass(mass) * AUC.keV2erg  # [erg]
+        coef = kT / (AC.mu * AC.u * vi**2)  # dimensionless
         rho_avg = self._density_average(M_main, z)  # [g/cm^3]
 
         def equation(r):
@@ -243,9 +231,9 @@ class HaloSingle:
             Eq.(12)
         """
         f_baryon = self.cosmo.Ob0 / self.cosmo.Om0
-        Rv = self._radius_virial(mass, z) * self.kpc2cm  # [cm]
+        Rv = self._radius_virial(mass, z) * AUC.kpc2cm  # [cm]
         V = (4*np.pi / 3) * Rv**3  # [cm^3]
-        rho = f_baryon * mass*self.Msun2g / V  # [g/cm^3]
+        rho = f_baryon * mass*AUC.Msun2g / V  # [g/cm^3]
         return rho
 
     def density_profile(self, r, mass, z):
@@ -273,9 +261,9 @@ class HaloSingle:
             Eq.(13)
         """
         f_baryon = self.cosmo.Ob0 / self.cosmo.Om0
-        M_ICM = mass * f_baryon * self.Msun2g  # [g]
-        r *= self.kpc2cm  # [cm]
-        Rv = self._radius_virial(mass, z) * self.kpc2cm  # [cm]
+        M_ICM = mass * f_baryon * AUC.Msun2g  # [g]
+        r *= AUC.kpc2cm  # [cm]
+        Rv = self._radius_virial(mass, z) * AUC.kpc2cm  # [cm]
         rc = self._beta_rc(Rv)
         beta = self._beta_beta()
         norm = self._beta_norm(M_ICM, beta, rc, Rv)  # [g/cm^3]
@@ -360,11 +348,10 @@ class HaloSingle:
             Eq.(9)
         """
         eta_v = 4 * (1 + M_main/M_sub) ** (1/3)
-        R_vir = self._radius_virial(M_main, z) * self.kpc2cm  # [cm]
-        G = ac.G.cgs.value
-        vi = np.sqrt(2*G * (1-1/eta_v) *
-                     (M_main+M_sub)*self.Msun2g / R_vir)  # [cm/s]
-        vi /= 1e5  # [km/s]
+        R_vir = self._radius_virial(M_main, z) * AUC.kpc2cm  # [cm]
+        vi = np.sqrt(2*AC.G * (1-1/eta_v) *
+                     (M_main+M_sub)*AUC.Msun2g / R_vir)  # [cm/s]
+        vi /= AUC.km2cm  # [km/s]
         return vi
 
     def _time_crossing(self, M_main, M_sub, z):
@@ -388,8 +375,7 @@ class HaloSingle:
         R_vir = self._radius_virial(M_main, z)  # [kpc]
         vi = self._velocity_impact(M_main, M_sub, z)  # [km/s]
         # Unit conversion coefficient: [s kpc/km] => [Gyr]
-        # uconv = au.kpc.to(au.km) * au.s.to(au.Gyr)
-        uconv = 0.9777922216731284
+        uconv = AUC.kpc2km * AUC.s2Gyr
         time = uconv * R_vir / vi  # [Gyr]
         return time
 
@@ -525,7 +511,7 @@ class HaloSingle:
             zend_idx = zidx + 1
         #
         coef = 2.23e-16 * self.eta_t / (self.radius_halo/500)**3  # [s^-1]
-        coef *= self.Gyr2s  # [Gyr^-1]
+        coef *= AUC.Gyr2s  # [Gyr^-1]
         chi = 0.0
         for ev in mevents[zidx:zend_idx]:
             M_main = ev["M_main"]
@@ -577,7 +563,7 @@ class HaloSingle:
         if not hasattr(self, "_electron_injection_rate"):
             e_th = self.e_thermal  # [erg/cm^3]
             term1 = (self.injection_index-2) * self.eta_e
-            term2 = e_th / (self.pmin * self.mec * ac.c.cgs.value)  # [cm^-3]
+            term2 = e_th / (self.pmin * self.mec * AC.c)  # [cm^-3]
             term3 = 1.0 / (self.cosmo.age0 * self.pmin)  # [Gyr^-1 mec^-1]
             Ke = term1 * term2 * term3
             self._electron_injection_rate = Ke
@@ -660,7 +646,7 @@ class HaloSingle:
         """
         z = self.cosmo.redshift(t)
         n_th = self._n_thermal(self.M0, z)
-        coef = -3.3e-29 * self.Gyr2s / self.mec  # [mec/Gyr]
+        coef = -3.3e-29 * AUC.Gyr2s / self.mec  # [mec/Gyr]
         dpdt = coef * n_th * (1 + np.log(p/n_th) / 75)
         return dpdt
 
@@ -675,7 +661,7 @@ class HaloSingle:
             Eq.(39)
         """
         z = self.cosmo.redshift(t)
-        coef = -4.8e-4 * self.Gyr2s / self.mec  # [mec/Gyr]
+        coef = -4.8e-4 * AUC.Gyr2s / self.mec  # [mec/Gyr]
         dpdt = (coef * (p*self.mec)**2 *
                 ((self.magnetic_field/3.2)**2 + (1+z)**4))
         return dpdt
@@ -693,9 +679,9 @@ class HaloSingle:
         mass = self.M0
         f_baryon = self.cosmo.Ob0 / self.cosmo.Om0
         kT = self.kT_mass(mass)  # [keV]
-        N = mass * self.Msun2g * f_baryon / (self.mu * self.m_atom)
-        E_th = kT*self.keV2erg * N  # [erg]
-        Rv = self._radius_virial(mass) * self.kpc2cm  # [cm]
+        N = mass * AUC.Msun2g * f_baryon / (AC.mu * AC.u)
+        E_th = kT*AUC.keV2erg * N  # [erg]
+        Rv = self._radius_virial(mass) * AUC.kpc2cm  # [cm]
         V = (4*np.pi / 3) * Rv**3  # [cm^3]
         e_th = E_th / V  # [erg/cm^3]
         return e_th
@@ -717,8 +703,8 @@ class HaloSingle:
             Number density of the ICM (unit: cm^-3)
         """
         f_baryon = self.cosmo.Ob0 / self.cosmo.Om0
-        N = mass * self.Msun2g * f_baryon / (self.mu * self.m_atom)
-        Rv = self._radius_virial(mass, z) * self.kpc2cm  # [cm]
+        N = mass * AUC.Msun2g * f_baryon / (AC.mu * AC.u)
+        Rv = self._radius_virial(mass, z) * AUC.kpc2cm  # [cm]
         V = (4*np.pi / 3) * Rv**3  # [cm^3]
         n_th = N / V  # [cm^-3]
         return n_th
