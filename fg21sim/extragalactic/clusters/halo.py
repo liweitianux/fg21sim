@@ -430,16 +430,16 @@ class HaloSingle:
         events = []
         tree = self.mtree
         while tree:
-            if (tree.major and tree.minor and
-                    tree.minor.node.mass >= self.merger_mass_th and
-                    tree.major.node.z <= self.zmax):
+            if (tree.main and tree.sub and
+                    tree.sub.data["mass"] >= self.merger_mass_th and
+                    tree.main.data["z"] <= self.zmax):
                 events.append({
-                    "M_main": tree.major.node.mass,
-                    "M_sub": tree.minor.node.mass,
-                    "z": tree.major.node.z,
-                    "age": tree.major.node.age
+                    "z": tree.main.data["z"],
+                    "age": tree.main.data["age"],
+                    "M_main": tree.main.data["mass"],
+                    "M_sub": tree.sub.data["mass"],
                 })
-            tree = tree.major
+            tree = tree.main
         return events
 
     def _coef_acceleration(self, z):
