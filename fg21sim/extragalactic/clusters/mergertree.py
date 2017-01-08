@@ -39,15 +39,11 @@ class MergerTree:
         merger happens.
         The ``sub`` cluster may be missing, which is regarded as an
         accretion event rather than a merger.
-    merged : `~MergerTree`
-        Reverse link to the merged cluster.  Therefore, it is able to refer
-        to the ``sub`` cluster from the ``main`` cluster, and vice versa.
     """
-    def __init__(self, data, main=None, sub=None, merged=None):
+    def __init__(self, data, main=None, sub=None):
         self.data = data
         self.main = main
         self.sub = sub
-        self.merged = merged
 
 
 def save_mtree(mtree, outfile, clobber=False):
