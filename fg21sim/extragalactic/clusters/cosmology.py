@@ -181,7 +181,7 @@ class Cosmology:
             Appendix.A, Eq.(A1)
         """
         coef = 3 * (12*np.pi) ** (2/3) / 20
-        D0 = self.growth_factor(0)
+        D0 = self.growth_factor0
         D_z = self.growth_factor(z)
         Om_z = self.Om(z)
         delta_c = coef * (D0 / D_z) * (1 + 0.0123*np.log10(Om_z))
@@ -201,6 +201,15 @@ class Cosmology:
         x = x0 / (1 + z)
         coef = np.sqrt(x**3 + 2) / (x**1.5)
         integral = integrate.quad(lambda y: y**1.5 * (y**3+2)**(-1.5),
-                                  a=0, b=x)[0]
+                                  a=0, b=x, epsabs=1e-5, epsrel=1e-5)[0]
         D = coef * integral
         return D
+
+    @property
+    def growth_factor0(self):
+        """
+        Present-day (z=0) growth factor.
+        """
+        if not hasattr(self, "_growth_factor0"):
+            self._growth_factor0 = self.growth_factor(0)
+        return self._growth_factor0
