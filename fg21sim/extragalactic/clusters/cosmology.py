@@ -5,15 +5,10 @@
 Flat ΛCDM cosmological model.
 """
 
-import logging
-
 import numpy as np
 from scipy import integrate
 import astropy.units as au
-from astropy.cosmology import LambdaCDM, z_at_value
-
-
-logger = logging.getLogger(__name__)
+from astropy.cosmology import FlatLambdaCDM
 
 
 class Cosmology:
@@ -41,16 +36,13 @@ class Cosmology:
         http://adsabs.harvard.edu/abs/2002ApJ...577..579R
         Sec.(2)
     """
-    def __init__(self, H0=71.0, Om0=0.27, Ob0=0.046, Ode0=None, sigma8=0.834):
-        Ode0 = 1.0 - Om0 if Ode0 is None else Ode0
-        if (Ode0 > 0) and abs(Om0 + Ode0 - 1) > 1e-5:
-            raise ValueError("non-flat LambdaCDM model not supported!")
+    def __init__(self, H0=71.0, Om0=0.27, Ob0=0.046, sigma8=0.834):
         self.H0 = H0  # [km/s/Mpc]
         self.Om0 = Om0
         self.Ob0 = Ob0
-        self.Ode0 = Ode0
+        self.Ode0 = 1.0 - Om0
         self.sigma8 = sigma8
-        self.cosmo = LambdaCDM(H0=H0, Om0=Om0, Ob0=Ob0, Ode0=Ode0)
+        self._cosmo = FlatLambdaCDM(H0=H0, Om0=Om0, Ob0=Ob0)
 
     @property
     def h(self):
@@ -69,9 +61,32 @@ class Cosmology:
         M8 = (4*np.pi/3) * r**3 * self.rho_crit(0)
         return (M8 * au.g.to(au.solMass))
 
+    def E(self, z):
+        """
+        Redshift evolution factor.
+        """
+        return np.sqrt(self.Om0 * (1+z)**3 + self.Ode0)
+
+    def H(self, z):
+        """
+        Hubble parameter at redshift z.
+        """
+        return self.H0 * self.E(z)
+
+    @property
+    def hubble_time(self):
+        """
+        Hubble time.
+        Unit: [Gyr]
+        """
+        # uconv = au.Mpc.to(au.km) * au.s.to(au.Gyr)
+        uconv = 977.7922216731284
+        t_H = (1.0/self.H0) * uconv  # [Gyr]
+        return t_H
+
     def age(self, z):
         """
-        Cosmic time at redshift z.
+        Cosmic time (age) at redshift z.
 
         Parameters
         ----------
@@ -83,22 +98,29 @@ class Cosmology:
         age : float
             Age of the universe (cosmic time) at the given redshift.
             Unit: [Gyr]
+
+        References
+        ----------
+        [1] Thomas & Kantowski 2000, Physical Review D, 62, 103507
+            http://adsabs.harvard.edu/abs/2000PhRvD..62j3507T
+            Eq.(18)
         """
-        return self.cosmo.age(z).value
+        t_H = self.hubble_time
+        t = (t_H * (2/3/np.sqrt(1-self.Om0)) *
+             np.arcsinh(np.sqrt((1/self.Om0 - 1) / (1+z)**3)))
+        return t
 
     @property
     def age0(self):
         """
         Present age of the universe.
         """
-        if not hasattr(self, "_age0"):
-            self._age0 = self.age(0)
-        return self._age0
+        return self.age(0)
 
     def redshift(self, age):
         """
-        Invert the above age calculation, to return the redshift
-        corresponding to the given cosmic time.
+        Invert the above ``self.age(z)`` formula analytically, to calculate
+        the redshift corresponding to the given cosmic time (age).
 
         Parameters
         ----------
@@ -108,22 +130,31 @@ class Cosmology:
         Returns
         -------
         z : float
-            Redshift corresponding to the input age.
+            Redshift corresponding to the specified age.
         """
-        return z_at_value(self.age, age)
+        t_H = self.hubble_time
+        term1 = (1/self.Om0) - 1
+        term2 = np.sinh(3*age*np.sqrt(1-self.Om0) / (2*t_H)) ** 2
+        z = (term1 / term2) ** (1/3) - 1
+        return z
 
     def rho_crit(self, z):
         """
         Critical density at redshift z.
         Unit: [g/cm^3]
         """
-        return self.cosmo.critical_density(0).value
+        G = 6.67384e-08  # [cm^3/g/s^2]
+        rho = 3 * self.H(z)**2 / (8*np.pi * G)
+        # uconv = au.km.to(au.Mpc)**2
+        uconv = 1.0502650403056094e-39
+        rho *= uconv
+        return rho
 
-    def OmegaM(self, z):
+    def Om(self, z):
         """
         Density parameter of matter at redshift z.
         """
-        return self.Om0 * (1+z)**3 / self.cosmo.efunc(z)**2
+        return self.Om0 * (1+z)**3 / self.E(z)**2
 
     def overdensity_virial(self, z):
         """
@@ -136,7 +167,7 @@ class Cosmology:
             http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
             Eqs.(10,A4)
         """
-        omega_z = (1 / self.OmegaM(z)) - 1
+        omega_z = (1 / self.Om(z)) - 1
         Delta_c = 18*np.pi**2 * (1 + 0.4093 * omega_z**0.9052)
         return Delta_c
 
@@ -154,7 +185,7 @@ class Cosmology:
         coef = 3 * (12*np.pi) ** (2/3) / 20
         D0 = self.growth_factor(0)
         D_z = self.growth_factor(z)
-        Om_z = self.OmegaM(z)
+        Om_z = self.Om(z)
         delta_c = coef * (D0 / D_z) * (1 + 0.0123*np.log10(Om_z))
         return delta_c
 
