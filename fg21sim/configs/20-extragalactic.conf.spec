@@ -53,6 +53,10 @@
   # merger. (unit: Msun)
   merger_mass_th = float(default=1e13, min=1e12)
 
+  # Minimum mass change of the main-cluster to be regarded as a merger
+  # event rather than accretion. (unit: Msun)
+  merger_mass_min = float(default=1e12, min=1e10)
+
   # Radius of the giant radio halo in clusters (unit: kpc)
   # XXX: currently only support a constant radius of halos
   radius_halo = float(default=500, min=100)
