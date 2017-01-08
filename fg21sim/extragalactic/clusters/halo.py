@@ -19,6 +19,7 @@ import scipy.integrate
 import scipy.optimize
 
 from .cosmology import Cosmology
+from .formation import ClusterFormation
 from .solver import FokkerPlanckSolver
 from .units import (Units as AU, UnitConversions as AUC, Constants as AC)
 
@@ -100,7 +101,9 @@ class HaloSingle:
         Simulate the merging history of the cluster using the extended
         Press-Schechter formalism.
         """
-        raise NotImplementedError
+        self.formation = ClusterFormation(self.M0, self.configs)
+        self.mtree = self.formation.simulate_mergertree()
+        return self.mtree
 
     def calc_electron_spectrum(self):
         """

@@ -181,7 +181,10 @@ class ClusterFormation:
 
         References: Ref.[1],Sec.(3.1)
         """
+        logger.info("Simulating cluster formation: " +
+                    "M0={:.3g}[Msun] ...".format(self.M0))
         self.mtree = self._trace_formation(self.M0, dMc=self.merger_mass_min)
+        logger.info("Simulated cluster formation with merger tree")
         return self.mtree
 
     def _trace_formation(self, M, dMc, _z=None):
