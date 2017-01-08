@@ -58,7 +58,7 @@ class FokkerPlanckSolver:
 
     u(x,t) : distribution/spectrum w.r.t. x at different times
     B(x,t) : advection coefficient
-    C(x,t) : diffusion coefficient (>=0)
+    C(x,t) : diffusion coefficient (>0)
     Q(x,t) : injection coefficient (>=0)
 
     References

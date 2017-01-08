@@ -447,6 +447,27 @@ class HaloSingle:
         Calculate the electron-acceleration coefficient at arbitrary
         redshift, by interpolating the coefficients calculated at every
         merger redshifts.
+
+        Parameters
+        ----------
+        z : float
+            Redshift where to calculate the acceleration coefficient.
+
+        Returns
+        -------
+        chi : float
+            The calculated electron-acceleration coefficient.
+            (unit: Gyr^-1)
+
+        XXX/NOTE
+        --------
+        This coefficient may be very small and even zero, then the
+        diffusion coefficient of the Fokker-Planck equation is  thus
+        very small and even zero, which cause problems for calculating
+        some quantities (e.g., w(x), C(x)) and wrong/invalid results.
+        To avoid these problems, force the minimal value of this
+        coefficient to be 1/(10*t0), which t0 is the present-day age
+        of the universe.
         """
         if not hasattr(self, "_coef_acceleration_interp"):
             # Order the merger events by decreasing redshifts
@@ -454,9 +475,12 @@ class HaloSingle:
             redshifts = np.array([ev["z"] for ev in mevents])
             chis = np.array([self._chi_at_zidx(zidx, mevents)
                              for zidx in range(len(redshifts))])
+            # XXX: force a minimal value instead of zero or too small
+            chi_min = 1.0 / (10 * self.cosmo.age0)
+            chis[chis < chi_min] = chi_min
             self._coef_acceleration_interp = scipy.interpolate.interp1d(
                     redshifts, chis, kind="linear",
-                    bounds_error=False, fill_value=0.0)
+                    bounds_error=False, fill_value=chi_min)
             logger.info("Interpolated acceleration coefficients w.r.t. z")
         return self._coef_acceleration_interp(z)
 
