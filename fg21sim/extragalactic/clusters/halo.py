@@ -100,15 +100,43 @@ class HaloSingle:
         """
         Simulate the merging history of the cluster using the extended
         Press-Schechter formalism.
+
+        Attributes
+        ----------
+        mtree : `~MergerTree`
+            Generated merger tree of this cluster.
+
+        Returns
+        -------
+        mtree : `~MergerTree`
+            Generated merger tree of this cluster.
         """
         self.formation = ClusterFormation(self.M0, self.configs)
         self.mtree = self.formation.simulate_mergertree()
         return self.mtree
 
-    def calc_electron_spectrum(self):
+    def calc_electron_spectrum(self, zbegin=None, zend=None):
         """
         Calculate the relativistic electron spectrum by solving the
         Fokker-Planck equation.
+
+        Parameters
+        ----------
+        zbegin : float, optional
+            The redshift from where to solve the Fokker-Planck equation.
+            Default: ``self.zmax``.
+        zend : float, optional
+            The redshift where to stop solving the Fokker-Planck equation.
+            Default: 0 (i.e., present)
+
+        Returns
+        -------
+        p : `~numpy.ndarray`
+            The momentum grid adopted for solving the equation.
+            Unit: [mec]
+        n_e : `~numpy.ndarray`
+            The solved electron spectrum at ``zend``.
+            Unit: [cm^-3 mec^-1]
         """
         fpsolver = FokkerPlanckSolver(
             xmin=self.pmin, xmax=self.pmax,
@@ -122,8 +150,14 @@ class HaloSingle:
         p = fpsolver.x
         # Assume NO initial electron distribution
         n0_e = np.zeros(p.shape)
-        tstart = self.cosmo.age(self.zmax)
-        tstop = self.cosmo.age0
+        if zbegin is None:
+            tstart = self.cosmo.age(self.zmax)
+        else:
+            tstart = self.cosmo.age(zbegin)
+        if zend is None:
+            tstop = self.cosmo.age0
+        else:
+            tstop = self.cosmo.age(zend)
         n_e = fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
         return (p, n_e)
 
