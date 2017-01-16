@@ -30,10 +30,13 @@ class UnitConversions:
     Hold the conversion relations directly to avoid repeated/unnecessary
     calculations.
     """
+    # Mass
     Msun2g = au.solMass.to(au.g)
     g2Msun = au.g.to(au.solMass)
+    # Time
     Gyr2s = au.Gyr.to(au.s)
     s2Gyr = au.s.to(au.Gyr)
+    # Length
     kpc2cm = au.kpc.to(au.cm)
     cm2kpc = au.cm.to(au.kpc)
     Mpc2cm = au.Mpc.to(au.cm)
@@ -43,6 +46,7 @@ class UnitConversions:
     kpc2km = au.kpc.to(au.km)
     km2kpc = au.km.to(au.kpc)
     km2cm = au.km.to(au.cm)
+    # Energy
     keV2erg = au.keV.to(au.erg)
 
 
@@ -60,6 +64,8 @@ class Constants:
     u = ac.u.cgs.value  # [g]
     # Gravitational constant
     G = ac.G.cgs.value  # [cm^3/g/s^2]
+    # Electron charge
+    e = ac.e.gauss.value  # [Fr] = [esu]
 
     # Mean molecular weight
     # Ref.: Ettori et al, 2013, Space Science Review, 177, 119-154, Eq.(6)
