@@ -33,8 +33,15 @@
   # Spectral index map
   indexmap = string(default=None)
 
-  # Whether add fluctuations on the small scales
+  # Whether add fluctuations on the small scales according the angular
+  # power spectrum prediction?
   add_smallscales = boolean(default=True)
+  # Range of multipole moments (l) of the angular power spectrum.
+  # The power spectrum will be cut off to a constant for multipole l < lmin.
+  # NOTE: Update the ``lmax`` accordingly w.r.t. ``sky/healpix/nside``.
+  #       Generally, lmax = 3 * nside - 1
+  lmin = integer(min=0, default=10)
+  lmax = integer(min=1, default=3071)
 
   # Filename prefix for this component
   prefix = string(default="gsync")

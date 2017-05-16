@@ -7,19 +7,6 @@
 # behaviors, or will be used in other configuration sections.
 
 
-# Common/general configurations for the simulation
-[common]
-# HEALPix Nside value, i.e., pixel resolution
-# NOTE: also update "lmax" below.
-nside = integer(min=1, default=1024)
-
-# Range of multipole monents (l) of the angular power spectrum.
-# The power spectrum will be cut off to a constant for multipole l < lmin.
-# Generally, lmax = 3 * nside - 1
-lmin = integer(min=0, default=10)
-lmax = integer(min=1, default=3071)
-
-
 # Foreground components to be simulated
 [foregrounds]
 # Diffuse Galactic synchrotron emission (unpolarized)
@@ -37,6 +24,38 @@ extragalactic/clusters = boolean(default=True)
 # Emission from multiple types of extragalactic point sources
 # NOTE: This component is not well integrated and tested at the moment
 extragalactic/pointsources = boolean(default=False)
+
+
+# Simulation sky/region configurations
+[sky]
+# Type of the input/output simulation sky
+# + patch:
+#       Input sky template is only a (square) patch of the sky.
+#       The simulated output maps have the same coverage/field as the
+#       input template, as well as the coordinate projection.
+# + healpix:
+#       Input sky template covers (almost) all sky, and stored in
+#       HEALPix format.  The simulated output maps will also be
+#       all-sky using the HEALPix projection.
+type = option("patch", "healpix", default="patch")
+
+  # Configurations for input sky patch
+  [[patch]]
+  # The (R.A., Dec.) coordinate of the input patch center [ deg ]
+  xcenter = float(default=0.0, min=0.0, max=360.0)
+  ycenter = float(default=0.0, min=-90.0, max=90.0)
+
+  # The (pixel) dimensions of the input patch
+  xsize = integer(default=None, min=1)
+  ysize = integer(default=None, min=1)
+
+  # Pixel size [ arcmin ]
+  pixelsize = float(default=None, min=0.0)
+
+  # Configurations for input HEALPix sky
+  [[healpix]]
+  # HEALPix Nside value, i.e., pixel resolution
+  nside = integer(min=1, default=1024)
 
 
 # Frequencies specification of the simulation products

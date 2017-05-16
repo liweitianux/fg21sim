@@ -55,6 +55,8 @@ class Synchrotron:
             self.configs.getn(comp+"/template_unit"))
         self.indexmap_path = self.configs.get_path(comp+"/indexmap")
         self.smallscales = self.configs.getn(comp+"/add_smallscales")
+        self.lmin = self.configs.getn(comp+"/lmin")
+        self.lmax = self.configs.getn(comp+"/lmax")
         self.prefix = self.configs.getn(comp+"/prefix")
         self.save = self.configs.getn(comp+"/save")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
@@ -64,8 +66,6 @@ class Synchrotron:
         self.checksum = self.configs.getn("output/checksum")
         self.clobber = self.configs.getn("output/clobber")
         self.nside = self.configs.getn("common/nside")
-        self.lmin = self.configs.getn("common/lmin")
-        self.lmax = self.configs.getn("common/lmax")
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
         #
         logger.info("Loaded and setup configurations")

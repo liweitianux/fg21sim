@@ -50,29 +50,32 @@ def _is_power2(n):
     return (n and not (n & (n-1)))
 
 
-def check_common(configs):
-    """Check the "[common]" section of the configurations."""
+def check_foregrounds(configs):
+    """Check the "[foregrounds]" section of the configurations."""
     results = {}
-    # "common/nside" must be a power of 2
-    key = "common/nside"
-    res = _check_missing(configs, key)
-    if res == {}:
-        if not _is_power2(configs.getn(key)):
-            results[key] = "not a power of 2"
-    else:
-        results.update(res)
-    # "common/lmax" must be greater than "common/lmin"
-    key = "common/lmax"
-    res = _check_missing(configs, [key, "common/lmin"])
-    if res == {}:
-        if configs.getn(key) <= configs.getn("common/lmin"):
-            results[key] = "not greater than 'common/lmin'"
-    else:
-        results.update(res)
-    # Check enabled components
-    key = "common/components"
-    if len(configs.getn(key)) == 0:
-        results[key] = "no components enabled/selected"
+    # Check enabled foreground components
+    fg = configs.foregrounds
+    if len(fg[0]) == 0:
+        results["foregrounds"] = "no foreground components enabled"
+    return results
+
+
+def check_sky(configs):
+    """Check the "[sky]" section of the configurations."""
+    results = {}
+    skytype = configs.getn("sky/type")
+    if skytype == "patch":
+        sec = "sky/patch"
+    elif skytype == "healpix":
+        sec = "sky/healpix"
+        # "nside" must be a power of 2
+        key = sec + "/nside"
+        res = _check_missing(configs, key)
+        if res == {}:
+            if not _is_power2(configs.getn(key)):
+                results[key] = "not a power of 2"
+        else:
+            results.update(res)
     return results
 
 
@@ -181,7 +184,8 @@ def check_extragalactic_clusters(configs):
 
 # Available checkers to validate the configurations
 _CHECKERS = [
-    check_common,
+    check_foregrounds,
+    check_sky,
     check_frequency,
     check_output,
     check_galactic_synchrotron,
