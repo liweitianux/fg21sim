@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 #
 # References:
@@ -453,6 +453,22 @@ class ConfigManager:
             else:
                 logger.warning("Cannot convert to absolute path: %s" % path)
         return os.path.normpath(path)
+
+    @property
+    def foregrounds(self):
+        """Get all available and enabled foreground components.
+
+        Returns
+        -------
+        enabled : list[str]
+            Enabled foreground components to be simulated
+        available : list[str]
+            All available foreground components
+        """
+        fg = self.get("foregrounds")
+        avaliable = list(fg.keys())
+        enabled = [key for key, value in fg.items() if value]
+        return (enabled, avaliable)
 
     @property
     def frequencies(self):

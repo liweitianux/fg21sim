@@ -19,19 +19,24 @@ nside = integer(min=1, default=1024)
 lmin = integer(min=0, default=10)
 lmax = integer(min=1, default=3071)
 
-# List of foreground components to be simulated:
-# + galactic/synchrotron:
-#       Diffuse Galactic synchrotron emission (unpolarized)
-# + galactic/freefree:
-#       Diffuse Galactic free-free emission
-# + galactic/snr:
-#       Galactic supernova remnants emission
-# + extragalactic/clusters:
-#       Extragalactic clusters of galaxies emission
-# + extragalactic/pointsources:
-#       Emission from multiple types of extragalactic point sources
-#       NOTE: This component is not well integrated and tested at the moment
-components = force_list(default=list("galactic/synchrotron", "galactic/freefree", "galactic/snr", "extragalactic/clusters"))
+
+# Foreground components to be simulated
+[foregrounds]
+# Diffuse Galactic synchrotron emission (unpolarized)
+galactic/synchrotron = boolean(default=True)
+
+# Diffuse Galactic free-free emission
+galactic/freefree = boolean(default=True)
+
+# Galactic supernova remnants emission
+galactic/snr = boolean(default=True)
+
+#  Extragalactic clusters of galaxies emission
+extragalactic/clusters = boolean(default=True)
+
+# Emission from multiple types of extragalactic point sources
+# NOTE: This component is not well integrated and tested at the moment
+extragalactic/pointsources = boolean(default=False)
 
 
 # Frequencies specification of the simulation products

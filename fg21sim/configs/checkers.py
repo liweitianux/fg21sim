@@ -101,26 +101,37 @@ def check_output(configs):
 def check_galactic_synchrotron(configs):
     """Check the "[galactic][synchrotron]" section of the configurations."""
     comp = "galactic/synchrotron"
-    comp_enabled = configs.getn("common/components")
+    comp_enabled = configs.foregrounds[0]
+    if comp not in comp_enabled:
+        return {}
+
     results = {}
-    if comp in comp_enabled:
-        # Only validate the configs if this component is enabled
-        results.update(
-            _check_missing(configs, [comp+"/template_freq",
-                                     comp+"/template_unit"])
-        )
-        results.update(
-            _check_existence(configs, [comp+"/template", comp+"/indexmap"])
-        )
-        if configs.getn(comp+"/save"):
-            results.update(_check_missing(configs, comp+"/output_dir"))
+    # Only validate the configs if this component is enabled
+    results.update(
+        _check_missing(configs, [comp+"/template_freq",
+                                 comp+"/template_unit"])
+    )
+    results.update(
+        _check_existence(configs, [comp+"/template", comp+"/indexmap"])
+    )
+    if configs.getn(comp+"/add_smallscales"):
+        # "lmax" must be greater than "lmin"
+        key = comp + "/lmax"
+        res = _check_missing(configs, [key, comp+"/lmin"])
+        if res == {}:
+            if configs.getn(key) <= configs.getn(comp+"/lmin"):
+                results[key] = "not greater than 'lmin'"
+        else:
+            results.update(res)
+    if configs.getn(comp+"/save"):
+        results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 
 
 def check_galactic_freefree(configs):
     """Check the "[galactic][freefree]" section of the configurations."""
     comp = "galactic/freefree"
-    comp_enabled = configs.getn("common/components")
+    comp_enabled = configs.foregrounds[0]
     results = {}
     if comp in comp_enabled:
         # Only validate the configs if this component is enabled
@@ -139,7 +150,7 @@ def check_galactic_freefree(configs):
 def check_galactic_snr(configs):
     """Check the "[galactic][snr]" section of the configurations."""
     comp = "galactic/snr"
-    comp_enabled = configs.getn("common/components")
+    comp_enabled = configs.foregrounds[0]
     results = {}
     if comp in comp_enabled:
         # Only validate the configs if this component is enabled
@@ -156,7 +167,7 @@ def check_extragalactic_clusters(configs):
     Check the "[extragalactic][clusters]" section of the configurations.
     """
     comp = "extragalactic/clusters"
-    comp_enabled = configs.getn("common/components")
+    comp_enabled = configs.foregrounds[0]
     results = {}
     if comp in comp_enabled:
         # Only validate the configs if this component is enabled

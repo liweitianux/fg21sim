@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -91,7 +91,7 @@ class Foregrounds:
 
     def _set_configs(self):
         """Load the configs and set the corresponding class attributes."""
-        self.components_id = self.configs.getn("common/components")
+        self.components_id = self.configs.foregrounds[0]
         logger.info("All supported simulation components: {0}".format(
             ", ".join(list(self.COMPONENTS_ALL.keys()))))
         logger.info("Enabled components: {0}".format(
