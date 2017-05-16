@@ -74,7 +74,7 @@
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
-  pmin = float(default=1.0)
+  pmin = float(default=1e1)
   pmax = float(default=1e5)
 
   # Number of points for the grid used during solving the Fokker-Planck

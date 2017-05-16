@@ -73,6 +73,8 @@ def plot_mtree(mtree, outfile, figsize=(12, 8)):
     """
     Plot the cluster merger tree.
 
+    TODO/XXX: This function needs significant speed optimization!
+
     Parameters
     ----------
     mtree : `~MergerTree`
