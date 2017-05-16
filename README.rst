@@ -42,8 +42,8 @@ Features
     - Fanaroff-Riley type I (FR-I) AGNs
     - Fanaroff-Riley type II (FR-II) AGNs
 
-* All-sky simulation
-  (*Note:* partial-sky simulation not supported yet)
+* All-sky simulation (with HEALPix)
+  (*Note:* partial-sky simulation is a WIP ...)
 * Configuration file allowing fine-grained control
 * Modular and well-designed API
 * Easy-to-use command line tools (CLI)
@@ -79,7 +79,7 @@ Installation
    $ make venv
    $ . ./venv/bin/activate
 
-   Check to make sure this virtual environment is active and the
+   Check to make sure that this virtual environment is activated so that the
    default ``python3`` and ``pip3`` is pointed to the virtual environment.
 
 4. Install this ``fg21sim`` package to the virtual environment::
@@ -104,7 +104,7 @@ Great!  Be sure to consult the guidelines in |CONTRIBUTING.md|_.
 
 Authors
 -------
-* Weitian LI <``liweitianux@live.com``>
+* Weitian LI <``weitian@aaronly.me``>
 
 
 Contributors
