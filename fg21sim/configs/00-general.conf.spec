@@ -88,12 +88,9 @@ unit = option("K", default="K")
 # Use single-precision float instead of double (also save spaces)
 use_float = boolean(default=True)
 
-# Filetype used to store the products (default: fits)
-filetype = option("fits", default="fits")
-
-# Filename pattern (without extension) for the output products, which will
-# be finally formatted using `str.format()`.
-filename_pattern = string(default="{prefix}_{frequency:05.1f}")
+# Filename pattern for the output products, which will be finally
+# formatted using `str.format()`.
+filename_pattern = string(default="{prefix}_{frequency:05.1f}.fits")
 
 # Whether calculate the checksum for the output file (e.g., "CHECKSUM"
 # keyword in FITS header)?

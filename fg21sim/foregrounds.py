@@ -123,11 +123,6 @@ class Foregrounds:
         }
         data.update(kwargs)
         filename = self.filename_pattern.format(**data)
-        filetype = self.configs.getn("output/filetype")
-        if filetype == "fits":
-            filename += ".fits"
-        else:
-            raise NotImplementedError("unsupported filetype: %s" % filetype)
         filepath = os.path.join(self.output_dir, filename)
         return filepath
 
