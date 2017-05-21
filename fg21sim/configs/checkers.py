@@ -15,6 +15,7 @@ Therefore, they are very different to the checker functions used in the
 import os
 
 from ..errors import ConfigError
+from ..sky import get_sky
 
 
 def _check_missing(configs, keys):
@@ -162,6 +163,12 @@ def check_galactic_snr(configs):
         )
         if configs.getn(comp+"/save"):
             results.update(_check_missing(configs, comp+"/output_dir"))
+        # simulation resolution should be higher than the output sky map
+        sky = get_sky(configs)
+        key = comp + "/resolution"
+        resolution = configs.getn(key)  # [ arcmin ]
+        if resolution < sky.pixelsize:
+            results[key] = "resolution should be higher than output map"
     return results
 
 
