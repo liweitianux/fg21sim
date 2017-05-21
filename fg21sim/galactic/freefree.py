@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -12,9 +12,8 @@ from datetime import datetime, timezone
 import numpy as np
 from astropy.io import fits
 import astropy.units as au
-import healpy as hp
 
-from ..utils.fits import read_fits_healpix, write_fits_healpix
+from ..sky import get_sky
 
 
 logger = logging.getLogger(__name__)
@@ -84,51 +83,31 @@ class FreeFree:
         self.use_float = self.configs.getn("output/use_float")
         self.checksum = self.configs.getn("output/checksum")
         self.clobber = self.configs.getn("output/clobber")
-        self.nside = self.configs.getn("common/nside")
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
         #
         logger.info("Loaded and set up configurations")
 
-    def _load_halphamap(self):
-        """Load the H{\alpha} map, and upgrade/downgrade the resolution
-        to match the output Nside.
+    def _load_maps(self):
         """
-        self.halphamap, self.halphamap_header = read_fits_healpix(
-            self.halphamap_path)
-        halphamap_nside = self.halphamap_header["NSIDE"]
-        logger.info("Loaded H[alpha] map from {0} (Nside={1})".format(
-            self.halphamap_path, halphamap_nside))
+        Load the H{\alpha} map, and dust map.
+        """
+        sky = get_sky(self.configs)
+        logger.info("Loading H[alpha] map ...")
+        self.halphamap = sky.load(self.halphamap_path)
         # TODO: Validate & convert unit
         if self.halphamap_unit != au.Unit("Rayleigh"):
             raise ValueError("unsupported Halpha map unit: {0}".format(
                 self.halphamap_unit))
-        # Upgrade/downgrade resolution
-        if halphamap_nside != self.nside:
-            self.halphamap = hp.ud_grade(self.halphamap, nside_out=self.nside)
-            logger.info("Upgrade/downgrade H[alpha] map from Nside "
-                        "{0} to {1}".format(halphamap_nside, self.nside))
-
-    def _load_dustmap(self):
-        """Load the dust map, and upgrade/downgrade the resolution
-        to match the output Nside.
-        """
-        self.dustmap, self.dustmap_header = read_fits_healpix(
-            self.dustmap_path)
-        dustmap_nside = self.dustmap_header["NSIDE"]
-        logger.info("Loaded dust map from {0} (Nside={1})".format(
-            self.dustmap_path, dustmap_nside))
+        logger.info("Loading dust map ...")
+        self.dustmap = sky.load(self.dustmap_path)
         # TODO: Validate & convert unit
         if self.dustmap_unit != au.Unit("MJy / sr"):
             raise ValueError("unsupported dust map unit: {0}".format(
                 self.dustmap_unit))
-        # Upgrade/downgrade resolution
-        if dustmap_nside != self.nside:
-            self.dustmap = hp.ud_grade(self.dustmap, nside_out=self.nside)
-            logger.info("Upgrade/downgrade dust map from Nside "
-                        "{0} to {1}".format(dustmap_nside, self.nside))
 
     def _correct_dust_absorption(self):
-        """Correct the H{\alpha} map for dust absorption using the
+        """
+        Correct the H{\alpha} map for dust absorption using the
         100-{\mu}m dust map.
 
         References: [Dickinson2003]: Eq.(1, 3); Sec.(2.5)
@@ -153,13 +132,14 @@ class FreeFree:
                     "{0:.1f} MJy/sr ".format(dust_abs_th) +
                     "<-> H[alpha] absorption threshold: " +
                     "{0:.1f} mag".format(halpha_abs_th))
-        mask = (self.dustmap > dust_abs_th)
-        self.dustmap[mask] = np.nan
-        fp_mask = 100 * mask.sum() / self.dustmap.size
+        mask = (self.dustmap.data > dust_abs_th)
+        self.dustmap.data[mask] = np.nan
+        fp_mask = 100 * mask.sum() / self.dustmap.data.size
         logger.warning("Dust map masked fraction: {0:.1f}%".format(fp_mask))
         #
-        halphamap_corr = self.halphamap * 10**(self.dustmap * 0.0185 * f_dust)
-        self.halphamap = halphamap_corr
+        halphamap_corr = (self.halphamap.data *
+                          10**(self.dustmap.data * 0.0185 * f_dust))
+        self.halphamap.data = halphamap_corr
         self._dust_corrected = True
         logger.info("Done dust absorption correction")
 
@@ -176,7 +156,8 @@ class FreeFree:
         return a
 
     def _make_filepath(self, **kwargs):
-        """Make the path of output file according to the filename pattern
+        """
+        Make the path of output file according to the filename pattern
         and output directory loaded from configurations.
         """
         data = {
@@ -188,7 +169,8 @@ class FreeFree:
         return filepath
 
     def _make_header(self):
-        """Make the header with detail information (e.g., parameters and
+        """
+        Make the header with detail information (e.g., parameters and
         history) for the simulated products.
         """
         header = fits.Header()
@@ -206,20 +188,17 @@ class FreeFree:
         self.header = header
         logger.info("Created FITS header")
 
-    def output(self, hpmap, frequency):
-        """Write the simulated free-free map to disk with proper header
+    def output(self, skymap, frequency):
+        """
+        Write the simulated free-free map to disk with proper header
         keywords and history.
 
         Returns
         -------
-        filepath : str
-            The (absolute) path to the output HEALPix map file.
+        outfile : str
+            The (absolute) path to the output sky map file.
         """
-        if not os.path.exists(self.output_dir):
-            os.mkdir(self.output_dir)
-            logger.info("Created output dir: {0}".format(self.output_dir))
-        #
-        filepath = self._make_filepath(frequency=frequency)
+        outfile = self._make_filepath(frequency=frequency)
         if not hasattr(self, "header"):
             self._make_header()
         header = self.header.copy()
@@ -229,14 +208,16 @@ class FreeFree:
             "File creation date"
         )
         if self.use_float:
-            hpmap = hpmap.astype(np.float32)
-        write_fits_healpix(filepath, hpmap, header=header,
-                           clobber=self.clobber, checksum=self.checksum)
-        logger.info("Write simulated map to file: {0}".format(filepath))
-        return filepath
+            skymap = skymap.astype(np.float32)
+        sky = get_sky(configs=self.configs)
+        sky.data = skymap
+        sky.header = header
+        sky.write(outfile, clobber=self.clobber, checksum=self.checksum)
+        return outfile
 
     def preprocess(self):
-        """Perform the preparation procedures for the final simulations.
+        """
+        Perform the preparation procedures for the final simulations.
 
         Attributes
         ----------
@@ -249,15 +230,15 @@ class FreeFree:
             return
         #
         logger.info("{name}: preprocessing ...".format(name=self.name))
-        self._load_halphamap()
-        self._load_dustmap()
+        self._load_maps()
         # Correct for dust absorption
         self._correct_dust_absorption()
         #
         self._preprocessed = True
 
     def simulate_frequency(self, frequency):
-        """Simulate the free-free map at the specified frequency.
+        """
+        Simulate the free-free map at the specified frequency.
 
         References: [Dickinson2003], Eq.(11)
 
@@ -285,16 +266,17 @@ class FreeFree:
                       T4**0.667 * 10**(0.029/T4) * (1+0.08))
         # Use "Kelvin" as the brightness temperature unit
         ratio_K_R = ratio_mK_R * au.mK.to(au.K)
-        hpmap_f = self.halphamap * ratio_K_R
+        skymap_f = self.halphamap.data * ratio_K_R
         #
         if self.save:
-            filepath = self.output(hpmap_f, frequency)
+            filepath = self.output(skymap_f, frequency)
         else:
             filepath = None
-        return (hpmap_f, filepath)
+        return (skymap_f, filepath)
 
     def simulate(self, frequencies):
-        """Simulate the synchrotron map at the specified frequencies.
+        """
+        Simulate the synchrotron map at the specified frequencies.
 
         Returns
         -------
@@ -303,13 +285,13 @@ class FreeFree:
         paths : list[str]
             List of (absolute) path to the output HEALPix maps.
         """
-        hpmaps = []
+        skymaps = []
         paths = []
         for f in np.array(frequencies, ndmin=1):
-            hpmap_f, filepath = self.simulate_frequency(f)
-            hpmaps.append(hpmap_f)
-            paths.append(filepath)
-        return (hpmaps, paths)
+            skymap_f, outfile = self.simulate_frequency(f)
+            skymaps.append(skymap_f)
+            paths.append(outfile)
+        return (skymaps, paths)
 
     def postprocess(self):
         """Perform the post-simulation operations before the end."""

@@ -73,7 +73,9 @@ class Synchrotron:
     def _load_maps(self):
         """Load the template map and spectral index map."""
         sky = get_sky(self.configs)
+        logger.info("Loading template map ...")
         self.template = sky.load(self.template_path)
+        logger.info("Loading spectral index map ...")
         self.indexmap = sky.load(self.indexmap_path)
 
     def _add_smallscales(self):
@@ -177,7 +179,7 @@ class Synchrotron:
         )
         if self.use_float:
             skymap = skymap.astype(np.float32)
-        sky = self.template.copy()
+        sky = get_sky(configs=self.configs)
         sky.data = skymap
         sky.header = header
         sky.write(outfile, clobber=self.clobber, checksum=self.checksum)
@@ -243,9 +245,9 @@ class Synchrotron:
         skymaps = []
         paths = []
         for f in np.array(frequencies, ndmin=1):
-            skymap_f, filepath = self.simulate_frequency(f)
+            skymap_f, outfile = self.simulate_frequency(f)
             skymaps.append(skymap_f)
-            paths.append(filepath)
+            paths.append(outfile)
         return (skymaps, paths)
 
     def postprocess(self):
