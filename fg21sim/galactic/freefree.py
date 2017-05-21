@@ -174,8 +174,7 @@ class FreeFree:
         history) for the simulated products.
         """
         header = fits.Header()
-        header["COMP"] = ("Galactic free-free emission",
-                          "Emission component")
+        header["COMP"] = (self.name, "Emission component")
         header["UNIT"] = ("Kelvin", "Map unit")
         header["CREATOR"] = (__name__, "File creator")
         # TODO:
@@ -246,10 +245,10 @@ class FreeFree:
 
         Returns
         -------
-        hpmap_f : 1D `~numpy.ndarray`
-            The HEALPix map (RING ordering) at the input frequency.
+        skymap_f : 1D `~numpy.ndarray`
+            The sky map at the input frequency.
         filepath : str
-            The (absolute) path to the output HEALPix file if saved,
+            The (absolute) path to the output sky map if saved,
             otherwise ``None``.
         """
         self.preprocess()
@@ -280,10 +279,10 @@ class FreeFree:
 
         Returns
         -------
-        hpmaps : list[1D `~numpy.ndarray`]
-            List of HEALPix maps (in RING ordering) at each frequency.
+        skymaps : list[1D `~numpy.ndarray`]
+            List of sky maps at each frequency.
         paths : list[str]
-            List of (absolute) path to the output HEALPix maps.
+            List of (absolute) path to the output sky maps.
         """
         skymaps = []
         paths = []

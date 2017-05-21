@@ -40,7 +40,7 @@ class Synchrotron:
     ???
     """
     # Component name
-    name = "Galactic synchrotron"
+    name = "Galactic synchrotron (unpolarized)"
 
     def __init__(self, configs):
         self.configs = configs
@@ -144,8 +144,7 @@ class Synchrotron:
         history) for the simulated products.
         """
         header = fits.Header()
-        header["COMP"] = ("Galactic synchrotron (unpolarized)",
-                          "Emission component")
+        header["COMP"] = (self.name, "Emission component")
         header["UNIT"] = ("Kelvin", "Map unit")
         header["CREATOR"] = (__name__, "File creator")
         # TODO:
@@ -215,7 +214,7 @@ class Synchrotron:
         skymap_f : 1D `~numpy.ndarray`
             The sky map at the input frequency.
         filepath : str
-            The (absolute) path to the output file if saved,
+            The (absolute) path to the output sky map if saved,
             otherwise ``None``.
         """
         self.preprocess()
