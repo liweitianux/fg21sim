@@ -44,10 +44,16 @@ class SkyPatch:
 
     Attributes
     ----------
+    type : str, "patch" or "healpix"
+        The type of this sky map
+    data : 1D `numpy.ndarray`
+        The flattened 1D array of map data
+        NOTE: The 2D image is flattened to 1D, making it easier to be
+              manipulated in a similar way as the HEALPix map.
     size : int tuple, (width, height)
         The dimensions of the FITS image
-    shape : int tuple, (nrow, ncol)
-        The shape of the Numpy array
+    shape : int tuple, (nrow*ncol, )
+        The shape of the flattened image array
         NOTE: nrow=height, ncol=width
     pixelsize : float
         The pixel size of the sky map [ arcmin ]
@@ -58,7 +64,7 @@ class SkyPatch:
     # Input sky patch and its frequency [ MHz ]
     infile = None
     frequency = None
-    # Sky data; should be a ``numpy.ndarray``
+    # Sky data; should be a 1D ``numpy.ndarray`` (i.e., flattened)
     data = None
     # Coordinates of each pixel
     coordinates = None
@@ -80,7 +86,7 @@ class SkyPatch:
         if self.data is not None:
             return self.data.shape
         else:
-            return (self.ysize, self.xsize)
+            return (self.ysize * self.xsize, )
 
     @property
     def center(self):
@@ -107,12 +113,13 @@ class SkyPatch:
         logger.info("Read sky patch from: %s (%dx%d)" %
                     (infile, self.xsize_in, self.ysize_in))
         if (self.xsize_in != self.xsize) or (self.ysize_in != self.ysize):
-            logger.warning("Scale input sky patch from size " +
-                           "%dx%d to %dx%d" % (self.xsize_in, self.ysize_in,
-                                               self.xsize, self.ysize))
-            self.data = ndimage.zoom(self.data, order=1,
-                                     zoom=(self.ysize/self.ysize_in,
-                                           self.xsize/self.xsize_in))
+            logger.warning("Scale input sky patch to size %dx%d" %
+                           (self.xsize, self.ysize))
+            zoom = (self.ysize/self.ysize_in, self.xsize/self.xsize_in)
+            self.data = ndimage.zoom(self.data, zoom=zoom, order=1)
+        # Flatten the image
+        self.data = self.data.flatten()
+        logger.info("Flatten the image to a 1D array")
 
     def load(self, infile, frequency=None):
         """
@@ -141,7 +148,8 @@ class SkyPatch:
         if not os.path.exists(outdir):
             os.makedirs(outdir)
             logger.info("Created output directory: %s" % outdir)
-        hdu = fits.PrimaryHDU(data=self.data, header=self.header)
+        image = self.data.reshape(self.ysize, self.xsize)
+        hdu = fits.PrimaryHDU(data=image, header=self.header)
         hdu.writeto(outfile, clobber=clobber, checksum=checksum)
         logger.info("Write sky map to file: %s" % outfile)
 
@@ -158,10 +166,9 @@ class SkyHealpix:
     Attributes
     ----------
     shape : int tuple, (npix,)
-        The shape of the Numpy array
-        NOTE: nrow=height, ncol=width
+        The shape (i.e., length) of the HEALPix array
     pixelsize : float
-        The pixel size of the HEALPix sky [ arcmin ]
+        The pixel size of the HEALPix map [ arcmin ]
     """
     type_ = "healpix"
     # Input sky patch and its frequency [ MHz ]
