@@ -40,7 +40,7 @@ class Synchrotron:
     ???
     """
     # Component name
-    name = "Galactic free-free"
+    name = "Galactic synchrotron"
 
     def __init__(self, configs):
         self.configs = configs
