@@ -47,7 +47,8 @@ def _get_configspec():
 
 
 def _flatten_dict(d, sep="/", parent_key=""):
-    """Recursively flatten a nested dictionary with keys compressed.
+    """
+    Recursively flatten a nested dictionary with keys compressed.
 
     The dictionary is recursively flattened into a one-level dictionary,
     i.e., all the leaves are raised to the top level.
@@ -104,7 +105,8 @@ def _flatten_dict(d, sep="/", parent_key=""):
 
 
 class ConfigManager:
-    """Manage the default configurations with specifications, as well as
+    """
+    Manage the default configurations with specifications, as well as
     the user configurations.
 
     Both the default configurations and user configurations are validated
@@ -139,7 +141,8 @@ class ConfigManager:
     userconfig = None
 
     def __init__(self, userconfig=None):
-        """Load the bundled default configurations and specifications.
+        """
+        Load the bundled default configurations and specifications.
         If the ``userconfig`` provided, the user configurations is also
         loaded, validated, and merged.
         """
@@ -156,7 +159,8 @@ class ConfigManager:
             self.read_userconfig(userconfig)
 
     def merge(self, config):
-        """Simply merge the given configurations without validation.
+        """
+        Simply merge the given configurations without validation.
 
         Parameters
         ----------
@@ -172,7 +176,8 @@ class ConfigManager:
         self._config.merge(config)
 
     def read_config(self, config):
-        """Read, validate and merge the input config.
+        """
+        Read, validate and merge the input config.
 
         Parameters
         ----------
@@ -191,7 +196,8 @@ class ConfigManager:
         logger.info("Loaded additional config")
 
     def read_userconfig(self, userconfig):
-        """Read user configuration file, validate, and merge into the
+        """
+        Read user configuration file, validate, and merge into the
         default configurations.
 
         Parameters
@@ -235,7 +241,8 @@ class ConfigManager:
         logger.warning("Reset the configurations to the copy of defaults!")
 
     def _validate(self, config):
-        """Validate the config against the specification using a default
+        """
+        Validate the config against the specification using a default
         validator.  The validated config values are returned if success,
         otherwise, the ``ConfigError`` raised with details.
         """
@@ -265,7 +272,8 @@ class ConfigManager:
         return config
 
     def check_all(self, raise_exception=True):
-        """Further check the whole configurations through a set of custom
+        """
+        Further check the whole configurations through a set of custom
         checker functions, which may check one config option against its
         context if necessary to determine whether it has a valid value.
 
@@ -303,7 +311,8 @@ class ConfigManager:
         return config.get(key, fallback)
 
     def getn(self, key, from_default=False):
-        """Get the value of a config option specified by the input key from
+        """
+        Get the value of a config option specified by the input key from
         from the configurations which is a nested dictionary.
 
         Parameters
@@ -343,7 +352,8 @@ class ConfigManager:
             raise KeyError("%s: invalid key" % "/".join(key))
 
     def setn(self, key, value):
-        """Set the value of config option specified by a list of keys or a
+        """
+        Set the value of config option specified by a list of keys or a
         "/"-separated keys string.
 
         The supplied key-value config pair is first used to create a
@@ -408,7 +418,8 @@ class ConfigManager:
             key="/".join(key), val_new=val_new, val_old=val_old))
 
     def get_path(self, key):
-        """Return the absolute path of the file/directory specified by the
+        """
+        Return the absolute path of the file/directory specified by the
         config keys.
 
         Parameters
@@ -456,7 +467,8 @@ class ConfigManager:
 
     @property
     def foregrounds(self):
-        """Get all available and enabled foreground components.
+        """
+        Get all available and enabled foreground components.
 
         Returns
         -------
@@ -472,7 +484,8 @@ class ConfigManager:
 
     @property
     def frequencies(self):
-        """Get or calculate if ``frequency/type = custom`` the frequencies
+        """
+        Get or calculate if ``frequency/type = custom`` the frequencies
         where to perform the simulations.
 
         Returns
@@ -494,7 +507,8 @@ class ConfigManager:
 
     @property
     def logging(self):
-        """Get and prepare the logging configurations for
+        """
+        Get and prepare the logging configurations for
         ``logging.basicConfig()`` to initialize the logging module.
 
         NOTE
@@ -528,7 +542,8 @@ class ConfigManager:
         return logconf
 
     def dump(self, from_default=False, flatten=False):
-        """Dump the configurations as plain Python dictionary.
+        """
+        Dump the configurations as plain Python dictionary.
 
         Parameters
         ----------
@@ -559,7 +574,8 @@ class ConfigManager:
         return data
 
     def save(self, outfile=None, clobber=False, backup=True):
-        """Save the configurations to file.
+        """
+        Save the configurations to file.
 
         Parameters
         ----------

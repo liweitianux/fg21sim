@@ -21,7 +21,6 @@ from collections import OrderedDict
 import numpy as np
 import astropy.units as au
 from astropy.io import fits
-import healpy as hp
 
 from .galactic import (Synchrotron as GalacticSynchrotron,
                        FreeFree as GalacticFreeFree,
@@ -29,14 +28,15 @@ from .galactic import (Synchrotron as GalacticSynchrotron,
 from .extragalactic import (GalaxyClusters as EGGalaxyClusters,
                             PointSources as EGPointSources)
 from .products import Products
-from .utils.fits import write_fits_healpix
+from .sky import get_sky
 
 
 logger = logging.getLogger(__name__)
 
 
 class Foregrounds:
-    """Interface to the simulations of supported foreground components.
+    """
+    Interface to the simulations of supported foreground components.
 
     All the enabled components are also combined to make the total foreground
     map, as controlled by the configurations.
@@ -108,14 +108,15 @@ class Foregrounds:
         #
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.use_float = self.configs.getn("output/use_float")
+        self.checksum = self.configs.getn("output/checksum")
         self.clobber = self.configs.getn("output/clobber")
         self.combine = self.configs.getn("output/combine")
         self.prefix = self.configs.getn("output/combine_prefix")
         self.output_dir = self.configs.get_path("output/output_dir")
-        self.nside = self.configs.getn("common/nside")
 
     def _make_filepath(self, **kwargs):
-        """Make the path of output file according to the filename pattern
+        """
+        Make the path of output file according to the filename pattern
         and output directory loaded from configurations.
         """
         data = {
@@ -127,12 +128,12 @@ class Foregrounds:
         return filepath
 
     def _make_header(self):
-        """Make the header with detail information (e.g., parameters and
+        """
+        Make the header with detail information (e.g., parameters and
         history) for the simulated products.
         """
         header = fits.Header()
-        header["COMP"] = ("Combined foreground",
-                          "Emission component")
+        header["COMP"] = ("Combined foreground", "Emission component")
         header.add_comment("COMPONENTS: " + ", ".join(self.components_id))
         header["UNIT"] = ("Kelvin", "Map unit")
         header["CREATOR"] = (__name__, "File creator")
@@ -146,20 +147,17 @@ class Foregrounds:
         self.header = header
         logger.info("Created FITS header")
 
-    def _output(self, hpmap, frequency):
-        """Write the simulated free-free map to disk with proper header
+    def _output(self, skymap, frequency):
+        """
+        Write the simulated free-free map to disk with proper header
         keywords and history.
 
         Returns
         -------
-        filepath : str
-            The (absolute) path to the output HEALPix map file.
+        outfile : str
+            The (absolute) path to the output sky map file.
         """
-        if not os.path.exists(self.output_dir):
-            os.mkdir(self.output_dir)
-            logger.info("Created output dir: {0}".format(self.output_dir))
-        #
-        filepath = self._make_filepath(frequency=frequency)
+        outfile = self._make_filepath(frequency=frequency)
         if not hasattr(self, "header"):
             self._make_header()
         header = self.header.copy()
@@ -169,11 +167,12 @@ class Foregrounds:
             "File creation date"
         )
         if self.use_float:
-            hpmap = hpmap.astype(np.float32)
-        write_fits_healpix(filepath, hpmap, header=header,
-                           clobber=self.clobber)
-        logger.info("Write combined foreground to file: {0}".format(filepath))
-        return filepath
+            skymap = skymap.astype(np.float32)
+        sky = get_sky(configs=self.configs)
+        sky.data = skymap
+        sky.header = header
+        sky.write(outfile, clobber=self.clobber, checksum=self.checksum)
+        return outfile
 
     def preprocess(self):
         """Perform the preparation procedures for the final simulations."""
@@ -183,7 +182,8 @@ class Foregrounds:
             comp_obj.preprocess()
 
     def simulate(self):
-        """Simulate the enabled components, as well as combine all the
+        """
+        Simulate the enabled components, as well as combine all the
         simulated components to make up the total foregrounds.
 
         This is the *main interface* to the foreground simulations.
@@ -195,22 +195,22 @@ class Foregrounds:
         In this way, less memory is required, since the number of components
         are generally much less than the number of frequency bins.
         """
-        npix = hp.nside2npix(self.nside)
+        sky = get_sky(configs=self.configs)
         nfreq = len(self.frequencies)
         for freq_id, freq in enumerate(self.frequencies):
             logger.info("[#{0}/{1}] ".format(freq_id+1, nfreq) +
                         "Simulating components at {freq} {unit} ...".format(
                             freq=freq, unit=self.freq_unit))
             if self.combine:
-                hpmap_comb = np.zeros(npix)
+                skymap_comb = np.zeros(shape=sky.shape)
             for comp_id, comp_obj in self.components.items():
-                hpmap, filepath = comp_obj.simulate_frequency(freq)
+                skymap, filepath = comp_obj.simulate_frequency(freq)
                 if filepath is not None:
                     self.products.add_product(comp_id, freq_id, filepath)
                 if self.combine:
-                    hpmap_comb += hpmap
+                    skymap_comb += skymap
             if self.combine:
-                filepath_comb = self._output(hpmap_comb, freq)
+                filepath_comb = self._output(skymap_comb, freq)
                 self.products.add_product("combined", freq_id, filepath_comb)
 
     def postprocess(self):
