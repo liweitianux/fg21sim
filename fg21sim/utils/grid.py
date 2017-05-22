@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -36,7 +36,8 @@ def _wrap_latitudes(lat):
     nb.float64),
         nopython=True)
 def make_coordinate_grid(center, size, resolution):
-    """Make a rectangle, Cartesian coordinate grid.
+    """
+    Make a rectangular, Cartesian coordinate grid.
 
     This is the ``numba.jit`` optimized version of ``make_coordinate_grid``.
 
@@ -84,12 +85,53 @@ def make_coordinate_grid(center, size, resolution):
     return (lon, lat)
 
 
+@nb.jit(nb.float64[:, :](nb.types.UniTuple(nb.int64, 2),
+                         nb.types.UniTuple(nb.int64, 2),
+                         nb.float64),
+        nopython=True)
+def make_ellipse(center, radii, rotation):
+    """
+    Make a square grid map containing the specified rotated ellipse.
+
+    Parameters
+    ----------
+    center : 2-int tuple
+        The row and column indexes of the ellipse center.
+    radii : 2-int tuple
+        The (major, minor) axes of the filling ellipse, number of pixels.
+    rotation : float
+        The rotation angle (unit [ degree ]) of the filling ellipse.
+
+    Returns
+    -------
+    gridmap : 2D float `~numpy.ndarray`
+        The array containing the specified ellipse, where the pixels
+        corresponding to the ellipse with positive values, while other pixels
+        are zeros.
+        This array is rotated from the nominal ellipse of value ones,
+        therefore the edges of the rotated ellipse is in fraction (0-1),
+        which can be regarded as similar to the sub-pixel rendering.
+    """
+    rmax = max(radii)
+    shape = (rmax*2+1, rmax*2+1)
+    rr, cc = ellipse(center, radii, shape=shape)
+    gridmap = np.zeros(shape)
+    # XXX: ``numba`` only support one advanced index
+    for ri, ci in zip(rr, cc):
+        gridmap[ri, ci] = 1.0
+    # Rotate the ellipse about the grid center
+    gridmap = rotate_center(gridmap, angle=rotation, interp=True,
+                            reshape=False, fill_value=0.0)
+    return gridmap
+
+
 @nb.jit(nb.types.UniTuple(nb.float64[:, :], 3)(
     nb.types.UniTuple(nb.float64, 2), nb.types.UniTuple(nb.float64, 2),
     nb.float64, nb.float64),
         nopython=True)
 def make_grid_ellipse(center, size, resolution, rotation=0.0):
-    """Make a square coordinate grid just containing the specified
+    """
+    Make a square coordinate grid just containing the specified
     (rotated) ellipse.
 
     Parameters
@@ -119,9 +161,6 @@ def make_grid_ellipse(center, size, resolution, rotation=0.0):
         The array containing the specified ellipse, where the pixels
         corresponding to the ellipse with positive values, while other pixels
         are zeros.
-        This array is rotated from the nominal ellipse of value ones,
-        therefore the edges of the rotated ellipse is in fraction (0-1),
-        which can be regarded as similar to the sub-pixel rendering.
 
     NOTE
     ----
@@ -150,7 +189,8 @@ def make_grid_ellipse(center, size, resolution, rotation=0.0):
     nb.types.UniTuple(nb.float64[:, :], 3), nb.int64),
         nopython=True)
 def map_grid_to_healpix(grid, nside):
-    """Map the filled coordinate grid to the HEALPix map (RING ordering).
+    """
+    Map the filled coordinate grid to the HEALPix map (RING ordering).
 
     Parameters
     ----------
