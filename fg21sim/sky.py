@@ -10,9 +10,13 @@ import os
 import logging
 import copy
 
+import numpy as np
 from scipy import ndimage
 from astropy.io import fits
 import astropy.units as au
+from astropy.wcs import WCS
+from astropy.coordinates import SkyCoord
+from regions import PixCoord, RectanglePixelRegion
 import healpy as hp
 
 from .utils.fits import read_fits_healpix, write_fits_healpix
@@ -24,6 +28,10 @@ logger = logging.getLogger(__name__)
 class SkyPatch:
     """
     Support reading & writing FITS file of sky patches.
+
+    NOTE/XXX
+    --------
+    Only `TAN` (tangential) sky projection supported!
 
     Parameters
     ----------
@@ -149,9 +157,57 @@ class SkyPatch:
             os.makedirs(outdir)
             logger.info("Created output directory: %s" % outdir)
         image = self.data.reshape(self.ysize, self.xsize)
+        header = self.wcs.to_header()
+        header.extend(self.header, update=True)
         hdu = fits.PrimaryHDU(data=image, header=self.header)
         hdu.writeto(outfile, clobber=clobber, checksum=checksum)
         logger.info("Write sky map to file: %s" % outfile)
+
+    @property
+    def wcs(self):
+        """
+        The WCS header with sky projection information, for sky <->
+        pixel coordinate(s) conversion.
+
+        NOTE/XXX
+        --------
+        Currently only support the `TAN` (tangential) projection.
+        """
+        w = WCS(naxis=2)
+        w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+        w.wcs.crval = np.array([self.xcenter, self.ycenter])
+        w.wcs.crpix = np.array([self.xsize/2.0-0.5, self.ysize/2.0-0.5])
+        w.wcs.cdelt = np.array([-self.pixelsize/60.0, self.pixelsize/60.0])
+        w.wcs.cunit = ["deg", "deg"]
+        w.wcs.equinox = 2000.0
+        return w
+
+    def contains(self, skycoord):
+        """
+        Check whether the given (list of) sky coordinate(s) falls
+        inside this sky patch (region).
+
+        Parameters
+        ----------
+        skycoord : `~astropy.coordinate.SkyCoord` or (lon, lat) tuple
+            The (list of) sky coordinate(s) to check, or the (list of)
+            longitudes and latitudes of sky coordinates [ deg ]
+
+        Returns
+        -------
+        inside : bool
+            (list of) boolean values indicating whether the given
+            sky coordinate(s) is inside this sky patch.
+        """
+        if not isinstance(skycoord, SkyCoord):
+            lon, lat = skycoord
+            skycoord = SkyCoord(lon, lat, unit=au.deg)
+        wcs = self.wcs
+        pixcoord = PixCoord.from_sky(skycoord, wcs=wcs)
+        center = PixCoord(x=self.xcenter, y=self.ycenter)
+        region = RectanglePixelRegion(center=center,
+                                      width=self.xsize, height=self.ysize)
+        return region.contains(pixcoord)
 
 
 class SkyHealpix:
