@@ -167,7 +167,7 @@ def check_galactic_snr(configs):
         sky = get_sky(configs)
         key = comp + "/resolution"
         resolution = configs.getn(key)  # [ arcmin ]
-        if resolution < sky.pixelsize:
+        if resolution > sky.pixelsize:
             results[key] = "resolution should be higher than output map"
     return results
 

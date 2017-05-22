@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -11,13 +11,14 @@ from datetime import datetime, timezone
 
 import numpy as np
 from astropy.io import fits
+from astropy.coordinates import SkyCoord
 import astropy.units as au
-import healpy as hp
 import pandas as pd
 
-from ..utils.fits import write_fits_healpix
+from ..sky import get_sky
+from ..utils.wcs import make_wcs
 from ..utils.convert import Fnu_to_Tb_fast
-from ..utils.grid import make_grid_ellipse, map_grid_to_healpix
+from ..utils.grid import make_ellipse
 
 
 logger = logging.getLogger(__name__)
@@ -71,6 +72,7 @@ class SuperNovaRemnants:
 
     def __init__(self, configs):
         self.configs = configs
+        self.sky = get_sky(configs)
         self._set_configs()
 
     def _set_configs(self):
@@ -78,7 +80,7 @@ class SuperNovaRemnants:
         comp = "galactic/snr"
         self.catalog_path = self.configs.get_path(comp+"/catalog")
         self.catalog_outfile = self.configs.get_path(comp+"/catalog_outfile")
-        self.resolution = self.configs.getn(comp+"/resolution") * au.arcmin
+        self.resolution = self.configs.getn(comp+"/resolution")  # [ arcmin ]
         self.prefix = self.configs.getn(comp+"/prefix")
         self.save = self.configs.getn(comp+"/save")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
@@ -87,32 +89,30 @@ class SuperNovaRemnants:
         self.use_float = self.configs.getn("output/use_float")
         self.checksum = self.configs.getn("output/checksum")
         self.clobber = self.configs.getn("output/clobber")
-        self.nside = self.configs.getn("common/nside")
-        self.pixsize = hp.nside2resol(self.nside, arcmin=True) / 60.0
-        self.pixarea = self.pixsize ** 2  # [ deg^2 ]
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
         logger.info("Loaded and set up configurations")
 
     def _load_catalog(self):
-        """Load the Galactic SNRs catalog data."""
+        """
+        Load the Galactic SNRs catalog data.
+
+        Catalog column units:
+        * glon, glat : deg
+        * size_major, size_minor : arcmin
+        * flux : Jy
+        """
         self.catalog = pd.read_csv(self.catalog_path)
         nrow, ncol = self.catalog.shape
         logger.info("Loaded SNRs catalog data from: {0}".format(
             self.catalog_path))
         logger.info("SNRs catalog data: {0} objects, {1} columns".format(
             nrow, ncol))
-        # Set the units for columns
-        self.units = {
-            "glon": au.deg,
-            "glat": au.deg,
-            "size": au.arcmin,
-            "flux": au.Jy,
-        }
         # The flux densities are given at 1 GHz
         self.catalog_flux_freq = (1.0*au.GHz).to(self.freq_unit).value
 
     def _save_catalog_inuse(self):
-        """Save the effective/inuse SNRs catalog data to a CSV file.
+        """
+        Save the effective/inuse SNRs catalog data to a CSV file.
 
         NOTE
         ----
@@ -146,8 +146,9 @@ class SuperNovaRemnants:
         logger.info("Saved SNRs catalog in use to: %s" % self.catalog_outfile)
 
     def _filter_catalog(self):
-        """Filter the catalog data to remove the objects with incomplete
-        data.
+        """
+        Filter the catalog data to remove the objects with incomplete data,
+        as well as the SNRs lying outside the sky coverage.
 
         The following cases are filtered out:
         - Missing angular size
@@ -163,20 +164,31 @@ class SuperNovaRemnants:
         cond3 = pd.isnull(self.catalog["flux"])
         cond4 = pd.isnull(self.catalog["specindex"])
         cond_keep = ~(cond1 | cond2 | cond3 | cond4)
-        n_total = len(cond_keep)
         n_remain = cond_keep.sum()
-        n_delete = n_total - n_remain
-        n_delete_p = n_delete / n_total * 100
+        n_delete = len(cond_keep) - n_remain
         self.catalog = self.catalog[cond_keep]
+        logger.info("SNRs catalog: filtered out due to incomplete data: " +
+                    "{0:d} objects".format(n_delete))
+        # Filter out the SNRs lying outside the sky region (e.g., a patch)
+        skycoords = SkyCoord(l=self.catalog["glon"], b=self.catalog["glat"],
+                             frame="galactic", unit="deg")
+        inside = self.sky.contains(skycoords)
+        n_remain = inside.sum()
+        n_delete = len(inside) - n_remain
+        self.catalog = self.catalog[inside]
         # Drop the index
         self.catalog.reset_index(drop=True, inplace=True)
         self.catalog_filtered = True
-        logger.info("SNRs catalog: filtered out " +
-                    "{0:d} ({1:.1f}%) objects".format(n_delete, n_delete_p))
+        logger.info("SNRs catalog: filtered out due to sky coverage: " +
+                    "{0:d} objects".format(n_delete))
         logger.info("Filtered SNRs catalog: {0} objects".format(n_remain))
+        if n_remain == 0:
+            raise RuntimeError("NO remaining SNRs within simulation sky! " +
+                               "Check the catalog or disable this component.")
 
     def _add_random_rotation(self):
-        """Add random rotation angles for each SNR as column "rotation"
+        """
+        Add random rotation angles for each SNR as column "rotation"
         within the catalog data frame.
 
         The rotation angles are uniformly distributed within [0, 360).
@@ -188,11 +200,11 @@ class SuperNovaRemnants:
         angles = np.random.uniform(low=0.0, high=360.0, size=num)
         rotation = pd.Series(data=angles, name="rotation")
         self.catalog["rotation"] = rotation
-        self.units["rotation"] = au.deg
         logger.info("Added random rotation angles as the 'rotation' column")
 
     def _calc_Tb(self, flux, specindex, frequency, size):
-        """Calculate the brightness temperature at requested frequency
+        """
+        Calculate the brightness temperature at requested frequency
         by assuming a power-law spectral shape.
 
         Parameters
@@ -225,58 +237,63 @@ class SuperNovaRemnants:
         freq_ref = self.catalog_flux_freq  # [ MHz ]
         Fnu = flux * (frequency / freq_ref) ** (-specindex)  # [ Jy ]
         omega = size[0] * size[1]  # [ deg^2 ]
-        if omega < self.pixarea:
+        pixelarea = (self.sky.pixelsize/60.0) ** 2  # [ deg^2 ]
+        if omega < pixelarea:
             # The object is smaller than a pixel, so round up to a pixel area
-            omega = self.pixarea
+            omega = pixelarea
         Tb = Fnu_to_Tb_fast(Fnu, omega, frequency)
         return Tb
 
     def _simulate_templates(self):
-        """Simulate the template (HEALPix) images for each SNR, and cache
-        these templates within the class.
+        """
+        Simulate the template images/maps for each SNR, and cache these
+        templates within this object.
 
         The template images/maps have values of (or approximate) ones for
         these effective pixels, excluding the pixels corresponding to the
         edges of original rotated ellipse, which may have values of
         significantly less than 1 due to the rotation.
 
-        Therefore, simulating the HEALPix map of one SNR at a requested
-        frequency is simply multiplying the cached template image by the
+        Therefore, simulating the sky map of one SNR at a requested
+        frequency is simply multiplying these cached templates by the
         calculated brightness temperature (Tb) at that frequency.
 
-        Furthermore, the total HEALPix map of all SNRs are straightforward
-        additions of all the maps of each SNR.
+        Furthermore, the final output sky map of all SNRs are just additions
+        of all the maps of each SNR.
 
         Attributes
         ----------
         templates : dict
             A dictionary containing the simulated templates for each SNR.
             The dictionary keys are the names (`self.catalog["name"]`)
-            of the SNRs, and the values are `(hpidx, hpval)` tuples with
-            `hpidx` the indexes of effective HEALPix pixels (RING ordering)
-            and `hpval` the values of the corresponding pixels.
+            of the SNRs, and the values are `(idx, val)` tuples with
+            `idx` the indexes of effective image pixels and `hpval` the
+            values of the corresponding pixels.
             e.g.,
-            ``{ name1: (hpidx1, hpval1), name2: (hpidx2, hpval2), ... }``
+            ``{ name1: (idx1, val1), name2: (idx2, val2), ... }``
         """
         templates = {}
-        resolution = self.resolution.to(au.deg).value
-        logger.info("Simulate HEALPix template for each SNR")
-        coef_size2deg = self.units["size"].to(au.deg)
+        logger.info("Simulate sky template for each SNR")
         for row in self.catalog.itertuples():
             name = row.name
-            logger.debug("Simulate HEALPix template for SNR: {0}".format(name))
-            center = (row.glon, row.glat)
-            size = (row.size_major * coef_size2deg,
-                    row.size_minor * coef_size2deg)
-            rotation = row.rotation
-            grid = make_grid_ellipse(center, size, resolution, rotation)
-            hpidx, hpval = map_grid_to_healpix(grid, self.nside)
-            templates[name] = (hpidx, hpval)
+            logger.debug("Simulate sky template for SNR: {0}".format(name))
+            gcenter = (row.glon, row.glat)  # [ deg ]
+            radii = (int(np.ceil(row.size_major * 0.5 / self.resolution)),
+                     int(np.ceil(row.size_minor * 0.5 / self.resolution)))
+            rmax = max(radii)
+            pcenter = (rmax, rmax)
+            image = make_ellipse(pcenter, radii, row.rotation)
+            wcs = make_wcs(center=gcenter, size=image.shape,
+                           pixelsize=self.resolution,
+                           frame="Galactic", projection="CAR")
+            idx, val = self.sky.reproject_from(image, wcs, squeeze=True)
+            templates[name] = (idx, val)
         logger.info("Done simulate {0} SNR templates".format(len(templates)))
         self.templates = templates
 
     def _simulate_single(self, data, frequency):
-        """Simulate one single SNR at the specified frequency.
+        """
+        Simulate one single SNR at the specified frequency.
 
         Parameters
         ----------
@@ -290,31 +307,29 @@ class SuperNovaRemnants:
 
         Returns
         -------
-        hpidx : 1D `~numpy.ndarray`
-            The indexes (in RING ordering) of the effective HEALPix
-            pixels for the SNR.
-        hpval : 1D `~numpy.ndarray`
-            The values (i.e., brightness temperature) of each HEALPix
-            pixel with respect the above indexes.
+        idx : 1D `~numpy.ndarray`
+            The indexes of the effective map pixels for the SNR.
+        val : 1D `~numpy.ndarray`
+            The values (i.e., brightness temperature) of each map
+            pixel with respect to the above indexes.
 
         See Also
         --------
         `self._simulate_template()` for more detailed description.
         """
         name = data.name
-        hpidx, hpval = self.templates[name]
+        idx, val = self.templates[name]
         # Calculate the brightness temperature
         flux = data.flux
         specindex = data.specindex
-        coef_size2deg = self.units["size"].to(au.deg)
-        size = (data.size_major * coef_size2deg,
-                data.size_minor * coef_size2deg)  # [ deg ]
+        size = (data.size_major/60.0, data.size_minor/60.0)  # [ deg ]
         Tb = self._calc_Tb(flux, specindex, frequency, size)
-        hpval = hpval * Tb
-        return (hpidx, hpval)
+        val = val * Tb
+        return (idx, val)
 
     def _make_filepath(self, **kwargs):
-        """Make the path of output file according to the filename pattern
+        """
+        Make the path of output file according to the filename pattern
         and output directory loaded from configurations.
         """
         data = {
@@ -326,12 +341,12 @@ class SuperNovaRemnants:
         return filepath
 
     def _make_header(self):
-        """Make the header with detail information (e.g., parameters and
+        """
+        Make the header with detail information (e.g., parameters and
         history) for the simulated products.
         """
         header = fits.Header()
-        header["COMP"] = ("Galactic supernova remnants (SNRs)",
-                          "Emission component")
+        header["COMP"] = (self.name, "Emission component")
         header["UNIT"] = ("Kelvin", "Map unit")
         header["CREATOR"] = (__name__, "File creator")
         # TODO:
@@ -344,20 +359,17 @@ class SuperNovaRemnants:
         self.header = header
         logger.info("Created FITS header")
 
-    def output(self, hpmap, frequency):
-        """Write the simulated free-free map to disk with proper header
+    def output(self, skymap, frequency):
+        """
+        Write the simulated free-free map to disk with proper header
         keywords and history.
 
         Returns
         -------
-        filepath : str
-            The (absolute) path to the output HEALPix map file.
+        outfile : str
+            The (absolute) path to the output sky map file.
         """
-        if not os.path.exists(self.output_dir):
-            os.mkdir(self.output_dir)
-            logger.info("Created output dir: {0}".format(self.output_dir))
-        #
-        filepath = self._make_filepath(frequency=frequency)
+        outfile = self._make_filepath(frequency=frequency)
         if not hasattr(self, "header"):
             self._make_header()
         header = self.header.copy()
@@ -367,14 +379,16 @@ class SuperNovaRemnants:
             "File creation date"
         )
         if self.use_float:
-            hpmap = hpmap.astype(np.float32)
-        write_fits_healpix(filepath, hpmap, header=header,
-                           clobber=self.clobber, checksum=self.checksum)
-        logger.info("Write simulated map to file: {0}".format(filepath))
-        return filepath
+            skymap = skymap.astype(np.float32)
+        sky = self.sky.copy()
+        sky.data = skymap
+        sky.header = header
+        sky.write(outfile, clobber=self.clobber, checksum=self.checksum)
+        return outfile
 
     def preprocess(self):
-        """Perform the preparation procedures for the final simulations.
+        """
+        Perform the preparation procedures for the final simulations.
 
         Attributes
         ----------
@@ -396,8 +410,9 @@ class SuperNovaRemnants:
         self._preprocessed = True
 
     def simulate_frequency(self, frequency):
-        """Simulate the emission (HEALPix) map of all Galactic SNRs at
-        the specified frequency.
+        """
+        Simulate the sky map of all Galactic SNRs emission at the specified
+        frequency.
 
         Parameters
         ----------
@@ -406,10 +421,10 @@ class SuperNovaRemnants:
 
         Returns
         -------
-        hpmap_f : 1D `~numpy.ndarray`
-            The HEALPix map (RING ordering) at the input frequency.
+        skymap_f : 1D/2D `~numpy.ndarray`
+            The sky map at the input frequency.
         filepath : str
-            The (absolute) path to the output HEALPix file if saved,
+            The (absolute) path to the output sky map if saved,
             otherwise ``None``.
 
         See Also
@@ -420,20 +435,21 @@ class SuperNovaRemnants:
         #
         logger.info("Simulating {name} map at {freq} ({unit}) ...".format(
             name=self.name, freq=frequency, unit=self.freq_unit))
-        hpmap_f = np.zeros(hp.nside2npix(self.nside))
+        skymap_f = np.zeros(self.sky.shape)
         for row in self.catalog.itertuples():
-            hpidx, hpval = self._simulate_single(row, frequency)
-            hpmap_f[hpidx] += hpval
+            index, value = self._simulate_single(row, frequency)
+            skymap_f[index] += value
         #
         if self.save:
-            filepath = self.output(hpmap_f, frequency)
+            filepath = self.output(skymap_f, frequency)
         else:
             filepath = None
-        return (hpmap_f, filepath)
+        return (skymap_f, filepath)
 
     def simulate(self, frequencies):
-        """Simulate the emission (HEALPix) maps of all Galactic SNRs for
-        every specified frequency.
+        """
+        Simulate the sky maps of all Galactic SNRs emission at every
+        specified frequency.
 
         Parameters
         ----------
@@ -443,18 +459,18 @@ class SuperNovaRemnants:
 
         Returns
         -------
-        hpmaps : list[1D `~numpy.ndarray`]
-            List of HEALPix maps (in RING ordering) at each frequency.
+        skymaps : list[1D `~numpy.ndarray`]
+            List of sky maps at each frequency.
         paths : list[str]
-            List of (absolute) path to the output HEALPix maps.
+            List of (absolute) path to the output sky maps.
         """
-        hpmaps = []
+        skymaps = []
         paths = []
         for f in np.array(frequencies, ndmin=1):
-            hpmap_f, filepath = self.simulate_frequency(f)
-            hpmaps.append(hpmap_f)
-            paths.append(filepath)
-        return (hpmaps, paths)
+            skymap_f, outfile = self.simulate_frequency(f)
+            skymaps.append(skymap_f)
+            paths.append(outfile)
+        return (skymaps, paths)
 
     def postprocess(self):
         """Perform the post-simulation operations before the end."""
