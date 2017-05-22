@@ -96,6 +96,9 @@ setup(
         "requests",
         "tornado",
     ],
+    dependency_links=[
+        "git+https://github.com/astropy/regions.git",
+    ],
     tests_require=["pytest"],
     cmdclass={"test": PyTest},
 )

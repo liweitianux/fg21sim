@@ -8,3 +8,4 @@ configobj
 beautifulsoup4
 requests
 tornado
+git+https://github.com/astropy/regions.git
