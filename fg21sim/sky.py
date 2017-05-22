@@ -14,11 +14,12 @@ import numpy as np
 from scipy import ndimage
 from astropy.io import fits
 import astropy.units as au
-from astropy.wcs import WCS
 from astropy.coordinates import SkyCoord
 from regions import PixCoord, RectanglePixelRegion
+from reproject import reproject_interp, reproject_to_healpix
 import healpy as hp
 
+from .utils.wcs import make_wcs
 from .utils.fits import read_fits_healpix, write_fits_healpix
 
 
@@ -173,13 +174,10 @@ class SkyPatch:
         --------
         Currently only support the `TAN` (tangential) projection.
         """
-        w = WCS(naxis=2)
-        w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
-        w.wcs.crval = np.array([self.xcenter, self.ycenter])
-        w.wcs.crpix = np.array([self.xsize/2.0-0.5, self.ysize/2.0-0.5])
-        w.wcs.cdelt = np.array([-self.pixelsize/60.0, self.pixelsize/60.0])
-        w.wcs.cunit = ["deg", "deg"]
-        w.wcs.equinox = 2000.0
+        w = make_wcs(center=(self.xcenter, self.ycenter),
+                     size=(self.xsize, self.ysize),
+                     pixelsize=self.pixelsize,
+                     frame="ICRS", projection="TAN")
         return w
 
     def contains(self, skycoord):
@@ -208,6 +206,50 @@ class SkyPatch:
         region = RectanglePixelRegion(center=center,
                                       width=self.xsize, height=self.ysize)
         return region.contains(pixcoord)
+
+    def reproject_from(self, data, wcs, squeeze=False):
+        """
+        Reproject the given image/data together with WCS information
+        onto the grid of this sky.
+
+        Parameters
+        ----------
+        data : 2D float `~numpy.ndarray`
+            The input data/image to be reprojected
+        wcs : `~astropy.wcs.WCS`
+            The WCS information of the input data/image (naxis=2)
+        squeeze : bool, optional
+            Whether to squeeze the reprojected data to only keep
+            the positive pixels.
+
+        Returns
+        -------
+        If ``squeeze=True``, then returns tuple of ``(indexes, values)``,
+        otherwise, returns the reprojected image/data array.
+
+        indexes : 1D int `~numpy.ndarray`
+            The indexes of the pixels with positive values.
+        values : 1D float `~numpy.ndarray`
+            The values of the above pixels.
+
+        reprojected : 1D `~numpy.ndarray`
+            The reprojected data/image with same shape of this sky,
+            i.e., ``self.data``.
+        """
+        eps = 1e-5
+        wcs_out = self.wcs
+        shape_out = (self.ysize, self.xsize)
+        reprojected, __ = reproject_interp(
+            input_data=(data, wcs), output_projection=wcs_out,
+            shape_out=shape_out)
+        reprojected = reprojected.flatten()
+        if squeeze:
+            with np.errstate(invalid="ignore"):
+                indexes = reprojected > eps
+            values = reprojected[indexes]
+            return (indexes, values)
+        else:
+            return reprojected
 
 
 class SkyHealpix:
@@ -304,6 +346,58 @@ class SkyHealpix:
         write_fits_healpix(outfile, self.data, header=self.header,
                            clobber=clobber, checksum=checksum)
         logger.info("Write sky map to file: %s" % outfile)
+
+    def contains(self, skycoord):
+        """
+        Shim method to be consistent with ``SkyPatch``.
+
+        Always returns ``True``, since the HEALPix map covers all sky.
+        """
+        if skycoord.isscalar:
+            return True
+        else:
+            return np.ones(shape=len(skycoord), dtype=np.bool)
+
+    def reproject_from(self, data, wcs, squeeze=False):
+        """
+        Reproject the given image/data together with WCS information
+        onto the grid of this sky.
+
+        Parameters
+        ----------
+        data : 2D float `~numpy.ndarray`
+            The input data/image to be reprojected
+        wcs : `~astropy.wcs.WCS`
+            The WCS information of the input data/image (naxis=2)
+        squeeze : bool, optional
+            Whether to squeeze the reprojected data to only keep
+            the positive pixels.
+
+        Returns
+        -------
+        If ``squeeze=True``, then returns tuple of ``(indexes, values)``,
+        otherwise, returns the reprojected image/data array.
+
+        indexes : 1D int `~numpy.ndarray`
+            The indexes of the pixels with positive values.
+        values : 1D float `~numpy.ndarray`
+            The values of the above pixels.
+
+        reprojected : 1D `~numpy.ndarray`
+            The reprojected data/image with same shape of this sky,
+            i.e., ``self.data.shape``.
+        """
+        eps = 1e-5
+        reprojected, __ = reproject_to_healpix(
+            input_data=(data, wcs), coord_system_out="galactic",
+            nested=False, nside=self.nside)
+        if squeeze:
+            with np.errstate(invalid="ignore"):
+                indexes = reprojected > eps
+            values = reprojected[indexes]
+            return (indexes, values)
+        else:
+            return reprojected
 
 
 def get_sky(configs):
