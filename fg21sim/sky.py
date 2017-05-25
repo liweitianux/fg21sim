@@ -87,6 +87,19 @@ class SkyPatch:
             self.read(infile, frequency)
 
     @property
+    def area(self):
+        """
+        The sky coverage of this patch [ deg^2 ]
+
+        XXX/FIXME
+        ---------
+        Consider the spherical coordination and WCS sky projection!!
+        """
+        ps = self.pixelsize / 60.0  # [ deg ]
+        size = self.xsize * self.ysize
+        return size * ps**2
+
+    @property
     def size(self):
         return (self.xsize, self.ysize)
 
@@ -281,6 +294,14 @@ class SkyHealpix:
         self.nside = nside
         if infile is not None:
             self.read(infile, frequency)
+
+    @property
+    def area(self):
+        """
+        The sky coverage of this HEALPix map, i.e., all sky,
+        unit [ deg^2 ]
+        """
+        return 4*np.pi * np.rad2deg(1)**2
 
     @property
     def shape(self):
