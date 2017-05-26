@@ -1,13 +1,13 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
 Simulation of the radio emissions from clusters of galaxies.
 
-NOTE
-----
-Currently, only radio *halos* are considered with many simplifications.
-Radio *relics* simulations need more investigations ...
+XXX/TODO
+--------
+* Only consider radio *halos*, with many simplifications!
+* Support radio *relics* simulations ...
 """
 
 import os
@@ -21,6 +21,7 @@ from astropy.cosmology import FlatLambdaCDM
 import healpy as hp
 import pandas as pd
 
+from ..sky import get_sky
 from ..utils.fits import write_fits_healpix
 from ..utils.random import spherical_uniform
 from ..utils.convert import Fnu_to_Tb_fast
@@ -93,6 +94,7 @@ class GalaxyClusters:
 
     def __init__(self, configs):
         self.configs = configs
+        self.sky = get_sky(configs)
         self._set_configs()
 
     def _set_configs(self):
@@ -194,29 +196,36 @@ class GalaxyClusters:
         logger.info("Catalog: dropped unnecessary columns: {0}".format(
             ", ".join(columns_drop)))
 
-    def _expand_catalog_fullsky(self):
-        """Expand the catalog to be full sky, by assuming that clusters are
-        uniformly distributed.  Also, the radio halo fraction is also
-        considered to determine the final number of clusters on the full sky.
+    def _scale_catalog_coverage(self):
         """
-        fullsky = 4*np.pi * au.sr
-        factor = float(fullsky / self.catalog_prop["coverage"])
+        Scale the catalog to match the coverage of the simulation sky
+        (patch or all sky), by assuming that clusters are uniformly
+        distributed.  Also, the radio halo fraction is also considered
+        to determine the final number of clusters within the simulation
+        sky.
+        """
+        skyarea = self.sky.area  # [ deg^2 ]
+        logger.info("Simulation sky coverage: %s [deg^2]" % skyarea)
+        logger.info("Cluster catalog sky coverage: %s [deg^2]" %
+                    self.catalog_prop["coverage"])
+        factor = float(skyarea / self.catalog_prop["coverage"])
         n0_cluster = len(self.catalog)
         logger.info("Radio halo fraction in clusters: {0}".format(
             self.halo_fraction))
-        # Total number of clusters on the full sky
-        N_cluster = int(n0_cluster * factor * self.halo_fraction)
-        logger.info("Total number of clusters on the full sky: {0:,}".format(
-            N_cluster))
-        logger.info("Expanding the catalog to be full sky ...")
+        # Total number of radio halos within the simulation sky
+        N_halo = int(n0_cluster * factor * self.halo_fraction)
+        logger.info("Total number of radio halos within the " +
+                    "simulation sky: {0:,}".format(N_halo))
+        logger.info("Scale the catalog to match the simulation sky ...")
         idx = np.round(np.random.uniform(low=0, high=n0_cluster-1,
-                                         size=N_cluster)).astype(np.int)
+                                         size=N_halo)).astype(np.int)
         self.catalog = self.catalog.iloc[idx, :]
         self.catalog.reset_index(inplace=True)
-        logger.info("Done expand the catalog to be full sky")
+        logger.info("DONE scale the catalog to match the simulation sky")
 
     def _add_random_position(self):
-        """Add random positions for each cluster as columns "glon" and
+        """
+        Add random positions for each cluster as columns "glon" and
         "glat" to the catalog data.
 
         Column "glon" is the Galactic longitudes, [0, 360) (degree).
@@ -623,7 +632,7 @@ class GalaxyClusters:
         self._load_catalog()
         self._process_catalog()
         #
-        self._expand_catalog_fullsky()
+        self._scale_catalog_coverage()
         self._add_random_position()
         self._add_random_eccentricity()
         self._add_random_rotation()
