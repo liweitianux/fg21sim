@@ -22,10 +22,11 @@ import healpy as hp
 import pandas as pd
 
 from ..sky import get_sky
+from ..utils.wcs import make_wcs
 from ..utils.fits import write_fits_healpix
 from ..utils.random import spherical_uniform
 from ..utils.convert import Fnu_to_Tb_fast
-from ..utils.grid import make_grid_ellipse, map_grid_to_healpix
+from ..utils.grid import make_ellipse
 
 
 logger = logging.getLogger(__name__)
@@ -90,7 +91,7 @@ class GalaxyClusters:
        http://adsabs.harvard.edu/abs/2002ApJ...567..716R
     """
     # Component name
-    name = "clusters of galaxies"
+    name = "extraglalactic clusters of galaxies"
 
     def __init__(self, configs):
         self.configs = configs
@@ -103,7 +104,7 @@ class GalaxyClusters:
         self.catalog_path = self.configs.get_path(comp+"/catalog")
         self.catalog_outfile = self.configs.get_path(comp+"/catalog_outfile")
         self.halo_fraction = self.configs.getn(comp+"/halo_fraction")
-        self.resolution = self.configs.getn(comp+"/resolution") * au.arcmin
+        self.resolution = self.configs.getn(comp+"/resolution")  # [ arcmin ]
         self.prefix = self.configs.getn(comp+"/prefix")
         self.save = self.configs.getn(comp+"/save")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
@@ -112,7 +113,6 @@ class GalaxyClusters:
         self.use_float = self.configs.getn("output/use_float")
         self.checksum = self.configs.getn("output/checksum")
         self.clobber = self.configs.getn("output/clobber")
-        self.nside = self.configs.getn("common/nside")
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
         # Cosmology model
         self.H0 = self.configs.getn("cosmology/H0")
@@ -153,7 +153,7 @@ class GalaxyClusters:
     def _save_catalog_inuse(self):
         """Save the effective/inuse clusters catalog data to a CSV file."""
         if self.catalog_outfile is None:
-            logger.warning("Catalog output file not set, so do NOT save.")
+            logger.warning("Catalog output file not set; skip saving.")
             return
         # Create directory if necessary
         dirname = os.path.dirname(self.catalog_outfile)
@@ -243,7 +243,8 @@ class GalaxyClusters:
         logger.info("Done add random positions for each cluster")
 
     def _add_random_eccentricity(self):
-        """Add random eccentricities for each cluster as column
+        """
+        Add random eccentricities for each cluster as column
         "eccentricity" to the catalog data.
 
         The eccentricity of a ellipse is defined as:
@@ -270,7 +271,8 @@ class GalaxyClusters:
         logger.info("Done add random eccentricities to catalog")
 
     def _add_random_rotation(self):
-        """Add random rotation angles for each cluster as column "rotation"
+        """
+        Add random rotation angles for each cluster as column "rotation"
         to the catalog data.
 
         The rotation angles are uniformly distributed within [0, 360).
@@ -286,7 +288,8 @@ class GalaxyClusters:
         logger.info("Done add random rotation angles to catalog")
 
     def _calc_sizes(self):
-        """Calculate the virial radii for each cluster from the masses,
+        """
+        Calculate the virial radii for each cluster from the masses,
         and then calculate the elliptical angular sizes by considering
         the added random eccentricities.
 
@@ -329,7 +332,8 @@ class GalaxyClusters:
         logger.info("Done calculate the elliptical angular sizes")
 
     def _calc_luminosity(self):
-        """Calculate the radio luminosity (at 1.4 GHz) using empirical
+        """
+        Calculate the radio luminosity (at 1.4 GHz) using empirical
         scaling relations.
 
         First, calculate the X-ray luminosity L_X using the empirical
@@ -402,10 +406,11 @@ class GalaxyClusters:
         self.catalog["luminosity"] = L_r
         self.catalog_prop["luminosity_freq"] = 1400 * self.freq_unit
         self.units["luminosity"] = au.W / au.Hz
-        logger.info("Done Calculate the radio luminosity")
+        logger.info("Done calculate the radio luminosity")
 
     def _calc_specindex(self):
-        """Calculate the radio spectral indexes for each cluster.
+        """
+        Calculate the radio spectral indexes for each cluster.
 
         Attributes
         ----------
@@ -418,12 +423,13 @@ class GalaxyClusters:
         clusters, which may be improved by investigating more recent results.
         """
         specindex = 1.2
-        logger.info("Use common spectral index for all clusters: "
+        logger.info("Use same spectral index for all clusters: "
                     "{0}".format(specindex))
         self.catalog["specindex"] = specindex
 
     def _calc_Tb(self, luminosity, distance, specindex, frequency, size):
-        """Calculate the brightness temperature at requested frequency
+        """
+        Calculate the brightness temperature at requested frequency
         by assuming a power-law spectral shape.
 
         Parameters
@@ -475,8 +481,9 @@ class GalaxyClusters:
         return Tb
 
     def _simulate_templates(self):
-        """Simulate the template (HEALPix) images for each cluster, and
-        cache these templates within the class.
+        """
+        Simulate the template sky images for each cluster, and cache
+        these templates within the class.
 
         The template images/maps have values of (or approximate) ones for
         these effective pixels, excluding the pixels corresponding to the
@@ -493,32 +500,38 @@ class GalaxyClusters:
         Attributes
         ----------
         templates : list
-            A List containing the simulated templates for each cluster.
-            Each element is a `(hpidx, hpval)` tuple with `hpidx` the
-            indexes of effective HEALPix pixels (RING ordering) and `hpval`
-            the values of the corresponding pixels.
-            e.g., ``[ (hpidx1, hpval1), (hpidx2, hpval2), ... ]``
+            A list containing the simulated templates for each cluster/halo.
+            Each element is a `(idx, val)` tuple with `hpidx` the indexes
+            of effective image pixels and `hpval` the values of the
+            corresponding pixels.
+            e.g., ``[ (idx1, val1), (idx2, val2), ... ]``
         """
-        logger.info("Simulating HEALPix templates for each cluster ...")
+        logger.info("Simulating sky templates for each cluster/halo ...")
         templates = []
-        resolution = self.resolution.to(au.deg).value
+        pixelsize_deg = self.resolution.to(au.deg).value
         # Make sure the index is reset, therefore, the *row indexes* can be
         # simply used to identify the corresponding template image.
         self.catalog.reset_index(inplace=True)
         # XXX/TODO: be parallel
         for row in self.catalog.itertuples():
             # TODO: progress bar
-            center = (row.glon, row.glat)
-            size = (row.size_major, row.size_minor)  # already [ degree ]
-            rotation = row.rotation  # already [ degree ]
-            grid = make_grid_ellipse(center, size, resolution, rotation)
-            hpidx, hpval = map_grid_to_healpix(grid, self.nside)
-            templates.append((hpidx, hpval))
+            gcenter = (row.glon, row.glat)  # [ deg ]
+            radii = (int(np.ceil(row.size_major * 0.5 / pixelsize_deg)),
+                     int(np.ceil(row.size_minor * 0.5 / pixelsize_deg)))
+            rmax = max(radii)
+            pcenter = (rmax, rmax)
+            image = make_ellipse(pcenter, radii, row.rotation)
+            wcs = make_wcs(center=gcenter, size=image.shape,
+                           pixelsize=self.resolution,
+                           frame="Galactic", projection="CAR")
+            idx, val = self.sky.reproject_from(image, wcs, squeeze=True)
+            templates.append((idx, val))
         logger.info("Done simulate %d cluster templates" % len(templates))
         self.templates = templates
 
     def _simulate_single(self, data, frequency):
-        """Simulate one single cluster at the specified frequency, based
+        """
+        Simulate one single cluster at the specified frequency, based
         on the cached template image.
 
         Parameters
@@ -533,30 +546,29 @@ class GalaxyClusters:
 
         Returns
         -------
-        hpidx : 1D `~numpy.ndarray`
-            The indexes (in RING ordering) of the effective HEALPix
-            pixels for the SNR.
-        hpval : 1D `~numpy.ndarray`
-            The values (i.e., brightness temperature) of each HEALPix
-            pixel with respect the above indexes.
+        idx : 1D `~numpy.ndarray`
+            The indexes of the effective map pixels for the single cluster.
+        val : 1D `~numpy.ndarray`
+            The values (i.e., brightness temperature) of each map pixel
+            with respect the above indexes.
 
         See Also
         --------
         `self._simulate_template()` for more detailed description.
         """
-        index = data.Index
-        hpidx, hpval = self.templates[index]
+        idx, val = self.templates[data.Index]
         # Calculate the brightness temperature
         luminosity = data.luminosity
         distance = data.distance
         specindex = data.specindex
-        size = (data.size_major, data.size_minor)
+        size = (data.size_major, data.size_minor)  # [ deg ]
         Tb = self._calc_Tb(luminosity, distance, specindex, frequency, size)
-        hpval = hpval * Tb
-        return (hpidx, hpval)
+        val = val * Tb
+        return (idx, val)
 
     def _make_filepath(self, **kwargs):
-        """Make the path of output file according to the filename pattern
+        """
+        Make the path of output file according to the filename pattern
         and output directory loaded from configurations.
         """
         data = {
@@ -568,12 +580,12 @@ class GalaxyClusters:
         return filepath
 
     def _make_header(self):
-        """Make the header with detail information (e.g., parameters and
+        """
+        Make the header with detail information (e.g., parameters and
         history) for the simulated products.
         """
         header = fits.Header()
-        header["COMP"] = ("Extragalactic clusters of galaxies",
-                          "Emission component")
+        header["COMP"] = (self.name, "Emission component")
         header["UNIT"] = ("Kelvin", "Map unit")
         header["CREATOR"] = (__name__, "File creator")
         # TODO:
@@ -586,20 +598,17 @@ class GalaxyClusters:
         self.header = header
         logger.info("Created FITS header")
 
-    def output(self, hpmap, frequency):
-        """Write the simulated free-free map to disk with proper header
+    def output(self, skymap, frequency):
+        """
+        Write the simulated free-free map to disk with proper header
         keywords and history.
 
         Returns
         -------
-        filepath : str
-            The (absolute) path to the output HEALPix map file.
+        outfile : str
+            The (absolute) path to the output sky map file.
         """
-        if not os.path.exists(self.output_dir):
-            os.mkdir(self.output_dir)
-            logger.info("Created output dir: {0}".format(self.output_dir))
-        #
-        filepath = self._make_filepath(frequency=frequency)
+        outfile = self._make_filepath(frequency=frequency)
         if not hasattr(self, "header"):
             self._make_header()
         header = self.header.copy()
@@ -609,14 +618,16 @@ class GalaxyClusters:
             "File creation date"
         )
         if self.use_float:
-            hpmap = hpmap.astype(np.float32)
-        write_fits_healpix(filepath, hpmap, header=header,
-                           clobber=self.clobber, checksum=self.checksum)
-        logger.info("Write simulated map to file: {0}".format(filepath))
-        return filepath
+            skymap = skymap.astype(np.float32)
+        sky = self.sky.copy()
+        sky.data = skymap
+        sky.header = header
+        sky.write(outfile, clobber=self.clobber, checksum=self.checksum)
+        return outfile
 
     def preprocess(self):
-        """Perform the preparation procedures for the final simulations.
+        """
+        Perform the preparation procedures for the final simulations.
 
         Attributes
         ----------
@@ -646,7 +657,8 @@ class GalaxyClusters:
         self._preprocessed = True
 
     def simulate_frequency(self, frequency):
-        """Simulate the emission (HEALPix) map of all Galactic SNRs at
+        """
+        Simulate the sky map of all extragalactic clusters of galaxies at
         the specified frequency.
 
         Parameters
@@ -657,9 +669,9 @@ class GalaxyClusters:
         Returns
         -------
         hpmap_f : 1D `~numpy.ndarray`
-            The HEALPix map (RING ordering) at the input frequency.
+            The sky map at the input frequency.
         filepath : str
-            The (absolute) path to the output HEALPix file if saved,
+            The (absolute) path to the output sky file if saved,
             otherwise ``None``.
 
         See Also
@@ -670,22 +682,23 @@ class GalaxyClusters:
         #
         logger.info("Simulating {name} map at {freq} ({unit}) ...".format(
             name=self.name, freq=frequency, unit=self.freq_unit))
-        hpmap_f = np.zeros(hp.nside2npix(self.nside))
+        skymap_f = np.zeros(self.sky.shape)
         # XXX/TODO: be parallel
         for row in self.catalog.itertuples():
             # TODO: progress bar
-            hpidx, hpval = self._simulate_single(row, frequency)
-            hpmap_f[hpidx] += hpval
+            index, value = self._simulate_single(row, frequency)
+            skymap_f[index] += value
         #
         if self.save:
-            filepath = self.output(hpmap_f, frequency)
+            filepath = self.output(skymap_f, frequency)
         else:
             filepath = None
-        return (hpmap_f, filepath)
+        return (skymap_f, filepath)
 
     def simulate(self, frequencies):
-        """Simulate the emission (HEALPix) maps of all Galactic SNRs for
-        every specified frequency.
+        """
+        Simulate the sky maps of all extragalactic clusters of galaxies
+        for every specified frequency.
 
         Parameters
         ----------
@@ -695,18 +708,18 @@ class GalaxyClusters:
 
         Returns
         -------
-        hpmaps : list[1D `~numpy.ndarray`]
-            List of HEALPix maps (in RING ordering) at each frequency.
+        skymaps : list[1D `~numpy.ndarray`]
+            List of sky maps at each frequency.
         paths : list[str]
-            List of (absolute) path to the output HEALPix maps.
+            List of (absolute) path to the output sky maps.
         """
-        hpmaps = []
+        skymaps = []
         paths = []
         for f in np.array(frequencies, ndmin=1):
-            hpmap_f, filepath = self.simulate_frequency(f)
-            hpmaps.append(hpmap_f)
-            paths.append(filepath)
-        return (hpmaps, paths)
+            skymap_f, outfile = self.simulate_frequency(f)
+            skymaps.append(skymap_f)
+            paths.append(outfile)
+        return (skymaps, paths)
 
     def postprocess(self):
         """Perform the post-simulation operations before the end."""

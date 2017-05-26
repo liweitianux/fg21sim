@@ -273,7 +273,7 @@ class SuperNovaRemnants:
             ``{ name1: (idx1, val1), name2: (idx2, val2), ... }``
         """
         templates = {}
-        logger.info("Simulate sky template for each SNR")
+        logger.info("Simulating sky template for each SNR ...")
         for row in self.catalog.itertuples():
             name = row.name
             logger.debug("Simulate sky template for SNR: {0}".format(name))
