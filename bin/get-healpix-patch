@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+#
+# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
+# MIT license
+#
+
+"""
+Extract a patch of sky from the all-sky HEALPix map.
+"""
+
+
+import os
+import sys
+import argparse
+import logging
+
+from reproject import reproject_from_healpix
+
+from fg21sim.configs import configs
+from fg21sim.sky import SkyPatch
+from fg21sim.utils import setup_logging
+from fg21sim.utils.fits import read_fits_healpix
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Extract a patch from the all-sky HEALPix map")
+    parser.add_argument("-C", "--clobber", action="store_true",
+                        help="overwrite the existing output files")
+    parser.add_argument("-c", "--config", dest="config", required=False,
+                        help="fg21sim configuration from which to " +
+                        "obtain the sky patch properties")
+    parser.add_argument("--center", dest="center",
+                        help="center coordinate of the sky patch; " +
+                        "format: ra,dec; unit: deg")
+    parser.add_argument("--size", dest="size",
+                        help="size of the sky patch; " +
+                        "format: xsize,ysize; unit: pixel")
+    parser.add_argument("--pixelsize", dest="pixelsize", type=float,
+                        help="pixel size of the sky patch; unit: arcmin")
+    parser.add_argument("infile", help="input all-sky HEALPix map")
+    parser.add_argument("outfile", help="output extracted sky patch")
+    args = parser.parse_args()
+
+    setup_logging(dict_config=configs.logging)
+    tool = os.path.basename(sys.argv[0])
+    logger = logging.getLogger(tool)
+    logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
+    if args.config:
+        configs.read_userconfig(args.config)
+        center = (configs.getn("sky/patch/xcenter"),
+                  configs.getn("sky/patch/ycenter"))  # [ deg ]
+        size = (configs.getn("sky/patch/xsize"),
+                configs.getn("sky/patch/ysize"))
+        pixelsize = configs.getn("sky/patch/pixelsize")  # [ arcmin ]
+    elif not all([args.center, args.size, args.pixelsize]):
+        raise ValueError("--center, --size, and --pixelsize are " +
+                         "required when --config is missing!")
+
+    if args.center:
+        center = args.center.split(",")
+        center = (float(center[0]), float(center[1]))
+    if args.size:
+        size = args.size.split(",")
+        size = (int(size[0]), int(size[1]))
+    if args.pixelsize:
+        pixelsize = args.pixelsize
+
+    logger.info("patch center: (%.3f, %.3f) [deg]" % center)
+    logger.info("patch size: (%d, %d) pixels" % size)
+    logger.info("patch pixel size: %.1f [arcmin]" % pixelsize)
+
+    sky = SkyPatch(size=size, pixelsize=pixelsize, center=center)
+    logger.info("Read HEALPix map from file: %s" % args.infile)
+    hpdata, hpheader = read_fits_healpix(args.infile)
+    logger.info("Reprojecting HEALPix map to sky patch ...")
+    image, __ = reproject_from_healpix(
+        input_data=(hpdata, hpheader["COORDSYS"]),
+        output_projection=sky.wcs, shape_out=size)
+    sky.header = hpheader.copy(strip=True)
+    sky.header["OBJECT"] = "Sky Patch"
+    sky.header["EXTNAME"] = "IMAGE"
+    sky.data = image
+    sky.write(args.outfile, clobber=args.clobber)
+    logger.info("Write sky patch to file: %s" % args.outfile)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 #
 # References:
@@ -77,12 +77,13 @@ setup(
     zip_safe=False,
     scripts=[
         "bin/fg21sim",
+        "bin/fg21sim-download-cluster-data",
+        "bin/fg21sim-download-snr-data",
         "bin/fg21sim-webui",
+        "bin/get-healpix-patch",
         "bin/healpix2hpx",
         "bin/hpx2healpix",
         "bin/zea2healpix",
-        "bin/fg21sim-download-snr-data",
-        "bin/fg21sim-download-cluster-data",
     ],
     install_requires=[
         "numpy",
