@@ -20,8 +20,8 @@ import scipy.integrate
 import scipy.special
 import scipy.optimize
 
-from .cosmology import Cosmology
 from .mergertree import MergerTree
+from ...utils.cosmology import Cosmology
 
 
 logger = logging.getLogger(__name__)

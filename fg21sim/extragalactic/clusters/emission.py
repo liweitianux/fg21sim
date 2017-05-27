@@ -11,7 +11,7 @@ import numpy as np
 import scipy.integrate
 import scipy.special
 
-from .units import (Units as AU, Constants as AC)
+from ...utils.units import (Units as AU, Constants as AC)
 
 
 logger = logging.getLogger(__name__)

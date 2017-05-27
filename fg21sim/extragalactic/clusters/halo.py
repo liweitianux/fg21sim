@@ -18,10 +18,12 @@ import scipy.interpolate
 import scipy.integrate
 import scipy.optimize
 
-from .cosmology import Cosmology
 from .formation import ClusterFormation
 from .solver import FokkerPlanckSolver
-from .units import (Units as AU, UnitConversions as AUC, Constants as AC)
+from ...utils.cosmology import Cosmology
+from ...utils.units import (Units as AU,
+                            UnitConversions as AUC,
+                            Constants as AC)
 
 
 logger = logging.getLogger(__name__)
