@@ -171,9 +171,11 @@ class SkyPatch:
             os.makedirs(outdir)
             logger.info("Created output directory: %s" % outdir)
         image = self.data.reshape(self.ysize, self.xsize)
-        header = self.wcs.to_header()
-        header.extend(self.header, update=True)
-        hdu = fits.PrimaryHDU(data=image, header=self.header)
+        if hasattr(self, "header"):
+            header = self.header.copy(strip=True)
+        wcs_header = self.wcs.to_header()
+        header.extend(wcs_header, update=True)
+        hdu = fits.PrimaryHDU(data=image, header=header)
         hdu.writeto(outfile, clobber=clobber, checksum=checksum)
         logger.info("Write sky map to file: %s" % outfile)
 
@@ -364,7 +366,9 @@ class SkyHealpix:
         if not os.path.exists(outdir):
             os.makedirs(outdir)
             logger.info("Created output directory: %s" % outdir)
-        write_fits_healpix(outfile, self.data, header=self.header,
+        if hasattr(self, "header"):
+            header = self.header
+        write_fits_healpix(outfile, self.data, header=header,
                            clobber=clobber, checksum=checksum)
         logger.info("Write sky map to file: %s" % outfile)
 
