@@ -18,12 +18,10 @@ import numpy as np
 import astropy.units as au
 from astropy.io import fits
 from astropy.cosmology import FlatLambdaCDM
-import healpy as hp
 import pandas as pd
 
 from ...sky import get_sky
 from ...utils.wcs import make_wcs
-from ...utils.fits import write_fits_healpix
 from ...utils.random import spherical_uniform
 from ...utils.convert import Fnu_to_Tb_fast
 from ...utils.grid import make_ellipse
