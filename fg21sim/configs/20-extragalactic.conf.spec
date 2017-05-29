@@ -59,7 +59,7 @@
 
   # Radius of the giant radio halo in clusters (unit: kpc)
   # XXX: currently only support a constant radius of halos
-  radius_halo = float(default=500, min=100)
+  radius = float(default=500, min=100)
 
   # Magnetic field assumed for the cluster (unit: uG)
   # XXX: currently only support a constant magnetic field
@@ -100,11 +100,10 @@
   # Output directory to save the simulated catelogues
   output_dir = string(default="PS_tables")
   # PS components to be simulated
-  pscomponents=string_list(default=list())
+  pscomponents = string_list(default=list())
   # Resolution [arcmin]
-  resolution=float(default=0.6, min=0.0)
-  # Number of each type of point source
-    # Star forming
+  resolution = float(default=0.6, min=0.0)
+
     [[[starforming]]]
     # Number of samples
     numps = integer(default=1000)

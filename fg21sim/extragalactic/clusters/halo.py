@@ -82,7 +82,7 @@ class HaloSingle:
         self.zmax = self.configs.getn(comp+"/zmax")
         # Mass threshold of the sub-cluster for a significant merger
         self.merger_mass_th = self.configs.getn(comp+"/merger_mass_th")
-        self.radius_halo = self.configs.getn(comp+"/radius_halo")
+        self.radius = self.configs.getn(comp+"/radius")
         self.magnetic_field = self.configs.getn(comp+"/magnetic_field")
         self.eta_t = self.configs.getn(comp+"/eta_t")
         self.eta_e = self.configs.getn(comp+"/eta_e")
@@ -493,7 +493,7 @@ class HaloSingle:
         XXX/NOTE
         --------
         This coefficient may be very small and even zero, then the
-        diffusion coefficient of the Fokker-Planck equation is  thus
+        diffusion coefficient of the Fokker-Planck equation is thus
         very small and even zero, which cause problems for calculating
         some quantities (e.g., w(x), C(x)) and wrong/invalid results.
         To avoid these problems, force the minimal value of this
@@ -578,7 +578,7 @@ class HaloSingle:
             # Specified redshift already the last/smallest one
             zend_idx = zidx + 1
         #
-        coef = 2.23e-16 * self.eta_t / (self.radius_halo/500)**3  # [s^-1]
+        coef = 2.23e-16 * self.eta_t / (self.radius/500)**3  # [s^-1]
         coef *= AUC.Gyr2s  # [Gyr^-1]
         chi = 0.0
         for ev in mevents[zidx:zend_idx]:
@@ -590,10 +590,10 @@ class HaloSingle:
             kT = self.kT_mass(M_main)
             term1 = ((M_main+M_sub)/2e15 * (2.6e3/R_vir)) ** (3/2)
             term2 = (rs/500)**2 / np.sqrt(kT/7)
-            if rs <= self.radius_halo:
+            if rs <= self.radius:
                 term3 = 1.0
             else:
-                term3 = (self.radius_halo/rs) ** 2
+                term3 = (self.radius/rs) ** 2
             chi += coef * term1 * term2 * term3
         return (chi, zbegin, zend)
 
