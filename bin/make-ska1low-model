@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+#
+# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
+# MIT license
+#
+
+"""
+Make SKA1-low telescope model for OSKAR[1] simulation usage.
+
+[1] OSKAR: https://github.com/OxfordSKA/OSKAR
+"""
+
+import os
+import sys
+import argparse
+import logging
+
+from pkg_resources import resource_exists, resource_filename
+
+from fg21sim.configs import configs
+from fg21sim.utils import setup_logging
+from fg21sim.uvsim import telescope
+
+
+def main():
+    layoutfile = "ska1low.layout.txt"
+    layoutfile_required = True
+    if resource_exists(telescope.__package__, layoutfile):
+        layoutfile = resource_filename(telescope.__package__, layoutfile)
+        layoutfile_required = False
+    else:
+        layoutfile = None
+
+    parser = argparse.ArgumentParser(
+        description="Make SKA1-low telescope model for OSKAR")
+    parser.add_argument("-d", "--debug", dest="debug", action="store_true",
+                        help="show verbose debug information")
+    parser.add_argument("-C", "--clobber", dest="clobber",
+                        action="store_true",
+                        help="overwrite the existing output files")
+    parser.add_argument("-l", "--layout-file", dest="layoutfile",
+                        required=layoutfile_required,
+                        default=layoutfile,
+                        help="SKA1-low layout configuration " +
+                        "(default: %s)" % layoutfile)
+    parser.add_argument("-o", "--outdir", dest="outdir",
+                        required=True,
+                        help="output telescope model directory")
+    args = parser.parse_args()
+
+    loglevel = "DEBUG" if args.debug else "INFO"
+    setup_logging(dict_config=configs.logging, level=loglevel)
+    tool = os.path.basename(sys.argv[0])
+    logger = logging.getLogger(tool)
+    logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
+    ska1low = telescope.SKA1Low(args.layoutfile)
+    ska1low.generate_stations()
+    ska1low.make_oskar_model(args.outdir, clobber=args.clobber)
+
+
+if __name__ == "__main__":
+    main()
