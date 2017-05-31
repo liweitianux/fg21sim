@@ -75,16 +75,7 @@ setup(
     # Do NOT installed as a zipped egg, since Tornado requires direct access
     # to the templates and static files.
     zip_safe=False,
-    scripts=[
-        "bin/fg21sim",
-        "bin/fg21sim-download-cluster-data",
-        "bin/fg21sim-download-snr-data",
-        "bin/fg21sim-webui",
-        "bin/get-healpix-patch",
-        "bin/healpix2hpx",
-        "bin/hpx2healpix",
-        "bin/zea2healpix",
-    ],
+    scripts=os.listdir("bin/"),
     install_requires=[
         "numpy",
         "numba",
