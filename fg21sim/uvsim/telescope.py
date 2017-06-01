@@ -12,6 +12,13 @@ import shutil
 import numpy as np
 import pandas as pd
 
+try:
+    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+    from matplotlib.figure import Figure
+    has_matplotlib = True
+except ImportError:
+    has_matplotlib = False
+
 from .wgs84 import geodetic2enu
 
 
@@ -33,6 +40,10 @@ class SKA1Low:
         Diameter of each station (unit: [m])
     ant_min_sep : float, optional
         Minimum separation between two antennas (unit: [m])
+    r_core : float, optional
+        Radius defined as the core region (unit: [m]), default: 500.0
+    r_central : float, optional
+        Radius defined as the central region (unit: [m]), default: 1700.0
 
     Reference
     ---------
@@ -42,11 +53,13 @@ class SKA1Low:
         http://www.oerc.ox.ac.uk/~ska/oskar2/OSKAR-Telescope-Model.pdf
     """
     def __init__(self, infile, stn_antennas=256, stn_diameter=45.0,
-                 ant_min_sep=1.5):
+                 ant_min_sep=1.5, r_core=500.0, r_central=1700.0):
         self.infile = infile
         self.stn_antennas = stn_antennas
-        self.stn_diameter = stn_diameter
-        self.ant_min_sep = ant_min_sep
+        self.stn_diameter = stn_diameter  # [m]
+        self.ant_min_sep = ant_min_sep  # [m]
+        self.r_core = r_core  # [m]
+        self.r_central = r_central  # [m]
         self.data = pd.read_csv(infile, sep="\s+", comment="#",
                                 index_col="Label")
         logger.info("Read telescope layout data from: %s" % infile)
@@ -56,6 +69,12 @@ class SKA1Low:
         self.labels = self.make_station_labels(self.data.index[1:])
         # (longitudes, latitudes)
         self.layouts_wgs84 = np.array(self.data.iloc[1:, :])
+        # Convert WGS84 to ENU coordinates
+        p0 = [self.position_wgs84[0], self.position_wgs84[1], 0.0]
+        layouts = np.array([geodetic2enu((lon, lat, 0.0), p0)
+                            for lon, lat in self.layouts_wgs84])
+        layouts[:, 2] = 0.0  # set `up` to 0.0
+        self.layouts_enu = layouts
         logger.info("Number of stations: %d" % len(self.layouts_wgs84))
 
     def generate_stations(self):
@@ -80,6 +99,62 @@ class SKA1Low:
         self.stn_layouts = layouts
         logger.info("DONE generate station layouts.")
 
+    def plot_stations(self, outdir, figsize=(8, 8), dpi=150):
+        """
+        Make a plot for each station.
+        """
+        if not has_matplotlib:
+            logger.error("matplotlib required to plot stations")
+
+        N = len(self.labels)
+        r_max = self.stn_diameter / 2.0
+        for i, label in enumerate(self.labels):
+            x, y = self.stn_layouts[i]
+            fpng = os.path.join(outdir, label+".png")
+            fig = Figure(figsize=figsize, dpi=dpi)
+            FigureCanvas(fig)
+            ax = fig.add_subplot(111, aspect="equal")
+            ax.plot(x, y, "k+")
+            ax.grid()
+            ax.set_xlim((-r_max*1.05, r_max*1.05))
+            ax.set_ylim((-r_max*1.05, r_max*1.05))
+            ax.set_xlabel("East [m]")
+            ax.set_ylabel("North [m]")
+            ax.set_title("Antenna elements: %d; $d_{min}$ = %.2f [m]" %
+                         (self.stn_antennas, self.ant_min_sep),
+                         fontsize=10)
+            fig.suptitle("Station [#%d/%d]: %s" % (i+1, N, label),
+                         fontsize=14)
+            fig.tight_layout()
+            fig.subplots_adjust(top=0.9)
+            fig.savefig(fpng)
+            logger.debug("Made plot for [#%d/%d] station: %s" %
+                         (i+1, N, fpng))
+
+    def plot_telescope(self, outdir, figsize=(8, 8), dpi=150):
+        """
+        Make plots showing all the telescope stations, central
+        stations, and core stations.
+        """
+        if not has_matplotlib:
+            logger.error("matplotlib required to plot the telescope")
+
+        x, y = self.layouts_enu[:, 0], self.layouts_enu[:, 1]
+        # All stations
+        fpng = os.path.join(outdir, "layout_all.png")
+        fig = Figure(figsize=figsize, dpi=dpi)
+        FigureCanvas(fig)
+        ax = fig.add_subplot(111, aspect="equal")
+        ax.plot(x, y, "ko")
+        ax.grid()
+        ax.set_xlabel("East [m]")
+        ax.set_ylabel("North [m]")
+        ax.set_title("SKA1-low Stations Layout (All #%d)" % len(x))
+        fig.tight_layout()
+        fig.savefig(fpng)
+        logger.debug("Made plot for telescope all station: %s" % fpng)
+        # TODO...
+
     def make_oskar_model(self, outdir, clobber=False):
         """
         Create the telescope model for OSKAR.
@@ -103,15 +178,11 @@ class SKA1Low:
         ])
         logger.info("Wrote telescope position: %s" % fposition)
         # Write layout of stations
-        p0 = [self.position_wgs84[0], self.position_wgs84[1], 0.0]
-        layouts = np.array([geodetic2enu((lon, lat, 0.0), p0)
-                            for lon, lat in self.layouts_wgs84])
-        layouts[:, 2] = 0.0  # set `up` to 0.0
         flayout = os.path.join(outdir, "layout.txt")
         header = ["SKA1-low layout: %s" % self.infile,
                   "All stations layout",
                   "East[m]   North[m]   Up[m]"]
-        np.savetxt(flayout, layouts, header="\n".join(header))
+        np.savetxt(flayout, self.layouts_enu, header="\n".join(header))
         logger.info("Wrote station layouts: %s" % flayout)
         # Write stations
         N = len(self.labels)

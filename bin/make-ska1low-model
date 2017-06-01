@@ -38,6 +38,9 @@ def main():
     parser.add_argument("-C", "--clobber", dest="clobber",
                         action="store_true",
                         help="overwrite the existing output files")
+    parser.add_argument("-p", "--plot", dest="plot",
+                        action="store_true",
+                        help="make plots for telescope and stations")
     parser.add_argument("-l", "--layout-file", dest="layoutfile",
                         required=layoutfile_required,
                         default=layoutfile,
@@ -57,6 +60,9 @@ def main():
     ska1low = telescope.SKA1Low(args.layoutfile)
     ska1low.generate_stations()
     ska1low.make_oskar_model(args.outdir, clobber=args.clobber)
+    if args.plot:
+        ska1low.plot_telescope(outdir=args.outdir)
+        ska1low.plot_stations(outdir=args.outdir)
 
 
 if __name__ == "__main__":
