@@ -96,10 +96,12 @@ class SuperNovaRemnants:
         """
         Load the Galactic SNRs catalog data.
 
-        Catalog column units:
-        * glon, glat : deg
-        * size_major, size_minor : arcmin
-        * flux : Jy
+        Catalog columns:
+        * glon, glat : SNR coordinate, Galactic coordinate, [deg]
+        * size_major, size_minor : SNR angular sizes; major and minor axes
+            of the ellipse fitted to the SNR, or the diameter of the fitted
+            circle if the SNR is nearly circular; [arcmin]
+        * flux : Flux density at 1 GHz, [Jy]
         """
         self.catalog = pd.read_csv(self.catalog_path)
         nrow, ncol = self.catalog.shape
