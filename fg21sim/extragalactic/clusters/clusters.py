@@ -296,19 +296,22 @@ class GalaxyClusters:
         catalog["r_vir"] : 1D `~numpy.ndarray`
             The virial radii (unit: Mpc) calculated from the cluster masses
         catalog["size_major"], catalog["size_minor] : 1D `~numpy.ndarray`
-            The major and minor axes (unit: degree) of the clusters calculated
+            The major and minor axes (unit: arcmin) of the clusters calculated
             from the above virial radii and the random eccentricities.
+            NOTE: These major and minor axes are corresponding to the
+                  diameter values; NOT semi-major/semi-minor axes!
+            Unit: arcmin
 
         NOTE
         ----
         The elliptical major and minor axes are calculated by assuming
         the equal area between the ellipse and corresponding circle.
-            theta2 = r_vir / distance
+            theta2 = r_vir / distance     # half angular size
             pi * a * b = pi * (theta2)^2
-            e = sqrt((a^2 - b^2) / a^2)
+            e = sqrt((a^2 - b^2) / a^2)   # eccentricity
         thus,
-            a = theta2 / (1-e^2)^(1/4)
-            b = theta2 * (1-e^2)^(1/4)
+            a = theta2 / (1-e^2)^(1/4)    # semi-major axis
+            b = theta2 * (1-e^2)^(1/4)    # semi-minor axis
         """
         logger.info("Calculating the virial radii ...")
         overdensity = self.catalog_prop["overdensity"]
@@ -321,12 +324,15 @@ class GalaxyClusters:
         # Calculate (elliptical) angular sizes, i.e., major and minor axes
         logger.info("Calculating the elliptical angular sizes ...")
         distance = self.catalog["distance"].data * self.units["distance"]
-        theta2 = (r_vir / distance).decompose().value  # [ rad ]
-        size_major = theta2 / (1 - self.catalog["eccentricity"]**2) ** 0.25
-        size_minor = theta2 * (1 - self.catalog["eccentricity"]**2) ** 0.25
-        self.catalog["size_major"] = size_major * au.rad.to(au.deg)
-        self.catalog["size_minor"] = size_minor * au.rad.to(au.deg)
-        self.units["size"] = au.deg
+        # Half angular size
+        theta2 = (r_vir / distance).decompose().value  # [rad]
+        theta = theta2 * 2  # angular size
+        # Major and minor axes (corresponding to diameter values)
+        size_major = theta / (1 - self.catalog["eccentricity"]**2) ** 0.25
+        size_minor = theta * (1 - self.catalog["eccentricity"]**2) ** 0.25
+        self.catalog["size_major"] = size_major * au.rad.to(au.arcmin)
+        self.catalog["size_minor"] = size_minor * au.rad.to(au.arcmin)
+        self.units["size"] = au.arcmin
         logger.info("Done calculate the elliptical angular sizes")
 
     def _calc_luminosity(self):
@@ -506,7 +512,6 @@ class GalaxyClusters:
         """
         logger.info("Simulating sky templates for each cluster/halo ...")
         templates = []
-        pixelsize_deg = self.resolution.to(au.deg).value
         # Make sure the index is reset, therefore, the *row indexes* can be
         # simply used to identify the corresponding template image.
         self.catalog.reset_index(inplace=True)
@@ -514,8 +519,8 @@ class GalaxyClusters:
         for row in self.catalog.itertuples():
             # TODO: progress bar
             gcenter = (row.glon, row.glat)  # [ deg ]
-            radii = (int(np.ceil(row.size_major * 0.5 / pixelsize_deg)),
-                     int(np.ceil(row.size_minor * 0.5 / pixelsize_deg)))
+            radii = (int(np.ceil(row.size_major * 0.5 / self.resolution)),
+                     int(np.ceil(row.size_minor * 0.5 / self.resolution)))
             rmax = max(radii)
             pcenter = (rmax, rmax)
             image = make_ellipse(pcenter, radii, row.rotation)
@@ -559,7 +564,7 @@ class GalaxyClusters:
         luminosity = data.luminosity
         distance = data.distance
         specindex = data.specindex
-        size = (data.size_major, data.size_minor)  # [ deg ]
+        size = (data.size_major/60.0, data.size_minor/60.0)  # [deg]
         Tb = self._calc_Tb(luminosity, distance, specindex, frequency, size)
         val = val * Tb
         return (idx, val)
