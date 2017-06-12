@@ -167,7 +167,7 @@ class SkyPatch:
         Write current data to file.
         """
         outdir = os.path.dirname(outfile)
-        if not os.path.exists(outdir):
+        if outdir and (not os.path.exists(outdir)):
             os.makedirs(outdir)
             logger.info("Created output directory: %s" % outdir)
         image = self.data.reshape(self.ysize, self.xsize)
@@ -363,7 +363,7 @@ class SkyHealpix:
         Write current data to file.
         """
         outdir = os.path.dirname(outfile)
-        if not os.path.exists(outdir):
+        if outdir and (not os.path.exists(outdir)):
             os.makedirs(outdir)
             logger.info("Created output directory: %s" % outdir)
         if hasattr(self, "header"):
