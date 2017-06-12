@@ -14,6 +14,8 @@ import sys
 import argparse
 import logging
 
+import scipy.ndimage
+import healpy as hp
 from reproject import reproject_from_healpix
 
 from fg21sim.configs import configs
@@ -38,6 +40,10 @@ def main():
                         "format: xsize,ysize; unit: pixel")
     parser.add_argument("--pixelsize", dest="pixelsize", type=float,
                         help="pixel size of the sky patch; unit: arcmin")
+    parser.add_argument("-S", "--smooth", dest="smooth", action="store_true",
+                        help="Smooth the output patch using a Gaussian " +
+                        "filter whose sigma is 2x the pixel size " +
+                        "of the input HEALPix map")
     parser.add_argument("infile", help="input all-sky HEALPix map")
     parser.add_argument("outfile", help="output extracted sky patch")
     args = parser.parse_args()
@@ -74,13 +80,20 @@ def main():
     sky = SkyPatch(size=size, pixelsize=pixelsize, center=center)
     logger.info("Read HEALPix map from file: %s" % args.infile)
     hpdata, hpheader = read_fits_healpix(args.infile)
+    nside = hpheader["NSIDE"]
     logger.info("Reprojecting HEALPix map to sky patch ...")
     image, __ = reproject_from_healpix(
         input_data=(hpdata, hpheader["COORDSYS"]),
         output_projection=sky.wcs, shape_out=size)
+    if args.smooth:
+        sigma = 2 * hp.nside2resol(nside, arcmin=True) / pixelsize
+        image = scipy.ndimage.gaussian_filter(image, sigma=sigma)
+        logger.info("Smoothed sky patch using Gaussian filter of " +
+                    "sigma = %.2f [pixel]" % sigma)
     sky.header = hpheader.copy(strip=True)
     sky.header["OBJECT"] = "Sky Patch"
     sky.header["EXTNAME"] = "IMAGE"
+    sky.header.add_history(" ".join(sys.argv))
     sky.data = image
     sky.write(args.outfile, clobber=args.clobber)
     logger.info("Write sky patch to file: %s" % args.outfile)
