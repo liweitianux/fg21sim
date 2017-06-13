@@ -10,16 +10,16 @@
 # Foreground components to be simulated
 [foregrounds]
 # Diffuse Galactic synchrotron emission (unpolarized)
-galactic/synchrotron = boolean(default=True)
+galactic/synchrotron = boolean(default=False)
 
 # Diffuse Galactic free-free emission
-galactic/freefree = boolean(default=True)
+galactic/freefree = boolean(default=False)
 
 # Galactic supernova remnants emission
-galactic/snr = boolean(default=True)
+galactic/snr = boolean(default=False)
 
 #  Extragalactic clusters of galaxies emission
-extragalactic/clusters = boolean(default=True)
+extragalactic/clusters = boolean(default=False)
 
 # Emission from multiple types of extragalactic point sources
 # NOTE: This component is not well integrated and tested at the moment
