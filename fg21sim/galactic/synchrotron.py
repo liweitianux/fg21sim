@@ -145,7 +145,7 @@ class Synchrotron:
         """
         header = fits.Header()
         header["COMP"] = (self.name, "Emission component")
-        header["UNIT"] = ("Kelvin", "Map unit")
+        header["BUNIT"] = ("K", "data unit is Kelvin")
         header["CREATOR"] = (__name__, "File creator")
         # TODO:
         history = []

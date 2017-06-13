@@ -90,7 +90,7 @@ use_float = boolean(default=True)
 
 # Filename pattern for the output products, which will be finally
 # formatted using `str.format()`.
-filename_pattern = string(default="{prefix}_{frequency:05.1f}.fits")
+filename_pattern = string(default="{prefix}_{frequency:06.2f}.fits")
 
 # Whether calculate the checksum for the output file (e.g., "CHECKSUM"
 # keyword in FITS header)?
