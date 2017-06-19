@@ -75,6 +75,20 @@ class Cosmology:
         """
         return self.H0 * self.E(z)
 
+    def DL(self, z):
+        """
+        Luminosity distance at redshift z.
+        Unit: [Mpc]
+        """
+        return self._cosmo.luminosity_distance(z).value
+
+    def DA(self, z):
+        """
+        Angular diameter distance at redshift z.
+        Unit: [Mpc]
+        """
+        return self._cosmo.angular_diameter_distance(z).value
+
     @property
     def hubble_time(self):
         """
