@@ -49,7 +49,10 @@ class HaloSingle:
     Parameters
     ----------
     M0 : float
-        Present-day (z=0) mass (unit: Msun) of the cluster.
+        Cluster mass at redshift z0
+        Unit: [Msun]
+    z0 : float
+        Redshift from where to simulate former merging history.
     configs : `ConfigManager`
         A `ConfigManager` instance containing default and user configurations.
         For more details, see the example configuration specifications.
@@ -69,8 +72,9 @@ class HaloSingle:
     # Merger tree (i.e., merging history) of this cluster
     mtree = None
 
-    def __init__(self, M0, configs):
+    def __init__(self, M0, z0, configs):
         self.M0 = M0  # [Msun]
+        self.z0 = z0
         self.configs = configs
         self._set_configs()
 
@@ -113,7 +117,7 @@ class HaloSingle:
         mtree : `~MergerTree`
             Generated merger tree of this cluster.
         """
-        self.formation = ClusterFormation(self.M0, self.configs)
+        self.formation = ClusterFormation(self.M0, self.z0, self.configs)
         self.mtree = self.formation.simulate_mergertree()
         return self.mtree
 

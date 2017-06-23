@@ -42,7 +42,10 @@ class ClusterFormation:
     Parameters
     ----------
     M0 : float
-        Present-day (z=0) mass (unit: Msun) of the cluster.
+        Cluster mass at redshift z0
+        Unit: [Msun]
+    z0 : float
+        Redshift from where to simulate former merging history.
     configs : `ConfigManager`
         A `ConfigManager` instance containing default and user configurations.
         For more details, see the example configuration specifications.
@@ -54,8 +57,9 @@ class ClusterFormation:
     mtree : `~MergerTree`
         Merging history of this cluster.
     """
-    def __init__(self, M0, configs):
+    def __init__(self, M0, z0, configs):
         self.M0 = M0  # [Msun]
+        self.z0 = z0
         self.configs = configs
         self._set_configs()
 
@@ -182,8 +186,11 @@ class ClusterFormation:
         References: Ref.[1],Sec.(3.1)
         """
         logger.info("Simulating cluster formation: " +
-                    "M0={:.3g}[Msun] ...".format(self.M0))
-        self.mtree = self._trace_formation(self.M0, dMc=self.merger_mass_min)
+                    "M0={:.3g}[Msun] from z={:.2f} ...".format(
+                        self.M0, self.z0))
+        self.mtree = self._trace_formation(self.M0,
+                                           dMc=self.merger_mass_min,
+                                           _z=self.z0)
         logger.info("Simulated cluster formation with merger tree")
         return self.mtree
 
