@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -48,6 +48,8 @@ class UnitConversions:
     km2cm = au.km.to(au.cm)
     # Energy
     keV2erg = au.keV.to(au.erg)
+    # Angle
+    rad2deg = au.rad.to(au.deg)
 
 
 class Constants:
@@ -66,6 +68,8 @@ class Constants:
     G = ac.G.cgs.value  # [cm^3/g/s^2]
     # Electron charge
     e = ac.e.gauss.value  # [Fr] = [esu]
+    # Boltzmann constant
+    k_B = ac.k_B.cgs.value  # [erg/K]
 
     # Mean molecular weight
     # Ref.: Ettori et al, 2013, Space Science Review, 177, 119-154, Eq.(6)
