@@ -9,6 +9,7 @@ import numpy as np
 from scipy import integrate
 from astropy.cosmology import FlatLambdaCDM
 
+from ..configs import configs
 from .units import (UnitConversions as AUC, Constants as AC)
 
 
@@ -37,7 +38,10 @@ class Cosmology:
         http://adsabs.harvard.edu/abs/2002ApJ...577..579R
         Sec.(2)
     """
-    def __init__(self, H0=71.0, Om0=0.27, Ob0=0.046, sigma8=0.834):
+    def __init__(self, H0=configs.getn("cosmology/H0"),
+                 Om0=configs.getn("cosmology/OmegaM0"),
+                 Ob0=configs.getn("cosmology/Omegab0"),
+                 sigma8=configs.getn("cosmology/sigma8")):
         self.H0 = H0  # [km/s/Mpc]
         self.Om0 = Om0
         self.Ob0 = Ob0
