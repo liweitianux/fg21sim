@@ -1,13 +1,14 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
 Utilities for conversion among common astronomical quantities.
 """
 
-import numpy as np
 import astropy.units as au
 import numba
+
+from .units import (Constants as AC, UnitConversions as AUC)
 
 
 def Fnu_to_Tb(Fnu, omega, freq):
@@ -92,11 +93,11 @@ def Sb_to_Tb_fast(Sb, freq):
         Calculated brightness temperature, unit [ K ]
     """
     # NOTE: `radian` is dimensionless
-    rad2_to_deg2 = np.rad2deg(1.0) * np.rad2deg(1.0)
+    rad2_to_deg2 = AUC.rad2deg ** 2
     Sb_rad2 = Sb * rad2_to_deg2  # unit: [ Jy/rad^2 ] -> [ Jy ]
-    c = 29979245800.0  # speed of light, [ cm/s ]
-    k_B = 1.3806488e-16  # Boltzmann constant, [ erg/K ]
-    coef = 1e-35  # take care the unit conversions
+    c = AC.c  # speed of light, [ cm/s ]
+    k_B = AC.k_B  # Boltzmann constant, [ erg/K ]
+    coef = 1e-35  # unit conversion factor
     Tb = coef * (Sb_rad2 * c*c) / (2 * k_B * freq*freq)  # unit: [ K ]
     return Tb
 
