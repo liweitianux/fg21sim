@@ -147,7 +147,7 @@ class HaloSingle:
             Default: ``self.zmax``.
         zend : float, optional
             The redshift where to stop solving the Fokker-Planck equation.
-            Default: 0 (i.e., present)
+            Default: ``self.z0``.
 
         Returns
         -------
@@ -158,6 +158,15 @@ class HaloSingle:
             The solved electron spectrum at ``zend``.
             Unit: [cm^-3 mec^-1]
         """
+        if zbegin is None:
+            tstart = self.cosmo.age(self.zmax)
+        else:
+            tstart = self.cosmo.age(zbegin)
+        if zend is None:
+            tstop = self.cosmo.age(self.z0)
+        else:
+            tstop = self.cosmo.age(zend)
+
         fpsolver = FokkerPlanckSolver(
             xmin=self.pmin, xmax=self.pmax,
             grid_num=self.pgrid_num,
@@ -168,16 +177,9 @@ class HaloSingle:
             f_injection=self.fp_injection,
         )
         p = fpsolver.x
-        # Assume NO initial electron distribution
+        # Assume NO initial electron distribution, i.e., only
+        # injection.
         n0_e = np.zeros(p.shape)
-        if zbegin is None:
-            tstart = self.cosmo.age(self.zmax)
-        else:
-            tstart = self.cosmo.age(zbegin)
-        if zend is None:
-            tstop = self.cosmo.age0
-        else:
-            tstop = self.cosmo.age(zend)
         n_e = fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
         return (p, n_e)
 
