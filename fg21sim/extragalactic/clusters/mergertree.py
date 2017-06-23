@@ -115,7 +115,6 @@ def plot_mtree(mtree, outfile, figsize=(12, 8)):
     fig = Figure(figsize=figsize)
     canvas = FigureCanvas(fig)
     ax = fig.add_subplot(1, 1, 1)
-    ax.hold(True)
     _plot(mtree, ax=ax)
     ax.set_xlabel("Cosmic time [Gyr]")
     ax.set_ylabel("Mass [Msun]")
