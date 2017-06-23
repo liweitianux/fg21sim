@@ -61,9 +61,13 @@
   # XXX: currently only support a constant radius of halos
   radius = float(default=500, min=100)
 
-  # Magnetic field assumed for the cluster (unit: uG)
-  # XXX: currently only support a constant magnetic field
-  magnetic_field = float(default=0.5, min=0.1, max=10)
+  # Magnetic field scaling relation for clusters
+  # Reference: Cassano et al. 2012, A&A, 548, A100, Eq.(1)
+  #
+  # The mean magnetic field assumed
+  b_mean = float(default=1.9, min=0.1, max=10)
+  # The index of the scaling relation
+  b_index = float(default=1.5, min=0.0, max=3.0)
 
   # Fraction of the turbulence energy in the form of magneto-sonic waves.
   eta_t = float(default=0.3, min=0.0, max=1.0)

@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -9,6 +9,10 @@ References
 ----------
 [1] Cassano & Brunetti 2005, MNRAS, 357, 1313
     http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
+[2] Cassano, Brunetti & Setti, 2006, MNRAS, 369, 1577
+    http://adsabs.harvard.edu/abs/2006MNRAS.369.1577C
+[3] Cassano et al. 2012, A&A, 548, A100
+    http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
 """
 
 import logging
@@ -41,15 +45,10 @@ class HaloSingle:
     by solving the Fokker-Planck equation; and finally derive the radio
     emission from the electron spectra.
 
-    References
-    ----------
-    [1] Cassano & Brunetti 2005, MNRAS, 357, 1313
-        http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
-
     Parameters
     ----------
     M0 : float
-        Cluster mass at redshift z0
+        Cluster virial mass at redshift z0
         Unit: [Msun]
     z0 : float
         Redshift from where to simulate former merging history.
@@ -87,7 +86,8 @@ class HaloSingle:
         # Mass threshold of the sub-cluster for a significant merger
         self.merger_mass_th = self.configs.getn(comp+"/merger_mass_th")
         self.radius = self.configs.getn(comp+"/radius")
-        self.magnetic_field = self.configs.getn(comp+"/magnetic_field")
+        self.b_mean = self.configs.getn(comp+"/b_mean")
+        self.b_index = self.configs.getn(comp+"/b_index")
         self.eta_t = self.configs.getn(comp+"/eta_t")
         self.eta_e = self.configs.getn(comp+"/eta_e")
         self.pmin = self.configs.getn(comp+"/pmin")
@@ -101,6 +101,20 @@ class HaloSingle:
         self.OmegaM0 = self.configs.getn("cosmology/OmegaM0")
         self.cosmo = Cosmology(H0=self.H0, Om0=self.OmegaM0)
         logger.info("Loaded and set up configurations")
+
+    @property
+    def magnetic_field(self):
+        """
+        Calculate the mean magnetic field of this cluster from the
+        scaling relation between magnetic field and cluster mass.
+
+        Unit: [uG]
+
+        Reference: Ref.[3],Eq.(1)
+        """
+        M_mean = 1.6e15  # [Msun]
+        B = self.b_mean * (self.M0/M_mean) ** self.b_index
+        return B
 
     def simulate_mergertree(self):
         """
