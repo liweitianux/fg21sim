@@ -524,13 +524,6 @@ class HaloSingle:
             The calculated electron-acceleration coefficient.
             (unit: Gyr^-1)
 
-        Attributes
-        ----------
-        _coef_acceleration_data : (`~numpy.ndarray`, `~numpy.ndarray`)
-            (zgrid, chigrid) tuple with ``zgrid`` the array of redshifts
-            grid with even spacing ``zbs``, and ``chigrid`` the array
-            of acceleration coefficients at each redshift.
-
         XXX/NOTE
         --------
         This coefficient may be very small and even zero, then the
@@ -541,23 +534,7 @@ class HaloSingle:
         coefficient to be 1/(10*t0), which t0 is the present-day age
         of the universe.
         """
-        # Redshift bin size
-        zbs = 0.01
-
-        if not hasattr(self, "_coef_acceleration_data"):
-            # Order the merger events by decreasing redshifts
-            mevents = list(reversed(self.merger_events))
-            chi_z = [self._chi_at_zidx(zidx, mevents)
-                     for zidx in range(len(mevents))]
-            zgrid = np.arange(0.0, self.zmax+zbs, step=zbs)
-            chigrid = np.zeros(zgrid.shape)
-            for (chi_, zbegin, zend) in chi_z:
-                # NOTE: zbegin > zend
-                mask = (zgrid <= zbegin) & (zgrid >= zend)
-                chigrid[mask] += chi_
-            self._coef_acceleration_data = (zgrid, chigrid)
-
-        zgrid, chigrid = self._coef_acceleration_data
+        zgrid, chigrid = self._chi_data
         # XXX: force a minimal value instead of zero or too small
         chi_min = 1 / (10 * self.cosmo.age0)
 
@@ -573,6 +550,33 @@ class HaloSingle:
             return chi
         else:
             return chi_min
+
+    @property
+    def _chi_data(self):
+        """
+        Returns
+        -------
+        zgrid : 1D `~numpy.ndarray`
+            Redshift positions where the chi values are calculated.
+            Same as the attribute ``self.zgrid``
+        chigrid : 1D `~numpy.ndarray`
+            Values of acceleration coefficients at each redshift.
+        """
+        if hasattr(self, "_chi_data_"):
+            zgrid, chigrid = self._chi_data_
+        else:
+            # Order the merger events by decreasing redshifts
+            mevents = list(reversed(self.merger_events))
+            chi_z = [self._chi_at_zidx(zidx, mevents)
+                     for zidx in range(len(mevents))]
+            zgrid = self.zgrid
+            chigrid = np.zeros(zgrid.shape)
+            for (chi_, zbegin, zend) in chi_z:
+                # NOTE: zbegin > zend
+                mask = (zgrid <= zbegin) & (zgrid >= zend)
+                chigrid[mask] += chi_
+            self._chi_data_ = (zgrid, chigrid)
+        return (zgrid, chigrid)
 
     def _chi_at_zidx(self, zidx, mevents):
         """
@@ -594,24 +598,20 @@ class HaloSingle:
         -------
         chi : float
             The calculated electron-acceleration coefficient.
-            (unit: Gyr^-1)
+            Unit: [Gyr^-1]
         zbegin : float
             The redshift when the merger begins
         zend : float
             The redshift when the merger ends
             NOTE: zbegin > zend
 
-        References
-        ----------
-        [1] Cassano & Brunetti 2005, MNRAS, 357, 1313
-            http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
-            Eq.(40)
+        References: Ref.[1],Eq.(40)
         """
         redshifts = np.array([ev["z"] for ev in mevents])
         zbegin = mevents[zidx]["z"]
         M_main = mevents[zidx]["M_main"]
         M_sub = mevents[zidx]["M_sub"]
-        t_crossing = self._time_crossing(M_main, M_sub, zbegin)
+        t_crossing = self._time_crossing(M_main, M_sub, zbegin)  # [Gyr]
         zend = self._z_end(zbegin, t_crossing)
         try:
             zend_idx = np.where(redshifts < zend)[0][0]
