@@ -13,6 +13,8 @@ References
     http://adsabs.harvard.edu/abs/2006MNRAS.369.1577C
 [3] Cassano et al. 2012, A&A, 548, A100
     http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
+[4] Donnert 2013, AN, 334, 615
+    http://adsabs.harvard.edu/abs/2013AN....334..515D
 """
 
 import logging
@@ -83,6 +85,7 @@ class HaloSingle:
         """
         comp = "extragalactic/halos"
         self.zmax = self.configs.getn(comp+"/zmax")
+        self.zbinsize = self.configs.getn(comp+"/zbinsize")
         # Mass threshold of the sub-cluster for a significant merger
         self.merger_mass_th = self.configs.getn(comp+"/merger_mass_th")
         self.radius = self.configs.getn(comp+"/radius")
@@ -658,9 +661,10 @@ class HaloSingle:
         """
         if not hasattr(self, "_electron_injection_rate"):
             e_th = self.e_thermal  # [erg/cm^3]
+            age = self.cosmo(self.z0)
             term1 = (self.injection_index-2) * self.eta_e
             term2 = e_th / (self.pmin * self.mec * AC.c)  # [cm^-3]
-            term3 = 1.0 / (self.cosmo.age0 * self.pmin)  # [Gyr^-1 mec^-1]
+            term3 = 1.0 / (age * self.pmin)  # [Gyr^-1 mec^-1]
             Ke = term1 * term2 * term3
             self._electron_injection_rate = Ke
         else:
@@ -765,7 +769,7 @@ class HaloSingle:
     @property
     def e_thermal(self):
         """
-        Calculate the present-day thermal energy density of the ICM.
+        Calculate the thermal energy density of the ICM.
 
         Returns
         -------
@@ -777,26 +781,28 @@ class HaloSingle:
         kT = self.kT_mass(mass)  # [keV]
         N = mass * AUC.Msun2g * f_baryon / (AC.mu * AC.u)
         E_th = kT*AUC.keV2erg * N  # [erg]
-        Rv = self._radius_virial(mass) * AUC.kpc2cm  # [cm]
+        Rv = self._radius_virial(mass, self.z0) * AUC.kpc2cm  # [cm]
         V = (4*np.pi / 3) * Rv**3  # [cm^3]
         e_th = E_th / V  # [erg/cm^3]
         return e_th
 
     def _n_thermal(self, mass, z=0.0):
         """
-        Calculate the present-day number density of the ICM thermal plasma.
+        Calculate the number density of the ICM thermal plasma.
 
         Parameters
         ----------
         mass : float
-            Mass (unit: Msun) of the cluster
+            Mass of the cluster at the redshift
+            Unit: [Msun]
         z : float
             Redshift
 
         Returns
         -------
         n_th : float
-            Number density of the ICM (unit: cm^-3)
+            Number density of the ICM
+            Unit: [cm^-3]
         """
         f_baryon = self.cosmo.Ob0 / self.cosmo.Om0
         N = mass * AUC.Msun2g * f_baryon / (AC.mu * AC.u)
