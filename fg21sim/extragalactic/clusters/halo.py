@@ -114,6 +114,16 @@ class HaloSingle:
                          step=self.zbinsize)
 
     @property
+    def pgrid(self):
+        """
+        Electron momentum values of the adopted logarithmic grid
+        used for solving the Fokker-Planck equation.
+        """
+        grid = np.logspace(np.log10(self.pmin), np.log10(self.pmax),
+                           num=self.pgrid_num)
+        return grid
+
+    @property
     def magnetic_field(self):
         """
         Calculate the mean magnetic field of this cluster from the
