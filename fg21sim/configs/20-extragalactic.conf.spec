@@ -48,6 +48,8 @@
   # Maximum redshift until where to tracing the cluster merging history
   # (e.g., when calculating the electron spectrum)
   zmax = float(default=3.0, min=0.0)
+  # Redshift bin size for, e.g., calculating acceleration coefficients
+  zbinsize = float(default=0.01, min=0.0, max=0.1)
 
   # Mass threshold of the sub-cluster to be regarded as a significant
   # merger. (unit: Msun)
@@ -59,7 +61,7 @@
 
   # Radius of the giant radio halo in clusters (unit: kpc)
   # XXX: currently only support a constant radius of halos
-  radius = float(default=500, min=100)
+  radius = float(default=500.0, min=100.0)
 
   # Magnetic field scaling relation for clusters
   # Reference: Cassano et al. 2012, A&A, 548, A100, Eq.(1)

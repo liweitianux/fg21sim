@@ -103,6 +103,14 @@ class HaloSingle:
         logger.info("Loaded and set up configurations")
 
     @property
+    def zgrid(self):
+        """
+        Redshift grid between 0 and ``self.zmax``.
+        """
+        return np.arange(start=0.0, stop=self.zmax+self.zbinsize,
+                         step=self.zbinsize)
+
+    @property
     def magnetic_field(self):
         """
         Calculate the mean magnetic field of this cluster from the
