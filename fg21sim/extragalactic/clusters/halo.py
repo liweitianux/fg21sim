@@ -156,7 +156,7 @@ class HaloSingle:
         self.mtree = self.formation.simulate_mergertree()
         return self.mtree
 
-    def calc_electron_spectrum(self, zbegin=None, zend=None):
+    def calc_electron_spectrum(self, zbegin=None, zend=None, n0_e=None):
         """
         Calculate the relativistic electron spectrum by solving the
         Fokker-Planck equation.
@@ -169,6 +169,11 @@ class HaloSingle:
         zend : float, optional
             The redshift where to stop solving the Fokker-Planck equation.
             Default: ``self.z0``.
+        n0_e : 1D `~numpy.ndarray`, optional
+            The initial electron number distribution.
+            Should have the same shape as ``self.pgrid`` and has unit
+            [cm^-3 mec^-1].
+            Default: accumulated constant-injected electrons until zbegin.
 
         Returns
         -------
@@ -198,9 +203,10 @@ class HaloSingle:
             f_injection=self.fp_injection,
         )
         p = fpsolver.x
-        # Assume NO initial electron distribution, i.e., only
-        # injection.
-        n0_e = np.zeros(p.shape)
+        if n0_e is None:
+            # Accumulated constant-injected electrons until ``tstart``.
+            n_inj = np.array([self.fp_injection(p_) for p_ in p])
+            n0_e = n_inj * tstart
         n_e = fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
         return (p, n_e)
 
