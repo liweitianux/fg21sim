@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -52,14 +52,15 @@ class FokkerPlanckSolver:
     """
     Solve the Fokker-Planck equation.
 
-    ∂u(x,t)   ∂  /                ∂u(x) \
-    ------- = -- | B(x)u(x) + C(x)----- | + Q(x,t)
-       ∂t     ∂x \                  ∂x  /
+    ∂u(x,t)   ∂  /                ∂u(x) \            u(x,t)
+    ------- = -- | B(x)u(x) + C(x)----- | + Q(x,t) - ------
+       ∂t     ∂x \                  ∂x  /            T(x,t)
 
     u(x,t) : distribution/spectrum w.r.t. x at different times
     B(x,t) : advection coefficient
     C(x,t) : diffusion coefficient (>0)
     Q(x,t) : injection coefficient (>=0)
+    T(x,t) : escape coefficient
 
     References
     ----------
@@ -70,7 +71,7 @@ class FokkerPlanckSolver:
     """
 
     def __init__(self, xmin, xmax, grid_num, buffer_np, tstep,
-                 f_advection, f_diffusion, f_injection):
+                 f_advection, f_diffusion, f_injection, f_escape=None):
         self.xmin = xmin
         self.xmax = xmax
         # Number of points on the logarithmic grid
@@ -85,6 +86,8 @@ class FokkerPlanckSolver:
         self.f_diffusion = f_diffusion
         # Function f(x,t) to calculate the injection coefficient Q(x,t)
         self.f_injection = f_injection
+        # Function f(x,t) to calculate the escape coefficient T(x,t)
+        self.f_escape = f_escape
 
     @property
     def x(self):
@@ -239,6 +242,10 @@ class FokkerPlanckSolver:
         c[-1] = 0.0  # Fix c[-1] which is NaN
         b = 1 + (dt/dx) * ((C_mhalf/dx_mhalf) * Wplus_mhalf +
                            (C_phalf/dx_phalf) * Wminus_phalf)
+        # Escape from the system
+        if self.f_escape is not None:
+            T = np.array([self.f_escape(x_, tc) for x_ in x])
+            b += dt / T
         # Calculate b[0] & b[-1], considering the no-flux boundary condition
         b[0] = 1 + (dt/dx[0]) * (C_phalf[0]/dx_phalf[0])*Wminus_phalf[0]
         b[-1] = 1 + (dt/dx[-1]) * (C_mhalf[-1]/dx_mhalf[-1])*Wplus_mhalf[-1]
