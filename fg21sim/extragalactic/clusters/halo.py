@@ -677,7 +677,7 @@ class HaloSingle:
         """
         if not hasattr(self, "_electron_injection_rate"):
             e_th = self.e_thermal  # [erg/cm^3]
-            age = self.cosmo(self.z0)
+            age = self.cosmo.age(self.z0)
             term1 = (self.injection_index-2) * self.eta_e
             term2 = e_th / (self.pmin * self.mec * AC.c)  # [cm^-3]
             term3 = 1.0 / (age * self.pmin)  # [Gyr^-1 mec^-1]
