@@ -22,6 +22,22 @@ def TDMAsolver(a, b, c, d):
     a[i]*x[i-1] + b[i]*x[i] + c[i]*x[i+1] = d[i],
     where: a[1] = c[n] = 0
 
+    Example
+    -------
+    >>> A = np.array([[10,  2, 0, 0],
+                      [ 3, 10, 4, 0],
+                      [ 0,  1, 7, 5],
+                      [ 0,  0, 3, 4]], dtype=float)
+    >>> a = np.array([     3, 1, 3], dtype=float)
+    >>> b = np.array([10, 10, 7, 4], dtype=float)
+    >>> c = np.array([ 2,  4, 5   ], dtype=float)
+    >>> d = np.array([ 3,  4, 5, 6], dtype=float)
+    >>> print(TDMAsolver(a, b, c, d))
+    [ 0.14877589  0.75612053 -1.00188324  2.25141243]
+    # compare against numpy linear algebra library
+    >>> print(np.linalg.solve(A, d))
+    [ 0.14877589  0.75612053 -1.00188324  2.25141243]
+
     References
     ----------
     [1] http://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
