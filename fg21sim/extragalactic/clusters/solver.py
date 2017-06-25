@@ -20,7 +20,7 @@ def TDMAsolver(a, b, c, d):
     which is much faster than the generic Gaussian elimination algorithm.
 
     a[i]*x[i-1] + b[i]*x[i] + c[i]*x[i+1] = d[i],
-    where: a[1] = c[n] = 0
+    where: a[0] = c[N-1] = 0
 
     Example
     -------
@@ -277,13 +277,14 @@ class FokkerPlanckSolver:
         c[-1] = 0.0  # Fix c[-1] which is NaN
         b = 1 + (dt/dx) * ((C_mhalf/dx_mhalf) * Wplus_mhalf +
                            (C_phalf/dx_phalf) * Wminus_phalf)
+        # Calculate b[0] & b[-1], considering the no-flux boundary condition
+        b[0] = 1 + (dt/dx[0]) * (C_phalf[0]/dx_phalf[0])*Wminus_phalf[0]
+        b[-1] = 1 + (dt/dx[-1]) * (C_mhalf[-1]/dx_mhalf[-1])*Wplus_mhalf[-1]
         # Escape from the system
         if self.f_escape is not None:
             T = np.array([self.f_escape(x_, tc) for x_ in x])
             b += dt / T
-        # Calculate b[0] & b[-1], considering the no-flux boundary condition
-        b[0] = 1 + (dt/dx[0]) * (C_phalf[0]/dx_phalf[0])*Wminus_phalf[0]
-        b[-1] = 1 + (dt/dx[-1]) * (C_mhalf[-1]/dx_mhalf[-1])*Wplus_mhalf[-1]
+        # Right-hand side
         r = dt * Q + uc
         return (a, b, c, r)
 
@@ -312,7 +313,7 @@ class FokkerPlanckSolver:
         """
         Solve the Fokker-Planck equation by a single step.
         """
-        a, b, c, r = self.tridiagonal_coefs(tc, uc)
+        a, b, c, r = self.tridiagonal_coefs(tc=tc, uc=uc)
         TDM_a = -a[1:]  # Also drop the first element
         TDM_b = b
         TDM_c = -c[:-1]  # Also drop the last element
