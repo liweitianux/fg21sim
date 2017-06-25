@@ -96,6 +96,10 @@ Documentations
 --------------
 To get started, read the `User Guide`_.
 
+**WARNING:**
+The documentation is *out-of-date* with the current code, and needs
+significant updates!
+
 
 Contributions
 -------------
