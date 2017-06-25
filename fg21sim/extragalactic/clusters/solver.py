@@ -226,9 +226,6 @@ class FokkerPlanckSolver:
             mask_mhalf = (np.abs(w_mhalf) > w_max)
         w_phalf[mask_phalf] = w_max * (np.sign(w_phalf[mask_phalf]))
         w_mhalf[mask_mhalf] = w_max * (np.sign(w_mhalf[mask_mhalf]))
-        logger.warning("Fixed too large w values: " +
-                       "%d+%d" % (len(mask_phalf), len(mask_mhalf)))
-        #
         W_phalf = self.W(w_phalf)
         W_mhalf = self.W(w_mhalf)
         Wplus_phalf = W_phalf * np.exp(w_phalf/2)
@@ -260,15 +257,17 @@ class FokkerPlanckSolver:
 
         References: Ref.[2],Sec.(3.3)
         """
-        uc = np.array(uc)
+        uc = np.asarray(uc)
         x = self.x
         # Calculate the power-law index
         xa = x[self.buffer_np]
         xb = x[self.buffer_np+1]
         ya = uc[self.buffer_np]
         yb = uc[self.buffer_np+1]
-        s = np.log(yb/ya) / np.log(xb/xa)
-        uc[:self.buffer_np] = ya * (x[:self.buffer_np] / xa) ** s
+        if ya > 0 and yb > 0:
+            # Truncate and extrapolate as a power law
+            s = np.log(yb/ya) / np.log(xb/xa)
+            uc[:self.buffer_np] = ya * (x[:self.buffer_np] / xa) ** s
         return uc
 
     def solve_step(self, tc, uc):
