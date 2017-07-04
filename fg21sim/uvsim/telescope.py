@@ -38,8 +38,10 @@ class SKA1Low:
         Number of antenna elements per station (default: 256)
     stn_diameter : float, optional
         Diameter of each station (unit: [m])
+        Default: 35.0 [m]
     ant_min_sep : float, optional
         Minimum separation between two antennas (unit: [m])
+        Default: 1.5 [m] (Ref.[3],Sec.3)
     r_core : float, optional
         Radius defined as the core region (unit: [m]), default: 500.0
     r_central : float, optional
@@ -51,8 +53,10 @@ class SKA1Low:
         http://astronomers.skatelescope.org/wp-content/uploads/2016/09/SKA-TEL-SKO-0000422_02_SKA1_LowConfigurationCoordinates-1.pdf
     [2] OSKAR: telescope model
         http://www.oerc.ox.ac.uk/~ska/oskar2/OSKAR-Telescope-Model.pdf
+    [3] Trott et al. 2017, MNRAS, 470, 455;
+        http://adsabs.harvard.edu/abs/2017MNRAS.470..455T
     """
-    def __init__(self, infile, stn_antennas=256, stn_diameter=45.0,
+    def __init__(self, infile, stn_antennas=256, stn_diameter=35.0,
                  ant_min_sep=1.5, r_core=500.0, r_central=1700.0):
         self.infile = infile
         self.stn_antennas = stn_antennas
