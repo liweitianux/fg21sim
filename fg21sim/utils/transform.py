@@ -1,8 +1,8 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
-Image (only gray-scale image, i.e., matrix) rotate utilities.
+Image (only gray-scale image, i.e., matrix) transformation utilities.
 
 References
 ----------
@@ -26,7 +26,8 @@ import numba as nb
                           nb.boolean, nb.float64)],
         nopython=True)
 def rotate_center(imgin, angle, interp=True, reshape=True, fill_value=0.0):
-    """Rotate the input image (only gray-scale image currently supported)
+    """
+    Rotate the input image (only gray-scale image currently supported)
     by a given angle about its center.
 
     Parameters

@@ -10,7 +10,7 @@ import numpy as np
 import numba as nb
 
 from .draw import ellipse
-from .rotate import rotate_center
+from .transform import rotate_center
 from .healpix import ang2pix_ring
 
 
