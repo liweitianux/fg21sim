@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 
@@ -6,9 +6,70 @@
 Generic drawers (a.k.a. painters) that draw some commonly used shapes.
 """
 
+import logging
 
 import numpy as np
 import numba as nb
+from scipy import interpolate
+
+
+logger = logging.getLogger(__name__)
+
+
+def circle(radius=None, rprofile=None, fill_value=0.0):
+    """
+    Draw a (filled) circle at the center of the output grid.
+    If ``rprofile`` is supplied, then it is used as the radial values
+    for the circle.
+
+    Parameters
+    ----------
+    radius : int
+        The radius of the circle to draw
+    rprofile : 1D `~numpy.ndarray`, optional
+        The radial values for the circle, and ``radius`` will be ignored
+        if specified.
+        If not provided, then fill the circle with ones.
+    fill_value : float, optional
+        Value to be filled to the empty pixels, default 0.0
+
+    Returns
+    -------
+    img : 2D `~numpy.ndarray`
+        Image of size ``(2*radius+1, 2*radius+1)`` with the circle drawn
+        at the center.
+
+    NOTE
+    ----
+    Using a rotational formulation to create the 2D window/image from the
+    1D window/profile gives more circular contours, than using the
+    "outer product."
+
+    Credit
+    ------
+    [1] MATLAB - creating 2D convolution filters
+        https://cn.mathworks.com/matlabcentral/newsreader/view_thread/23588
+    """
+    if rprofile is not None:
+        if radius is not None:
+            logger.warning("circle(): Ignored parameter radius.")
+        rprofile = np.asarray(rprofile)
+        radius = len(rprofile) - 1
+
+    xsize = 2 * radius + 1
+    x = np.arange(xsize) - radius
+    xg, yg = np.meshgrid(x, x)
+    r = np.sqrt(xg**2 + yg**2)
+    ridx = (r <= radius)
+    img = np.zeros(shape=(xsize, xsize))
+    img.fill(fill_value)
+    if rprofile is None:
+        img[ridx] = 1.0
+    else:
+        finterp = interpolate.interp1d(x=np.arange(len(rprofile)),
+                                       y=rprofile, kind="linear")
+        img[ridx] = finterp(r[ridx])
+    return img
 
 
 @nb.jit(nb.types.UniTuple(nb.int64[:], 2)(nb.types.UniTuple(nb.int64, 2),
