@@ -18,6 +18,7 @@ References
 
 import numpy as np
 import numba as nb
+from scipy import ndimage
 
 
 @nb.jit([nb.float64[:, :](nb.int64[:, :], nb.float64, nb.boolean,
@@ -140,4 +141,43 @@ def rotate_center(imgin, angle, interp=True, reshape=True, fill_value=0.0):
                     p_val = imgin[idx_r, idx_c]
                 #
                 imgout[rr, cc] = p_val
+    return imgout
+
+
+def circle2ellipse(imgcirc, bfraction, rotation=0.0):
+    """
+    Shrink the input circle image with respect to the center along the
+    column (axis) to transform the circle to an ellipse, and then rotate
+    around the image center.
+
+    Parameters
+    ----------
+    imgcirc : 2D `~numpy.ndarray`
+        Input image grid containing a circle at the center
+    bfraction : float
+        The fraction of the semi-minor axis w.r.t. the semi-major axis
+        (assumed to be the width of the input image), to determine the
+        shrunk size (height) of the output image.
+        Should be a fraction within [0, 1]
+    rotation : float, optional
+        Rotation angle (unit: [ degree ])
+
+    Returns
+    -------
+    imgout : 2D `~numpy.ndarray`
+        Image of the same size as the input circle image.
+    """
+    nrow, ncol = imgcirc.shape
+    # Shrink the circle to be elliptical
+    nrow2 = nrow * bfraction
+    nrow2 = int(nrow2 / 2) * 2 + 1  # be odd
+    img2 = ndimage.zoom(imgcirc, zoom=(nrow2/nrow, 1.0), order=1)
+    # Pad the shrunk image to have the same size as input
+    imgout = np.zeros(shape=(nrow, ncol))
+    r1 = int((nrow - nrow2) / 2)
+    r2 = r1 + nrow2
+    imgout[r1:r2, :] = img2
+    # Rotate the ellipse
+    imgout = ndimage.rotate(imgout, angle=rotation, reshape=False,
+                            order=1)
     return imgout
