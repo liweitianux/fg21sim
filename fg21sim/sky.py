@@ -33,7 +33,8 @@ class SkyPatch:
 
     NOTE/XXX
     --------
-    Only `TAN` (tangential) sky projection supported!
+    Currently just use ``CAR`` (Cartesian) sky projection, i.e.,
+    assuming a flat sky!
 
     Parameters
     ----------
@@ -48,11 +49,14 @@ class SkyPatch:
         The pixel size of the sky patch, will be used to determine
         the sky coordinates.
         Unit: [arcsec]
-    center : (ra, dec) tuple
+    center : (ra, dec) tuple, optional
         The (R.A., Dec.) coordinate of the sky patch center.
         Unit: [deg]
-    infile : str
+    infile : str, optional
         The path to the input sky patch
+    frequency : float, optional
+        The frequency of the input sky path
+        Unit: [MHz]
 
     Attributes
     ----------
@@ -188,12 +192,13 @@ class SkyPatch:
 
         NOTE/XXX
         --------
-        Currently only support the `TAN` (tangential) projection.
+        Currently just use the `CAR` (Cartesian) projection,
+        i.e., assuming a flat sky.
         """
         w = make_wcs(center=(self.xcenter, self.ycenter),
                      size=(self.xsize, self.ysize),
                      pixelsize=self.pixelsize,
-                     frame="ICRS", projection="TAN")
+                     frame="ICRS", projection="CAR")
         return w
 
     def contains(self, skycoord):
