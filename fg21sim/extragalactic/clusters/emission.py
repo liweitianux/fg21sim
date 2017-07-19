@@ -184,7 +184,7 @@ class SynchrotronEmission:
         ----------
         pixelsize : float
             The pixel size of the output simulated sky image
-            Unit: [arcmin]
+            Unit: [arcsec]
 
         Returns
         -------
@@ -195,7 +195,7 @@ class SynchrotronEmission:
         DA = self.cosmo.DL(self.z) * AUC.Mpc2cm  # [cm]
         radius = self.radius * AUC.kpc2cm  # [cm]
         omega = (np.pi * radius**2 / DA**2) * AUC.rad2deg**2  # [deg^2]
-        pixelarea = (pixelsize/60.0) ** 2  # [deg^2]
+        pixelarea = (pixelsize * AUC.arcsec2deg) ** 2  # [deg^2]
         if omega < pixelarea:
             omega = pixelarea
         F_nu = self.flux(nu)

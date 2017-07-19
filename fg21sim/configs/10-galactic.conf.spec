@@ -76,9 +76,10 @@
   # Output the effective/inuse SNRs catalog data (CSV file)
   catalog_outfile = string(default=None)
 
-  # Resolution (unit: arcmin) for simulating each SNR, which are finally
-  # mapped to the HEALPix map of Nside specified in "[common]" section.
-  resolution = float(default=0.5, min=0.0)
+  # Resolution for simulating each SNR template, which are finally
+  # mapped to the all-sky HEALPix map if used.
+  # Unit: [arcsec]
+  resolution = float(default=30.0, min=5.0)
 
   # Filename prefix for this component
   prefix = string(default="gsnr")

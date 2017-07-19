@@ -8,6 +8,8 @@ Create WCS for sky projection.
 import numpy as np
 from astropy.wcs import WCS
 
+from .units import UnitConversions as AUC
+
 
 def make_wcs(center, size, pixelsize, frame="ICRS", projection="TAN"):
     """
@@ -16,11 +18,13 @@ def make_wcs(center, size, pixelsize, frame="ICRS", projection="TAN"):
     Parameters
     ----------
     center : (xcenter, ycenter) float tuple
-        The equatorial/galactic coordinate of the sky/image center [ deg ].
+        The equatorial/galactic coordinate of the sky/image center.
+        Unit: [deg]
     size : (xsize, ysize) int tuple
         The size (width, height) of the sky/image.
     pixelsize : float
-        The pixel size of the sky/image [ arcmin ]
+        The pixel size of the sky/image.
+        Unit: [arcsec]
     frame : str, "ICRS" or "Galactic"
         The coordinate frame, only one of ``ICRS`` or ``Galactic``.
     projection : str, "TAN" or "CAR"
@@ -31,10 +35,14 @@ def make_wcs(center, size, pixelsize, frame="ICRS", projection="TAN"):
     -------
     w : `~astropy.wcs.WCS`
         Created WCS header/object
+
+    TODO/XXX
+    ---------
+    To support other projections, e.g., ``SIN`` (common in radio astronomy).
     """
     xcenter, ycenter = center  # [ deg ]
     xsize, ysize = size
-    delt = pixelsize / 60.0  # [ deg ]
+    delt = pixelsize * AUC.arcsec2deg  # [ deg ]
     if projection.upper() not in ["TAN", "CAR"]:
         raise ValueError("unsupported projection: " % projection)
     if frame.upper() == "ICRS":

@@ -50,6 +50,13 @@ class UnitConversions:
     keV2erg = au.keV.to(au.erg)
     # Angle
     rad2deg = au.rad.to(au.deg)
+    deg2rad = au.deg.to(au.rad)
+    arcmin2deg = au.arcmin.to(au.deg)
+    deg2arcmin = au.deg.to(au.arcmin)
+    arcsec2deg = au.arcsec.to(au.deg)
+    deg2arcsec = au.deg.to(au.arcsec)
+    arcmin2arcsec = au.arcmin.to(au.arcsec)
+    arcsec2arcmin = au.arcsec.to(au.arcmin)
 
 
 class Constants:

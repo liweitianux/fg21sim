@@ -19,6 +19,7 @@ from ..sky import get_sky
 from ..utils.wcs import make_wcs
 from ..utils.convert import Fnu_to_Tb_fast
 from ..utils.grid import make_ellipse
+from ..utils.units import UnitConversions as AUC
 
 
 logger = logging.getLogger(__name__)
@@ -80,7 +81,7 @@ class SuperNovaRemnants:
         comp = "galactic/snr"
         self.catalog_path = self.configs.get_path(comp+"/catalog")
         self.catalog_outfile = self.configs.get_path(comp+"/catalog_outfile")
-        self.resolution = self.configs.getn(comp+"/resolution")  # [ arcmin ]
+        self.resolution = self.configs.getn(comp+"/resolution")  # [ arcsec ]
         self.prefix = self.configs.getn(comp+"/prefix")
         self.save = self.configs.getn(comp+"/save")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
@@ -100,7 +101,8 @@ class SuperNovaRemnants:
         * glon, glat : SNR coordinate, Galactic coordinate, [deg]
         * size_major, size_minor : SNR angular sizes; major and minor axes
             of the ellipse fitted to the SNR, or the diameter of the fitted
-            circle if the SNR is nearly circular; [arcmin]
+            circle if the SNR is nearly circular;
+            originally in [arcmin], converted to [arcsec]
         * flux : Flux density at 1 GHz, [Jy]
         """
         self.catalog = pd.read_csv(self.catalog_path)
@@ -111,6 +113,10 @@ class SuperNovaRemnants:
             nrow, ncol))
         # The flux densities are given at 1 GHz
         self.catalog_flux_freq = (1.0*au.GHz).to(self.freq_unit).value
+        # Convert ``size_major`` and ``size_minor`` from unit [arcmin]
+        # to [arcsec]
+        self.catalog["size_major"] *= AUC.arcmin2arcsec
+        self.catalog["size_minor"] *= AUC.arcmin2arcsec
 
     def _save_catalog_inuse(self):
         """
@@ -239,7 +245,7 @@ class SuperNovaRemnants:
         freq_ref = self.catalog_flux_freq  # [ MHz ]
         Fnu = flux * (frequency / freq_ref) ** (-specindex)  # [ Jy ]
         omega = size[0] * size[1]  # [ deg^2 ]
-        pixelarea = (self.sky.pixelsize/60.0) ** 2  # [ deg^2 ]
+        pixelarea = (self.sky.pixelsize * AUC.arcsec2deg) ** 2  # [ deg^2 ]
         if omega < pixelarea:
             # The object is smaller than a pixel, so round up to a pixel area
             omega = pixelarea

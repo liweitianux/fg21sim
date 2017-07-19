@@ -21,6 +21,7 @@ import healpy as hp
 
 from .utils.wcs import make_wcs
 from .utils.fits import read_fits_healpix, write_fits_healpix
+from .utils.units import UnitConversions as AUC
 
 
 logger = logging.getLogger(__name__)
@@ -45,29 +46,25 @@ class SkyPatch:
               has shape (ysize, xsize).
     pixelsize : float
         The pixel size of the sky patch, will be used to determine
-        the sky coordinates. [ arcmin ]
+        the sky coordinates.
+        Unit: [arcsec]
     center : (ra, dec) tuple
-        The (R.A., Dec.) coordinate of the sky patch center. [ deg ]
+        The (R.A., Dec.) coordinate of the sky patch center.
+        Unit: [deg]
     infile : str
         The path to the input sky patch
 
     Attributes
     ----------
-    type : str, "patch" or "healpix"
+    type_ : str, "patch" or "healpix"
         The type of this sky map
     data : 1D `numpy.ndarray`
         The flattened 1D array of map data
         NOTE: The 2D image is flattened to 1D, making it easier to be
               manipulated in a similar way as the HEALPix map.
-    size : int tuple, (width, height)
-        The dimensions of the FITS image
     shape : int tuple, (nrow*ncol, )
         The shape of the flattened image array
         NOTE: nrow=height, ncol=width
-    pixelsize : float
-        The pixel size of the sky map [ arcmin ]
-    center : float tuple, (ra, dec)
-        The (R.A., Dec.) coordinate of the sky patch center. [ deg ]
     """
     type_ = "patch"
     # Input sky patch and its frequency [ MHz ]
@@ -93,9 +90,10 @@ class SkyPatch:
 
         XXX/FIXME
         ---------
+        Assumed a flat sky!
         Consider the spherical coordination and WCS sky projection!!
         """
-        ps = self.pixelsize / 60.0  # [ deg ]
+        ps = self.pixelsize * AUC.arcsec2deg  # [deg]
         size = self.xsize * self.ysize
         return size * ps**2
 
@@ -175,7 +173,7 @@ class SkyPatch:
             header = self.header.copy(strip=True)
         wcs_header = self.wcs.to_header()
         header.extend(wcs_header, update=True)
-        header["PIXSIZE"] = (self.pixelsize, "Pixel size [arcmin]")
+        header["PIXSIZE"] = (self.pixelsize, "Pixel size [arcsec]")
         header["RA0"] = (self.center[0], "R.A. of patch center [deg]")
         header["DEC0"] = (self.center[1], "Dec. of patch center [deg]")
         hdu = fits.PrimaryHDU(data=image, header=header)
@@ -284,7 +282,8 @@ class SkyHealpix:
     shape : int tuple, (npix,)
         The shape (i.e., length) of the HEALPix array
     pixelsize : float
-        The pixel size of the HEALPix map [ arcmin ]
+        The pixel size of the HEALPix map
+        Unit: [arcsec]
     """
     type_ = "healpix"
     # Input sky patch and its frequency [ MHz ]
@@ -317,7 +316,9 @@ class SkyHealpix:
 
     @property
     def pixelsize(self):
-        return hp.nside2resol(self.nside, arcmin=True)
+        ps = hp.nside2resol(self.nside, arcmin=True)
+        ps *= AUC.arcmin2arcsec
+        return ps
 
     def read(self, infile, frequency=None):
         """

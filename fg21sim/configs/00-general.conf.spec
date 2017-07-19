@@ -49,7 +49,7 @@ type = option("patch", "healpix", default="patch")
   xsize = integer(default=None, min=1)
   ysize = integer(default=None, min=1)
 
-  # Pixel size [ arcmin ]
+  # Pixel size [ arcsec ]
   pixelsize = float(default=None, min=0.0)
 
   # Configurations for input HEALPix sky

@@ -22,6 +22,7 @@ from fg21sim.configs import configs
 from fg21sim.sky import SkyPatch
 from fg21sim.utils import setup_logging
 from fg21sim.utils.fits import read_fits_healpix
+from fg21sim.utils.units import UnitConversions as AUC
 
 
 def main():
@@ -39,7 +40,7 @@ def main():
                         help="size of the sky patch; " +
                         "format: xsize,ysize; unit: pixel")
     parser.add_argument("--pixelsize", dest="pixelsize", type=float,
-                        help="pixel size of the sky patch; unit: arcmin")
+                        help="pixel size of the sky patch; unit: [arcsec]")
     parser.add_argument("-S", "--smooth", dest="smooth", action="store_true",
                         help="Smooth the output patch using a Gaussian " +
                         "filter whose sigma is 2x the pixel size " +
@@ -59,7 +60,7 @@ def main():
                   configs.getn("sky/patch/ycenter"))  # [ deg ]
         size = (configs.getn("sky/patch/xsize"),
                 configs.getn("sky/patch/ysize"))
-        pixelsize = configs.getn("sky/patch/pixelsize")  # [ arcmin ]
+        pixelsize = configs.getn("sky/patch/pixelsize")  # [ arcsec ]
     elif not all([args.center, args.size, args.pixelsize]):
         raise ValueError("--center, --size, and --pixelsize are " +
                          "required when --config is missing!")
@@ -75,7 +76,7 @@ def main():
 
     logger.info("patch center: (%.3f, %.3f) [deg]" % center)
     logger.info("patch size: (%d, %d) pixels" % size)
-    logger.info("patch pixel size: %.1f [arcmin]" % pixelsize)
+    logger.info("patch pixel size: %.1f [arcsec]" % pixelsize)
 
     sky = SkyPatch(size=size, pixelsize=pixelsize, center=center)
     logger.info("Read HEALPix map from file: %s" % args.infile)
@@ -86,7 +87,8 @@ def main():
         input_data=(hpdata, hpheader["COORDSYS"]),
         output_projection=sky.wcs, shape_out=size)
     if args.smooth:
-        sigma = 2 * hp.nside2resol(nside, arcmin=True) / pixelsize
+        sigma = (2.0 * hp.nside2resol(nside, arcmin=True) *
+                 AUC.arcmin2arcsec / pixelsize)
         image = scipy.ndimage.gaussian_filter(image, sigma=sigma)
         logger.info("Smoothed sky patch using Gaussian filter of " +
                     "sigma = %.2f [pixel]" % sigma)

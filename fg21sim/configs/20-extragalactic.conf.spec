@@ -31,9 +31,10 @@
   # The fraction that a cluster hosts a radio halo
   halo_fraction = float(default=None, min=0.0, max=1.0)
 
-  # Resolution (unit: arcmin) for simulating each cluster, which are finally
-  # mapped to the HEALPix map of Nside specified in "[common]" section.
-  resolution = float(default=0.5, min=0.0)
+  # Resolution for simulating each cluster templates, which are finally
+  # mapped to the all-sky HEALPix map if used.
+  # Unit: [arcsec]
+  resolution = float(default=30.0, min=5.0)
 
   # Filename prefix for this component
   prefix = string(default="egcluster")
@@ -58,6 +59,10 @@
   # Minimum mass change of the main-cluster to be regarded as a merger
   # event rather than accretion. (unit: Msun)
   merger_mass_min = float(default=1e12, min=1e10)
+
+  # Mass ratio of the main and sub clusters, below which is regarded as
+  # a major merger event.
+  ratio_major = float(default=3.0, min=1.0, max=10.0)
 
   # Radius of the giant radio halo in clusters (unit: kpc)
   # XXX: currently only support a constant radius of halos
