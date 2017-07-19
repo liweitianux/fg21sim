@@ -11,7 +11,6 @@ There are other types of extended radio emissions not considered
 yet, e.g., mini-halos, roundish radio relics, etc.
 """
 
-import os
 import logging
 
 import numpy as np
@@ -21,7 +20,6 @@ from .formation import ClusterFormation
 from .halo import RadioHalo
 from ...sky import get_sky
 from ...utils.cosmology import Cosmology
-from ...utils.random import spherical_uniform
 from ...utils.io import dataframe_to_csv
 
 
@@ -77,7 +75,7 @@ class GalaxyClusters:
 
     def _load_catalog(self):
         """
-        Load the sampled (z, M) catalogs from the Press-Schechter
+        Load the sampled (z, mass) catalogs from the Press-Schechter
         formalism for the clusters in this sky patch.
 
         Catalog columns
@@ -85,9 +83,13 @@ class GalaxyClusters:
         * ``z`` : redshifts
         * ``mass`` : cluster mass; unit: [Msun]
         """
-        self.catalog = pd.read_csv(self.catalog_path)
+        self.catalog = pd.read_csv(self.catalog_path, comment="#")
+        self.catalog_comment = [
+            "z : redshift",
+            "mass : cluster total mass [Msun]",
+        ]
         num = len(self.catalog)
-        logger.info("Loaded (z, M) catalog: %d clusters" % num)
+        logger.info("Loaded (z, mass) catalog: %d clusters" % num)
 
     def _process_catalog(self):
         """
@@ -122,25 +124,35 @@ class GalaxyClusters:
         lon, lat = self.sky.random_points(n=num)
         self.catalog["lon"] = lon
         self.catalog["lat"] = lat
+        self.catalog_comment.append(
+            "lon, lat : longitudes and latitudes [deg]")
         logger.info("Added catalog columns: lon, lat.")
 
         felong_min = 0.3
         sigma = (1.0 - felong_min) / 3.0
         felong = 1.0 - np.abs(np.random.normal(scale=sigma, size=num))
         felong[felong < felong_min] = felong_min
+        self.catalog["felong"] = felong
+        self.catalog_comment.append(
+            "felong : elongated fraction (= b/a)")
         logger.info("Added catalog column: felong.")
 
         rotation = np.random.uniform(low=0.0, high=360.0, size=num)
         self.catalog["rotation"] = rotation
+        self.catalog_comment.append(
+            "rotation : ellipse rotation angle [deg]")
         logger.info("Added catalog column: rotation.")
 
     def postprocess(self):
         """
         Do some necessary post-simulation operations.
         """
+        logger.info("{name}: postprocessing ...".format(name=self.name))
         # Save the effective/inuse clusters catalog
         logger.info("Save the resulting catalog ...")
         if self.catalog_outfile is None:
             logger.warning("Catalog output file not set; skip saving!")
         else:
-            dataframe_to_csv()
+            dataframe_to_csv(self.catalog, outfile=self.catalog_outfile,
+                             comment=self.catalog_comment,
+                             clobber=self.clobber)
