@@ -1,15 +1,16 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
-Custom utilities of random number generations.
+Random number and/or points generations.
 """
 
 import numpy as np
 
 
 def spherical_uniform(n=1):
-    """Uniformly pick random points on the surface of a unit sphere.
+    """
+    Uniformly pick random points on the surface of an unit sphere.
     The algorithm is described in [SpherePointPicking]_.
 
     Parameters
@@ -20,11 +21,13 @@ def spherical_uniform(n=1):
     Returns
     -------
     theta : float, or 1D `~numpy.ndarray`
-        The polar angles, θ ∈ [0, π]. (unit: rad)
+        The polar angles, θ ∈ [0, π].
         If ``n > 1``, then returns a 1D array containing all the generated
-        coordinates. (unit: rad)
+        coordinates.
+        Unit: [rad]
     phi : float, or 1D `~numpy.ndarray`
         The azimuthal angles, φ ∈ [0, 2π).
+        Unit: [rad]
 
     NOTE
     ----
@@ -35,9 +38,9 @@ def spherical_uniform(n=1):
     used by mathematicians.
 
     The following relation can be used to convert the generated (theta, phi)
-    to the Galactic longitude and latitude convention:
-        glon = np.rad2deg(phi)
-        glat = 90.0 - np.rad2deg(theta)
+    to the Galactic/equatorial longitude and latitude convention:
+        lon = np.rad2deg(phi)
+        lat = 90.0 - np.rad2deg(theta)
 
     References
     ----------

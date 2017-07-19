@@ -30,29 +30,30 @@ extragalactic/pointsources = boolean(default=False)
 [sky]
 # Type of the input/output simulation sky
 # + patch:
-#       Input sky template is only a (square) patch of the sky.
+#       Input/output sky template is only a (square) patch of the sky.
 #       The simulated output maps have the same coverage/field as the
 #       input template, as well as the coordinate projection.
 # + healpix:
-#       Input sky template covers (almost) all sky, and stored in
-#       HEALPix format.  The simulated output maps will also be
+#       Input/output sky template covers (almost) all sky, and stored
+#       in HEALPix format.  The simulated output maps will also be
 #       all-sky using the HEALPix projection.
 type = option("patch", "healpix", default="patch")
 
-  # Configurations for input sky patch
+  # Configurations for input/output sky patch
   [[patch]]
-  # The (R.A., Dec.) coordinate of the input patch center [ deg ]
+  # The (R.A., Dec.) coordinate of the sky patch center [deg]
   xcenter = float(default=0.0, min=0.0, max=360.0)
   ycenter = float(default=0.0, min=-90.0, max=90.0)
 
-  # The (pixel) dimensions of the input patch
   xsize = integer(default=None, min=1)
   ysize = integer(default=None, min=1)
+  # The image dimensions (i.e., number of pixels) of the sky patch,
+  # along the X (R.A./longitude) and Y (Dec./latitude) axes.
 
   # Pixel size [ arcsec ]
   pixelsize = float(default=None, min=0.0)
 
-  # Configurations for input HEALPix sky
+  # Configurations for input/output HEALPix sky
   [[healpix]]
   # HEALPix Nside value, i.e., pixel resolution
   nside = integer(min=1, default=1024)
