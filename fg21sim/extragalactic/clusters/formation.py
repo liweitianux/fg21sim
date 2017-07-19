@@ -49,6 +49,11 @@ class ClusterFormation:
     zmax : float, optional
         The maximum redshift/age when to stop the formation trace.
         Default: 3.0 (i.e., looking back time ~11.5 Gyr)
+    ratio_major : float, optional
+        The mass ratio of the main and sub clusters to define whether
+        the merger is a major event or a  minor one.
+        If ``M_main/M_sub < ratio_major``, then it is a major merger event.
+        Default: 3.0
     cosmo : `~Cosmology`, optional
         Adopted cosmological model with custom utility functions.
     merger_mass_min : float, optional
@@ -61,11 +66,12 @@ class ClusterFormation:
     mtree : `~MergerTree`
         Merging history of this cluster.
     """
-    def __init__(self, M0, z0, zmax=3.0,
+    def __init__(self, M0, z0, zmax=3.0, ratio_major=3.0,
                  cosmo=Cosmology(), merger_mass_min=1e12):
         self.M0 = M0  # [Msun]
         self.z0 = z0
         self.zmax = zmax
+        self.ratio_major = ratio_major
         self.cosmo = cosmo
         self.merger_mass_min = merger_mass_min
 
@@ -195,6 +201,41 @@ class ClusterFormation:
             self.mtree = self._trace_formation(self.M0, _z=self.z0)
         logger.info("Simulated cluster formation with merger tree")
         return self.mtree
+
+    @property
+    def last_major_merger(self):
+        """
+        Identify and return the last major merger event
+
+        Returns
+        -------
+        event :
+            An dictionary containing the properties of the found major
+            event:
+            ``{"M_main": M_main, "M_sub": M_sub, "z": z, "age": age}``;
+            ``None`` if no major event found.
+        """
+        mtree = self.mtree
+        event = None
+        while mtree and mtree.main:
+            if mtree.sub is None:
+                mtree = mtree.main
+                continue
+
+            M_main = mtree.main["mass"]
+            M_sub = mtree.sub["mass"]
+            z = mtree.main["z"]
+            age = mtree.main["age"]
+            if M_main / M_sub < self.ratio_major:
+                # Found a major merger event
+                event = {"M_main": M_main, "M_sub": M_sub,
+                         "z": z, "age": age}
+                break
+
+            # A minor merger event, continue
+            mtree = mtree.main
+
+        return event
 
     def _trace_main(self):
         """
