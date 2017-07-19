@@ -10,13 +10,8 @@
 #
 # This file contains the options corresponding the extragalactic emission
 # components, which currently includes the following components:
-# - clusters
-# - halos
+# - clusters: halos
 # - pointsources
-#
-# NOTE:
-# - The input templates for simulations should be HEALPix full-sky maps.
-# - The input catalog should be in CSV format.
 
 
 [extragalactic]
@@ -37,7 +32,7 @@
   resolution = float(default=30.0, min=5.0)
 
   # Filename prefix for this component
-  prefix = string(default="egcluster")
+  prefix = string(default="cluster")
   # Whether save this component to disk
   save = boolean(default=True)
   # Output directory to save the simulated results
