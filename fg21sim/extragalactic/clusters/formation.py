@@ -46,37 +46,28 @@ class ClusterFormation:
         Unit: [Msun]
     z0 : float
         Redshift from where to simulate former merging history.
-    configs : `ConfigManager`
-        A `ConfigManager` instance containing default and user configurations.
-        For more details, see the example configuration specifications.
+    zmax : float, optional
+        The maximum redshift/age when to stop the formation trace.
+        Default: 3.0 (i.e., looking back time ~11.5 Gyr)
+    cosmo : `~Cosmology`, optional
+        Adopted cosmological model with custom utility functions.
+    merger_mass_min : float, optional
+        Minimum mass change to be regarded as a merger event instead of
+        accretion.
+        Unit: [Msun]
 
     Attributes
     ----------
-    cosmo : `~Cosmology`
-        Adopted cosmological model with custom utility functions.
     mtree : `~MergerTree`
         Merging history of this cluster.
     """
-    def __init__(self, M0, z0, configs):
+    def __init__(self, M0, z0, zmax=3.0,
+                 cosmo=Cosmology(), merger_mass_min=1e12):
         self.M0 = M0  # [Msun]
         self.z0 = z0
-        self.configs = configs
-        self._set_configs()
-
-    def _set_configs(self):
-        """
-        Set up the necessary class attributes according to the configs.
-        """
-        comp = "extragalactic/halos"
-        # Minimum mass change (unit: Msun) of the main-cluster for a merger
-        self.merger_mass_min = self.configs.getn(comp+"/merger_mass_min")
-        # Cosmology model
-        self.H0 = self.configs.getn("cosmology/H0")
-        self.OmegaM0 = self.configs.getn("cosmology/OmegaM0")
-        self.sigma8 = self.configs.getn("cosmology/sigma8")
-        self.cosmo = Cosmology(H0=self.H0, Om0=self.OmegaM0,
-                               sigma8=self.sigma8)
-        logger.info("Loaded and set up configurations")
+        self.zmax = zmax
+        self.cosmo = cosmo
+        self.merger_mass_min = merger_mass_min
 
     @property
     def sigma_index(self):
@@ -195,6 +186,7 @@ class ClusterFormation:
         return self.mtree
 
     def _trace_formation(self, M, dMc, _z=None):
+    def _trace_formation(self, M, _z=None, zmax=None):
         """
         Recursively trace the cluster formation and thus simulate its
         merger tree.
@@ -202,7 +194,11 @@ class ClusterFormation:
         z = 0.0 if _z is None else _z
         node_data = {"mass": M, "z": z, "age": self.cosmo.age(z)}
 
-        if M <= dMc:
+        if self.zmax is not None and z > self.zmax:
+            # Stop the trace
+            return MergerTree(data=node_data)
+
+        if M <= self.merger_mass_min:
             # Stop the trace
             return MergerTree(data=node_data)
 
@@ -221,12 +217,12 @@ class ClusterFormation:
         dM = M - M1
 
         M_min = min(M1, dM)
-        if M_min <= dMc:
+        if M_min <= self.merger_mass_min:
             # Accretion
             M_new = M - M_min
             return MergerTree(
                 data=node_data,
-                main=self._trace_formation(M_new, dMc=dMc, _z=z1),
+                main=self._trace_formation(M_new, _z=z1),
                 sub=None
             )
         else:
@@ -235,6 +231,6 @@ class ClusterFormation:
             M_sub = M_min
             return MergerTree(
                 data=node_data,
-                main=self._trace_formation(M_main, dMc=dMc, _z=z1),
-                sub=self._trace_formation(M_sub, dMc=dMc, _z=z1)
+                main=self._trace_formation(M_main, _z=z1),
+                sub=self._trace_formation(M_sub, _z=z1)
             )
