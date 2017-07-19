@@ -125,11 +125,12 @@ class SkyPatch:
         infile : str
             The path to the input sky patch
         frequency : float, optional
-            The frequency of the sky patch; [ MHz ]
+            The frequency of the sky patch;
+            Unit: [MHz]
         """
         self.infile = infile
         if frequency is not None:
-            self.frequency = frequency * au.MHz
+            self.frequency = frequency
         with fits.open(infile) as f:
             self.data = f[0].data
             self.header = f[0].header
@@ -143,7 +144,7 @@ class SkyPatch:
             self.data = ndimage.zoom(self.data, zoom=zoom, order=1)
         # Flatten the image
         self.data = self.data.flatten()
-        logger.info("Flatten the image to a 1D array")
+        logger.info("Flattened the image to an 1D array")
 
     def load(self, infile, frequency=None):
         """
@@ -228,7 +229,7 @@ class SkyPatch:
                                       width=self.xsize, height=self.ysize)
         return region.contains(pixcoord)
 
-    def reproject_from(self, data, wcs, squeeze=False):
+    def reproject_from(self, data, wcs, squeeze=False, eps=1e-5):
         """
         Reproject the given image/data together with WCS information
         onto the grid of this sky.
@@ -241,7 +242,12 @@ class SkyPatch:
             The WCS information of the input data/image (naxis=2)
         squeeze : bool, optional
             Whether to squeeze the reprojected data to only keep
-            the positive pixels.
+            the pixels greater than a small positive value specified
+            by parameter ``eps``.
+            Default: False
+        eps : float, optional
+            The small positive value to specify the squeeze threshold.
+            Default: 1e-5
 
         Returns
         -------
@@ -257,7 +263,6 @@ class SkyPatch:
             The reprojected data/image with same shape of this sky,
             i.e., ``self.data``.
         """
-        eps = 1e-5
         wcs_out = self.wcs
         shape_out = (self.ysize, self.xsize)
         reprojected, __ = reproject_interp(
@@ -281,6 +286,11 @@ class SkyHealpix:
     ----------
     nside : int
         The pixel resolution of HEALPix (must be power of 2)
+    infile : str, optional
+        The path to the input sky patch
+    frequency : float, optional
+        The frequency of the input sky path
+        Unit: [MHz]
 
     Attributes
     ----------
@@ -294,7 +304,7 @@ class SkyHealpix:
     # Input sky patch and its frequency [ MHz ]
     infile = None
     frequency = None
-    # Sky data; should be a ``numpy.ndarray``
+    # Sky data; should be a `~numpy.ndarray`
     data = None
     # Coordinates of each pixel
     coordinates = None
@@ -307,8 +317,8 @@ class SkyHealpix:
     @property
     def area(self):
         """
-        The sky coverage of this HEALPix map, i.e., all sky,
-        unit [ deg^2 ]
+        The sky coverage of this HEALPix map, i.e., all sky = 4π,
+        Unit: [deg^2]
         """
         return 4*np.pi * np.rad2deg(1)**2
 
@@ -334,11 +344,12 @@ class SkyHealpix:
         infile : str
             The path to the input HEALPix all-sky map.
         frequency : float, optional
-            The frequency of the sky patch; [ MHz ]
+            The frequency of the sky patch;
+            Unit: [MHz]
         """
         self.infile = infile
         if frequency is not None:
-            self.frequency = frequency * au.MHz
+            self.frequency = frequency
         self.data, self.header = read_fits_healpix(infile)
         self.nside_in = self.header["NSIDE"]
         logger.info("Read HEALPix sky map from: {0} (Nside={1})".format(
