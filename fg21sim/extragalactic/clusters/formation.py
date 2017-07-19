@@ -169,23 +169,92 @@ class ClusterFormation:
         dS = self.cdf_K_inv(r, dw)
         return dS
 
-    def simulate_mergertree(self):
+    def simulate_mergertree(self, main_only=True):
         """
         Simulate the merger tree of this cluster by tracing its formation
         using the PS formalism.
 
+        Parameters
+        ----------
+        main_only : bool, optional
+            Whether to only trace the forming history of the main
+            halo/cluster.
+            (default: True)
+
         References: Ref.[1],Sec.(3.1)
         """
         logger.info("Simulating cluster formation: " +
-                    "M0={:.3g}[Msun] from z={:.2f} ...".format(
-                        self.M0, self.z0))
-        self.mtree = self._trace_formation(self.M0,
-                                           dMc=self.merger_mass_min,
-                                           _z=self.z0)
+                    "M0={:.3g}[Msun] from z={:.2f} to z={zmax} ...".format(
+                        self.M0, self.z0, zmax=self.zmax))
+        self.main_only = main_only
+        if main_only:
+            logger.info("Only trace the formation of the *main* cluster ...")
+            self.mtree = self._trace_main()
+        else:
+            logger.info("Trace formations of both main and sub cluster ...")
+            self.mtree = self._trace_formation(self.M0, _z=self.z0)
         logger.info("Simulated cluster formation with merger tree")
         return self.mtree
 
-    def _trace_formation(self, M, dMc, _z=None):
+    def _trace_main(self):
+        """
+        Iteratively trace the merger and accretion events of the
+        main cluster/halo.
+        """
+        # Initial properties
+        zc = self.z0
+        Mc = self.M0
+        mtree = MergerTree(data={"mass": Mc,
+                                 "z": zc,
+                                 "age": self.cosmo.age(zc)})
+
+        while True:
+            # Whether to stop the trace
+            if self.zmax is not None and zc > self.zmax:
+                break
+            if Mc <= self.merger_mass_min:
+                break
+
+            # Trace the formation by simulate a merger/accretion event
+            # Notation: progenitor (*1) -> current (*2)
+
+            # Current properties
+            w2 = self.f_delta_c(z=zc)
+            S2 = self.f_sigma(Mc) ** 2
+            dw = 0.5 * self.f_dw_max(Mc)
+            dS = self.gen_dS(dw)
+            # Progenitor properties
+            z1 = self.calc_z(w2 + dw)
+            age1 = self.cosmo.age(z1)
+            S1 = S2 + dS
+            M1 = self.calc_mass(S1)
+            dM = Mc - M1
+
+            M_min = min(M1, dM)
+            if M_min <= self.merger_mass_min:
+                # Accretion
+                M_main = Mc - M_min
+                # NOTE: no sub node
+            else:
+                # Merger event
+                M_main = max(M1, dM)
+                M_sub = M_min
+                mtree.sub = MergerTree(data={"mass": M_sub,
+                                             "z": z1,
+                                             "age": age1})
+
+            # Update main cluster
+            mtree.main = MergerTree(data={"mass": M_main,
+                                          "z": z1,
+                                          "age": age1})
+
+            # Update for next iteration
+            Mc = M_main
+            zc = z1
+            mtree = mtree.main
+
+        return mtree
+
     def _trace_formation(self, M, _z=None, zmax=None):
         """
         Recursively trace the cluster formation and thus simulate its
@@ -194,12 +263,10 @@ class ClusterFormation:
         z = 0.0 if _z is None else _z
         node_data = {"mass": M, "z": z, "age": self.cosmo.age(z)}
 
+        # Whether to stop the trace
         if self.zmax is not None and z > self.zmax:
-            # Stop the trace
             return MergerTree(data=node_data)
-
         if M <= self.merger_mass_min:
-            # Stop the trace
             return MergerTree(data=node_data)
 
         # Trace the formation by simulate a merger/accretion event
