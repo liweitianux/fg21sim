@@ -21,6 +21,7 @@ import healpy as hp
 
 from .utils.wcs import make_wcs
 from .utils.fits import read_fits_healpix, write_fits_healpix
+from .utils.random import spherical_uniform
 from .utils.units import UnitConversions as AUC
 
 
@@ -44,7 +45,8 @@ class SkyPatch:
         to match this output size.
         NOTE: Due to the FITS using Fortran ordering, while Python/numpy
               using C ordering, therefore, the read in image/data array
-              has shape (ysize, xsize).
+              has shape ``(ysize, xsize)``, therefore, the ``self.data``
+              should be reshaped to ``(ysize, xsize)`` on output.
     pixelsize : float
         The pixel size of the sky patch, will be used to determine
         the sky coordinates.
@@ -90,20 +92,30 @@ class SkyPatch:
     @property
     def area(self):
         """
-        The sky coverage of this patch [ deg^2 ]
+        The sky coverage of this patch.
+        Unit: [deg^2]
 
         XXX/FIXME
         ---------
         Assumed a flat sky!
         Consider the spherical coordination and WCS sky projection!!
         """
-        ps = self.pixelsize * AUC.arcsec2deg  # [deg]
-        size = self.xsize * self.ysize
-        return size * ps**2
+        lonsize, latsize = self.size
+        return lonsize * latsize
 
     @property
     def size(self):
-        return (self.xsize, self.ysize)
+        """
+        The sky patch size along X/longitude and Y/latitude axes.
+
+        Returns
+        -------
+        (lonsize, latsize) : float tuple
+            Longitudinal and latitudinal sizes
+            Unit: [deg]
+        """
+        return (self.xsize * self.pixelsize * AUC.arcsec2deg,
+                self.ysize * self.pixelsize * AUC.arcsec2deg)
 
     @property
     def shape(self):
@@ -115,6 +127,36 @@ class SkyPatch:
     @property
     def center(self):
         return (self.xcenter, self.ycenter)
+
+    @property
+    def lon_limit(self):
+        """
+        The longitudinal (X axis) limits.
+
+        Returns
+        -------
+        (lon_min, lon_max) : float tuple
+            The minimum and maximum longitudes (X axis).
+            Unit: [deg]
+        """
+        lonsize, latsize = self.size
+        return (self.xcenter - 0.5*lonsize,
+                self.xcenter + 0.5*lonsize)
+
+    @property
+    def lat_limit(self):
+        """
+        The latitudinal (Y axis) limits.
+
+        Returns
+        -------
+        (lat_min, lat_max) : float tuple
+            The minimum and maximum latitudes (Y axis).
+            Unit: [deg]
+        """
+        lonsize, latsize = self.size
+        return (self.ycenter - 0.5*latsize,
+                self.ycenter + 0.5*latsize)
 
     def read(self, infile, frequency=None):
         """
@@ -173,6 +215,7 @@ class SkyPatch:
         if outdir and (not os.path.exists(outdir)):
             os.makedirs(outdir)
             logger.info("Created output directory: %s" % outdir)
+        # NOTE: output image shape be (ysize, xsize)!
         image = self.data.reshape(self.ysize, self.xsize)
         if hasattr(self, "header"):
             header = self.header.copy(strip=True)
@@ -276,6 +319,25 @@ class SkyPatch:
             return (indexes, values)
         else:
             return reprojected
+
+    def random_points(self, n=1):
+        """
+        Generate uniformly distributed random points within the sky patch.
+
+        Returns
+        -------
+        lon : float, or 1D `~numpy.ndarray`
+            Longitudes (Galactic/equatorial);
+            Unit: [deg]
+        lat : float, or 1D `~numpy.ndarray`
+            Latitudes (Galactic/equatorial);
+            Unit: [deg]
+        """
+        lon_min, lon_max = self.lon_limit
+        lat_min, lat_max = self.lat_limit
+        lon = np.random.uniform(low=lon_min, high=lon_max, size=n)
+        lat = np.random.uniform(low=lat_min, high=lat_max, size=n)
+        return (lon, lat)
 
 
 class SkyHealpix:
@@ -443,6 +505,23 @@ class SkyHealpix:
             return (indexes, values)
         else:
             return reprojected
+
+    def random_points(self, n=1):
+        """
+        Generate uniformly distributed random points within the sky
+        (i.e., all sky; on an unit sphere).
+
+        Returns
+        -------
+        lon : float, or 1D `~numpy.ndarray`
+            Longitudes (Galactic/equatorial), [0, 360) [deg].
+        lat : float, or 1D `~numpy.ndarray`
+            Latitudes (Galactic/equatorial), [-90, 90] [deg].
+        """
+        theta, phi = spherical_uniform(n)
+        lon = np.degrees(phi)
+        lat = 90.0 - np.degrees(theta)
+        return (lon, lat)
 
 
 def get_sky(configs):
