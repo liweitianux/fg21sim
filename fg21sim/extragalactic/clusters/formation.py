@@ -245,10 +245,12 @@ class ClusterFormation:
         # Initial properties
         zc = self.z0
         Mc = self.M0
-        mtree = MergerTree(data={"mass": Mc,
-                                 "z": zc,
-                                 "age": self.cosmo.age(zc)})
+        mtree_root = MergerTree(data={"mass": Mc,
+                                      "z": zc,
+                                      "age": self.cosmo.age(zc)})
+        logger.debug("[main] z=%.4f : mass=%g [Msun]" % (zc, Mc))
 
+        mtree = mtree_root
         while True:
             # Whether to stop the trace
             if self.zmax is not None and zc > self.zmax:
@@ -283,18 +285,20 @@ class ClusterFormation:
                 mtree.sub = MergerTree(data={"mass": M_sub,
                                              "z": z1,
                                              "age": age1})
+                logger.debug("[sub] z=%.4f : mass=%g [Msun]" % (z1, M_sub))
 
             # Update main cluster
             mtree.main = MergerTree(data={"mass": M_main,
                                           "z": z1,
                                           "age": age1})
+            logger.debug("[main] z=%.4f : mass=%g [Msun]" % (z1, M_main))
 
             # Update for next iteration
             Mc = M_main
             zc = z1
             mtree = mtree.main
 
-        return mtree
+        return mtree_root
 
     def _trace_formation(self, M, _z=None, zmax=None):
         """
