@@ -69,6 +69,38 @@ def read_mtree(infile):
     return mtree
 
 
+def show_mtree(mtree):
+    """
+    Trace the main cluster and show its formation history.
+    """
+    def _show_event(main, sub=None, parent=None):
+        z = main.data["z"]
+        age = main.data["age"]
+        mass = main.data["mass"]
+        info = "[z=%.3f/t=%.2f]" % (z, age)
+        if sub is None:
+            # Accretion
+            info += " %.5g" % mass
+            if parent is not None:
+                dM = parent.data["mass"] - mass
+                info += " (dM=%.5g)" % dM
+        else:
+            # Merger
+            Msub = sub.data["mass"]
+            Rmass = mass / Msub
+            info += " %.5g <> %.5g (Rm=%.1f)" % (mass, Msub, Rmass)
+        return info
+
+    i = 0
+    info = _show_event(main=mtree)
+    print("%2d %s" % (i, info))
+    while mtree and mtree.main:
+        i += 1
+        info = _show_event(main=mtree.main, sub=mtree.sub, parent=mtree)
+        print("%2d %s" % (i, info))
+        mtree = mtree.main
+
+
 def plot_mtree(mtree, outfile, figsize=(12, 8)):
     """
     Plot the cluster merger tree.
