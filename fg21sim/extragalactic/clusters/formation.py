@@ -212,7 +212,8 @@ class ClusterFormation:
         event :
             An dictionary containing the properties of the found major
             event:
-            ``{"M_main": M_main, "M_sub": M_sub, "z": z, "age": age}``;
+            ``{"M_main": M_main, "M_sub": M_sub, "R_mass": R_mass,
+               "z": z, "age": age}``;
             ``None`` if no major event found.
         """
         mtree = self.mtree
@@ -222,14 +223,17 @@ class ClusterFormation:
                 mtree = mtree.main
                 continue
 
-            M_main = mtree.main["mass"]
-            M_sub = mtree.sub["mass"]
-            z = mtree.main["z"]
-            age = mtree.main["age"]
+            M_main = mtree.main.data["mass"]
+            M_sub = mtree.sub.data["mass"]
+            z = mtree.main.data["z"]
+            age = mtree.main.data["age"]
             if M_main / M_sub < self.ratio_major:
                 # Found a major merger event
-                event = {"M_main": M_main, "M_sub": M_sub,
-                         "z": z, "age": age}
+                event = {"M_main": M_main,
+                         "M_sub": M_sub,
+                         "R_mass": M_main / M_sub,
+                         "z": z,
+                         "age": age}
                 break
 
             # A minor merger event, continue
