@@ -79,8 +79,12 @@ class Foregrounds:
         self._set_configs()
         # Initialize the products manifest
         logger.info("Initialize the products manifest ...")
-        manifestfile = self.configs.get_path("output/manifest")
-        self.products = Products(manifestfile, load=False)
+        self.manifestfile = self.configs.get_path("output/manifest")
+        if self.manifestfile:
+            self.products = Products(self.manifestfile, load=False)
+        else:
+            self.products = None
+            logger.warning("Output products manifest not configured!")
         # Initialize enabled components
         self.components = OrderedDict()
         for comp in self.components_id:
@@ -176,7 +180,9 @@ class Foregrounds:
 
     def preprocess(self):
         """Perform the preparation procedures for the final simulations."""
-        self.products.frequencies = (self.frequencies, str(self.freq_unit))
+        if self.products:
+            self.products.frequencies = (self.frequencies,
+                                         str(self.freq_unit))
         logger.info("Perform preprocessing for all enabled components ...")
         for comp_obj in self.components.values():
             comp_obj.preprocess()
@@ -205,13 +211,15 @@ class Foregrounds:
                 skymap_comb = np.zeros(shape=sky.shape)
             for comp_id, comp_obj in self.components.items():
                 skymap, filepath = comp_obj.simulate_frequency(freq)
-                if filepath is not None:
+                if filepath and self.products:
                     self.products.add_product(comp_id, freq_id, filepath)
                 if self.combine:
                     skymap_comb += skymap
             if self.combine:
                 filepath_comb = self._output(skymap_comb, freq)
-                self.products.add_product("combined", freq_id, filepath_comb)
+                if self.products:
+                    self.products.add_product("combined", freq_id,
+                                              filepath_comb)
 
     def postprocess(self):
         """Perform the post-simulation operations before the end."""
@@ -219,4 +227,5 @@ class Foregrounds:
         for comp_obj in self.components.values():
             comp_obj.postprocess()
         # Save the products manifest
-        self.products.dump(clobber=self.clobber, backup=True)
+        if self.products:
+            self.products.dump(clobber=self.clobber, backup=True)
