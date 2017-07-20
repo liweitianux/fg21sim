@@ -65,6 +65,9 @@ class ClusterFormation:
     ----------
     mtree : `~MergerTree`
         Merging history of this cluster.
+    last_major_merger : dict, or None
+        An dictionary containing the properties of the found last/recent
+        major merger event, or None if not found.
     """
     def __init__(self, M0, z0, zmax=3.0, ratio_major=3.0,
                  cosmo=Cosmology(), merger_mass_min=1e12):
@@ -189,17 +192,17 @@ class ClusterFormation:
 
         References: Ref.[1],Sec.(3.1)
         """
-        logger.info("Simulating cluster formation: " +
-                    "M0={:.3g}[Msun] from z={:.2f} to z={zmax} ...".format(
-                        self.M0, self.z0, zmax=self.zmax))
+        logger.debug("Simulating cluster formation: " +
+                     "M0={:.3g}[Msun] from z={:.3f} to z={zmax} ...".format(
+                         self.M0, self.z0, zmax=self.zmax))
         self.main_only = main_only
         if main_only:
-            logger.info("Only trace the formation of the *main* cluster ...")
+            logger.debug("Only trace the formation of the *main* cluster ...")
             self.mtree = self._trace_main()
         else:
-            logger.info("Trace formations of both main and sub cluster ...")
+            logger.debug("Trace formations of both main and sub cluster ...")
             self.mtree = self._trace_formation(self.M0, _z=self.z0)
-        logger.info("Simulated cluster formation with merger tree")
+        logger.debug("Simulated cluster formation with merger tree")
         return self.mtree
 
     @property
