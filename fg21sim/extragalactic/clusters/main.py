@@ -213,12 +213,34 @@ class GalaxyClusters:
         logger.info("%d (%.1f%%) clusters have recent major mergers." %
                     (num_major, 100*num_major/num))
 
+    def preprocess(self):
+        """
+        Perform the preparation procedures for the later simulations.
+
+        Attributes
+        ----------
+        _preprocessed : bool
+            This attribute presents and is ``True`` after the preparation
+            procedures have been done.
+        """
+        if hasattr(self, "_preprocessed") and self._preprocessed:
+            return
+
+        logger.info("{name}: preprocessing ...".format(name=self.name))
+        self._load_catalog()
+        self._process_catalog()
+        self._simulate_merger()
+
+        # TODO ???
+
+        self._preprocessed = True
+
     def postprocess(self):
         """
         Do some necessary post-simulation operations.
         """
         logger.info("{name}: postprocessing ...".format(name=self.name))
-        # Save the effective/inuse clusters catalog
+        # Save the final resulting clusters catalog
         logger.info("Save the resulting catalog ...")
         if self.catalog_outfile is None:
             logger.warning("Catalog output file not set; skip saving!")
