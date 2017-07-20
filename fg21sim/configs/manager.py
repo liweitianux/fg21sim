@@ -432,8 +432,8 @@ class ConfigManager:
         -------
         path : str
             The absolute path (if user configuration loaded) or relative
-            path specified by the input key, or ``None`` if specified
-            config is ``None``.
+            path specified by the input key, or ``None`` if the specified
+            config has value of ``None`` or an empty string.
 
         Raises
         ------
@@ -449,6 +449,9 @@ class ConfigManager:
         value = self.getn(key)
         if value is None:
             logger.warning("Specified config '%s' is None or not exist" % key)
+            return None
+        if value == "":
+            logger.warning("Specified config '%s' is an empty string" % key)
             return None
         if not isinstance(value, str):
             msg = "Specified config '%s' is non-string: %s" % (key, value)
