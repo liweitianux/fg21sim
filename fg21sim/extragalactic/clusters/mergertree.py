@@ -80,15 +80,15 @@ def show_mtree(mtree):
         info = "[z=%.3f/t=%.2f]" % (z, age)
         if sub is None:
             # Accretion
-            info += " %.5g" % mass
+            info += " %.3e" % mass
             if parent is not None:
                 dM = parent.data["mass"] - mass
-                info += " (dM=%.5g)" % dM
+                info += "    (dM=%.2e)" % dM
         else:
             # Merger
             Msub = sub.data["mass"]
             Rmass = mass / Msub
-            info += " %.5g <> %.5g (Rm=%.1f)" % (mass, Msub, Rmass)
+            info += " %.3e <> %.3e (Rm=%.1f)" % (mass, Msub, Rmass)
         return info
 
     i = 0
