@@ -75,7 +75,7 @@ setup(
     # Do NOT installed as a zipped egg, since Tornado requires direct access
     # to the templates and static files.
     zip_safe=False,
-    scripts=os.listdir("bin/"),
+    scripts=[os.path.join("bin", script) for script in os.listdir("bin/")],
     install_requires=[
         "numpy",
         "numba",
