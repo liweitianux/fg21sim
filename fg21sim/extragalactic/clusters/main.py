@@ -54,15 +54,15 @@ class GalaxyClusters:
         self.prefix = self.configs.getn(comp+"/prefix")
         self.save = self.configs.getn(comp+"/save")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
-        if self.sky.type_ == "patch":
-            self.resolution = self.sky.pixelsize
-        else:
-            raise NotImplementedError("TODO: full-sky simulations")
-        #
+        self.merger_mass_min = self.configs.getn(comp+"/merger_mass_min")
+        self.ratio_major = self.configs.getn(comp+"/ratio_major")
+        self.tau_merger = self.configs.getn(comp+"/tau_merger")
+
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.use_float = self.configs.getn("output/use_float")
         self.checksum = self.configs.getn("output/checksum")
         self.clobber = self.configs.getn("output/clobber")
+
         # Cosmology model
         self.H0 = self.configs.getn("cosmology/H0")
         self.OmegaM0 = self.configs.getn("cosmology/OmegaM0")
@@ -70,7 +70,13 @@ class GalaxyClusters:
         self.sigma8 = self.configs.getn("cosmology/sigma8")
         self.cosmo = Cosmology(H0=self.H0, Om0=self.OmegaM0,
                                Ob0=self.Omegab0, sigma8=self.sigma8)
-        #
+
+        # Sky and resolution
+        if self.sky.type_ == "patch":
+            self.resolution = self.sky.pixelsize  # [arcsec]
+        else:
+            raise NotImplementedError("TODO: full-sky simulations")
+
         logger.info("Loaded and set up configurations")
 
     def _load_catalog(self):
@@ -142,6 +148,70 @@ class GalaxyClusters:
         self.catalog_comment.append(
             "rotation : ellipse rotation angle [deg]")
         logger.info("Added catalog column: rotation.")
+
+    def _simulate_merger(self):
+        """
+        Simulate the *last/recent major merger* event for each cluster.
+
+        First simulate the cluster formation history by tracing the
+        merger and accretion events of the main cluster, then identify
+        the last (i.e., most recent) major merger event according
+        to the mass ratio of two merging clusters.  And the properties
+        of the found merger event are appended to the catalog.
+
+        NOTE
+        ----
+        There may be no such recent major merger event satisfying the
+        criteria, since we only tracing ``tau_merger`` (~3 Gyr) back.
+        On the other hand, the cluster may only experience minor merger
+        or accretion events.
+
+        Catalog columns
+        ---------------
+        * ``lmm_mass1``, ``lmm_mass2`` : masses of the main and sub
+          clusters upon the last major merger event; unit: [Msun]
+        * ``lmm_z``, ``lmm_age`` : redshift and cosmic age (unit: [Gyr])
+          of the last major merger event.
+        """
+        logger.info("Simulating the galaxy formation to identify " +
+                    "the last/recent major merger event ...")
+        num = len(self.catalog)
+        mdata = np.zeros(shape=(num, 4))
+        num_major = 0  # number of clusters with recent major merger
+
+        for i, row in zip(range(num), self.catalog.itertuples()):
+            ii = i + 1
+            if ii % 50 == 0:
+                logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
+            z0, M0 = row.z, row.mass
+            age0 = self.cosmo.age(z0)
+            zmax = self.cosmo.redshift(age0 - self.tau_merger)
+            clform = ClusterFormation(M0=M0, z0=z0, zmax=zmax,
+                                      ratio_major=self.ratio_major,
+                                      cosmo=self.cosmo,
+                                      merger_mass_min=self.merger_mass_min)
+            clform.simulate_mergertree(main_only=True)
+            mmev = clform.last_major_merger
+            if mmev:
+                num_major += 1
+                mdata[i, :] = [mmev["M_main"], mmev["M_sub"],
+                               mmev["z"], mmev["age"]]
+            else:
+                mdata[i, :] = [np.nan, np.nan, np.nan, np.nan]
+
+        mdf = pd.DataFrame(data=mdata,
+                           columns=["lmm_mass1", "lmm_mass2",
+                                    "lmm_z", "lmm_age"])
+        self.catalog = self.catalog.join(mdf, how="outer")
+        self.catalog_comment += [
+            "lmm_mass1 : main cluster mass at last major merger; [Msun]",
+            "lmm_mass2 : sub cluster mass at last major merger; [Msun]",
+            "lmm_z : redshift of the last major merger",
+            "lmm_age : cosmic age of the last major merger; [Gyr]",
+        ]
+        logger.info("Simulated and identified last major merger events.")
+        logger.info("%d (%.1f%%) clusters have recent major mergers." %
+                    (num_major, 100*num_major/num))
 
     def postprocess(self):
         """

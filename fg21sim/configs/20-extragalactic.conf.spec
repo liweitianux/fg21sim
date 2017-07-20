@@ -16,12 +16,30 @@
 
 [extragalactic]
 
-  # Emissions from the clusters of galaxies
+  # Extended emissions from the clusters of galaxies
+  # The configurations in this ``[[clusters]]`` section may also be
+  # used by the following ``[[halos]]`` section.
   [[clusters]]
   # The clusters catalog derived from the Hubble Volume Project (CSV file)
   catalog = string(default=None)
   # Output the effective/inuse clusters catalog data (CSV file)
   catalog_outfile = string(default=None)
+
+  # Minimum mass change of the main cluster to be regarded as a merger
+  # event instead of an accretion event.
+  # Unit: [Msun]
+  merger_mass_min = float(default=1e12, min=1e10, max=1e14)
+
+  # Mass ratio of the main and sub clusters, below which is regarded as
+  # a major merger event.
+  ratio_major = float(default=3.0, min=1.0, max=10.0)
+
+  # The merger timescale, which roughly describes the duration of the
+  # merger-induced disturbance (~2-3 Gyr).  This timescale is much longer
+  # the merger crossing time (~1 Gyr), and is also longer than the lifetime
+  # of radio halos.
+  # Unit: [Gyr]
+  tau_merger = float(default=3.0, min=1.0, max=5.0)
 
   # The fraction that a cluster hosts a radio halo
   halo_fraction = float(default=None, min=0.0, max=1.0)
@@ -50,14 +68,6 @@
   # Mass threshold of the sub-cluster to be regarded as a significant
   # merger. (unit: Msun)
   merger_mass_th = float(default=1e13, min=1e12)
-
-  # Minimum mass change of the main-cluster to be regarded as a merger
-  # event rather than accretion. (unit: Msun)
-  merger_mass_min = float(default=1e12, min=1e10)
-
-  # Mass ratio of the main and sub clusters, below which is regarded as
-  # a major merger event.
-  ratio_major = float(default=3.0, min=1.0, max=10.0)
 
   # Radius of the giant radio halo in clusters (unit: kpc)
   # XXX: currently only support a constant radius of halos
