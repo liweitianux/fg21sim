@@ -2,17 +2,17 @@
 Realistic Foregrounds Simulation for EoR 21cm Signal Detection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:copyright: (c) 2016 Weitian LI
+:copyright: (c) 2016-2017 Weitian LI
 :license: MIT
 """
 
 __pkgname__ = "fg21sim"
 __version__ = "0.4.1"
 __author__ = "Weitian LI"
-__author_email__ = "liweitianux@live.com"
+__author_email__ = "weitian@aaronly.me"
 __license__ = "MIT"
-__copyright__ = "Copyright (c) 2016 Weitian LI"
-__url__ = "https://github.com/liweitianux/fg21sim"
+__copyright__ = "Copyright (c) 2016-2017 Weitian LI"
+__url__ = "https://code.aaronly.me/fg21sim.git"
 __description__ = ("Realistic Foregrounds Simulation for "
                    "EoR 21cm Signal Detection")
 
