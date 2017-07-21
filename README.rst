@@ -95,11 +95,14 @@ Installation
 Development
 -----------
 To ease development and tests, you may want to install this package in
-an **editable state**, instead of using the *virtual environment*::
+an **editable state**::
 
     $ cd fg21sim/
     $ pip3 install --user -r requirements.txt
     $ pip3 install --editable .
+
+In addition, setting the environment variable ``DEBUG_FG21SIM`` forces
+this package running with ``DEBUG`` logging level.
 
 
 Documentations
