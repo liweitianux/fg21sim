@@ -544,6 +544,21 @@ class ConfigManager:
         }
         return logconf
 
+    @property
+    def cosmology(self):
+        """
+        Get the cosmological parameters and organize them as an dictionary
+        for ``Cosmology`` initialization.
+        """
+        conf = self.get("cosmology")
+        cosmoconf = {
+            "H0": conf["H0"],
+            "OmegaM0": conf["OmegaM0"],
+            "Omegab0": conf["Omegab0"],
+            "sigma8": conf["sigma8"],
+        }
+        return cosmoconf
+
     def dump(self, from_default=False, flatten=False):
         """
         Dump the configurations as plain Python dictionary.
