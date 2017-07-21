@@ -5,12 +5,17 @@
 Flat ΛCDM cosmological model.
 """
 
+import logging
+
 import numpy as np
 from scipy import integrate
 from astropy.cosmology import FlatLambdaCDM
 
 from ..configs import configs
 from .units import (UnitConversions as AUC, Constants as AC)
+
+
+logger = logging.getLogger(__name__)
 
 
 class Cosmology:
@@ -21,6 +26,7 @@ class Cosmology:
     ----------
     H0 : float
         Hubble parameter at present day (z=0)
+        Unit: [km/s/Mpc]
     Om0 : float
         Density parameter of (dark and baryon) matter at present day
     Ob0 : float
@@ -30,6 +36,13 @@ class Cosmology:
     sigma8 : float
         Present-day rms density fluctuation on a scale of 8 h^-1 Mpc.
 
+    Internal attributes
+    -------------------
+    _cosmo : `~astropy.cosmology.Cosmology`
+        Astropy cosmology instance to help calculations.
+    _growth_factor0 : float
+        Present day (z=0) growth factor
+
     References
     ----------
     [1] https://astro.uni-bonn.de/~pavel/WIKIPEDIA/Lambda-CDM_model.html
@@ -38,16 +51,30 @@ class Cosmology:
         http://adsabs.harvard.edu/abs/2002ApJ...577..579R
         Sec.(2)
     """
-    def __init__(self, H0=configs.getn("cosmology/H0"),
-                 Om0=configs.getn("cosmology/OmegaM0"),
-                 Ob0=configs.getn("cosmology/Omegab0"),
-                 sigma8=configs.getn("cosmology/sigma8")):
-        self.H0 = H0  # [km/s/Mpc]
-        self.Om0 = Om0
-        self.Ob0 = Ob0
-        self.Ode0 = 1.0 - Om0
-        self.sigma8 = sigma8
-        self._cosmo = FlatLambdaCDM(H0=H0, Om0=Om0, Ob0=Ob0)
+    # Present day (z=0) growth factor
+    _growth_factor0 = None
+
+    def __init__(self,
+                 H0=configs.cosmology["H0"],
+                 Om0=configs.cosmology["OmegaM0"],
+                 Ob0=configs.cosmology["Omegab0"],
+                 sigma8=configs.cosmology["sigma8"]):
+        self.setup(H0=H0, Om0=Om0, Ob0=Ob0, sigma8=sigma8)
+
+    def setup(self, **kwargs):
+        """
+        Setup/update the parameters of the cosmology model.
+        """
+        for key, value in kwargs:
+            if key in ["H0", "Om0", "Ob0", "sigma8"]:
+                setattr(self, key, value)
+            else:
+                raise ValueError("unknown parameter: %s" % key)
+
+        self.Ode0 = 1.0 - self.Om0
+        self._cosmo = FlatLambdaCDM(H0=self.H0, Om0=self.Om0, Ob0=self.Ob0)
+        self._growth_factor0 = None
+        logger.info("Setup cosmology with: {0}".format(kwargs))
 
     @property
     def h(self):
@@ -228,6 +255,6 @@ class Cosmology:
         """
         Present-day (z=0) growth factor.
         """
-        if not hasattr(self, "_growth_factor0"):
+        if self._growth_factor0 is None:
             self._growth_factor0 = self.growth_factor(0)
         return self._growth_factor0
