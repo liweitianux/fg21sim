@@ -21,7 +21,7 @@ import scipy.special
 import scipy.optimize
 
 from .mergertree import MergerTree
-from ...utils.cosmology import Cosmology
+from ...utils import cosmo
 
 
 logger = logging.getLogger(__name__)
@@ -54,8 +54,6 @@ class ClusterFormation:
         the merger is a major event or a  minor one.
         If ``M_main/M_sub < ratio_major``, then it is a major merger event.
         Default: 3.0
-    cosmo : `~Cosmology`, optional
-        Adopted cosmological model with custom utility functions.
     merger_mass_min : float, optional
         Minimum mass change to be regarded as a merger event instead of
         accretion.
@@ -70,12 +68,11 @@ class ClusterFormation:
         major merger event, or None if not found.
     """
     def __init__(self, M0, z0, zmax=3.0, ratio_major=3.0,
-                 cosmo=Cosmology(), merger_mass_min=1e12):
+                 merger_mass_min=1e12):
         self.M0 = M0  # [Msun]
         self.z0 = z0
         self.zmax = zmax
         self.ratio_major = ratio_major
-        self.cosmo = cosmo
         self.merger_mass_min = merger_mass_min
 
     @property
@@ -101,7 +98,7 @@ class ClusterFormation:
         References: Ref.[1],Eq.(2)
         """
         alpha = self.sigma_index
-        sigma = self.cosmo.sigma8 * (mass / self.cosmo.M8) ** (-alpha)
+        sigma = cosmo.sigma8 * (mass / cosmo.M8) ** (-alpha)
         return sigma
 
     def f_delta_c(self, z):
@@ -113,7 +110,7 @@ class ClusterFormation:
 
         References: Ref.[1],App.A,Eq.(A1)
         """
-        return self.cosmo.overdensity_crit(z)
+        return cosmo.overdensity_crit(z)
 
     def f_dw_max(self, mass):
         """
@@ -148,7 +145,7 @@ class ClusterFormation:
         References: Ref.[1],Sec.(3)
         """
         alpha = self.sigma_index
-        mass = self.cosmo.M8 * (S / self.cosmo.sigma8**2)**(-1/(2*alpha))
+        mass = cosmo.M8 * (S / cosmo.sigma8**2)**(-1/(2*alpha))
         return mass
 
     @staticmethod
@@ -254,7 +251,7 @@ class ClusterFormation:
         Mc = self.M0
         mtree_root = MergerTree(data={"mass": Mc,
                                       "z": zc,
-                                      "age": self.cosmo.age(zc)})
+                                      "age": cosmo.age(zc)})
         logger.debug("[main] z=%.4f : mass=%g [Msun]" % (zc, Mc))
 
         mtree = mtree_root
@@ -275,7 +272,7 @@ class ClusterFormation:
             dS = self.gen_dS(dw)
             # Progenitor properties
             z1 = self.calc_z(w2 + dw)
-            age1 = self.cosmo.age(z1)
+            age1 = cosmo.age(z1)
             S1 = S2 + dS
             M1 = self.calc_mass(S1)
             dM = Mc - M1
@@ -313,7 +310,7 @@ class ClusterFormation:
         merger tree.
         """
         z = 0.0 if _z is None else _z
-        node_data = {"mass": M, "z": z, "age": self.cosmo.age(z)}
+        node_data = {"mass": M, "z": z, "age": cosmo.age(z)}
 
         # Whether to stop the trace
         if self.zmax is not None and z > self.zmax:

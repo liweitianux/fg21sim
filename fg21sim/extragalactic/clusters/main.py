@@ -19,7 +19,7 @@ import pandas as pd
 from .formation import ClusterFormation
 from .halo import RadioHalo
 from ...sky import get_sky
-from ...utils.cosmology import Cosmology
+from ...utils import cosmo
 from ...utils.io import dataframe_to_csv
 
 
@@ -62,14 +62,6 @@ class GalaxyClusters:
         self.use_float = self.configs.getn("output/use_float")
         self.checksum = self.configs.getn("output/checksum")
         self.clobber = self.configs.getn("output/clobber")
-
-        # Cosmology model
-        self.H0 = self.configs.getn("cosmology/H0")
-        self.OmegaM0 = self.configs.getn("cosmology/OmegaM0")
-        self.Omegab0 = self.configs.getn("cosmology/Omegab0")
-        self.sigma8 = self.configs.getn("cosmology/sigma8")
-        self.cosmo = Cosmology(H0=self.H0, Om0=self.OmegaM0,
-                               Ob0=self.Omegab0, sigma8=self.sigma8)
 
         # Sky and resolution
         if self.sky.type_ == "patch":
@@ -184,11 +176,10 @@ class GalaxyClusters:
             if ii % 50 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
             z0, M0 = row.z, row.mass
-            age0 = self.cosmo.age(z0)
-            zmax = self.cosmo.redshift(age0 - self.tau_merger)
+            age0 = cosmo.age(z0)
+            zmax = cosmo.redshift(age0 - self.tau_merger)
             clform = ClusterFormation(M0=M0, z0=z0, zmax=zmax,
                                       ratio_major=self.ratio_major,
-                                      cosmo=self.cosmo,
                                       merger_mass_min=self.merger_mass_min)
             clform.simulate_mergertree(main_only=True)
             mmev = clform.last_major_merger

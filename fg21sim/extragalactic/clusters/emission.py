@@ -18,11 +18,11 @@ import numpy as np
 import scipy.integrate
 import scipy.special
 
+from ...utils import cosmo
 from ...utils.units import (Units as AU,
                             UnitConversions as AUC,
                             Constants as AC)
 from ...utils.convert import Fnu_to_Tb_fast
-from ...utils.cosmology import Cosmology
 
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,6 @@ class SynchrotronEmission:
         self.n_e = n_e
         self.z = z
         self.radius = radius  # [kpc]
-        self.cosmo = Cosmology()
 
     @property
     def frequency_larmor(self):
@@ -165,7 +164,7 @@ class SynchrotronEmission:
             Synchrotron flux at frequency ``nu``.
             Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz]
         """
-        DL = self.cosmo.DL(self.z) * AUC.Mpc2cm  # [cm]
+        DL = cosmo.DL(self.z) * AUC.Mpc2cm  # [cm]
         P_nu = self.power(nu)
         F_nu = 1e23 * P_nu / (4*np.pi * DL*DL)  # [Jy]
         return F_nu
@@ -192,7 +191,7 @@ class SynchrotronEmission:
             Synchrotron surface brightness at frequency ``nu``.
             Unit: [K] <-> [Jy/pixel]
         """
-        DA = self.cosmo.DL(self.z) * AUC.Mpc2cm  # [cm]
+        DA = cosmo.DL(self.z) * AUC.Mpc2cm  # [cm]
         radius = self.radius * AUC.kpc2cm  # [cm]
         omega = (np.pi * radius**2 / DA**2) * AUC.rad2deg**2  # [deg^2]
         pixelarea = (pixelsize * AUC.arcsec2deg) ** 2  # [deg^2]

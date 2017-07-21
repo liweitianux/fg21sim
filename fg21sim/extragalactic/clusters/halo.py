@@ -26,7 +26,7 @@ import scipy.optimize
 
 from .formation import ClusterFormation
 from .solver import FokkerPlanckSolver
-from ...utils.cosmology import Cosmology
+from ...utils import cosmo
 from ...utils.units import (Units as AU,
                             UnitConversions as AUC,
                             Constants as AC)
@@ -35,7 +35,7 @@ from ...utils.units import (Units as AU,
 logger = logging.getLogger(__name__)
 
 
-class HaloSingle:
+class RadioHalo:
     """
     Simulate a single (giant) radio halos following the "statistical
     magneto-turbulent model" proposed by Cassano & Brunetti (2005).
@@ -63,8 +63,6 @@ class HaloSingle:
     mec : float
         Unit for electron momentum (p): mec = m_e * c, p = gamma * mec,
         therefore value of p is the Lorentz factor.
-    cosmo : `~Cosmology`
-        Adopted cosmological model with custom utility functions.
     mtree : `~MergerTree`
         Merging history of this cluster.
     """
@@ -99,10 +97,6 @@ class HaloSingle:
         self.buffer_np = self.configs.getn(comp+"/buffer_np")
         self.time_step = self.configs.getn(comp+"/time_step")
         self.injection_index = self.configs.getn(comp+"/injection_index")
-        # Cosmology model
-        self.H0 = self.configs.getn("cosmology/H0")
-        self.OmegaM0 = self.configs.getn("cosmology/OmegaM0")
-        self.cosmo = Cosmology(H0=self.H0, Om0=self.OmegaM0)
         logger.info("Loaded and set up configurations")
 
     @property
@@ -185,13 +179,13 @@ class HaloSingle:
             Unit: [cm^-3 mec^-1]
         """
         if zbegin is None:
-            tstart = self.cosmo.age(self.zmax)
+            tstart = cosmo.age(self.zmax)
         else:
-            tstart = self.cosmo.age(zbegin)
+            tstart = cosmo.age(zbegin)
         if zend is None:
-            tstop = self.cosmo.age(self.z0)
+            tstop = cosmo.age(self.z0)
         else:
-            tstop = self.cosmo.age(zend)
+            tstop = cosmo.age(zend)
 
         fpsolver = FokkerPlanckSolver(
             xmin=self.pmin, xmax=self.pmax,
@@ -252,8 +246,8 @@ class HaloSingle:
         Rvir : float
             Virial radius (unit: kpc) of the cluster at given redshift
         """
-        Dc = self.cosmo.overdensity_virial(z)
-        rho = self.cosmo.rho_crit(z)  # [g/cm^3]
+        Dc = cosmo.overdensity_virial(z)
+        rho = cosmo.rho_crit(z)  # [g/cm^3]
         R_vir = (3*mass*AUC.Msun2g / (4*np.pi * Dc * rho))**(1/3)  # [cm]
         R_vir *= AUC.cm2kpc  # [kpc]
         return R_vir
@@ -316,7 +310,7 @@ class HaloSingle:
             http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
             Eq.(12)
         """
-        f_baryon = self.cosmo.Ob0 / self.cosmo.Om0
+        f_baryon = cosmo.Ob0 / cosmo.Om0
         Rv = self._radius_virial(mass, z) * AUC.kpc2cm  # [cm]
         V = (4*np.pi / 3) * Rv**3  # [cm^3]
         rho = f_baryon * mass*AUC.Msun2g / V  # [g/cm^3]
@@ -346,7 +340,7 @@ class HaloSingle:
             http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
             Eq.(13)
         """
-        f_baryon = self.cosmo.Ob0 / self.cosmo.Om0
+        f_baryon = cosmo.Ob0 / cosmo.Om0
         M_ICM = mass * f_baryon * AUC.Msun2g  # [g]
         r *= AUC.kpc2cm  # [cm]
         Rv = self._radius_virial(mass, z) * AUC.kpc2cm  # [cm]
@@ -477,12 +471,12 @@ class HaloSingle:
         time : float
             Elapsing time (unit: Gyr)
         """
-        t_begin = self.cosmo.age(z_begin)  # [Gyr]
+        t_begin = cosmo.age(z_begin)  # [Gyr]
         t_end = t_begin + time
-        if t_end >= self.cosmo.age(0):
+        if t_end >= cosmo.age(0):
             z_end = 0.0
         else:
-            z_end = self.cosmo.redshift(t_end)
+            z_end = cosmo.redshift(t_end)
         return z_end
 
     @property
@@ -542,7 +536,7 @@ class HaloSingle:
         """
         zgrid, chigrid = self._chi_data
         # XXX: force a minimal value instead of zero or too small
-        chi_min = 1 / (10 * self.cosmo.age0)
+        chi_min = 1 / (10 * cosmo.age0)
 
         try:
             zi = np.where(z < zgrid)[0][0]
@@ -677,7 +671,7 @@ class HaloSingle:
         """
         if not hasattr(self, "_electron_injection_rate"):
             e_th = self.e_thermal  # [erg/cm^3]
-            age = self.cosmo.age(self.z0)
+            age = cosmo.age(self.z0)
             term1 = (self.injection_index-2) * self.eta_e
             term2 = e_th / (self.pmin * self.mec * AC.c)  # [cm^-3]
             term3 = 1.0 / (age * self.pmin)  # [Gyr^-1 mec^-1]
@@ -714,7 +708,7 @@ class HaloSingle:
             http://adsabs.harvard.edu/abs/2013AN....334..515D
             Eq.(15)
         """
-        z = self.cosmo.redshift(t)
+        z = cosmo.redshift(t)
         chi = self._coef_acceleration(z)  # [Gyr^-1]
         # NOTE: Cassano & Brunetti's formula misses a factor of 2.
         Dpp = chi * p**2 / 4  # [mec^2/Gyr]
@@ -760,7 +754,7 @@ class HaloSingle:
             http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
             Eq.(38)
         """
-        z = self.cosmo.redshift(t)
+        z = cosmo.redshift(t)
         n_th = self._n_thermal(self.M0, z)
         coef = -3.3e-29 * AUC.Gyr2s / self.mec  # [mec/Gyr]
         dpdt = coef * n_th * (1 + np.log(p/n_th) / 75)
@@ -776,7 +770,7 @@ class HaloSingle:
             http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
             Eq.(39)
         """
-        z = self.cosmo.redshift(t)
+        z = cosmo.redshift(t)
         coef = -4.8e-4 * AUC.Gyr2s / self.mec  # [mec/Gyr]
         dpdt = (coef * (p*self.mec)**2 *
                 ((self.magnetic_field/3.2)**2 + (1+z)**4))
@@ -793,7 +787,7 @@ class HaloSingle:
             Energy density of the ICM (unit: erg/cm^3)
         """
         mass = self.M0
-        f_baryon = self.cosmo.Ob0 / self.cosmo.Om0
+        f_baryon = cosmo.Ob0 / cosmo.Om0
         kT = self.kT_mass(mass)  # [keV]
         N = mass * AUC.Msun2g * f_baryon / (AC.mu * AC.u)
         E_th = kT*AUC.keV2erg * N  # [erg]
@@ -820,7 +814,7 @@ class HaloSingle:
             Number density of the ICM
             Unit: [cm^-3]
         """
-        f_baryon = self.cosmo.Ob0 / self.cosmo.Om0
+        f_baryon = cosmo.Ob0 / cosmo.Om0
         N = mass * AUC.Msun2g * f_baryon / (AC.mu * AC.u)
         Rv = self._radius_virial(mass, z) * AUC.kpc2cm  # [cm]
         V = (4*np.pi / 3) * Rv**3  # [cm^3]
