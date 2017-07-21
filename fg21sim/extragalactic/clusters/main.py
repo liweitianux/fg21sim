@@ -9,6 +9,12 @@ NOTE
 ----
 There are other types of extended radio emissions not considered
 yet, e.g., mini-halos, roundish radio relics, etc.
+
+References
+----------
+.. [cassano2012]
+   Cassano et al. 2012, A&A, 548, A100
+   http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
 """
 
 import logging
@@ -57,6 +63,8 @@ class GalaxyClusters:
         self.merger_mass_min = self.configs.getn(comp+"/merger_mass_min")
         self.ratio_major = self.configs.getn(comp+"/ratio_major")
         self.tau_merger = self.configs.getn(comp+"/tau_merger")
+        self.b_mean = self.configs.getn(comp+"/b_mean")
+        self.b_index = self.configs.getn(comp+"/b_index")
 
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.use_float = self.configs.getn("output/use_float")
@@ -203,6 +211,31 @@ class GalaxyClusters:
         logger.info("Simulated and identified last major merger events.")
         logger.info("%d (%.1f%%) clusters have recent major mergers." %
                     (num_major, 100*num_major/num))
+
+    def _magnetic_field(self, mass):
+        """
+        Calculate the mean magnetic field strength according to the
+        scaling relation between magnetic field and cluster mass.
+
+        Parameters
+        ----------
+        mass : float
+            Cluster mass
+            Unit: [Msun]
+
+        Returns
+        -------
+        B : float
+            The mean magnetic field strength
+            Unit: [uG]
+
+        References
+        ----------
+        Ref.[cassano2012],Eq.(1)
+        """
+        M_mean = 1.6e15  # [Msun]
+        B = self.b_mean * (mass/M_mean) ** self.b_index
+        return B
 
     def preprocess(self):
         """
