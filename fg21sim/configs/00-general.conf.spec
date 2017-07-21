@@ -112,8 +112,10 @@ combine_prefix = string(default="fg")
 #       if above "combine=True".
 output_dir = string(default=None)
 
-# Filename of the simulation products manifest (JSON format)
-manifest = string(default="products_manifest.json")
+# Filename of the simulation products manifest (JSON format), which
+# records all output products together with their sizes and MD5 hashes.
+# Do not create such a manifest if this option is not specified.
+manifest = string(default=None)
 
 
 # Cosmological parameters
