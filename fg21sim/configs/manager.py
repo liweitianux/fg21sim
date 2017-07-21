@@ -553,8 +553,8 @@ class ConfigManager:
         conf = self.get("cosmology")
         cosmoconf = {
             "H0": conf["H0"],
-            "OmegaM0": conf["OmegaM0"],
-            "Omegab0": conf["Omegab0"],
+            "Om0": conf["OmegaM0"],
+            "Ob0": conf["Omegab0"],
             "sigma8": conf["sigma8"],
         }
         return cosmoconf

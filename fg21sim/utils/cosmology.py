@@ -56,8 +56,8 @@ class Cosmology:
 
     def __init__(self,
                  H0=configs.cosmology["H0"],
-                 Om0=configs.cosmology["OmegaM0"],
-                 Ob0=configs.cosmology["Omegab0"],
+                 Om0=configs.cosmology["Om0"],
+                 Ob0=configs.cosmology["Ob0"],
                  sigma8=configs.cosmology["sigma8"]):
         self.setup(H0=H0, Om0=Om0, Ob0=Ob0, sigma8=sigma8)
 
