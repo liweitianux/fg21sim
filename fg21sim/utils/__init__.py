@@ -1,4 +1,7 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 from .logging import setup_logging
+from .cosmology import Cosmology
+
+cosmo = Cosmology()
