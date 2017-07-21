@@ -199,6 +199,15 @@ class Cosmology:
         """
         return self.Om0 * (1+z)**3 / self.E(z)**2
 
+    @property
+    def baryon_fraction(self):
+        """
+        The cosmological mean baryon fraction (w.r.t. matter).
+
+        XXX: assumed to be *constant* regardless of redshifts!
+        """
+        return self.Ob0 / self.Om0
+
     def overdensity_virial(self, z):
         """
         Calculate the virial overdensity, which generally used to
