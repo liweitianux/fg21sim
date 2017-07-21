@@ -65,7 +65,7 @@ class Cosmology:
         """
         Setup/update the parameters of the cosmology model.
         """
-        for key, value in kwargs:
+        for key, value in kwargs.items():
             if key in ["H0", "Om0", "Ob0", "sigma8"]:
                 setattr(self, key, value)
             else:
