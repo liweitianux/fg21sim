@@ -2,25 +2,47 @@
 # MIT license
 
 """
-Simulate (giant) radio halos following the "statistical
-magneto-turbulent model" proposed by Cassano & Brunetti (2005).
+Simulate (giant) radio halo originating from the last/ most recent
+cluster-cluster major merger event, following the "statistical
+magneto-turbulent model" proposed by [cassano2005]_, but with many
+modifications and simplifications.
 
 References
 ----------
-[1] Cassano & Brunetti 2005, MNRAS, 357, 1313
-    http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
-[2] Cassano, Brunetti & Setti, 2006, MNRAS, 369, 1577
-    http://adsabs.harvard.edu/abs/2006MNRAS.369.1577C
-[3] Cassano et al. 2012, A&A, 548, A100
-    http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
-[4] Donnert 2013, AN, 334, 615
-    http://adsabs.harvard.edu/abs/2013AN....334..515D
+.. [brunetti2011]
+   Brunetti & Lazarian 2011, MNRAS, 410, 127
+   http://adsabs.harvard.edu/abs/2011MNRAS.410..127B
+
+.. [cassano2005]
+   Cassano & Brunetti 2005, MNRAS, 357, 1313
+   http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
+
+.. [cassano2006]
+   Cassano, Brunetti & Setti, 2006, MNRAS, 369, 1577
+   http://adsabs.harvard.edu/abs/2006MNRAS.369.1577C
+
+.. [cassano2012]
+   Cassano et al. 2012, A&A, 548, A100
+   http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
+
+.. [donnert2013]
+   Donnert 2013, AN, 334, 615
+   http://adsabs.harvard.edu/abs/2013AN....334..515D
+
+.. [donnert2014]
+   Donnert & Brunetti 2014, MNRAS, 443, 3564
+   http://adsabs.harvard.edu/abs/2014MNRAS.443.3564D
+
+.. [sarazin1999]
+   Sarazin 1999, ApJ, 520, 529
+   http://adsabs.harvard.edu/abs/1999ApJ...520..529S
 """
 
 import logging
 
 import numpy as np
 
+from . import helper
 from .solver import FokkerPlanckSolver
 from ...utils import cosmo
 from ...utils.units import (Units as AU,
@@ -33,13 +55,22 @@ logger = logging.getLogger(__name__)
 
 class RadioHalo:
     """
-    Simulate a single (giant) radio halos following the "statistical
-    magneto-turbulent model" proposed by Cassano & Brunetti (2005).
+    Simulate the extended radio halo emission from galaxy cluster
+    experiencing on-going/recent merger.
 
-    First, simulate the cluster merging history from the extended
-    Press-Schecter formalism using the Monte Carlo method; then derive
-    the merger energy and turbulence energy as well as its spectrum;
-    after that, calculate the electron acceleration and time  evolution
+    Description
+    -----------
+    1. Calculate the merger crossing time (t_cross; ~1 Gyr);
+    2. Calculate the diffusion coefficient (Dpp) from the systematic
+       acceleration timescale (tau_acc; ~0.1 Gyr).  The acceleration
+       diffusion is assumed to have an action time ~ t_cross (i.e.,
+       only during merger crossing), and then been disabled (i.e.,
+       only radiation and ionization losses later);
+    3. Assume the electrons are constantly injected and has a power-law
+       energy spectrum;
+    4. Determine the initial electron density
+
+    after that, calculate the electron acceleration and time evolution
     by solving the Fokker-Planck equation; and finally derive the radio
     emission from the electron spectra.
 
@@ -70,18 +101,16 @@ class RadioHalo:
             Default: ``self.z0``.
         n0_e : 1D `~numpy.ndarray`, optional
             The initial electron number distribution.
-            Should have the same shape as ``self.pgrid`` and has unit
-            [cm^-3 mec^-1].
+            Unit: [cm^-3].
             Default: accumulated constant-injected electrons until zbegin.
 
         Returns
         -------
-        p : `~numpy.ndarray`
-            The momentum grid adopted for solving the equation.
-            Unit: [mec]
+        gamma : `~numpy.ndarray`
+            The Lorentz factor grid adopted for solving the equation.
         n_e : `~numpy.ndarray`
             The solved electron spectrum at ``zend``.
-            Unit: [cm^-3 mec^-1]
+            Unit: [cm^-3]
         """
         if zbegin is None:
             tstart = cosmo.age(self.zmax)
@@ -93,21 +122,21 @@ class RadioHalo:
             tstop = cosmo.age(zend)
 
         fpsolver = FokkerPlanckSolver(
-            xmin=self.pmin, xmax=self.pmax,
-            grid_num=self.pgrid_num,
-            buffer_np=self.buffer_np,
+            xmin=self.gamma_min, xmax=self.gamma_max,
+            x_np=self.gamma_np,
             tstep=self.time_step,
             f_advection=self.fp_advection,
             f_diffusion=self.fp_diffusion,
             f_injection=self.fp_injection,
+            buffer_np=self.buffer_np,
         )
-        p = fpsolver.x
+        gamma = fpsolver.x
         if n0_e is None:
             # Accumulated constant-injected electrons until ``tstart``.
-            n_inj = np.array([self.fp_injection(p_) for p_ in p])
+            n_inj = np.array([self.fp_injection(gm) for gm in gamma])
             n0_e = n_inj * tstart
         n_e = fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
-        return (p, n_e)
+        return (gamma, n_e)
 
     def _z_end(self, z_begin, time):
         """
@@ -205,69 +234,67 @@ class RadioHalo:
         Dpp = chi * p**2 / 4  # [mec^2/Gyr]
         return Dpp
 
-    def fp_advection(self, p, t):
+    def fp_advection(self, gamma, t):
         """
         Advection term/coefficient for the Fokker-Planck equation,
         which describes a systematic tendency for upward or downard
         drift of particles.
 
-        This term is also called the "generalized cooling function" by
-        Donnert & Brunetti (2014), which includes all relevant energy
-        loss functions and the energy gain function due to turbulence.
+        This term is also called the "generalized cooling function"
+        by [donnert2014], which includes all relevant energy loss
+        functions and the energy gain function due to turbulence.
 
         Returns
         -------
-        Hp : float
-            Advection coefficient
-            Unit: [mec/Gyr]
-
-        References
-        ----------
-        [1] Donnert & Brunetti 2014, MNRAS, 443, 3564
-            http://adsabs.harvard.edu/abs/2014MNRAS.443.3564D
-            Eq.(15)
-        [2] Cassano & Brunetti 2005, MNRAS, 357, 1313
-            http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
-            Eqs.(30,36,38,39)
+        advection : float
+            Advection coefficient, describing the energy loss/gain rate.
+            Unit: [Gyr^-1]
         """
-        Hp = (abs(self._dpdt_ion(p, t)) +
-              abs(self._dpdt_rad(p, t)) -
-              (self.fp_diffusion(p, t) * 2 / p))
-        return Hp
+        advection = (abs(self._loss_ion(gamma, t)) +
+                     abs(self._loss_rad(gamma, t)) -
+                     (self.fp_diffusion(gamma, t) * 2 / gamma))
+        return advection
 
-    def _dpdt_ion(self, p, t):
+    def _loss_ion(self, gamma, t):
         """
         Energy loss through ionization and Coulomb collisions.
 
+        Parameters
+        ----------
+        gamma : float
+            The Lorentz factor of electrons
+        t : float
+            The cosmic time/age
+            Unit: [Gyr]
+
+        Returns
+        -------
+        loss : float
+            The energy loss rate
+            Unit: [Gyr^-1]
+
         References
         ----------
-        [1] Cassano & Brunetti 2005, MNRAS, 357, 1313
-            http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
-            Eq.(38)
+        Ref.[sarazin1999],Eq.(9)
         """
         z = cosmo.redshift(t)
-        n_th = self._n_thermal(self.M0, z)
-        coef = -3.3e-29 * AUC.Gyr2s / self.mec  # [mec/Gyr]
-        dpdt = coef * n_th * (1 + np.log(p/n_th) / 75)
-        return dpdt
+        mass = self._mass(t)
+        n_th = helper.density_number_thermal(mass, z)
+        coef = -1.20e-12 * AUC.Gyr2s  # [Gyr^-1]
+        loss = coef * n_th * (1 + np.log(gamma/n_th) / 75)
+        return loss
 
-    def _dpdt_rad(self, p, t):
+    def _loss_rad(self, gamma, t):
         """
-        Energy loss via synchrotron emission and IC scattering off the CMB.
+        Energy loss via synchrotron emission and inverse Compton
+        scattering off the CMB photons.
 
         References
         ----------
-        [1] Cassano & Brunetti 2005, MNRAS, 357, 1313
-            http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
-            Eq.(39)
+        Ref.[sarazin1999],Eq.(6,7)
         """
         z = cosmo.redshift(t)
-        coef = -4.8e-4 * AUC.Gyr2s / self.mec  # [mec/Gyr]
-        dpdt = (coef * (p*self.mec)**2 *
-                ((self.magnetic_field/3.2)**2 + (1+z)**4))
-        return dpdt
-
-        """
-
-        ----------
-        """
+        coef = -1.37e-20 * AUC.Gyr2s  # [Gyr^-1]
+        loss = (coef * gamma**2 *
+                ((self.magnetic_field/3.25)**2 + (1+z)**4))
+        return loss

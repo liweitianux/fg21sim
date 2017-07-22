@@ -45,6 +45,7 @@
   # Reference: Cassano et al. 2012, A&A, 548, A100, Eq.(1)
   #
   # The mean magnetic field assumed
+  # Unit: [uG]
   b_mean = float(default=1.9, min=0.1, max=10)
   # The index of the scaling relation
   b_index = float(default=1.5, min=0.0, max=3.0)
