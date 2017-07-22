@@ -18,7 +18,7 @@ import numpy as np
 import scipy.integrate
 import scipy.special
 
-from ...utils import cosmo
+from ...utils import COSMO
 from ...utils.units import (Units as AU,
                             UnitConversions as AUC,
                             Constants as AC)
@@ -164,7 +164,7 @@ class SynchrotronEmission:
             Synchrotron flux at frequency ``nu``.
             Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz]
         """
-        DL = cosmo.DL(self.z) * AUC.Mpc2cm  # [cm]
+        DL = COSMO.DL(self.z) * AUC.Mpc2cm  # [cm]
         P_nu = self.power(nu)
         F_nu = 1e23 * P_nu / (4*np.pi * DL*DL)  # [Jy]
         return F_nu
@@ -191,7 +191,7 @@ class SynchrotronEmission:
             Synchrotron surface brightness at frequency ``nu``.
             Unit: [K] <-> [Jy/pixel]
         """
-        DA = cosmo.DL(self.z) * AUC.Mpc2cm  # [cm]
+        DA = COSMO.DL(self.z) * AUC.Mpc2cm  # [cm]
         radius = self.radius * AUC.kpc2cm  # [cm]
         omega = (np.pi * radius**2 / DA**2) * AUC.rad2deg**2  # [deg^2]
         pixelarea = (pixelsize * AUC.arcsec2deg) ** 2  # [deg^2]

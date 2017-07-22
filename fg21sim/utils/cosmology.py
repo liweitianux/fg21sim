@@ -11,7 +11,7 @@ import numpy as np
 from scipy import integrate
 from astropy.cosmology import FlatLambdaCDM
 
-from ..configs import configs
+from ..configs import CONFIGS
 from .units import (UnitConversions as AUC, Constants as AC)
 
 
@@ -55,10 +55,10 @@ class Cosmology:
     _growth_factor0 = None
 
     def __init__(self,
-                 H0=configs.cosmology["H0"],
-                 Om0=configs.cosmology["Om0"],
-                 Ob0=configs.cosmology["Ob0"],
-                 sigma8=configs.cosmology["sigma8"]):
+                 H0=CONFIGS.cosmology["H0"],
+                 Om0=CONFIGS.cosmology["Om0"],
+                 Ob0=CONFIGS.cosmology["Ob0"],
+                 sigma8=CONFIGS.cosmology["sigma8"]):
         self.setup(H0=H0, Om0=Om0, Ob0=Ob0, sigma8=sigma8)
 
     def setup(self, **kwargs):

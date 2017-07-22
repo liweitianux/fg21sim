@@ -14,8 +14,8 @@ import argparse
 import logging
 import time
 
-from fg21sim.configs import configs
-from fg21sim.utils import setup_logging, cosmo
+from fg21sim.configs import CONFIGS
+from fg21sim.utils import setup_logging, COSMO
 
 
 def main():
@@ -36,14 +36,14 @@ def main():
     t1_start = time.perf_counter()
     t2_start = time.process_time()
 
-    configs.read_userconfig(args.config)
+    CONFIGS.read_userconfig(args.config)
     if os.environ.get("DEBUG_FG21SIM"):
-        print("DEBUG: Current configurations:", configs._config,
+        print("DEBUG: Current configurations:", CONFIGS._config,
               sep="\n", file=sys.stderr)
-    configs.check_all()
+    CONFIGS.check_all()
 
     log_stream = "" if args.quiet else None
-    setup_logging(dict_config=configs.logging,
+    setup_logging(dict_config=CONFIGS.logging,
                   level=args.loglevel,
                   stream=log_stream,
                   logfile=args.logfile)
@@ -52,17 +52,17 @@ def main():
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
     # Save/backup current configurations
-    configfile_dump = os.path.splitext(configs.userconfig)[0] + "_dump.conf"
-    configs.save(configfile_dump, clobber=True, backup=True)
+    configfile_dump = os.path.splitext(CONFIGS.userconfig)[0] + "_dump.conf"
+    CONFIGS.save(configfile_dump, clobber=True, backup=True)
     logger.info("Saved current configurations to file: %s" % configfile_dump)
 
     # Setup cosmology model
     logger.info("Setup cosmology model with parameters from configs ...")
-    cosmo.setup(**configs.cosmology)
+    COSMO.setup(**CONFIGS.cosmology)
 
     logger.info("Importing modules + Numba JIT, waiting ...")
     from fg21sim.foregrounds import Foregrounds
-    fg = Foregrounds(configs)
+    fg = Foregrounds(CONFIGS)
     fg.preprocess()
     fg.simulate()
     fg.postprocess()

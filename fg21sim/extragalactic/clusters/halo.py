@@ -44,8 +44,8 @@ import numpy as np
 
 from . import helper
 from .solver import FokkerPlanckSolver
-from ...configs import configs
-from ...utils import cosmo
+from ...configs import CONFIGS
+from ...utils import COSMO
 from ...utils.units import (Units as AU,
                             UnitConversions as AUC,
                             Constants as AC)
@@ -88,10 +88,6 @@ class RadioHalo:
         Unit: [Msun]
     z_merger : float
         The redshift when the (major) merger begins.
-    tau_merger : float
-        The timescale of the merger-induced disturbance.
-        Unit: [Gyr]
-    ...
 
     Attributes
     ----------
@@ -102,7 +98,7 @@ class RadioHalo:
         Unit: [kpc]
     """
     def __init__(self, M_obs, z_obs, M_main, M_sub, z_merger,
-                 configs=configs):
+                 configs=CONFIGS):
         self.M_obs = M_obs
         self.z_obs = z_obs
         self.M_main = M_main
@@ -144,11 +140,11 @@ class RadioHalo:
 
     @property
     def age_obs(self):
-        return cosmo.age(self.z_obs)
+        return COSMO.age(self.z_obs)
 
     @property
     def age_merger(self):
-        return cosmo.age(self.z_merger)
+        return COSMO.age(self.z_merger)
 
     @property
     def time_crossing(self):
@@ -191,13 +187,13 @@ class RadioHalo:
             Unit: [cm^-3]
         """
         if zbegin is None:
-            tstart = cosmo.age(self.z_merger)
+            tstart = COSMO.age(self.z_merger)
         else:
-            tstart = cosmo.age(zbegin)
+            tstart = COSMO.age(zbegin)
         if zend is None:
-            tstop = cosmo.age(self.z_obs)
+            tstop = COSMO.age(self.z_obs)
         else:
-            tstop = cosmo.age(zend)
+            tstop = COSMO.age(zend)
         if n0_e is None:
             # Accumulated constantly injected electrons until ``tstart``.
             n_inj = np.array([self.fp_injection(gm)
@@ -401,7 +397,7 @@ class RadioHalo:
         ----------
         Ref.[sarazin1999],Eq.(9)
         """
-        z = cosmo.redshift(t)
+        z = COSMO.redshift(t)
         mass = self._mass(t)
         n_th = helper.density_number_thermal(mass, z)
         coef = -1.20e-12 * AUC.Gyr2s  # [Gyr^-1]
@@ -417,7 +413,7 @@ class RadioHalo:
         ----------
         Ref.[sarazin1999],Eq.(6,7)
         """
-        z = cosmo.redshift(t)
+        z = COSMO.redshift(t)
         mass = self._mass(t)
         B = helper.magnetic_field(mass)
         coef = -1.37e-20 * AUC.Gyr2s  # [Gyr^-1]

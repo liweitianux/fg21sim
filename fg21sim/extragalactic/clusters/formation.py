@@ -21,7 +21,7 @@ import scipy.special
 import scipy.optimize
 
 from .mergertree import MergerTree
-from ...utils import cosmo
+from ...utils import COSMO
 
 
 logger = logging.getLogger(__name__)
@@ -98,7 +98,7 @@ class ClusterFormation:
         References: Ref.[1],Eq.(2)
         """
         alpha = self.sigma_index
-        sigma = cosmo.sigma8 * (mass / cosmo.M8) ** (-alpha)
+        sigma = COSMO.sigma8 * (mass / COSMO.M8) ** (-alpha)
         return sigma
 
     def f_delta_c(self, z):
@@ -110,7 +110,7 @@ class ClusterFormation:
 
         References: Ref.[1],App.A,Eq.(A1)
         """
-        return cosmo.overdensity_crit(z)
+        return COSMO.overdensity_crit(z)
 
     def f_dw_max(self, mass):
         """
@@ -145,7 +145,7 @@ class ClusterFormation:
         References: Ref.[1],Sec.(3)
         """
         alpha = self.sigma_index
-        mass = cosmo.M8 * (S / cosmo.sigma8**2)**(-1/(2*alpha))
+        mass = COSMO.M8 * (S / COSMO.sigma8**2)**(-1/(2*alpha))
         return mass
 
     @staticmethod
@@ -251,7 +251,7 @@ class ClusterFormation:
         Mc = self.M0
         mtree_root = MergerTree(data={"mass": Mc,
                                       "z": zc,
-                                      "age": cosmo.age(zc)})
+                                      "age": COSMO.age(zc)})
         logger.debug("[main] z=%.4f : mass=%g [Msun]" % (zc, Mc))
 
         mtree = mtree_root
@@ -272,7 +272,7 @@ class ClusterFormation:
             dS = self.gen_dS(dw)
             # Progenitor properties
             z1 = self.calc_z(w2 + dw)
-            age1 = cosmo.age(z1)
+            age1 = COSMO.age(z1)
             S1 = S2 + dS
             M1 = self.calc_mass(S1)
             dM = Mc - M1
@@ -310,7 +310,7 @@ class ClusterFormation:
         merger tree.
         """
         z = 0.0 if _z is None else _z
-        node_data = {"mass": M, "z": z, "age": cosmo.age(z)}
+        node_data = {"mass": M, "z": z, "age": COSMO.age(z)}
 
         # Whether to stop the trace
         if self.zmax is not None and z > self.zmax:

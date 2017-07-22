@@ -26,8 +26,8 @@ References
 
 import numpy as np
 
-from ...configs import configs
-from ...utils import cosmo
+from ...configs import CONFIGS
+from ...utils import COSMO
 from ...utils.units import (Constants as AC,
                             UnitConversions as AUC)
 
@@ -51,8 +51,8 @@ def radius_virial(mass, z=0.0):
         Virial radius of the cluster
         Unit: [kpc]
     """
-    Dc = cosmo.overdensity_virial(z)
-    rho = cosmo.rho_crit(z)  # [g/cm^3]
+    Dc = COSMO.overdensity_virial(z)
+    rho = COSMO.rho_crit(z)  # [g/cm^3]
     R_vir = (3*mass*AUC.Msun2g / (4*np.pi * Dc * rho))**(1/3)  # [cm]
     R_vir *= AUC.cm2kpc  # [kpc]
     return R_vir
@@ -123,7 +123,7 @@ def mass_to_kT(mass, z=0.0):
     """
     A = 5.34 + np.random.normal(scale=0.22)
     alpha = 1.72 + np.random.normal(scale=0.10)
-    Ez = cosmo.E(z)
+    Ez = COSMO.E(z)
     kT = 5.0 * (mass * Ez / A) ** (1/alpha)
     return kT
 
@@ -151,7 +151,7 @@ def density_number_thermal(mass, z=0.0):
         Number density of the ICM thermal plasma
         Unit: [cm^-3]
     """
-    N = mass * AUC.Msun2g * cosmo.baryon_fraction / (AC.mu * AC.u)
+    N = mass * AUC.Msun2g * COSMO.baryon_fraction / (AC.mu * AC.u)
     R_vir = radius_virial(mass, z) * AUC.kpc2cm  # [cm]
     volume = (4*np.pi / 3) * R_vir**3  # [cm^3]
     n_th = N / volume  # [cm^-3]
@@ -258,8 +258,8 @@ def magnetic_field(mass):
     Ref.[cassano2012],Eq.(1)
     """
     comp = "extragalactic/clusters"
-    b_mean = configs.getn(comp+"/b_mean")
-    b_index = configs.getn(comp+"/b_index")
+    b_mean = CONFIGS.getn(comp+"/b_mean")
+    b_index = CONFIGS.getn(comp+"/b_index")
 
     M_mean = 1.6e15  # [Msun]
     B = b_mean * (mass/M_mean) ** b_index

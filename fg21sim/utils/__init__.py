@@ -4,4 +4,4 @@
 from .logging import setup_logging
 from .cosmology import Cosmology
 
-cosmo = Cosmology()
+COSMO = Cosmology()

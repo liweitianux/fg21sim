@@ -58,7 +58,7 @@ class GalaxyClusters:
     # Component name
     name = "galaxy clusters (halos)"
 
-    def __init__(self, configs=configs):
+    def __init__(self, configs=CONFIGS):
         self.configs = configs
         self.sky = get_sky(configs)
         self._set_configs()
@@ -196,8 +196,8 @@ class GalaxyClusters:
             if ii % 50 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
             z0, M0 = row.z, row.mass
-            age0 = cosmo.age(z0)
-            zmax = cosmo.redshift(age0 - self.tau_merger)
+            age0 = COSMO.age(z0)
+            zmax = COSMO.redshift(age0 - self.tau_merger)
             clform = ClusterFormation(M0=M0, z0=z0, zmax=zmax,
                                       ratio_major=self.ratio_major,
                                       merger_mass_min=self.merger_mass_min)
