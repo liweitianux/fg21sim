@@ -63,9 +63,9 @@ class ClusterFormation:
     ----------
     mtree : `~MergerTree`
         Merging history of this cluster.
-    last_major_merger : dict, or None
-        An dictionary containing the properties of the found last/recent
-        major merger event, or None if not found.
+    recent_major_merger : dict, or None
+        An dictionary containing the properties of the found most recent
+        major merger event, or ``None`` if not found.
     """
     def __init__(self, M0, z0, zmax=3.0, ratio_major=3.0,
                  merger_mass_min=1e12):
@@ -203,9 +203,9 @@ class ClusterFormation:
         return self.mtree
 
     @property
-    def last_major_merger(self):
+    def recent_major_merger(self):
         """
-        Identify and return the last major merger event
+        Identify and return the most recent major merger event.
 
         Returns
         -------

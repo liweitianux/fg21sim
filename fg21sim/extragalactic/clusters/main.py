@@ -179,15 +179,15 @@ class GalaxyClusters:
             "rotation : ellipse rotation angle [deg]")
         logger.info("Added catalog column: rotation.")
 
-    def _simulate_merger(self):
+    def _simulate_mergers(self):
         """
-        Simulate the *last/recent major merger* event for each cluster.
+        Simulate the *recent major merger* event for each cluster.
 
         First simulate the cluster formation history by tracing the
         merger and accretion events of the main cluster, then identify
-        the last (i.e., most recent) major merger event according
-        to the mass ratio of two merging clusters.  And the properties
-        of the found merger event are appended to the catalog.
+        the most recent major merger event according to the mass ratio
+        of two merging clusters.  And the properties of the found merger
+        event are appended to the catalog.
 
         NOTE
         ----
@@ -198,15 +198,16 @@ class GalaxyClusters:
 
         Catalog columns
         ---------------
-        * ``lmm_mass1``, ``lmm_mass2`` : masses of the main and sub
-          clusters upon the last major merger event; unit: [Msun]
-        * ``lmm_z``, ``lmm_age`` : redshift and cosmic age (unit: [Gyr])
-          of the last major merger event.
+        * ``rmm_mass1``, ``rmm_mass2`` : masses of the main and sub
+          clusters upon the recent major merger event; unit: [Msun]
+        * ``rmm_z``, ``rmm_age`` : redshift and cosmic age; unit: [Gyr]
+          of the recent major merger event.
         """
         logger.info("Simulating the galaxy formation to identify " +
-                    "the last/recent major merger event ...")
+                    "the most recent major merger event ...")
         num = len(self.catalog)
         mdata = np.zeros(shape=(num, 4))
+        mdata.fill(np.nan)
         num_major = 0  # number of clusters with recent major merger
 
         for i, row in zip(range(num), self.catalog.itertuples()):
@@ -220,25 +221,23 @@ class GalaxyClusters:
                                       ratio_major=self.ratio_major,
                                       merger_mass_min=self.merger_mass_min)
             clform.simulate_mergertree(main_only=True)
-            mmev = clform.last_major_merger
+            mmev = clform.recent_major_merger
             if mmev:
                 num_major += 1
                 mdata[i, :] = [mmev["M_main"], mmev["M_sub"],
                                mmev["z"], mmev["age"]]
-            else:
-                mdata[i, :] = [np.nan, np.nan, np.nan, np.nan]
 
         mdf = pd.DataFrame(data=mdata,
-                           columns=["lmm_mass1", "lmm_mass2",
-                                    "lmm_z", "lmm_age"])
+                           columns=["rmm_mass1", "rmm_mass2",
+                                    "rmm_z", "rmm_age"])
         self.catalog = self.catalog.join(mdf, how="outer")
         self.catalog_comment += [
-            "lmm_mass1 : main cluster mass at last major merger; [Msun]",
-            "lmm_mass2 : sub cluster mass at last major merger; [Msun]",
-            "lmm_z : redshift of the last major merger",
-            "lmm_age : cosmic age of the last major merger; [Gyr]",
+            "rmm_mass1 : main cluster mass at recent major merger; [Msun]",
+            "rmm_mass2 : sub cluster mass at recent major merger; [Msun]",
+            "rmm_z : redshift of the recent major merger",
+            "rmm_age : cosmic age of the recent major merger; [Gyr]",
         ]
-        logger.info("Simulated and identified last major merger events.")
+        logger.info("Simulated and identified recent major merger events.")
         logger.info("%d (%.1f%%) clusters have recent major mergers." %
                     (num_major, 100*num_major/num))
 
@@ -283,7 +282,7 @@ class GalaxyClusters:
         logger.info("{name}: preprocessing ...".format(name=self.name))
         self._load_catalog()
         self._process_catalog()
-        self._simulate_merger()
+        self._simulate_mergers()
 
         # TODO ???
 
