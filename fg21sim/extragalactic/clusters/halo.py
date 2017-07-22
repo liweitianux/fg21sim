@@ -44,6 +44,7 @@ import numpy as np
 
 from . import helper
 from .solver import FokkerPlanckSolver
+from ...configs import configs
 from ...utils import cosmo
 from ...utils.units import (Units as AU,
                             UnitConversions as AUC,
@@ -69,6 +70,7 @@ class RadioHalo:
     3. Assume the electrons are constantly injected and has a power-law
        energy spectrum;
     4. Determine the initial electron density
+    TODO...
 
     after that, calculate the electron acceleration and time evolution
     by solving the Fokker-Planck equation; and finally derive the radio
@@ -90,25 +92,55 @@ class RadioHalo:
         The timescale of the merger-induced disturbance.
         Unit: [Gyr]
     ...
+
+    Attributes
+    ----------
+    fpsolver : `~FokkerPlanckSolver`
+        The solver instance to calculate the electron spectrum evolution.
+    radius : float
+        The halo radius (scales with the virial radius)
+        Unit: [kpc]
     """
-    def __init__(self, M_obs, z_obs,
-                 M_main, M_sub, z_merger, tau_merger,
-                 eta_turb, eta_e, gamma_min, gamma_max, gamma_np,
-                 buffer_np, time_step, injection_rate, injection_index):
+    def __init__(self, M_obs, z_obs, M_main, M_sub, z_merger,
+                 configs=configs):
         self.M_obs = M_obs
         self.z_obs = z_obs
         self.M_main = M_main
         self.M_sub = M_sub
         self.z_merger = z_merger
-        self.eta_turb = eta_turb
-        self.eta_e = eta_e
-        self.gamma_min = gamma_min
-        self.gamma_max = gamma_max
-        self.gamma_np = gamma_np
-        self.buffer_np = buffer_np
-        self.time_step = time_step
-        self.injection_rate = injection_rate
-        self.injection_index = injection_index
+
+        self.configs = configs
+        self._set_configs()
+        self._set_solver()
+
+    def _set_configs(self):
+        comp = "extragalactic/halos"
+        self.eta_turb = self.configs.getn(comp+"/eta_turb")
+        self.eta_e = self.configs.getn(comp+"/eta_e")
+        self.gamma_min = self.configs.getn(comp+"/gamma_min")
+        self.gamma_max = self.configs.getn(comp+"/gamma_max")
+        self.gamma_np = self.configs.getn(comp+"/gamma_np")
+        self.buffer_np = self.configs.getn(comp+"/buffer_np")
+        self.time_step = self.configs.getn(comp+"/time_step")
+        self.injection_index = self.configs.getn(comp+"/injection_index")
+
+    def _set_solver(self):
+        self.fpsolver = FokkerPlanckSolver(
+            xmin=self.gamma_min, xmax=self.gamma_max,
+            x_np=self.gamma_np,
+            tstep=self.time_step,
+            f_advection=self.fp_advection,
+            f_diffusion=self.fp_diffusion,
+            f_injection=self.fp_injection,
+            buffer_np=self.buffer_np,
+        )
+
+    @property
+    def gamma(self):
+        """
+        The logarithmic grid adopted for solving the equation.
+        """
+        return self.fpsolver.x
 
     @property
     def age_obs(self):
@@ -154,58 +186,27 @@ class RadioHalo:
 
         Returns
         -------
-        gamma : `~numpy.ndarray`
-            The Lorentz factor grid adopted for solving the equation.
-        n_e : `~numpy.ndarray`
+        electron_spec : `~numpy.ndarray`
             The solved electron spectrum at ``zend``.
             Unit: [cm^-3]
         """
         if zbegin is None:
-            tstart = cosmo.age(self.zmax)
+            tstart = cosmo.age(self.z_merger)
         else:
             tstart = cosmo.age(zbegin)
         if zend is None:
-            tstop = cosmo.age(self.z0)
+            tstop = cosmo.age(self.z_obs)
         else:
             tstop = cosmo.age(zend)
-
-        fpsolver = FokkerPlanckSolver(
-            xmin=self.gamma_min, xmax=self.gamma_max,
-            x_np=self.gamma_np,
-            tstep=self.time_step,
-            f_advection=self.fp_advection,
-            f_diffusion=self.fp_diffusion,
-            f_injection=self.fp_injection,
-            buffer_np=self.buffer_np,
-        )
-        gamma = fpsolver.x
         if n0_e is None:
             # Accumulated constantly injected electrons until ``tstart``.
             n_inj = np.array([self.fp_injection(gm)
                               for gm in self.gamma])
             n0_e = n_inj * tstart
-        n_e = fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
-        return (gamma, n_e)
 
-    def _z_end(self, z_begin, time):
-        """
-        Calculate the ending redshift from ``z_begin`` after elapsing
-        ``time``.
-
-        Parameters
-        ----------
-        z_begin : float
-            Beginning redshift
-        time : float
-            Elapsing time (unit: Gyr)
-        """
-        t_begin = cosmo.age(z_begin)  # [Gyr]
-        t_end = t_begin + time
-        if t_end >= cosmo.age(0):
-            z_end = 0.0
-        else:
-            z_end = cosmo.redshift(t_end)
-        return z_end
+        self.electron_spec = self.fpsolver.solve(u0=n0_e, tstart=tstart,
+                                                 tstop=tstop)
+        return self.electron_spec
 
     def fp_injection(self, gamma, t=None):
         """
@@ -417,7 +418,8 @@ class RadioHalo:
         Ref.[sarazin1999],Eq.(6,7)
         """
         z = cosmo.redshift(t)
+        mass = self._mass(t)
+        B = helper.magnetic_field(mass)
         coef = -1.37e-20 * AUC.Gyr2s  # [Gyr^-1]
-        loss = (coef * gamma**2 *
-                ((self.magnetic_field/3.25)**2 + (1+z)**4))
+        loss = coef * gamma**2 * ((B/3.25)**2 + (1+z)**4)
         return loss

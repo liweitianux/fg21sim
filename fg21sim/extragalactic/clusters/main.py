@@ -24,6 +24,7 @@ import pandas as pd
 
 from .formation import ClusterFormation
 from .halo import RadioHalo
+from ...configs import configs
 from ...sky import get_sky
 from ...utils import cosmo
 from ...utils.io import dataframe_to_csv
@@ -57,7 +58,7 @@ class GalaxyClusters:
     # Component name
     name = "galaxy clusters (halos)"
 
-    def __init__(self, configs):
+    def __init__(self, configs=configs):
         self.configs = configs
         self.sky = get_sky(configs)
         self._set_configs()
@@ -88,24 +89,6 @@ class GalaxyClusters:
             raise NotImplementedError("TODO: full-sky simulations")
 
         logger.info("Loaded and set up configurations")
-
-    @property
-    def halo_configs(self):
-        """
-        Configurations for radio halo simulation as a dictionary.
-        """
-        comp = "extragalactic/halos"
-        haloconf = {
-            "eta_turb": self.configs.getn(comp+"/eta_turb"),
-            "eta_e": self.configs.getn(comp+"/eta_e"),
-            "gamma_min": self.configs.getn(comp+"/gamma_min"),
-            "gamma_max": self.configs.getn(comp+"/gamma_max"),
-            "gamma_np": self.configs.getn(comp+"/gamma_num"),
-            "buffer_np": self.configs.getn(comp+"/buffer_np"),
-            "time_step": self.configs.getn(comp+"/time_step"),
-            "injection_index": self.configs.getn(comp+"/injection_index"),
-        }
-        return haloconf
 
     def _load_catalog(self):
         """
@@ -258,7 +241,7 @@ class GalaxyClusters:
         logger.info("{name}: preprocessing ...".format(name=self.name))
         self._load_catalog()
         self._process_catalog()
-        self._simulate_mergers()
+        # self._simulate_mergers()
 
         # TODO ???
 
