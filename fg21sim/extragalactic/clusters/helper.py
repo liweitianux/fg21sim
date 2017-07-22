@@ -6,12 +6,17 @@ Helper functions
 
 References
 ----------
-.. [cassano2007]
-   Cassano et al. 2007, MNRAS, 378, 1565;
-   http://adsabs.harvard.edu/abs/2007MNRAS.378.1565C
 .. [arnaud2005]
    Arnaud, Pointecouteau & Pratt 2005, A&A, 441, 893;
    http://adsabs.harvard.edu/abs/2005A%26A...441..893
+
+.. [cassano2005]
+   Cassano & Brunetti 2005, MNRAS, 357, 1313
+   http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
+
+.. [cassano2007]
+   Cassano et al. 2007, MNRAS, 378, 1565;
+   http://adsabs.harvard.edu/abs/2007MNRAS.378.1565C
 """
 
 
@@ -156,3 +161,66 @@ def density_energy_thermal(mass, z=0.0):
     kT = mass_to_kT(mass, z) * AUC.keV2erg  # [erg]
     e_th = (3.0/2) * kT * n_th
     return e_th
+
+
+def velocity_impact(M_main, M_sub, z=0.0):
+    """
+    Estimate the relative impact velocity between the two merging
+    clusters when they are at a distance of the virial radius.
+
+    Parameters
+    ----------
+    M_main, M_sub : float
+        Total (virial) masses of the main and sub clusters
+        Unit: [Msun]
+    z : float, optional
+        Redshift
+
+    Returns
+    -------
+    vi : float
+        Relative impact velocity
+        Unit: [km/s]
+
+    References
+    ----------
+    Ref.[cassano2005],Eq.(9)
+    """
+    eta_v = 4 * (1 + M_main/M_sub) ** (1/3)
+    R_vir = radius_virial(M_main, z) * AUC.kpc2cm  # [cm]
+    vi = np.sqrt(2*AC.G * (1-1/eta_v) *
+                 (M_main+M_sub)*AUC.Msun2g / R_vir)  # [cm/s]
+    vi /= AUC.km2cm  # [km/s]
+    return vi
+
+
+def time_crossing(M_main, M_sub, z=0.0):
+    """
+    Estimate the crossing time of the sub cluster during a merger.
+
+    NOTE: The crossing time is estimated to be τ ~ R_vir / v_impact.
+
+    Parameters
+    ----------
+    M_main, M_sub : float
+        Total (virial) masses of the main and sub clusters
+        Unit: [Msun]
+    z : float, optional
+        Redshift
+
+    Returns
+    -------
+    time : float
+        Crossing time
+        Unit: [Gyr]
+
+    References
+    ----------
+    Ref.[cassano2005],Sec.(4.1)
+    """
+    R_vir = radius_virial(M_main, z)  # [kpc]
+    vi = velocity_impact(M_main, M_sub, z)  # [km/s]
+    # Unit conversion coefficient: [s kpc/km] => [Gyr]
+    uconv = AUC.kpc2km * AUC.s2Gyr
+    time = uconv * R_vir / vi  # [Gyr]
+    return time
