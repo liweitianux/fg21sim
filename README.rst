@@ -6,7 +6,6 @@ Realistic Foregrounds Simulation for EoR 21cm Signal Detection
 This package is still under heavy development, and may lack some
 necessary features or even fail to run correctly.
 It is *NOT* recommended to use it at the moment!
-Nevertheless, *tests and feedback* are always welcome!
 
 
 This |fg21sim|_ package provides the tools to simulate the
@@ -21,7 +20,8 @@ Features
 * Supported foreground components:
 
   + ``galactic/synchrotron``:
-    Galactic synchrotron emission (*Note:* only *unpolarized* considered now)
+    Galactic synchrotron emission
+    (*Note:* only the *unpolarized* part considered)
   + ``galactic/freefree``:
     Galactic free-free emission
   + ``galactic/snr``:
@@ -31,8 +31,8 @@ Features
     (*Note:* only radio *halos* considered at the moment)
   + ``extragalactic/pointsources``:
     Emission from multiple types of extragalactic discrete point sources
-    (*Note:* this component was contributed by Zhixian MA, and is not well
-    integrated and tested at the moment)
+    (*Note:* contributed by Zhixian MA)
+    (*WARNING:* not well integrated and tested at the moment!)
 
     Current supported point sources types:
 
@@ -42,14 +42,17 @@ Features
     - Fanaroff-Riley type I (FR-I) AGNs
     - Fanaroff-Riley type II (FR-II) AGNs
 
-* All-sky simulation (with HEALPix)
-  (*Note:* partial-sky simulation is a WIP ...)
+* All-sky simulation using HEALPix
+  (*Note:* optimize the speed, and more tests)
+* High-resolution simulation within sky patches
+  (*Note:* assumes a flat sky)
 * Configuration file allowing fine-grained control
 * Modular and well-designed API
 * Easy-to-use command line tools (CLI)
-* Full-featured Web UI
+* Simple Web UI
   (*Note:* recent Firefox, Chrome/Chromium, Edge, and IE >=11 are supported)
-* Handy utilities
+  (*WARNING:* needs significant updates against recent changes!)
+* Other handy utilities
 
 
 Requirements
