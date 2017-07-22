@@ -76,15 +76,52 @@ class RadioHalo:
 
     Parameters
     ----------
-    M0 : float
-        Cluster virial mass at redshift z0
+    M_obs : float
+        Cluster virial mass at the current observation (simulation end) time.
         Unit: [Msun]
-    z0 : float
-        Redshift from where to simulate former merging history.
+    z_obs : float
+        Redshift of the current observation (simulation end) time.
+    M_main, M_sub : float
+        The main and sub cluster masses before the (major) merger.
+        Unit: [Msun]
+    z_merger : float
+        The redshift when the (major) merger begins.
+    tau_merger : float
+        The timescale of the merger-induced disturbance.
+        Unit: [Gyr]
+    ...
     """
-    def __init__(self, M0, z0):
-        self.M0 = M0
-        self.z0 = z0
+    def __init__(self, M_obs, z_obs,
+                 M_main, M_sub, z_merger, tau_merger,
+                 eta_turb, eta_e, gamma_min, gamma_max, gamma_np,
+                 buffer_np, time_step, injection_rate, injection_index):
+        self.M_obs = M_obs
+        self.z_obs = z_obs
+        self.M_main = M_main
+        self.M_sub = M_sub
+        self.z_merger = z_merger
+        self.eta_turb = eta_turb
+        self.eta_e = eta_e
+        self.gamma_min = gamma_min
+        self.gamma_max = gamma_max
+        self.gamma_np = gamma_np
+        self.buffer_np = buffer_np
+        self.time_step = time_step
+        self.injection_rate = injection_rate
+        self.injection_index = injection_index
+
+    @property
+    def age_obs(self):
+        return cosmo.age(self.z_obs)
+
+    @property
+    def age_merger(self):
+        return cosmo.age(self.z_merger)
+
+    @property
+    def time_crossing(self):
+        return helper.time_crossing(self.M_main, self.M_sub,
+                                    z=self.z_merger)
 
     def calc_electron_spectrum(self, zbegin=None, zend=None, n0_e=None):
         """
@@ -95,10 +132,10 @@ class RadioHalo:
         ----------
         zbegin : float, optional
             The redshift from where to solve the Fokker-Planck equation.
-            Default: ``self.zmax``.
+            Default: ``self.z_merger``.
         zend : float, optional
             The redshift where to stop solving the Fokker-Planck equation.
-            Default: ``self.z0``.
+            Default: ``self.z_obs``.
         n0_e : 1D `~numpy.ndarray`, optional
             The initial electron number distribution.
             Unit: [cm^-3].
@@ -158,10 +195,12 @@ class RadioHalo:
             z_end = cosmo.redshift(t_end)
         return z_end
 
-    def fp_injection(self, p, t=None):
+    def fp_injection(self, gamma, t=None):
         """
-        Electron injection term for the Fokker-Planck equation.
+        Electron injection (rate) term for the Fokker-Planck equation.
 
+        NOTE
+        ----
         The injected electrons are assumed to have a power-law spectrum
         and a constant injection rate.
 
@@ -170,8 +209,8 @@ class RadioHalo:
 
         Parameters
         ----------
-        p : float
-            Electron momentum (unit: mec), i.e., Lorentz factor
+        gamma : float
+            Lorentz factor of electrons
         t : None
             Currently a constant injection rate is assumed, therefore
             this parameter is not used.  Keep it for the consistency
@@ -180,59 +219,40 @@ class RadioHalo:
         Returns
         -------
         Qe : float
-            Current electron injection rate at specified energy (p).
-            Unit: [cm^-3 Gyr^-1 mec^-1]
+            Current electron injection rate at specified energy (gamma).
+            Unit: [cm^-3 Gyr^-1]
 
         References
         ----------
-        [1] Cassano & Brunetti 2005, MNRAS, 357, 1313
-            http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
-            Eqs.(31-33)
         """
-        if not hasattr(self, "_electron_injection_rate"):
-            e_th = self.e_thermal  # [erg/cm^3]
-            age = cosmo.age(self.z0)
-            term1 = (self.injection_index-2) * self.eta_e
-            term2 = e_th / (self.pmin * self.mec * AC.c)  # [cm^-3]
-            term3 = 1.0 / (age * self.pmin)  # [Gyr^-1 mec^-1]
-            Ke = term1 * term2 * term3
-            self._electron_injection_rate = Ke
-        else:
-            Ke = self._electron_injection_rate
-        Qe = Ke * (p/self.pmin) ** (-self.injection_index)
+        Qe = ValueError
         return Qe
 
-    def fp_diffusion(self, p, t):
+    def fp_diffusion(self, gamma, t):
         """
         Diffusion term/coefficient for the Fokker-Planck equation.
 
         Parameters
         ----------
-        p : float
-            Electron momentum (unit: mec), i.e., Lorentz factor
+        gamma : float
+            The Lorentz factor of electrons
         t : float
-            Current time when solving the equation (unit: Gyr)
+            Current (cosmic) time when solving the equation
+            Unit: [Gyr]
 
         Returns
         -------
-        Dpp : float
+        diffusion : float
             Diffusion coefficient
-            Unit: [mec^2/Gyr]
+            Unit: [Gyr^-1]
 
         References
         ----------
-        [1] Cassano & Brunetti 2005, MNRAS, 357, 1313
-            http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
-            Eq.(36)
-        [2] Donnert 2013, AN, 334, 615
-            http://adsabs.harvard.edu/abs/2013AN....334..515D
-            Eq.(15)
+        Ref.[donnert2013],Eq.(15)
         """
-        z = cosmo.redshift(t)
-        chi = self._coef_acceleration(z)  # [Gyr^-1]
-        # NOTE: Cassano & Brunetti's formula misses a factor of 2.
-        Dpp = chi * p**2 / 4  # [mec^2/Gyr]
-        return Dpp
+        tau_acc = self._tau_acceleration(t)  # [Gyr]
+        diffusion = gamma**2 / (4 * tau_acc)
+        return diffusion
 
     def fp_advection(self, gamma, t):
         """
@@ -254,6 +274,59 @@ class RadioHalo:
                      abs(self._loss_rad(gamma, t)) -
                      (self.fp_diffusion(gamma, t) * 2 / gamma))
         return advection
+
+    def _mass(self, t):
+        """
+        Calculate the main cluster mass at the given (cosmic) time.
+
+        NOTE
+        ----
+        We assume that the main cluster grows (i.e., gains mass) linearly
+        in time from (M_main, z_merge) to (M_obs, z_obs).
+
+        Parameters
+        ----------
+        t : float
+            The (cosmic) time/age.
+            Unit: [Gyr]
+
+        Returns
+        -------
+        mass : float
+            The mass of the main cluster.
+            Unit: [Msun]
+        """
+        t_merger = self.age_merger
+        rate = (self.M_obs - self.M_main) / (self.age_obs - t_merger)
+        mass = rate * (t - t_merger) + self.M_main
+        return mass
+
+    def _tau_acceleration(self, t):
+        """
+        Calculate the systematic acceleration timescale at the
+        given (cosmic) time.
+
+        NOTE
+        ----
+        A reference value of the acceleration time due to TTD
+        (transit-time damping) resonance is ~0.1 Gyr (Ref.[brunetti2011],
+        Eq.(27) below); the formula derived by [cassano2005] (Eq.(40))
+        has a dependence on eta_turb.
+
+        Returns
+        -------
+        tau : float
+            The acceleration timescale.
+            Unit: [Gyr]
+        """
+        # The reference/typical acceleration timescale
+        tau_ref = 0.1  # [Gyr]
+
+        if t > self.age_merger + self.time_crossing:
+            tau = np.inf
+        else:
+            tau = tau_ref / self.eta_turb
+        return tau
 
     def _loss_ion(self, gamma, t):
         """
