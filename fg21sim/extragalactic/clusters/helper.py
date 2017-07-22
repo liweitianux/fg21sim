@@ -17,11 +17,16 @@ References
 .. [cassano2007]
    Cassano et al. 2007, MNRAS, 378, 1565;
    http://adsabs.harvard.edu/abs/2007MNRAS.378.1565C
+
+.. [cassano2012]
+   Cassano et al. 2012, A&A, 548, A100
+   http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
 """
 
 
 import numpy as np
 
+from ...configs import configs
 from ...utils import cosmo
 from ...utils.units import (Constants as AC,
                             UnitConversions as AUC)
@@ -127,6 +132,11 @@ def density_number_thermal(mass, z=0.0):
     """
     Calculate the number density of the ICM thermal plasma.
 
+    NOTE
+    ----
+    This number density is independent of cluster (virial) mass,
+    but (mostly) increases with redshifts.
+
     Parameters
     ----------
     mass : float
@@ -224,3 +234,33 @@ def time_crossing(M_main, M_sub, z=0.0):
     uconv = AUC.kpc2km * AUC.s2Gyr
     time = uconv * R_vir / vi  # [Gyr]
     return time
+
+
+def magnetic_field(mass):
+    """
+    Calculate the mean magnetic field strength according to the
+    scaling relation between magnetic field and cluster mass.
+
+    Parameters
+    ----------
+    mass : float
+        Cluster mass
+        Unit: [Msun]
+
+    Returns
+    -------
+    B : float
+        The mean magnetic field strength
+        Unit: [uG]
+
+    References
+    ----------
+    Ref.[cassano2012],Eq.(1)
+    """
+    comp = "extragalactic/clusters"
+    b_mean = configs.getn(comp+"/b_mean")
+    b_index = configs.getn(comp+"/b_index")
+
+    M_mean = 1.6e15  # [Msun]
+    B = b_mean * (mass/M_mean) ** b_index
+    return B
