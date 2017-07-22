@@ -41,9 +41,21 @@ class GalaxyClusters:
     Currently, only the *giant radio halos* are considered, while
     other types of extended emissions are missing, e.g., mini-halos,
     elongated relics, roundish relics.
+
+    Attributes
+    ----------
+    configs : `~ConfigManager`
+        A `ConfigManager` instance containing default and user configurations.
+        For more details, see the example configuration specifications.
+    halo_configs : dict
+        A dictionary containing the configurations for halo simulation.
+    sky : `~SkyPatch` or `SkyHealpix`
+        The sky instance to deal with the simulation sky as well as the
+        output map.
+        XXX: current full-sky HEALPix map is NOT supported!
     """
     # Component name
-    name = "galaxy clusters"
+    name = "galaxy clusters (halos)"
 
     def __init__(self, configs):
         self.configs = configs
@@ -78,6 +90,24 @@ class GalaxyClusters:
             raise NotImplementedError("TODO: full-sky simulations")
 
         logger.info("Loaded and set up configurations")
+
+    @property
+    def halo_configs(self):
+        """
+        Configurations for radio halo simulation as a dictionary.
+        """
+        comp = "extragalactic/halos"
+        haloconf = {
+            "eta_turb": self.configs.getn(comp+"/eta_turb"),
+            "eta_e": self.configs.getn(comp+"/eta_e"),
+            "gamma_min": self.configs.getn(comp+"/gamma_min"),
+            "gamma_max": self.configs.getn(comp+"/gamma_max"),
+            "gamma_np": self.configs.getn(comp+"/gamma_num"),
+            "buffer_np": self.configs.getn(comp+"/buffer_np"),
+            "time_step": self.configs.getn(comp+"/time_step"),
+            "injection_index": self.configs.getn(comp+"/injection_index"),
+        }
+        return haloconf
 
     def _load_catalog(self):
         """

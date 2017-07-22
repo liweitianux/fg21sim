@@ -41,8 +41,6 @@
   # Unit: [Gyr]
   tau_merger = float(default=3.0, min=1.0, max=5.0)
 
-  # The fraction that a cluster hosts a radio halo
-  halo_fraction = float(default=None, min=0.0, max=1.0)
   # Magnetic field scaling relation for clusters
   # Reference: Cassano et al. 2012, A&A, 548, A100, Eq.(1)
   #
@@ -66,42 +64,30 @@
 
   # Emission of giant radio halos from galaxy clusters
   [[halos]]
-  # Maximum redshift until where to tracing the cluster merging history
-  # (e.g., when calculating the electron spectrum)
-  zmax = float(default=3.0, min=0.0)
-  # Redshift bin size for, e.g., calculating acceleration coefficients
-  zbinsize = float(default=0.01, min=0.0, max=0.1)
+  # Fraction of the turbulence energy in the form of magneto-sonic waves,
+  # which will channel into relativistic electrons.
+  eta_turb = float(default=0.3, min=0.0, max=1.0)
 
-  # Mass threshold of the sub-cluster to be regarded as a significant
-  # merger. (unit: Msun)
-  merger_mass_th = float(default=1e13, min=1e12)
-
-  # Radius of the giant radio halo in clusters (unit: kpc)
-  # XXX: currently only support a constant radius of halos
-  radius = float(default=500.0, min=100.0)
-
-  # Fraction of the turbulence energy in the form of magneto-sonic waves.
-  eta_t = float(default=0.3, min=0.0, max=1.0)
-
-  # Ratio of the total energy injected in cosmic-ray electrons during the
-  # cluster life to the present-day total thermal energy of the cluster.
+  # Ratio of the total energy injected into cosmic-ray electrons during
+  # the cluster life to its total thermal energy.
   eta_e = float(default=0.003, min=0.0, max=0.1)
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
-  pmin = float(default=1e1)
-  pmax = float(default=1e5)
-
-  # Number of points for the grid used during solving the Fokker-Planck
-  # equation to calculate the electron spectrum.
-  pgrid_num = integer(default=100, min=10)
+  gamma_min = float(default=1e1)
+  gamma_max = float(default=1e5)
+  # Number of momentum points/cells for solving the Fokker-Planck
+  # equation.
+  gamma_np = integer(default=200, min=50)
 
   # Number of grid points used as the buffer region near the lower
   # boundary, and the value within this buffer region will be fixed to
   # avoid unphysical pile-up of low-energy electrons.
+  # Reference: Donnert & Brunetti 2014, MNRAS, 443, 3564, Sec.(3.3)
   buffer_np = integer(default=5, min=0)
 
-  # Time step for solving the Fokker-Planck equation (unit: Gyr)
+  # Time step for solving the Fokker-Planck equation
+  # Unit: [Gyr]
   time_step = float(default=0.01, min=1e-5, max=1.0)
 
   # Index of the power-law spectrum assumed for the injected electrons.
