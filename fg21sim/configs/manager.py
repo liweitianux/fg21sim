@@ -525,6 +525,7 @@ class ConfigManager:
         if os.environ.get("DEBUG_FG21SIM"):
             print("DEBUG: Force 'DEBUG' logging level", file=sys.stderr)
             level = "DEBUG"
+
         # logging handlers
         handlers = []
         stream = conf["stream"]
@@ -534,7 +535,13 @@ class ConfigManager:
         filemode = "a" if conf["appendmode"] else "w"
         if logfile:
             handlers.append(FileHandler(logfile, mode=filemode))
-        #
+
+        # Explicitly add formatter to each handler
+        formatter = logging.Formatter(fmt=conf["format"],
+                                      datefmt=conf["datefmt"])
+        for handler in handlers:
+            handler.setFormatter(formatter)
+
         logconf = {
             "level": getattr(logging, level),
             "format": conf["format"],
