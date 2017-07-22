@@ -123,6 +123,17 @@ class RadioHalo:
         return helper.time_crossing(self.M_main, self.M_sub,
                                     z=self.z_merger)
 
+    @property
+    def radius(self):
+        """
+        The halo radius derived from the virial radius by a scaling
+        relation.
+        Unit: [kpc]
+        """
+        mass = self.M_main + self.M_sub  # [Msun]
+        r_halo = helper.radius_halo(mass, self.z_merger)  # [kpc]
+        return r_halo
+
     def calc_electron_spectrum(self, zbegin=None, zend=None, n0_e=None):
         """
         Calculate the relativistic electron spectrum by solving the
@@ -139,7 +150,7 @@ class RadioHalo:
         n0_e : 1D `~numpy.ndarray`, optional
             The initial electron number distribution.
             Unit: [cm^-3].
-            Default: accumulated constant-injected electrons until zbegin.
+            Default: accumulated constantly injected electrons until zbegin.
 
         Returns
         -------
@@ -169,8 +180,9 @@ class RadioHalo:
         )
         gamma = fpsolver.x
         if n0_e is None:
-            # Accumulated constant-injected electrons until ``tstart``.
-            n_inj = np.array([self.fp_injection(gm) for gm in gamma])
+            # Accumulated constantly injected electrons until ``tstart``.
+            n_inj = np.array([self.fp_injection(gm)
+                              for gm in self.gamma])
             n0_e = n_inj * tstart
         n_e = fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
         return (gamma, n_e)
@@ -204,8 +216,8 @@ class RadioHalo:
         The injected electrons are assumed to have a power-law spectrum
         and a constant injection rate.
 
-        Qe(p) = Ke * (p/pmin)**(-s)
-        Ke = ((s-2)*eta_e) * (e_th/(pmin*c)) / (t0*pmin)
+        Qe(γ) = Ke * γ^(-s),
+        Ke: constant injection rate
 
         Parameters
         ----------
@@ -224,8 +236,10 @@ class RadioHalo:
 
         References
         ----------
+        Ref.[cassano2005],Eqs.(31,32,33)
         """
-        Qe = ValueError
+        Ke = self._injection_rate
+        Qe = Ke * gamma**(-self.injection_index)
         return Qe
 
     def fp_diffusion(self, gamma, t):
@@ -327,6 +341,42 @@ class RadioHalo:
         else:
             tau = tau_ref / self.eta_turb
         return tau
+
+    @property
+    def _injection_rate(self):
+        """
+        The constant electron injection rate assumed.
+        Unit: [cm^-3 Gyr^-1]
+
+        The injection rate is parametrized by assuming that the total
+        energy injected in the relativistic electrons during the cluster
+        life (e.g., ``age_obs`` here) is a fraction (``self.eta_e``)
+        of the total thermal energy of the cluster.
+
+        Note that we assume that the relativistic electrons only permeate
+        the halo volume (i.e., of radius ``self.radius``) instead of the
+        whole cluster volume (of virial radius).
+
+        Qe(γ) = Ke * γ^(-s),
+        int[ Qe(γ) γ me c^2 ]dγ * t_cluster * V_halo =
+            eta_e * e_th * V_cluster
+        =>
+        Ke = [(s-2) * eta_e * e_th * γ_min^(s-2) * (R_vir/R_halo)^3 /
+              me / c^2 / t_cluster]
+
+        References
+        ----------
+        Ref.[cassano2005],Eqs.(31,32,33)
+        """
+        s = self.injection_index
+        R_halo = self.radius  # [kpc]
+        R_vir = helper.radius_virial(self.M_obs, self.z_obs)  # [kpc]
+        e_thermal = helper.density_energy_thermal(self.M_obs, self.z_obs)
+        term1 = (s-2) * self.eta_e * e_thermal  # [erg cm^-3]
+        term2 = self.gamma_min**(s-2) * (R_vir/R_halo)**3
+        term3 = AU.mec2 * self.age_obs  # [erg Gyr]
+        Ke = term1 * term2 / term3  # [cm^-3 Gyr^-1]
+        return Ke
 
     def _loss_ion(self, gamma, t):
         """
