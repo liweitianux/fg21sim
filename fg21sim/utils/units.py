@@ -20,7 +20,11 @@ class Units:
     Commonly used units, especially in the CGS unit system.
     """
     # Unit for electron momentum (p), thus its value is the Lorentz factor
-    mec = ac.m_e.cgs.value*ac.c.cgs.value  # [g cm / s]
+    # Unit: [g cm / s]
+    mec = ac.m_e.cgs.value*ac.c.cgs.value
+    # Energy of a still electron
+    # Unit: [erg]
+    mec2 = (ac.m_e * ac.c**2).to(au.erg).value
 
 
 class UnitConversions:
