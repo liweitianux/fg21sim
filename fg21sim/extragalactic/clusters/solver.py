@@ -66,7 +66,7 @@ def TDMAsolver(a, b, c, d):
 
 class FokkerPlanckSolver:
     """
-    Solve the Fokker-Planck equation.
+    Solve the Fokker-Planck equation:
 
     ∂u(x,t)   ∂  /                ∂u(x) \            u(x,t)
     ------- = -- | B(x)u(x) + C(x)----- | + Q(x,t) - ------
@@ -78,6 +78,30 @@ class FokkerPlanckSolver:
     Q(x,t) : injection coefficient (>=0)
     T(x,t) : escape coefficient
 
+    NOTE: The no-flux boundary condition is used.
+
+    Parameters
+    ----------
+    xmin, xmax : float
+        The minimum and maximum bounds of the X (spatial/momentum) axis.
+    x_np : int
+        Number of (logarithmic grid) points/cells along the X axis
+    tstep : float
+        Specify to use the constant time step for solving the equation.
+    f_advection : function
+        Function f(x,t) to calculate the advection coefficient B(x,t)
+    f_diffusion : function
+        Function f(x,t) to calculate the diffusion coefficient C(x,t)
+    f_injection : function
+        Function f(x,t) to calculate the injection coefficient Q(x,t)
+    f_escape : optional
+        Function f(x,t) to calculate the escape coefficient T(x,t)
+    buffer_np : int, optional
+        Number of grid points taking as the buffer region near the lower
+        boundary.  The densities within this buffer region will be replaced
+        by extrapolating an power law to avoid unphysical accumulations.
+        This fix is ignored if this parameter is not specified.
+
     References
     ----------
     [1] Park & Petrosian 1996, ApJS, 103, 255
@@ -86,24 +110,18 @@ class FokkerPlanckSolver:
         http://adsabs.harvard.edu/abs/2014MNRAS.443.3564D
     """
 
-    def __init__(self, xmin, xmax, grid_num, buffer_np, tstep,
-                 f_advection, f_diffusion, f_injection, f_escape=None):
+    def __init__(self, xmin, xmax, x_np, tstep,
+                 f_advection, f_diffusion, f_injection,
+                 f_escape=None, buffer_np=None):
         self.xmin = xmin
         self.xmax = xmax
-        # Number of points on the logarithmic grid
-        self.grid_num = grid_num
-        # Number of grid points for the buffer region near the lower boundary
-        self.buffer_np = buffer_np
-        # Time step
+        self.x_np = x_np
         self.tstep = tstep
-        # Function f(x,t) to calculate the advection coefficient B(x,t)
         self.f_advection = f_advection
-        # Function f(x,t) to calculate the diffusion coefficient C(x,t)
         self.f_diffusion = f_diffusion
-        # Function f(x,t) to calculate the injection coefficient Q(x,t)
         self.f_injection = f_injection
-        # Function f(x,t) to calculate the escape coefficient T(x,t)
         self.f_escape = f_escape
+        self.buffer_np = buffer_np
 
     @property
     def x(self):
@@ -111,7 +129,7 @@ class FokkerPlanckSolver:
         X values of the adopted logarithmic grid.
         """
         grid = np.logspace(np.log10(self.xmin), np.log10(self.xmax),
-                           num=self.grid_num)
+                           num=self.x_np)
         return grid
 
     @property
@@ -294,8 +312,15 @@ class FokkerPlanckSolver:
         distribution/spectrum and then extrapolate as a power law, in order
         to avoid the unphysical pile-up of electrons at the lower regime.
 
+        TODO:
+        Fit a power law to the same number (``buffer_np``) of data points,
+        then extrapolate it to fix the lower buffer region.
+
         References: Ref.[2],Sec.(3.3)
         """
+        if self.buffer_np is None:
+            return uc
+
         uc = np.asarray(uc)
         x = self.x
         # Calculate the power-law index
@@ -308,6 +333,14 @@ class FokkerPlanckSolver:
             s = np.log(yb/ya) / np.log(xb/xa)
             uc[:self.buffer_np] = ya * (x[:self.buffer_np] / xa) ** s
         return uc
+
+    def time_step(self):
+        """
+        Adaptively determine the time step for solving the equation.
+
+        TODO/XXX
+        """
+        pass
 
     def solve_step(self, tc, uc):
         """
@@ -334,7 +367,9 @@ class FokkerPlanckSolver:
         tc = tstart
         logger.info("Solving Fokker-Planck equation: " +
                     "time: %.3f - %.3f" % (tstart, tstop))
-        nstep = (tstop - tc) / self.tstep
+        nstep = int((tstop - tc) / self.tstep)
+        logger.info("Constant time step: %.3f (#%d steps)" %
+                    (self.tstep, nstep))
         i = 0
         while tc < tstop:
             i += 1
