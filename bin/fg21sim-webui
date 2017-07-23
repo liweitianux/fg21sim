@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- mode: python -*-
 #
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -23,7 +23,7 @@ import webbrowser
 import tornado.ioloop
 from tornado.options import define, options, parse_command_line
 
-from fg21sim.configs import configs
+from fg21sim.configs import CONFIGS
 from fg21sim.utils import setup_logging
 from fg21sim.webui import Application
 
@@ -48,7 +48,7 @@ def main():
         options.host = "0.0.0.0"
 
     loglevel = "DEBUG" if options.debug else None
-    setup_logging(dict_config=configs.logging, level=loglevel)
+    setup_logging(dict_config=CONFIGS.logging, level=loglevel)
     tool = os.path.basename(sys.argv[0])
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))

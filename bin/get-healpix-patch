@@ -18,7 +18,7 @@ import scipy.ndimage
 import healpy as hp
 from reproject import reproject_from_healpix
 
-from fg21sim.configs import configs
+from fg21sim.configs import CONFIGS
 from fg21sim.sky import SkyPatch
 from fg21sim.utils import setup_logging
 from fg21sim.utils.fits import read_fits_healpix
@@ -49,18 +49,18 @@ def main():
     parser.add_argument("outfile", help="output extracted sky patch")
     args = parser.parse_args()
 
-    setup_logging(dict_config=configs.logging)
+    setup_logging(dict_config=CONFIGS.logging)
     tool = os.path.basename(sys.argv[0])
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
     if args.config:
-        configs.read_userconfig(args.config)
-        center = (configs.getn("sky/patch/xcenter"),
-                  configs.getn("sky/patch/ycenter"))  # [ deg ]
-        size = (configs.getn("sky/patch/xsize"),
-                configs.getn("sky/patch/ysize"))
-        pixelsize = configs.getn("sky/patch/pixelsize")  # [ arcsec ]
+        CONFIGS.read_userconfig(args.config)
+        center = (CONFIGS.getn("sky/patch/xcenter"),
+                  CONFIGS.getn("sky/patch/ycenter"))  # [ deg ]
+        size = (CONFIGS.getn("sky/patch/xsize"),
+                CONFIGS.getn("sky/patch/ysize"))
+        pixelsize = CONFIGS.getn("sky/patch/pixelsize")  # [ arcsec ]
     elif not all([args.center, args.size, args.pixelsize]):
         raise ValueError("--center, --size, and --pixelsize are " +
                          "required when --config is missing!")

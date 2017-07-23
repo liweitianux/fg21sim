@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- mode: python -*-
 #
 # Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
 # MIT license
@@ -17,7 +18,7 @@ import logging
 
 from pkg_resources import resource_exists, resource_filename
 
-from fg21sim.configs import configs
+from fg21sim.configs import CONFIGS
 from fg21sim.utils import setup_logging
 from fg21sim.uvsim import telescope
 
@@ -52,7 +53,7 @@ def main():
     args = parser.parse_args()
 
     loglevel = "DEBUG" if args.debug else "INFO"
-    setup_logging(dict_config=configs.logging, level=loglevel)
+    setup_logging(dict_config=CONFIGS.logging, level=loglevel)
     tool = os.path.basename(sys.argv[0])
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))

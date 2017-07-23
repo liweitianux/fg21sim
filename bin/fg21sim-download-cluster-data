@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -65,7 +65,7 @@ import csv
 import urllib.request
 import tarfile
 
-from fg21sim.configs import configs
+from fg21sim.configs import CONFIGS
 from fg21sim.utils import setup_logging
 
 
@@ -96,17 +96,12 @@ def main():
                         help="be quiet so do not log messages to screen")
     args = parser.parse_args()
 
-    if args.quiet:
-        log_stream = ""
-    else:
-        log_stream = None
-
-    tool = os.path.basename(sys.argv[0])
-
-    setup_logging(dict_config=configs.logging,
+    log_stream = "" if args.quiet else None
+    setup_logging(dict_config=CONFIGS.logging,
                   level=args.loglevel,
                   stream=log_stream,
                   logfile=args.logfile)
+    tool = os.path.basename(sys.argv[0])
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 

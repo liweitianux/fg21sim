@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -13,7 +13,7 @@ import argparse
 import logging
 import json
 
-from fg21sim.configs import configs
+from fg21sim.configs import CONFIGS
 from fg21sim.utils import setup_logging
 from fg21sim.utils.download import download_file
 
@@ -30,7 +30,7 @@ def main():
     args = parser.parse_args()
 
     tool = os.path.basename(sys.argv[0])
-    setup_logging(dict_config=configs.logging)
+    setup_logging(dict_config=CONFIGS.logging)
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
