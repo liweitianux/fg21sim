@@ -125,8 +125,8 @@ def mass_to_kT(mass, z=0.0):
         The ICM mean temperature.
         Unit: [keV]
     """
-    # A = 5.34 + np.random.normal(scale=0.22)
-    A = 5.34
+    # A = (5.34 + np.random.normal(scale=0.22)) * 1e14  # [Msun]
+    A = 5.34 * 1e14  # [Msun]
     # alpha = 1.72 + np.random.normal(scale=0.10)
     alpha = 1.72
     Ez = COSMO.E(z)
