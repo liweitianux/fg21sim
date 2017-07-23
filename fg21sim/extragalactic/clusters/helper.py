@@ -25,10 +25,12 @@ References
 
 
 import numpy as np
+from scipy import integrate
 
 from ...configs import CONFIGS
 from ...utils import COSMO
-from ...utils.units import (Constants as AC,
+from ...utils.units import (Units as AU,
+                            Constants as AC,
                             UnitConversions as AUC)
 
 
@@ -169,12 +171,35 @@ def density_energy_thermal(mass, z=0.0):
     Returns
     -------
     e_th : float
-        Energy density of the ICM (unit: erg/cm^3)
+        Energy density of the ICM
+        Unit: [erg cm^-3]
     """
     n_th = density_number_thermal(mass, z)  # [cm^-3]
     kT = mass_to_kT(mass, z) * AUC.keV2erg  # [erg]
     e_th = (3.0/2) * kT * n_th
     return e_th
+
+
+def density_energy_electron(spectrum, gamma):
+    """
+    Calculate the energy density of relativistic electrons.
+
+    Parameters
+    ----------
+    spectrum : 1D float `~numpy.ndarray`
+        The number density of the electrons w.r.t. Lorentz factors
+        Unit: [cm^-3]
+    gamma : 1D float `~numpy.ndarray`
+        The Lorentz factors of electrons
+
+    Returns
+    -------
+    e_re : float
+        The energy density of the relativistic electrons.
+        Unit: [erg cm^-3]
+    """
+    e_re = integrate.trapz(spectrum*gamma*AU.mec2, gamma)
+    return e_re
 
 
 def velocity_impact(M_main, M_sub, z=0.0):
