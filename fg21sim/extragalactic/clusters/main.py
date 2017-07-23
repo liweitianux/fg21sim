@@ -24,10 +24,10 @@ import pandas as pd
 
 from .formation import ClusterFormation
 from .halo import RadioHalo
-from ...configs import configs
-from ...sky import get_sky
-from ...utils import cosmo
+from ...configs import CONFIGS
+from ...utils import COSMO
 from ...utils.io import dataframe_to_csv
+from ...sky import get_sky
 
 
 logger = logging.getLogger(__name__)
