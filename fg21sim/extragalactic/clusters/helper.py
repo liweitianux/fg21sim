@@ -21,6 +21,10 @@ References
 .. [cassano2012]
    Cassano et al. 2012, A&A, 548, A100
    http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
+
+.. [zandanel2014]
+   Zandanel, Pfrommer & Prada 2014, MNRAS, 438, 124
+   http://adsabs.harvard.edu/abs/2014MNRAS.438..124Z
 """
 
 
@@ -64,8 +68,13 @@ def radius_halo(mass, z=0.0):
     """
     Calculate the radius of (giant) radio halo for a cluster.
 
-    The halo radius is derived from the virial radius using the scaling
-    relation in [cassano2007]_.
+    The halo radius is assumed to linearly scale with the virial radius,
+    and is estimated by:
+        R_halo = R_vir / 4
+    * halo radius is ~3-6 times smaller than the virial radius;
+      Ref.[cassano2007],Sec.(1)
+    * halo half radius is ~R500/4, therefore, R_halo ~ R_vir/4;
+      Ref.[zandanel2014],Sec.(6.2)
 
     Parameters
     ----------
@@ -81,17 +90,9 @@ def radius_halo(mass, z=0.0):
     R_halo : float
         Radius of the (expected) giant radio halo
         Unit: [kpc]
-
-    References
-    ----------
-    Ref.[cassano2007],Fig.(11)
     """
-    # slope = 2.63 + np.random.normal(scale=0.5)
-    slope = 2.63
-    # intercept = 2.3 + np.random.normal(scale=0.05)
-    intercept = 2.3
     R_vir = radius_virial(mass=mass, z=z)  # [kpc]
-    R_halo = 10 ** (slope * np.log10(R_vir) + intercept)
+    R_halo = R_vir / 4.0  # [kpc]
     return R_halo
 
 
