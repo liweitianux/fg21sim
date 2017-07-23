@@ -84,8 +84,10 @@ def radius_halo(mass, z=0.0):
     ----------
     Ref.[cassano2007],Fig.(11)
     """
-    slope = 2.63 + np.random.normal(scale=0.5)
-    intercept = 2.3 + np.random.normal(scale=0.05)
+    # slope = 2.63 + np.random.normal(scale=0.5)
+    slope = 2.63
+    # intercept = 2.3 + np.random.normal(scale=0.05)
+    intercept = 2.3
     R_vir = radius_virial(mass=mass, z=z)  # [kpc]
     R_halo = 10 ** (slope * np.log10(R_vir) + intercept)
     return R_halo
@@ -121,8 +123,10 @@ def mass_to_kT(mass, z=0.0):
         The ICM mean temperature.
         Unit: [keV]
     """
-    A = 5.34 + np.random.normal(scale=0.22)
-    alpha = 1.72 + np.random.normal(scale=0.10)
+    # A = 5.34 + np.random.normal(scale=0.22)
+    A = 5.34
+    # alpha = 1.72 + np.random.normal(scale=0.10)
+    alpha = 1.72
     Ez = COSMO.E(z)
     kT = 5.0 * (mass * Ez / A) ** (1/alpha)
     return kT
