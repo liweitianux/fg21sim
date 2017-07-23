@@ -104,6 +104,13 @@ class FokkerPlanckSolver:
 
     NOTE
     ----
+    All above functions should accept two parameters: ``(x, t)``,
+    where ``x`` is an 1D float `~numpy.ndarray` representing the adopted
+    logarithmic grid points along the spatial/energy axis, ``t`` is the
+    time of each solving step.
+
+    NOTE
+    ----
     The diffusion coefficients (i.e., calculated by ``f_diffusion()``)
     should be *positive* (i.e., C(x) > 0), otherwise unstable or wrong
     results may occur, due to the current numerical scheme/algorithm
@@ -281,9 +288,9 @@ class FokkerPlanckSolver:
         dx_phalf = self.dx_phalf
         dx_mhalf = self.dx_mhalf
         dt = self.tstep
-        B = np.array([self.f_advection(x_, tc) for x_ in x])
-        C = np.array([self.f_diffusion(x_, tc) for x_ in x])
-        Q = np.array([self.f_injection(x_, tc) for x_ in x])
+        B = self.f_advection(x, tc)
+        C = self.f_diffusion(x, tc)
+        Q = self.f_injection(x, tc)
         #
         B_phalf = self.X_phalf(B)
         B_mhalf = self.X_mhalf(B)
@@ -307,7 +314,7 @@ class FokkerPlanckSolver:
         b[-1] = 1 + (dt/dx[-1]) * (C_mhalf[-1]/dx_mhalf[-1])*Wplus_mhalf[-1]
         # Escape from the system
         if self.f_escape is not None:
-            T = np.array([self.f_escape(x_, tc) for x_ in x])
+            T = self.f_escape(x, tc)
             b += dt / T
         # Right-hand side
         r = dt * Q + uc

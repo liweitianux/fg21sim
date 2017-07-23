@@ -182,7 +182,7 @@ class RadioHalo:
 
         Returns
         -------
-        electron_spec : `~numpy.ndarray`
+        electron_spec : float 1D `~numpy.ndarray`
             The solved electron spectrum at ``zend``.
             Unit: [cm^-3]
         """
@@ -196,8 +196,7 @@ class RadioHalo:
             tstop = COSMO.age(zend)
         if n0_e is None:
             # Accumulated constantly injected electrons until ``tstart``.
-            n_inj = np.array([self.fp_injection(gm)
-                              for gm in self.gamma])
+            n_inj = self.fp_injection(self.gamma)
             n0_e = n_inj * tstart
 
         self.electron_spec = self.fpsolver.solve(u0=n0_e, tstart=tstart,
@@ -218,8 +217,8 @@ class RadioHalo:
 
         Parameters
         ----------
-        gamma : float
-            Lorentz factor of electrons
+        gamma : float, or float 1D `~numpy.ndarray`
+            Lorentz factors of electrons
         t : None
             Currently a constant injection rate is assumed, therefore
             this parameter is not used.  Keep it for the consistency
@@ -227,8 +226,8 @@ class RadioHalo:
 
         Returns
         -------
-        Qe : float
-            Current electron injection rate at specified energy (gamma).
+        Qe : float, or float 1D `~numpy.ndarray`
+            Current electron injection rate at specified energies (gamma).
             Unit: [cm^-3 Gyr^-1]
 
         References
@@ -251,16 +250,16 @@ class RadioHalo:
 
         Parameters
         ----------
-        gamma : float
-            The Lorentz factor of electrons
+        gamma : float, or float 1D `~numpy.ndarray`
+            The Lorentz factors of electrons
         t : float
             Current (cosmic) time when solving the equation
             Unit: [Gyr]
 
         Returns
         -------
-        diffusion : float
-            Diffusion coefficient
+        diffusion : float, or float 1D `~numpy.ndarray`
+            Diffusion coefficients
             Unit: [Gyr^-1]
 
         References
@@ -283,8 +282,8 @@ class RadioHalo:
 
         Returns
         -------
-        advection : float
-            Advection coefficient, describing the energy loss/gain rate.
+        advection : float, or float 1D `~numpy.ndarray`
+            Advection coefficients, describing the energy loss/gain rates.
             Unit: [Gyr^-1]
         """
         advection = (abs(self._loss_ion(gamma, t)) +
@@ -394,16 +393,16 @@ class RadioHalo:
 
         Parameters
         ----------
-        gamma : float
-            The Lorentz factor of electrons
+        gamma : float, or float 1D `~numpy.ndarray`
+            The Lorentz factors of electrons
         t : float
             The cosmic time/age
             Unit: [Gyr]
 
         Returns
         -------
-        loss : float
-            The energy loss rate
+        loss : float, or float 1D `~numpy.ndarray`
+            The energy loss rates
             Unit: [Gyr^-1]
 
         References
