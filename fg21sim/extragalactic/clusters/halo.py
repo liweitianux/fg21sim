@@ -243,6 +243,12 @@ class RadioHalo:
         """
         Diffusion term/coefficient for the Fokker-Planck equation.
 
+        NOTE
+        ----
+        The diffusion coefficients cannot be zero or negative, which
+        may cause unstable or wrong results.  So constrain ``tau_acc``
+        be a sufficient large but finite number.
+
         Parameters
         ----------
         gamma : float
@@ -322,7 +328,12 @@ class RadioHalo:
         A reference value of the acceleration time due to TTD
         (transit-time damping) resonance is ~0.1 Gyr (Ref.[brunetti2011],
         Eq.(27) below); the formula derived by [cassano2005] (Eq.(40))
-        has a dependence on eta_turb.
+        has a dependence on ``eta_turb``.
+
+        NOTE
+        ----
+        A zero diffusion coefficient may lead to unstable/wrong results,
+        so constrain this acceleration timescale be finite.
 
         Returns
         -------
@@ -332,9 +343,11 @@ class RadioHalo:
         """
         # The reference/typical acceleration timescale
         tau_ref = 0.1  # [Gyr]
+        # The maximum timescale to avoid unstable results
+        tau_max = 100.0  # [Gyr]
 
         if t > self.age_merger + self.time_crossing:
-            tau = np.inf
+            tau = tau_max
         else:
             tau = tau_ref / self.eta_turb
         return tau

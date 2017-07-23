@@ -102,6 +102,13 @@ class FokkerPlanckSolver:
         by extrapolating an power law to avoid unphysical accumulations.
         This fix is ignored if this parameter is not specified.
 
+    NOTE
+    ----
+    The diffusion coefficients (i.e., calculated by ``f_diffusion()``)
+    should be *positive* (i.e., C(x) > 0), otherwise unstable or wrong
+    results may occur, due to the current numerical scheme/algorithm
+    adopted.
+
     References
     ----------
     [1] Park & Petrosian 1996, ApJS, 103, 255
