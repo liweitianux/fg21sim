@@ -63,14 +63,14 @@
   output_dir = string(default=None)
 
 
-  # Emission of giant radio halos from galaxy clusters
+  # Giant radio halos for clusters with recent major mergers
   [[halos]]
   # Intensity of the turbulence acceleration.
   beta_turb = float(default=0.3, min=0.1, max=2.0)
 
   # Ratio of the total energy injected into cosmic-ray electrons during
   # the cluster life to its total thermal energy.
-  eta_e = float(default=0.003, min=0.0, max=0.1)
+  eta_e = float(default=0.01, min=0.0, max=0.1)
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
@@ -88,10 +88,11 @@
 
   # Time step for solving the Fokker-Planck equation
   # Unit: [Gyr]
-  time_step = float(default=0.01, min=1e-5, max=1.0)
+  time_step = float(default=0.01, min=1e-5, max=0.1)
 
-  # Index of the power-law spectrum assumed for the injected electrons.
-  injection_index = float(default=2.5)
+  # Electron injection, which is assumed to have a constant injection
+  # rate and a power-law spectrum.
+  injection_index = float(default=2.5, min=2.1, max=3.5)
 
 
   # Extragalactic point sources
