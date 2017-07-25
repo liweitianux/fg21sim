@@ -111,7 +111,7 @@ class RadioHalo:
 
     def _set_configs(self):
         comp = "extragalactic/halos"
-        self.eta_turb = self.configs.getn(comp+"/eta_turb")
+        self.beta_turb = self.configs.getn(comp+"/beta_turb")
         self.eta_e = self.configs.getn(comp+"/eta_e")
         self.gamma_min = self.configs.getn(comp+"/gamma_min")
         self.gamma_max = self.configs.getn(comp+"/gamma_max")
@@ -327,7 +327,7 @@ class RadioHalo:
         A reference value of the acceleration time due to TTD
         (transit-time damping) resonance is ~0.1 Gyr (Ref.[brunetti2011],
         Eq.(27) below); the formula derived by [cassano2005] (Eq.(40))
-        has a dependence on ``eta_turb``.
+        has a dependence on ``beta_turb``.
 
         NOTE
         ----
@@ -348,7 +348,7 @@ class RadioHalo:
         if t > self.age_merger + self.time_crossing:
             tau = tau_max
         else:
-            tau = tau_ref / self.eta_turb
+            tau = tau_ref / self.beta_turb
         return tau
 
     @property

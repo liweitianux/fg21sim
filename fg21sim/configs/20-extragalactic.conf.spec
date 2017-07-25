@@ -65,9 +65,8 @@
 
   # Emission of giant radio halos from galaxy clusters
   [[halos]]
-  # Fraction of the turbulence energy in the form of magneto-sonic waves,
-  # which will channel into relativistic electrons.
-  eta_turb = float(default=0.3, min=0.0, max=1.0)
+  # Intensity of the turbulence acceleration.
+  beta_turb = float(default=0.3, min=0.1, max=2.0)
 
   # Ratio of the total energy injected into cosmic-ray electrons during
   # the cluster life to its total thermal energy.
