@@ -322,30 +322,32 @@ class FokkerPlanckSolver:
 
     def fix_boundary(self, uc):
         """
-        Truncate the lower end (i.e., near the lower boundary) of the
-        distribution/spectrum and then extrapolate as a power law, in order
-        to avoid the unphysical pile-up of electrons at the lower regime.
-
-        TODO:
-        Fit a power law to the same number (``buffer_np``) of data points,
-        then extrapolate it to fix the lower buffer region.
+        Due to the no-flux boundary condition adopted, particles may
+        unphysically pile up near the lower boundary.  Therefore, a
+        buffer region spanning ``self.buffer_np`` cells is chosen, within
+        which the densities are replaced by extrapolating from the upper
+        density distribution as a power law, and the power-law index
+        is determined by fitting to the data points of ``self.buffer_np``
+        cells on the upper side of the buffer region.
 
         References: Ref.[2],Sec.(3.3)
         """
         if self.buffer_np is None:
             return uc
+        if (uc <= 0.0).sum() > 0:
+            logger.warning("solved density has negative values!")
+            return uc
 
-        uc = np.asarray(uc)
         x = self.x
-        # Calculate the power-law index
-        xa = x[self.buffer_np]
-        xb = x[self.buffer_np+1]
-        ya = uc[self.buffer_np]
-        yb = uc[self.buffer_np+1]
-        if ya > 0 and yb > 0:
-            # Truncate and extrapolate as a power law
-            s = np.log(yb/ya) / np.log(xb/xa)
-            uc[:self.buffer_np] = ya * (x[:self.buffer_np] / xa) ** s
+        # Calculate the power-law index from ``self.buffer_np`` data
+        # points just right of the buffer region.
+        xp = x[self.buffer_np:(self.buffer_np*2)]
+        yp = uc[self.buffer_np:(self.buffer_np*2)]
+        # Power-law fit
+        pfit = np.polyfit(np.log10(xp), np.log10(yp), deg=1)
+        xbuf = x[:self.buffer_np]
+        ybuf = 10 ** np.polyval(pfit, np.log10(xbuf))
+        uc[:self.buffer_np] = ybuf
         return uc
 
     def time_step(self):
