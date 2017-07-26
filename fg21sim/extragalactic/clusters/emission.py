@@ -15,7 +15,6 @@ References
 import logging
 
 import numpy as np
-import scipy.integrate
 import scipy.special
 from scipy import integrate
 from scipy import interpolate
@@ -147,6 +146,13 @@ class SynchrotronEmission:
         Calculate the synchrotron emissivity (power emitted per volume
         and per frequency) at the requested frequency.
 
+        NOTE
+        ----
+        Since ``self.gamma`` and ``self.n_e`` are sampled on a logarithmic
+        grid, we integrate over ``ln(gamma)`` instead of ``gamma`` directly:
+            I = int_gmin^gmax f(g) d(g)
+              = int_ln(gmin)^ln(gmax) f(g) g d(ln(g))
+
         Parameters
         ----------
         nu : float
@@ -159,20 +165,23 @@ class SynchrotronEmission:
             Synchrotron emissivity at frequency ``nu``.
             Unit: [erg/s/cm^3/Hz]
         """
-        def func(theta, _p, _n_e):
-            nu_c = self.frequency_crit(_p, theta)
-            x = nu / nu_c
-            return (np.sin(theta)**2 * _n_e * self.F(x))
+        # Ignore the zero angle
+        theta = np.linspace(0, np.pi/2, num=len(self.gamma))[1:]
+        theta_grid, gamma_grid = np.meshgrid(theta, self.gamma)
+        nu_c = self.frequency_crit(gamma_grid, theta_grid)
+        Fv = np.vectorize(self.F, otypes=[np.float])
+        x = nu / nu_c
+        kernel = Fv(x)
 
-        coef = np.sqrt(3) * AC.e**3 * self.B / AC.c  # multiplied a [mec]
-        func_p = np.zeros(self.p.shape)
-        for i in range(len(self.p)):
-            # Integrate over ``theta``
-            func_p[i] = scipy.integrate.quad(
-                lambda t: func(t, self.p[i], self.n_e[i]),
-                a=0, b=np.pi/2)[0]
-        # Integrate over ``p``
-        j_nu = coef * scipy.integrate.trapz(func_p, self.p)
+        # 2D samples over width to do the integration
+        s2d = kernel * np.outer(self.n_e, np.sin(theta)**2)
+        # Integrate over ``theta`` (the last axis)
+        s1d = integrate.simps(s2d, x=theta)
+        # Integrate over energy ``gamma`` in logarithmic grid
+        j_nu = integrate.simps(s1d*self.gamma, np.log(self.gamma))
+
+        coef = np.sqrt(3) * AC.e**3 * self.B / AC.c
+        j_nu *= coef
         return j_nu
 
     def power(self, nu):
