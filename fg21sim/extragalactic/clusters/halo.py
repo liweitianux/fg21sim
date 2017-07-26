@@ -162,6 +162,17 @@ class RadioHalo:
         r_halo = helper.radius_halo(mass, self.z_merger)  # [kpc]
         return r_halo
 
+    @property
+    def magnetic_field(self):
+        """
+        The magnetic field strength at the simulated observation
+        time (i.e., cluster mass of ``self.M_obs``), will be used
+        to calculate the synchrotron emissions.
+
+        Unit: [uG]
+        """
+        return helper.magnetic_field(self.M_obs)
+
     def calc_electron_spectrum(self, zbegin=None, zend=None, n0_e=None):
         """
         Calculate the relativistic electron spectrum by solving the
