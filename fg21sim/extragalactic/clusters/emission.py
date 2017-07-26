@@ -185,7 +185,8 @@ class SynchrotronEmission:
         # Integrate over energy ``gamma`` in logarithmic grid
         j_nu = integrate.simps(s1d*self.gamma, np.log(self.gamma))
 
-        coef = np.sqrt(3) * AC.e**3 * self.B / AC.c
+        B_gauss = self.B * 1e-6  # [uG] -> [G]
+        coef = np.sqrt(3) * AC.e**3 * B_gauss / AU.mec2
         j_nu *= coef
         return j_nu
 
