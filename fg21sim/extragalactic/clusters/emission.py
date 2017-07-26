@@ -80,21 +80,20 @@ class SynchrotronEmission:
 
         Parameters
         ----------
-        gamma : float, or `~numpy.ndarray`
+        gamma : `~numpy.ndarray`
             Electron Lorentz factors γ
-        theta : float, or `~numpy.ndarray`, optional
+        theta : `~numpy.ndarray`, optional
             The angles between the electron velocity and the magnetic field.
             Unit: [rad]
 
         Returns
         -------
-        nu : float, or `~numpy.ndarray`
+        nu_c : `~numpy.ndarray`
             Critical frequencies
             Unit: [MHz]
         """
-        nu_L = self.frequency_larmor
-        nu = (3/2) * gamma**2 * np.sin(theta) * nu_L
-        return nu
+        nu_c = 1.5 * gamma**2 * np.sin(theta) * self.frequency_larmor
+        return nu_c
 
     @staticmethod
     def F(x):
@@ -169,9 +168,7 @@ class SynchrotronEmission:
         theta = np.linspace(0, np.pi/2, num=len(self.gamma))[1:]
         theta_grid, gamma_grid = np.meshgrid(theta, self.gamma)
         nu_c = self.frequency_crit(gamma_grid, theta_grid)
-        Fv = np.vectorize(self.F, otypes=[np.float])
-        x = nu / nu_c
-        kernel = Fv(x)
+        kernel = self.F(nu / nu_c)
 
         # 2D samples over width to do the integration
         s2d = kernel * np.outer(self.n_e, np.sin(theta)**2)
