@@ -7,9 +7,16 @@ for simulated radio halos.
 
 References
 ----------
-[1] Cassano & Brunetti 2005, MNRAS, 357, 1313
-    http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
-    Appendix.C
+.. [cassano2005]
+   Cassano & Brunetti 2005, MNRAS, 357, 1313
+   http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
+   Appendix.C
+
+.. [era2016]
+   Condon & Ransom 2016
+   Essential Radio Astronomy
+   https://science.nrao.edu/opportunities/courses/era/
+   Chapter.5
 """
 
 import logging
@@ -61,8 +68,9 @@ class SynchrotronEmission:
     @property
     def frequency_larmor(self):
         """
-        Electron Larmor frequency:
+        Electron Larmor frequency (a.k.a. gyro frequency):
             ν_L = e * B / (2*π * m0 * c) = e * B / (2*π * mec)
+        =>  ν_L [MHz] = 2.8 * B [G]
 
         Unit: [MHz]
         """
