@@ -17,6 +17,8 @@ import logging
 import numpy as np
 import scipy.integrate
 import scipy.special
+from scipy import integrate
+from scipy import interpolate
 
 from ...utils import COSMO
 from ...utils.units import (Units as AU,
@@ -99,10 +101,46 @@ class SynchrotronEmission:
     def F(x):
         """
         Synchrotron kernel function.
+
+        NOTE
+        ----
+        Use interpolation to optimize the speed, also avoid instabilities
+        near the lower end (e.g., x < 1e-5).
+        Interpolation also helps vectorize this function for easier calling.
+
+        Parameters
+        ----------
+        x : `~numpy.ndarray`
+            Points where to calculate the kernel function values.
+            NOTE: X values will be bounded, e.g., within [1e-5, 20]
+
+        Returns
+        -------
+        y : `~numpy.ndarray`
+            Calculated kernel function values.
         """
-        val = x * scipy.integrate.quad(lambda t: scipy.special.kv(5/3, t),
-                                       a=x, b=np.inf)[0]
-        return val
+        # The lower and upper cuts
+        xmin = 1e-5
+        xmax = 20.0
+        # Number of samples within [xmin, xmax]
+        # NOTE: this kernel function is quiet smooth and slow-varying.
+        nsamples = 128
+        # Make an interpolation
+        x_interp = np.logspace(np.log10(xmin), np.log10(xmax),
+                               num=nsamples)
+        F_interp = [
+            xp * integrate.quad(lambda t: scipy.special.kv(5/3, t),
+                                a=xp, b=np.inf)[0]
+            for xp in x_interp
+        ]
+        func_interp = interpolate.interp1d(x_interp, F_interp,
+                                           kind="quadratic")
+
+        x = np.array(x)  # Make a copy!
+        x[x < xmin] = xmin
+        x[x > xmax] = xmax
+        y = func_interp(x)
+        return y
 
     def emissivity(self, nu):
         """
