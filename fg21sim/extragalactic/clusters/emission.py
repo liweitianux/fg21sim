@@ -32,32 +32,31 @@ logger = logging.getLogger(__name__)
 
 class SynchrotronEmission:
     """
-    Calculate the synchrotron emission spectrum from a given population
+    Calculate the synchrotron emission from a given population
     of electrons.
 
     Parameters
     ----------
-    B : float
-        The assumed uniform magnetic field of the galaxy cluster.
-        Unit: [uG]
-    p : `~numpy.ndarray`
-        The momentum grid adopted when solving the Fokker-Planck equation.
-        Unit: [mec]
+    gamma : `~numpy.ndarray`
+        The Lorentz factors of electrons.
     n_e : `~numpy.ndarray`
-        Electron spectrum by solving the Fokker-Planck equation.
-        Unit: [cm^-3 mec^-1]
-    radius, float
-        The radius of the galaxy cluster/halo, within which the uniform
-        magnetic field and electron distribution are assumed.
-        Unit: [kpc]
+        Electron number density spectrum.
+        Unit: [cm^-3]
     z : float
-        Redshift of the galaxy cluster/halo
+        Redshift of the cluster/halo been observed/simulated.
+    B : float
+        The assumed uniform magnetic field within the cluster ICM.
+        Unit: [uG]
+    radius : float
+        The radius of the halo, within which the uniform magnetic field
+        and electron distribution are assumed.
+        Unit: [kpc]
     """
-    def __init__(self, B, p, n_e, radius, z):
-        self.B = B  # [uG]
-        self.p = p
-        self.n_e = n_e
+    def __init__(self, gamma, n_e, z, B, radius):
+        self.gamma = np.asarray(gamma)
+        self.n_e = np.asarray(n_e)
         self.z = z
+        self.B = B  # [uG]
         self.radius = radius  # [kpc]
 
     @property
@@ -66,14 +65,14 @@ class SynchrotronEmission:
         Electron Larmor frequency:
             ν_L = e * B / (2*π * m0 * c) = e * B / (2*π * mec)
 
-        Unit: MHz
+        Unit: [MHz]
         """
         coef = AC.e / (2*np.pi * AU.mec)  # [Hz/G]
-        coef *= 1e-12  # [MHz/uG]
+        coef *= 1e-12  # [Hz/G] -> [MHz/uG]
         nu = coef * self.B  # [MHz]
         return nu
 
-    def frequency_crit(self, p, theta=np.pi/2):
+    def frequency_crit(self, gamma, theta=np.pi/2):
         """
         Synchrotron critical frequency.
 
@@ -82,19 +81,20 @@ class SynchrotronEmission:
 
         Parameters
         ----------
-        p : float
-            Electron momentum (unit: mec), i.e., Lorentz factor γ
-        theta : float, optional
-            The angle between the electron velocity and the magnetic field.
-            (unit: radian)
+        gamma : float, or `~numpy.ndarray`
+            Electron Lorentz factors γ
+        theta : float, or `~numpy.ndarray`, optional
+            The angles between the electron velocity and the magnetic field.
+            Unit: [rad]
 
         Returns
         -------
-        nu : float
-            Critical frequency, unit: MHz
+        nu : float, or `~numpy.ndarray`
+            Critical frequencies
+            Unit: [MHz]
         """
         nu_L = self.frequency_larmor
-        nu = (3/2) * p**2 * np.sin(theta) * nu_L
+        nu = (3/2) * gamma**2 * np.sin(theta) * nu_L
         return nu
 
     @staticmethod
