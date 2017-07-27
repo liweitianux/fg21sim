@@ -103,16 +103,17 @@ class SynchrotronEmission:
         nu_c = 1.5 * gamma**2 * np.sin(theta) * self.frequency_larmor
         return nu_c
 
-    @staticmethod
-    def F(x):
+    def F(self, x):
         """
         Synchrotron kernel function.
 
         NOTE
         ----
-        Use interpolation to optimize the speed, also avoid instabilities
-        near the lower end (e.g., x < 1e-5).
-        Interpolation also helps vectorize this function for easier calling.
+        * Use interpolation to optimize the speed, also avoid instabilities
+          near the lower end (e.g., x < 1e-5).
+        * Interpolation also helps vectorize this function for easier calling.
+        * Cache the interpolation results, since this function will be called
+          multiple times for each frequency.
 
         Parameters
         ----------
@@ -125,27 +126,26 @@ class SynchrotronEmission:
         y : `~numpy.ndarray`
             Calculated kernel function values.
         """
-        # The lower and upper cuts
-        xmin = 1e-5
-        xmax = 20.0
-        # Number of samples within [xmin, xmax]
-        # NOTE: this kernel function is quiet smooth and slow-varying.
-        nsamples = 128
-        # Make an interpolation
-        x_interp = np.logspace(np.log10(xmin), np.log10(xmax),
-                               num=nsamples)
-        F_interp = [
-            xp * integrate.quad(lambda t: scipy.special.kv(5/3, t),
-                                a=xp, b=np.inf)[0]
-            for xp in x_interp
-        ]
-        func_interp = interpolate.interp1d(x_interp, F_interp,
-                                           kind="quadratic")
+        if not hasattr(self, "_F_interp"):
+            # Interpolate the kernel function and cache the results
+            #
+            # The lower and upper cuts
+            xmin = 1e-5
+            xmax = 20.0
+            # Number of samples within [xmin, xmax]
+            # NOTE: this kernel function is quiet smooth and slow-varying.
+            nsamples = 128
+            # Make an interpolation
+            xx = np.logspace(np.log10(xmin), np.log10(xmax), num=nsamples)
+            Fxx = [xp * integrate.quad(lambda t: scipy.special.kv(5/3, t),
+                                       a=xp, b=np.inf)[0]
+                   for xp in xx]
+            self._F_interp = interpolate.interp1d(xx, Fxx, kind="quadratic")
 
         x = np.array(x)  # Make a copy!
         x[x < xmin] = xmin
         x[x > xmax] = xmax
-        y = func_interp(x)
+        y = self._F_interp(x)
         return y
 
     def emissivity(self, nu):
