@@ -182,19 +182,20 @@ class Cosmology:
 
         Parameters
         ----------
-        z : float
+        z : `~numpy.ndarray`
             Redshift
 
         Returns
         -------
-        age : float
+        age : `~numpy.ndarray`
             Age of the universe (cosmic time) at the given redshift.
             Unit: [Gyr]
 
         References: Ref.[thomas2000],Eq.(18)
         """
+        z = np.asarray(z)
         t_H = self.hubble_time
-        t = (t_H * (2/3/np.sqrt(1-self.Om0)) *
+        t = ((2*t_H / 3 / np.sqrt(1-self.Om0)) *
              np.arcsinh(np.sqrt((1/self.Om0 - 1) / (1+z)**3)))
         return t
 
@@ -212,17 +213,19 @@ class Cosmology:
 
         Parameters
         ----------
-        age : float
-            Age of the universe (cosmic time), unit [Gyr]
+        age : `~numpy.ndarray`
+            Age of the universe (i.e., cosmic time)
+            Unit: [Gyr]
 
         Returns
         -------
-        z : float
+        z : `~numpy.ndarray`
             Redshift corresponding to the specified age.
         """
+        age = np.asarray(age)
         t_H = self.hubble_time
         term1 = (1/self.Om0) - 1
-        term2 = np.sinh(3*age*np.sqrt(1-self.Om0) / (2*t_H)) ** 2
+        term2 = np.sinh(3*age * np.sqrt(1-self.Om0) / (2*t_H)) ** 2
         z = (term1 / term2) ** (1/3) - 1
         return z
 
