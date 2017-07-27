@@ -3,6 +3,35 @@
 
 """
 Flat ΛCDM cosmological model.
+
+References
+----------
+.. [unibonn-wiki]
+   https://astro.uni-bonn.de/~pavel/WIKIPEDIA/Lambda-CDM_model.html
+
+.. [wikipedia]
+   https://en.wikipedia.org/wiki/Lambda-CDM_model
+
+.. [randall2002]
+   Randall, Sarazin & Ricker 2002, ApJ, 577, 579
+   http://adsabs.harvard.edu/abs/2002ApJ...577..579R
+   Sec.(2)
+
+.. [hogg1999]
+   Hogg 1999, arXiv:astro-ph/9905116
+   http://adsabs.harvard.edu/abs/1999astro.ph..5116H
+
+.. [thomas2000]
+   Thomas & Kantowski 2000, Physical Review D, 62, 103507
+   http://adsabs.harvard.edu/abs/2000PhRvD..62j3507T
+
+.. [ellis2007]
+   Ellis 2007, General Relativity and Gravitation, 39, 1047
+   http://adsabs.harvard.edu/abs/2007GReGr..39.1047E
+
+.. [cassano2005]
+   Cassano & Brunetti 2005, MNRAS, 357, 1313
+   http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
 """
 
 import logging
@@ -34,7 +63,7 @@ class Cosmology:
     Ode0 : float
         Density parameter of dark energy at present day
     sigma8 : float
-        Present-day rms density fluctuation on a scale of 8 h^-1 Mpc.
+        Present-day rms density fluctuation on a scale of 8 h^-1 [Mpc].
 
     Internal attributes
     -------------------
@@ -42,14 +71,6 @@ class Cosmology:
         Astropy cosmology instance to help calculations.
     _growth_factor0 : float
         Present day (z=0) growth factor
-
-    References
-    ----------
-    [1] https://astro.uni-bonn.de/~pavel/WIKIPEDIA/Lambda-CDM_model.html
-    [2] https://en.wikipedia.org/wiki/Lambda-CDM_model
-    [3] Randall, Sarazin & Ricker 2002, ApJ, 577, 579
-        http://adsabs.harvard.edu/abs/2002ApJ...577..579R
-        Sec.(2)
     """
     # Present day (z=0) growth factor
     _growth_factor0 = None
@@ -86,7 +107,7 @@ class Cosmology:
     @property
     def M8(self):
         """
-        Mass contained in a sphere of radius of 8 h^-1 Mpc.
+        Mass contained in a sphere of radius of 8 h^-1 [Mpc].
         Unit: [Msun]
         """
         r = 8 * AUC.Mpc2cm / self.h  # [cm]
@@ -106,19 +127,44 @@ class Cosmology:
         """
         return self.H0 * self.E(z)
 
-    def DL(self, z):
-        """
-        Luminosity distance at redshift z.
-        Unit: [Mpc]
-        """
-        return self._cosmo.luminosity_distance(z).value
-
     def DA(self, z):
         """
         Angular diameter distance at redshift z.
         Unit: [Mpc]
+
+        Defined as the ratio of an object's physical transverse size
+        to its (observed) angular size (in radians).  It is used to
+        convert the observed angular separations between sources into
+        their proper separations.
+
+        NOTE
+        ----
+        This distance is NOT increasing indefinitely as z -> ∞.
+
+        Reference: Ref.[hogg1999]
         """
         return self._cosmo.angular_diameter_distance(z).value
+
+    def DL(self, z):
+        """
+        Luminosity distance at redshift z.
+        Unit: [Mpc]
+
+        Defined by the relationship between the measured bolometric
+        (i.e., integrated over all frequencies) flux S_bolo and the
+        object's intrinsic bolometric luminosity L_bolo.
+
+        NOTE
+        ----
+        DL = DA * (1+z)^2
+        This is the general reciprocity theorem in General Relativity.
+
+        Reference
+        ---------
+        * Ref.[hogg1999],Eq.(20,21)
+        * Ref.[ellis2007]
+        """
+        return self._cosmo.luminosity_distance(z).value
 
     @property
     def hubble_time(self):
@@ -145,11 +191,7 @@ class Cosmology:
             Age of the universe (cosmic time) at the given redshift.
             Unit: [Gyr]
 
-        References
-        ----------
-        [1] Thomas & Kantowski 2000, Physical Review D, 62, 103507
-            http://adsabs.harvard.edu/abs/2000PhRvD..62j3507T
-            Eq.(18)
+        References: Ref.[thomas2000],Eq.(18)
         """
         t_H = self.hubble_time
         t = (t_H * (2/3/np.sqrt(1-self.Om0)) *
@@ -213,11 +255,7 @@ class Cosmology:
         Calculate the virial overdensity, which generally used to
         determine the virial radius of a cluster.
 
-        References
-        ----------
-        [1] Cassano & Brunetti 2005, MNRAS, 357, 1313
-            http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
-            Eqs.(10,A4)
+        References: Ref.[cassano2005],Eqs.(10,A4)
         """
         omega_z = (1 / self.Om(z)) - 1
         Delta_c = 18*np.pi**2 * (1 + 0.4093 * omega_z**0.9052)
@@ -228,11 +266,7 @@ class Cosmology:
         Critical (linear) overdensity for a region to collapse
         at a redshift z.
 
-        References
-        ----------
-        [1] Randall, Sarazin & Ricker 2002, ApJ, 577, 579
-            http://adsabs.harvard.edu/abs/2002ApJ...577..579R
-            Appendix.A, Eq.(A1)
+        References: Ref.[randall2002],Eq.(A1)
         """
         coef = 3 * (12*np.pi) ** (2/3) / 20
         D0 = self.growth_factor0
@@ -245,11 +279,7 @@ class Cosmology:
         """
         Growth factor at redshift z.
 
-        References
-        ----------
-        [1] Randall, Sarazin & Ricker 2002, ApJ, 577, 579
-            http://adsabs.harvard.edu/abs/2002ApJ...577..579R
-            Appendix.A, Eq.(A7)
+        References: Ref.[randall2002],Eq.(A7)
         """
         x0 = (2 * self.Ode0 / self.Om0) ** (1/3)
         x = x0 / (1 + z)
