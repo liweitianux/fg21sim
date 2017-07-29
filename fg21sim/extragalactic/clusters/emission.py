@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 class SynchrotronEmission:
     """
-    Calculate the synchrotron emission from a given population
+    Calculate the synchrotron emissivity from a given population
     of electrons.
 
     Parameters
@@ -66,6 +66,13 @@ class SynchrotronEmission:
         self.radius = radius  # [kpc]
 
     @property
+    def B_gauss(self):
+        """
+        Magnetic field in unit of [G] (i.e., gauss)
+        """
+        return self.B * 1e-6  # [uG] -> [G]
+
+    @property
     def frequency_larmor(self):
         """
         Electron Larmor frequency (a.k.a. gyro frequency):
@@ -74,10 +81,8 @@ class SynchrotronEmission:
 
         Unit: [MHz]
         """
-        coef = AC.e / (2*np.pi * AU.mec)  # [Hz/G]
-        coef *= 1e-12  # [Hz/G] -> [MHz/uG]
-        nu = coef * self.B  # [MHz]
-        return nu
+        nu_larmor = AC.e * self.B_gauss / (2*np.pi * AU.mec)  # [Hz]
+        return nu_larmor * 1e-6  # [Hz] -> [MHz]
 
     def frequency_crit(self, gamma, theta=np.pi/2):
         """
@@ -185,8 +190,7 @@ class SynchrotronEmission:
         # Integrate over energy ``gamma`` in logarithmic grid
         j_nu = integrate.simps(s1d*self.gamma, np.log(self.gamma))
 
-        B_gauss = self.B * 1e-6  # [uG] -> [G]
-        coef = np.sqrt(3) * AC.e**3 * B_gauss / AU.mec2
+        coef = np.sqrt(3) * AC.e**3 * self.B_gauss / AU.mec2
         j_nu *= coef
         return j_nu
 
