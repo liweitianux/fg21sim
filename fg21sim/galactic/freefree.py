@@ -3,6 +3,27 @@
 
 """
 Diffuse Galactic free-free emission simulations.
+
+References
+----------
+.. [dickinson2003]
+   Dickinson, C.; Davies, R. D.; Davis, R. J.,
+   "Towards a free-free template for CMB foregrounds",
+   2003, MNRAS, 341, 369,
+   http://adsabs.harvard.edu/abs/2003MNRAS.341..369D
+
+.. [finkbeiner2003]
+   Finkbeiner, Douglas P.,
+   "A Full-Sky Hα Template for Microwave Foreground Prediction",
+   2003, ApJS, 146, 407,
+   http://adsabs.harvard.edu/abs/2003ApJS..146..407F
+
+.. [schlegel1998]
+   Schlegel, David J.; Finkbeiner, Douglas P.; Davis, Marc,
+   "Maps of Dust Infrared Emission for Use in Estimation of Reddening
+   and Cosmic Microwave Background Radiation Foregrounds",
+   1998, ApJ, 500, 525,
+   http://adsabs.harvard.edu/abs/1998ApJ...500..525S
 """
 
 import os
@@ -23,9 +44,9 @@ class FreeFree:
     """
     Simulate the diffuse Galactic free-free emission.
 
-    The [Dickinson2003]_ method is followed to derive the free-free template.
-    The H\alpha survey map [Finkbeiner2003]_ is first corrected for dust
-    absorption using the infrared 100-\mu{}m dust map [Schlegel1998]_,
+    The [dickinson2003] method is followed to derive the free-free template.
+    The all-sky Hα survey map [Finkbeiner2003] is first corrected for dust
+    absorption using the infrared 100-μm dust map [Schlegel1998],
     and then converted to free-free emission map (brightness temperature).
 
     Parameters
@@ -36,28 +57,7 @@ class FreeFree:
 
     Attributes
     ----------
-    ???
-
-    References
-    ----------
-    .. [Dickinson2003]
-       Dickinson, C.; Davies, R. D.; Davis, R. J.,
-       "Towards a free-free template for CMB foregrounds",
-       2003, MNRAS, 341, 369,
-       http://adsabs.harvard.edu/abs/2003MNRAS.341..369D
-
-    .. [Finkbeiner2003]
-       Finkbeiner, Douglas P.,
-       "A Full-Sky Hα Template for Microwave Foreground Prediction",
-       2003, ApJS, 146, 407,
-       http://adsabs.harvard.edu/abs/2003ApJS..146..407F
-
-    .. [Schlegel1998]
-       Schlegel, David J.; Finkbeiner, Douglas P.; Davis, Marc,
-       "Maps of Dust Infrared Emission for Use in Estimation of Reddening
-       and Cosmic Microwave Background Radiation Foregrounds",
-       1998, ApJ, 500, 525,
-       http://adsabs.harvard.edu/abs/1998ApJ...500..525S
+    TODO
     """
     # Component name
     name = "Galactic free-free"
@@ -90,28 +90,28 @@ class FreeFree:
 
     def _load_maps(self):
         """
-        Load the H{\alpha} map, and dust map.
+        Load the Hα map, and 100-μm dust map.
         """
         sky = get_sky(self.configs)
         logger.info("Loading H[alpha] map ...")
         self.halphamap = sky.load(self.halphamap_path)
-        # TODO: Validate & convert unit
+        # Validate input map unit
         if self.halphamap_unit != au.Unit("Rayleigh"):
             raise ValueError("unsupported Halpha map unit: {0}".format(
                 self.halphamap_unit))
         logger.info("Loading dust map ...")
         self.dustmap = sky.load(self.dustmap_path)
-        # TODO: Validate & convert unit
+        # Validate input map unit
         if self.dustmap_unit != au.Unit("MJy / sr"):
             raise ValueError("unsupported dust map unit: {0}".format(
                 self.dustmap_unit))
 
     def _correct_dust_absorption(self):
         """
-        Correct the H{\alpha} map for dust absorption using the
-        100-{\mu}m dust map.
+        Correct the Hα map for dust absorption using the
+        100-μm dust map.
 
-        References: [Dickinson2003]: Eq.(1, 3); Sec.(2.5)
+        References: Ref.[dickinson2003],Eq.(1,3),Sec.(2.5)
         """
         if hasattr(self, "_dust_corrected") and self._dust_corrected:
             return
@@ -271,9 +271,9 @@ class FreeFree:
         # Assumed electron temperature [ K ]
         T4 = self.Te / 1e4
         nu = frequency * self.freq_unit.to(au.GHz)  # frequency [ GHz ]
-        # NOTE: ignored the "10^3" term in the referred equation
-        ratio_mK_R = (8.396 * ratio_a * nu**(-2.1) *
         factor_a = self._calc_factor_a(frequency)
+        # NOTE:
+        # The referred formula has a superfluous "10^3" term.
         ratio_mK_R = (8.396 * factor_a * nu**(-2.1) *
                       T4**0.667 * 10**(0.029/T4) * (1+0.08))
         # Use "Kelvin" as the brightness temperature unit
