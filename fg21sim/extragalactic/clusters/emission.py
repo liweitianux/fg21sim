@@ -26,11 +26,7 @@ import scipy.special
 from scipy import integrate
 from scipy import interpolate
 
-from ...utils import COSMO
-from ...utils.units import (Units as AU,
-                            UnitConversions as AUC,
-                            Constants as AC)
-from ...utils.convert import Fnu_to_Tb_fast
+from ...utils.units import (Units as AU, Constants as AC)
 
 
 logger = logging.getLogger(__name__)
@@ -48,22 +44,14 @@ class SynchrotronEmission:
     n_e : `~numpy.ndarray`
         Electron number density spectrum.
         Unit: [cm^-3]
-    z : float
-        Redshift of the cluster/halo been observed/simulated.
     B : float
         The assumed uniform magnetic field within the cluster ICM.
         Unit: [uG]
-    radius : float
-        The radius of the halo, within which the uniform magnetic field
-        and electron distribution are assumed.
-        Unit: [kpc]
     """
-    def __init__(self, gamma, n_e, z, B, radius):
+    def __init__(self, gamma, n_e, B):
         self.gamma = np.asarray(gamma)
         self.n_e = np.asarray(n_e)
-        self.z = z
         self.B = B  # [uG]
-        self.radius = radius  # [kpc]
 
     @property
     def B_gauss(self):
@@ -203,67 +191,3 @@ class SynchrotronEmission:
             return syncem[0]
         else:
             return syncem
-
-    def power(self, nu):
-        """
-        Calculate the synchrotron power (power emitted per frequency)
-        at the requested frequency.
-
-        Returns
-        -------
-        P_nu : float
-            Synchrotron power at frequency ``nu``.
-            Unit: [erg/s/Hz]
-        """
-        r_cm = self.radius * AUC.kpc2cm
-        volume = (4.0/3.0) * np.pi * r_cm**3
-        P_nu = self.emissivity(nu) * volume
-        return P_nu
-
-    def flux(self, nu):
-        """
-        Calculate the synchrotron flux (power observed per frequency)
-        at the requested frequency.
-
-        Returns
-        -------
-        F_nu : float
-            Synchrotron flux at frequency ``nu``.
-            Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz]
-        """
-        DL = COSMO.DL(self.z) * AUC.Mpc2cm  # [cm]
-        P_nu = self.power(nu)
-        F_nu = 1e23 * P_nu / (4*np.pi * DL*DL)  # [Jy]
-        return F_nu
-
-    def brightness(self, nu, pixelsize):
-        """
-        Calculate the synchrotron surface brightness (power observed
-        per frequency and per solid angle) at the specified frequency.
-
-        NOTE
-        ----
-        If the radio halo has solid angle less than the pixel area, then
-        it is assumed to have solid angle of 1 pixel.
-
-        Parameters
-        ----------
-        pixelsize : float
-            The pixel size of the output simulated sky image
-            Unit: [arcsec]
-
-        Returns
-        -------
-        Tb : float
-            Synchrotron surface brightness at frequency ``nu``.
-            Unit: [K] <-> [Jy/pixel]
-        """
-        DA = COSMO.DL(self.z) * AUC.Mpc2cm  # [cm]
-        radius = self.radius * AUC.kpc2cm  # [cm]
-        omega = (np.pi * radius**2 / DA**2) * AUC.rad2deg**2  # [deg^2]
-        pixelarea = (pixelsize * AUC.arcsec2deg) ** 2  # [deg^2]
-        if omega < pixelarea:
-            omega = pixelarea
-        F_nu = self.flux(nu)
-        Tb = Fnu_to_Tb_fast(F_nu, omega, nu)
-        return Tb
