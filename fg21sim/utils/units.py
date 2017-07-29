@@ -41,6 +41,10 @@ class UnitConversions:
     Gyr2s = au.Gyr.to(au.s)
     s2Gyr = au.s.to(au.Gyr)
     # Length
+    kpc2m = au.kpc.to(au.m)
+    m2kpc = au.m.to(au.kpc)
+    Mpc2m = au.Mpc.to(au.m)
+    m2Mpc = au.m.to(au.Mpc)
     kpc2cm = au.kpc.to(au.cm)
     cm2kpc = au.cm.to(au.kpc)
     Mpc2cm = au.Mpc.to(au.cm)
