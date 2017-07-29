@@ -153,7 +153,7 @@ class SynchrotronEmission:
         y = self._F_interp(x)
         return y
 
-    def emissivity(self, nu):
+    def emissivity(self, frequencies):
         """
         Calculate the synchrotron emissivity (power emitted per volume
         and per frequency) at the requested frequency.
@@ -167,32 +167,42 @@ class SynchrotronEmission:
 
         Parameters
         ----------
-        nu : float
-            Frequency where to calculate the emissivity.
+        frequencies : float, or 1D `~numpy.ndarray`
+            The frequencies where to calculate the synchrotron emissivity.
             Unit: [MHz]
 
         Returns
         -------
-        j_nu : float
-            Synchrotron emissivity at frequency ``nu``.
+        syncem : float, or 1D `~numpy.ndarray`
+            The calculated synchrotron emissivity at each specified
+            frequency.
             Unit: [erg/s/cm^3/Hz]
         """
+        j_coef = np.sqrt(3) * AC.e**3 * self.B_gauss / AU.mec2
         # Ignore the zero angle
         theta = np.linspace(0, np.pi/2, num=len(self.gamma))[1:]
         theta_grid, gamma_grid = np.meshgrid(theta, self.gamma)
         nu_c = self.frequency_crit(gamma_grid, theta_grid)
-        kernel = self.F(nu / nu_c)
+        # 2D grid of ``n_e(gamma) * sin^2(theta)``
+        nsin2 = np.outer(self.n_e, np.sin(theta)**2)
 
-        # 2D samples over width to do the integration
-        s2d = kernel * np.outer(self.n_e, np.sin(theta)**2)
-        # Integrate over ``theta`` (the last axis)
-        s1d = integrate.simps(s2d, x=theta)
-        # Integrate over energy ``gamma`` in logarithmic grid
-        j_nu = integrate.simps(s1d*self.gamma, np.log(self.gamma))
+        frequencies = np.array(frequencies, ndmin=1)
+        syncem = np.zeros(shape=frequencies.shape)
+        for i, freq in zip(range(len(frequencies)), frequencies):
+            logger.debug("Calc synchrotron emissivity at %.2f [MHz]" % freq)
+            kernel = self.F(freq / nu_c)
+            # 2D samples over width to do the integration
+            s2d = kernel * nsin2
+            # Integrate over ``theta`` (the last axis)
+            s1d = integrate.simps(s2d, x=theta)
+            # Integrate over energy ``gamma`` in logarithmic grid
+            syncem[i] = j_coef * integrate.simps(s1d*self.gamma,
+                                                 np.log(self.gamma))
 
-        coef = np.sqrt(3) * AC.e**3 * self.B_gauss / AU.mec2
-        j_nu *= coef
-        return j_nu
+        if len(syncem) == 1:
+            return syncem[0]
+        else:
+            return syncem
 
     def power(self, nu):
         """
