@@ -254,6 +254,56 @@ class RadioHalo:
         emissivity = syncem.emissivity(frequencies)
         return emissivity
 
+    def calc_power(self, emissivity):
+        """
+        Calculate the synchrotron power (i.e., power *emitted* per
+        unit frequency) from emissivity.
+
+        NOTE
+        ----
+        The calculated power (a.k.a. spectral luminosity) is in units of
+        [W/Hz] which is common in radio astronomy, instead of [erg/s/Hz]!
+            1 [W] = 1e7 [erg/s]
+
+        Parameters
+        ----------
+        emissivity : float, or 1D `~numpy.ndarray`
+            The synchrotron emissivity at multiple frequencies.
+            Unit: [erg/s/cm^3/Hz]
+
+        Returns
+        -------
+        power : float, or 1D `~numpy.ndarray`
+            The calculated synchrotron power w.r.t. each input emissivity.
+            Unit: [W/Hz]
+        """
+        emissivity = np.asarray(emissivity)
+        power = emissivity * self.volume  # [erg/s/Hz]
+        power *= 1e-7  # [erg/s/Hz] -> [W/Hz]
+        return power
+
+    def calc_flux(self, emissivity):
+        """
+        Calculate the synchrotron flux density (i.e., power *observed*
+        per unit frequency) from emissivity.
+
+        Parameters
+        ----------
+        emissivity : float, or 1D `~numpy.ndarray`
+            The synchrotron emissivity at multiple frequencies.
+            Unit: [erg/s/cm^3/Hz]
+
+        Returns
+        -------
+        flux : float, or 1D `~numpy.ndarray`
+            The calculated synchrotron flux w.r.t. each input emissivity.
+            Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz] = 1e-26 [W/m^2/Hz]
+        """
+        power = self.calc_power(emissivity)  # [W/Hz]
+        DL = COSMO.DL(self.z) * AUC.Mpc2m  # [m]
+        flux = 1e26 * power / (4*np.pi * DL*DL)  # [Jy]
+        return flux
+
     def fp_injection(self, gamma, t=None):
         """
         Electron injection (rate) term for the Fokker-Planck equation.
