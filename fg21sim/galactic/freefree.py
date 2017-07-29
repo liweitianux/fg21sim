@@ -75,6 +75,7 @@ class FreeFree:
         self.dustmap_path = self.configs.get_path(comp+"/dustmap")
         self.dustmap_unit = au.Unit(
             self.configs.getn(comp+"/dustmap_unit"))
+        self.Te = self.configs.getn(comp+"/electron_temperature")  # [K]
         self.prefix = self.configs.getn(comp+"/prefix")
         self.save = self.configs.getn(comp+"/save")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
@@ -143,15 +144,27 @@ class FreeFree:
         self._dust_corrected = True
         logger.info("Done dust absorption correction")
 
-    def _calc_ratio_a(self, Te, nu_GHz):
-        """Calculate the ratio factor a(T, nu), which will be used to
-        transform the Halpha emission (Rayleigh) to free-free emission
-        brightness temperature (mK).
-
-        References: [Dickinson2003], Eq.(8)
+    def _calc_factor_a(self, nu):
         """
-        term1 = 0.366 * nu_GHz**0.1 * Te**(-0.15)
-        term2 = np.log(4.995e-2 / nu_GHz) + 1.5*np.log(Te)
+        Calculate the ratio factor a(Te, ν), which will be used to
+        convert the Halpha emission [Rayleigh] to free-free emission
+        brightness temperature [K].
+
+        Parameters
+        ----------
+        nu : float
+            The frequency where to calculate the factor a(nu).
+            Unit: [MHz]
+
+        Returns
+        -------
+        a : float
+            The factor for Hα to free-free conversion.
+
+        References: [dickinson2003],Eq.(8)
+        """
+        term1 = 0.183 * nu**0.1 * self.Te**(-0.15)
+        term2 = 3.91 - np.log(nu) + 1.5*np.log(self.Te)
         a = term1 * term2
         return a
 
@@ -256,12 +269,12 @@ class FreeFree:
         logger.info("Simulating {name} map at {freq} ({unit}) ...".format(
             name=self.name, freq=frequency, unit=self.freq_unit))
         # Assumed electron temperature [ K ]
-        Te = 7000.0
-        T4 = Te / 1e4
+        T4 = self.Te / 1e4
         nu = frequency * self.freq_unit.to(au.GHz)  # frequency [ GHz ]
-        ratio_a = self._calc_ratio_a(Te, nu)
         # NOTE: ignored the "10^3" term in the referred equation
         ratio_mK_R = (8.396 * ratio_a * nu**(-2.1) *
+        factor_a = self._calc_factor_a(frequency)
+        ratio_mK_R = (8.396 * factor_a * nu**(-2.1) *
                       T4**0.667 * 10**(0.029/T4) * (1+0.08))
         # Use "Kelvin" as the brightness temperature unit
         ratio_K_R = ratio_mK_R * au.mK.to(au.K)

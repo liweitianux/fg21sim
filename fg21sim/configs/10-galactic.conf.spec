@@ -62,6 +62,11 @@
   # The unit of the above dust map (e.g., "MJy/sr")
   dustmap_unit = string(default=None)
 
+  # The electron temperature assumed for the ionized interstellar medium
+  # that generating H{\alpha} emission.
+  # Unit: [K]
+  electron_temperature = float(default=7000.0, min=1000)
+
   # Filename prefix for this component
   prefix = string(default="gfree")
   # Whether save this component to disk
