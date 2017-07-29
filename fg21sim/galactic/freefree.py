@@ -168,6 +168,29 @@ class FreeFree:
         a = term1 * term2
         return a
 
+    def _calc_halpha_to_freefree(self, nu):
+        """
+        Calculate the conversion factor between Hα emission [Rayleigh]
+        to radio free-free emission [K] at frequency ν [MHz].
+
+        Parameters
+        ----------
+        nu : float
+            The frequency where to calculate the conversion factor.
+            Unit: [MHz]
+
+        Returns
+        -------
+        h2f : float
+            The conversion factor between Hα emission and free-free emission.
+
+        References: [dickinson2003],Eq.(11)
+        NOTE: The above referred formula has a superfluous "10^3" term!
+        """
+        a = self._calc_factor_a(nu)
+        h2f = 38.86 * a * nu**(-2.1) * 10**(290/self.Te) * self.Te**0.667
+        return h2f
+
     def _make_filepath(self, **kwargs):
         """
         Make the path of output file according to the filename pattern
@@ -252,10 +275,6 @@ class FreeFree:
         """
         Simulate the free-free map at the specified frequency.
 
-        References: [Dickinson2003], Eq.(11)
-
-        NOTE: [Dickinson2003], Eq.(11) may wrongly have the "10^3" term.
-
         Returns
         -------
         skymap_f : 1D `~numpy.ndarray`
@@ -268,16 +287,7 @@ class FreeFree:
         #
         logger.info("Simulating {name} map at {freq} ({unit}) ...".format(
             name=self.name, freq=frequency, unit=self.freq_unit))
-        # Assumed electron temperature [ K ]
-        T4 = self.Te / 1e4
-        nu = frequency * self.freq_unit.to(au.GHz)  # frequency [ GHz ]
-        factor_a = self._calc_factor_a(frequency)
-        # NOTE:
-        # The referred formula has a superfluous "10^3" term.
-        ratio_mK_R = (8.396 * factor_a * nu**(-2.1) *
-                      T4**0.667 * 10**(0.029/T4) * (1+0.08))
-        # Use "Kelvin" as the brightness temperature unit
-        ratio_K_R = ratio_mK_R * au.mK.to(au.K)
+        ratio_K_R = self._calc_halpha_to_freefree(frequency)
         skymap_f = self.halphamap.data * ratio_K_R
         #
         if self.save:
