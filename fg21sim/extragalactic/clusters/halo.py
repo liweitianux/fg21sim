@@ -44,11 +44,11 @@ import numpy as np
 
 from . import helper
 from .solver import FokkerPlanckSolver
+from .emission import SynchrotronEmission
 from ...configs import CONFIGS
 from ...utils import COSMO
 from ...utils.units import (Units as AU,
-                            UnitConversions as AUC,
-                            Constants as AC)
+                            UnitConversions as AUC)
 
 
 logger = logging.getLogger(__name__)
@@ -71,10 +71,6 @@ class RadioHalo:
        energy spectrum;
     4. Determine the initial electron density
     TODO...
-
-    after that, calculate the electron acceleration and time evolution
-    by solving the Fokker-Planck equation; and finally derive the radio
-    emission from the electron spectra.
 
     Parameters
     ----------
@@ -222,6 +218,41 @@ class RadioHalo:
         self.electron_spec = self.fpsolver.solve(u0=n0_e, tstart=tstart,
                                                  tstop=tstop)
         return self.electron_spec
+
+    def calc_emissivity(self, frequencies, n_e=None, gamma=None):
+        """
+        Calculate the synchrotron emissivity for the derived electron
+        spectrum.
+
+        Parameters
+        ----------
+        frequencies : float, or 1D `~numpy.ndarray`
+            The frequencies where to calculate the synchrotron emissivity.
+            Unit: [MHz]
+        n_e : 1D `~numpy.ndarray`, optional
+            The electron spectrum (w.r.t. Lorentz factors γ).
+            If not provided, then used the cached ``self.electron_spec``
+            solved above.
+            Unit: [cm^-3]
+        gamma : 1D `~numpy.ndarray`, optional
+            The Lorentz factors γ of the electron spectrum.
+            If not provided, then used ``self.gamma``.
+
+        Returns
+        -------
+        emissivity : float, or 1D `~numpy.ndarray`
+            The calculated synchrotron emissivity at each specified
+            frequency.
+            Unit: [erg/s/cm^3/Hz]
+        """
+        if n_e is None:
+            n_e = self.electron_spec
+        if gamma is None:
+            gamma = self.gamma
+        syncem = SynchrotronEmission(gamma=gamma, n_e=n_e,
+                                     B=self.magnetic_field)
+        emissivity = syncem.emissivity(frequencies)
+        return emissivity
 
     def fp_injection(self, gamma, t=None):
         """
