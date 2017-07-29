@@ -75,6 +75,8 @@ class FreeFree:
         self.dustmap_path = self.configs.get_path(comp+"/dustmap")
         self.dustmap_unit = au.Unit(
             self.configs.getn(comp+"/dustmap_unit"))
+        self.f_dust = self.configs.getn(comp+"/dust_fraction")
+        self.halpha_abs_th = self.configs.getn(comp+"/halpha_abs_th")  # [mag]
         self.Te = self.configs.getn(comp+"/electron_temperature")  # [K]
         self.prefix = self.configs.getn(comp+"/prefix")
         self.save = self.configs.getn(comp+"/save")
@@ -117,29 +119,23 @@ class FreeFree:
             return
         #
         logger.info("Correct H[alpha] map for dust absorption")
-        # Effective dust fraction in the LoS actually absorbing Halpha
-        f_dust = 0.33
-        logger.info("Effective dust fraction: {0}".format(f_dust))
-        # NOTE:
+        logger.info("Effective dust fraction: {0}".format(self.f_dust))
         # Mask the regions where the true Halpha absorption is uncertain.
         # When the dust absorption goes rather large, the true Halpha
         # absorption can not well determined.
-        # Therefore, the regions where the calculated Halpha absorption
-        # greater than 1.0 mag are masked out.
-        halpha_abs_th = 1.0  # Halpha absorption threshold, unit: [ mag ]
         # Corresponding dust absorption threshold, unit: [ MJy / sr ]
-        dust_abs_th = halpha_abs_th / 0.0462 / f_dust
+        dust_abs_th = self.halpha_abs_th / 0.0462 / self.f_dust
         logger.info("Dust absorption mask threshold: " +
                     "{0:.1f} MJy/sr ".format(dust_abs_th) +
                     "<-> H[alpha] absorption threshold: " +
-                    "{0:.1f} mag".format(halpha_abs_th))
+                    "{0:.1f} mag".format(self.halpha_abs_th))
         mask = (self.dustmap.data > dust_abs_th)
         self.dustmap.data[mask] = np.nan
         fp_mask = 100 * mask.sum() / self.dustmap.data.size
         logger.warning("Dust map masked fraction: {0:.1f}%".format(fp_mask))
         #
         halphamap_corr = (self.halphamap.data *
-                          10**(self.dustmap.data * 0.0185 * f_dust))
+                          10**(self.dustmap.data * 0.0185 * self.f_dust))
         self.halphamap.data = halphamap_corr
         self._dust_corrected = True
         logger.info("Done dust absorption correction")

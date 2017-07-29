@@ -62,6 +62,18 @@
   # The unit of the above dust map (e.g., "MJy/sr")
   dustmap_unit = string(default=None)
 
+  # Effective dust fraction in the LoS actually absorbing Halpha
+  dust_fraction = float(default=0.33, min=0.1, max=1.0)
+
+  # Halpha absorption threshold:
+  # When the dust absorption goes rather large, the true Halpha
+  # absorption can not well determined.  This configuration sets the
+  # threshold below which the dust absorption can be well determined,
+  # while the sky regions with higher absorption are masked out due
+  # to unreliable absorption correction.
+  # Unit: [mag]
+  halpha_abs_th = float(default=1.0)
+
   # The electron temperature assumed for the ionized interstellar medium
   # that generating H{\alpha} emission.
   # Unit: [K]
