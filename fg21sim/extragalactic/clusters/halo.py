@@ -163,6 +163,15 @@ class RadioHalo:
         return r_halo
 
     @property
+    def volume(self):
+        """
+        The halo volume, calculated from the above radius.
+        Unit: [cm^3]
+        """
+        r_cm = self.radius * AUC.kpc2cm
+        return (4*np.pi/3) * r_cm**3
+
+    @property
     def magnetic_field(self):
         """
         The magnetic field strength at the simulated observation
