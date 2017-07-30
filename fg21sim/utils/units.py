@@ -59,6 +59,8 @@ class UnitConversions:
     # Angle
     rad2deg = au.rad.to(au.deg)
     deg2rad = au.deg.to(au.rad)
+    rad2arcsec = au.rad.to(au.arcsec)
+    arcsec2rad = au.arcsec.to(au.rad)
     arcmin2deg = au.arcmin.to(au.deg)
     deg2arcmin = au.deg.to(au.arcmin)
     arcsec2deg = au.arcsec.to(au.deg)

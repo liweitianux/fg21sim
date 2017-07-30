@@ -159,6 +159,16 @@ class RadioHalo:
         return r_halo
 
     @property
+    def angular_radius(self):
+        """
+        The angular radius of the radio halo.
+        Unit: [arcsec]
+        """
+        DA = COSMO.DA(self.z) * 1e3  # [Mpc] -> [kpc]
+        theta = self.radius / DA  # [rad]
+        return theta * AUC.rad2arcsec
+
+    @property
     def volume(self):
         """
         The halo volume, calculated from the above radius.
