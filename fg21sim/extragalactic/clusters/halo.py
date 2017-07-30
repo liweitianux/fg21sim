@@ -49,6 +49,7 @@ from ...configs import CONFIGS
 from ...utils import COSMO
 from ...utils.units import (Units as AU,
                             UnitConversions as AUC)
+from ...utils.convert import Fnu_to_Tb_fast
 
 
 logger = logging.getLogger(__name__)
@@ -313,6 +314,53 @@ class RadioHalo:
         DL = COSMO.DL(self.z) * AUC.Mpc2m  # [m]
         flux = 1e26 * power / (4*np.pi * DL*DL)  # [Jy]
         return flux
+
+    def calc_brightness_mean(self, emissivity, frequencies, pixelsize=None):
+        """
+        Calculate the mean surface brightness (power observed per unit
+        frequency and per unit solid angle) at the specified frequencies
+        from emissivity.
+
+        NOTE
+        ----
+        If the solid angle that the radio halo extends is smaller than
+        the specified pixel area, then the halo is assumed to cover a
+        solid angle of 1 pixel.
+
+        Parameters
+        ----------
+        emissivity : float, or 1D `~numpy.ndarray`
+            The synchrotron emissivity at multiple frequencies.
+            Unit: [erg/s/cm^3/Hz]
+        frequencies : float, or 1D `~numpy.ndarray`
+            The frequencies where to calculate the synchrotron emissivity.
+            Unit: [MHz]
+        pixelsize : float, optional
+            The pixel size of the output simulated sky image.
+            Unit: [arcsec]
+
+        Returns
+        -------
+        Tb : float, or 1D `~numpy.ndarray`
+            The mean surface brightness at each frequency.
+            Unit: [K] <-> [Jy/pixel]
+        """
+        omega = np.pi * self.angular_radius**2  # [arcsec^2]
+        if pixelsize:
+            pixelarea = pixelsize ** 2  # [arcsec^2]
+            if omega < pixelarea:
+                omega = pixelarea
+                logger.warning("Halo sky coverage (%.2f [arcsec^2])" % omega,
+                               " < pixel area (%.2f [arcsec^2])" % pixelarea)
+
+        flux = self.calc_flux(emissivity)
+        Tb = [Fnu_to_Tb_fast(Fnu, omega, freq)
+              for Fnu, freq in zip(np.array(flux, ndmin=1),
+                                   np.array(frequencies, ndmin=1))]
+        if len(Tb) == 1:
+            return Tb[0]
+        else:
+            return np.array(Tb)
 
     def fp_injection(self, gamma, t=None):
         """
