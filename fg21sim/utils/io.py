@@ -15,6 +15,35 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
+def _create_dir(filepath):
+    """
+    Check the existence of the target directory, and create it if necessary.
+    """
+    dirname = os.path.dirname(filepath)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+        logger.info("Created output directory: {0}".format(dirname))
+
+
+def _check_existence(filepath, clobber=False, remove=False):
+    """
+    Check the existence of the target file.
+
+    * raise ``OSError`` : file exists and clobber is False;
+    * no action : files does not exists or clobber is True;
+    * remove the file : files exists and clobber is True and remove is True
+    """
+    if os.path.exists(filepath):
+        if clobber:
+            if remove:
+                logger.warning("Removed existing file: {0}".format(filepath))
+                os.remove(filepath)
+            else:
+                logger.warning("Existing file will be overwritten.")
+        else:
+            raise OSError("Output file exists: {0}".format(filepath))
+
+
 def dataframe_to_csv(df, outfile, comment=None, clobber=False):
     """
     Save the given Pandas DataFrame into a CSV text file.
@@ -35,18 +64,8 @@ def dataframe_to_csv(df, outfile, comment=None, clobber=False):
     if not isinstance(df, pd.DataFrame):
         raise TypeError("Not a Pandas DataFrame!")
 
-    # Create directory if necessary
-    dirname = os.path.dirname(outfile)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-        logger.info("Created output directory: {0}".format(dirname))
-
-    if os.path.exists(outfile):
-        if clobber:
-            logger.warning("Removed existing file: {0}".format(outfile))
-            os.remove(outfile)
-        else:
-            raise OSError("Output file exists: {0}".format(outfile))
+    _create_dir(outfile)
+    _check_existence(outfile, clobber=clobber, remove=True)
 
     # Add a default header comment
     if comment is None:
