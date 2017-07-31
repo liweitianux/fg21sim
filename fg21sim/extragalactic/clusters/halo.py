@@ -145,6 +145,12 @@ class RadioHalo:
 
     @property
     def time_crossing(self):
+        """
+        The time duration of the sub-cluster crossing the main cluster,
+        which is also used to approximate the merging time, during which
+        the turbulence acceleration is regarded as effective.
+        Unit: [Gyr]
+        """
         return helper.time_crossing(self.M_main, self.M_sub,
                                     z=self.z_merger)
 
