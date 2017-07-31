@@ -29,4 +29,4 @@ CONFIGS = ConfigManager()
 # NOTE: Once the above shared ``CONFIGS`` setup or loaded with new
 #       configurations, this ``COSMO`` object needs also been updated:
 #       ``COSMO.setup(**CONFIGS.cosmology)``
-COSMO = Cosmology()
+COSMO = Cosmology(**CONFIGS.cosmology)

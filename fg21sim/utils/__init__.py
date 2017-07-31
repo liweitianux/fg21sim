@@ -2,4 +2,3 @@
 # MIT license
 
 from .logging import setup_logging
-from .cosmology import Cosmology

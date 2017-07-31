@@ -40,7 +40,6 @@ import numpy as np
 from scipy import integrate
 from astropy.cosmology import FlatLambdaCDM
 
-from ..share import CONFIGS
 from .units import (UnitConversions as AUC, Constants as AC)
 
 
@@ -75,11 +74,7 @@ class Cosmology:
     # Present day (z=0) growth factor
     _growth_factor0 = None
 
-    def __init__(self,
-                 H0=CONFIGS.cosmology["H0"],
-                 Om0=CONFIGS.cosmology["Om0"],
-                 Ob0=CONFIGS.cosmology["Ob0"],
-                 sigma8=CONFIGS.cosmology["sigma8"]):
+    def __init__(self, H0=71.0, Om0=0.27, Ob0=0.046, sigma8=0.81):
         self.setup(H0=H0, Om0=Om0, Ob0=Ob0, sigma8=sigma8)
 
     def setup(self, **kwargs):
