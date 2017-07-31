@@ -77,6 +77,7 @@ class GalaxyClusters:
         self.ratio_major = self.configs.getn(comp+"/ratio_major")
         self.tau_merger = self.configs.getn(comp+"/tau_merger")
 
+        self.frequencies = self.configs.frequencies
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.use_float = self.configs.getn("output/use_float")
         self.checksum = self.configs.getn("output/checksum")
@@ -222,8 +223,50 @@ class GalaxyClusters:
         logger.info("%d (%.1f%%) clusters have recent major mergers." %
                     (num_major, 100*num_major/num))
 
+    def _simulate_halos(self):
         """
+        Simulate the radio halo properties for each cluster with
+        recent major merger event.
+
+        Attributes
+        ----------
+        halos : list[dict]
+            Simulated data for each cluster with recent major merger.
         """
+        # Select out the clusters with recent major mergers
+        idx_rmm = ~self.catalog["rmm_z"].isnull()
+        num = idx_rmm.sum()
+        logger.info("Simulating halos for %d merging clusters ..." % num)
+        self.halos = []
+        i = 0
+        for row in self.catalog[idx_rmm].itertuples():
+            i += 1
+            if i % 50 == 0:
+                logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
+            halo = RadioHalo(M_obs=row.mass, z_obs=row.z,
+                             M_main=row.rmm_mass1, M_sub=row.rmm_mass2,
+                             z_merger=row.rmm_z, configs=self.configs)
+            n_e = halo.calc_electron_spectrum()
+            emissivity = halo.calc_emissivity(frequencies=self.frequencies)
+            flux = halo.calc_flux(emissivity)
+            data = {
+                "z0": halo.z,
+                "M0": halo.mass,  # [Msun]
+                "z_merger": halo.z_merger,
+                "M_main": halo.M_main,  # [Msun]
+                "M_sub": halo.M_sub,  # [Msun]
+                "time_crossing": halo.time_crossing,  # [Gyr]
+                "gamma": halo.gamma,  # Lorentz factors
+                "radius": halo.radius,  # [kpc]
+                "angular_radius": halo.angular_radius,  # [arcsec]
+                "B": halo.magnetic_field,  # [uG]
+                "n_e": n_e,  # [cm^-3]
+                "frequencies": self.frequencies,  # [MHz]
+                "emissivity": emissivity,  # [erg/s/cm^3/Hz]
+                "flux": flux,  # [Jy]
+            }
+            self.halos.append(data)
+        logger.info("Simulated radio halos for merging cluster.")
 
     def preprocess(self):
         """
