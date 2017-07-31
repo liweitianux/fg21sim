@@ -45,8 +45,7 @@ import numpy as np
 from . import helper
 from .solver import FokkerPlanckSolver
 from .emission import SynchrotronEmission
-from ...configs import CONFIGS
-from ...utils import COSMO
+from ...share import CONFIGS, COSMO
 from ...utils.units import (Units as AU,
                             UnitConversions as AUC)
 from ...utils.convert import Fnu_to_Tb_fast

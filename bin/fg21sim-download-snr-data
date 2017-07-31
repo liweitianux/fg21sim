@@ -19,7 +19,7 @@ import argparse
 import logging
 import csv
 
-from fg21sim.configs import CONFIGS
+from fg21sim.share import CONFIGS
 from fg21sim.utils import setup_logging
 from fg21sim.data import retrieve_snr_data_green, SNRDataGreen
 

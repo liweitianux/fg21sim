@@ -14,8 +14,8 @@ import argparse
 import logging
 import time
 
-from fg21sim.configs import CONFIGS
-from fg21sim.utils import setup_logging, COSMO
+from fg21sim.share import CONFIGS, COSMO
+from fg21sim.utils import setup_logging
 
 
 def main():

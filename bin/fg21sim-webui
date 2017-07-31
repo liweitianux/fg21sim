@@ -23,7 +23,7 @@ import webbrowser
 import tornado.ioloop
 from tornado.options import define, options, parse_command_line
 
-from fg21sim.configs import CONFIGS
+from fg21sim.share import CONFIGS
 from fg21sim.utils import setup_logging
 from fg21sim.webui import Application
 

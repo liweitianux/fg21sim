@@ -3,5 +3,3 @@
 
 from .manager import ConfigManager
 from .checkers import check_configs
-
-CONFIGS = ConfigManager()

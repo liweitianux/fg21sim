@@ -40,7 +40,7 @@ import numpy as np
 from scipy import integrate
 from astropy.cosmology import FlatLambdaCDM
 
-from ..configs import CONFIGS
+from ..share import CONFIGS
 from .units import (UnitConversions as AUC, Constants as AC)
 
 

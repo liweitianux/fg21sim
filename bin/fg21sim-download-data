@@ -13,7 +13,7 @@ import argparse
 import logging
 import json
 
-from fg21sim.configs import CONFIGS
+from fg21sim.share import CONFIGS
 from fg21sim.utils import setup_logging
 from fg21sim.utils.download import download_file
 

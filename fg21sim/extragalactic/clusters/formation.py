@@ -24,7 +24,7 @@ import scipy.special
 import scipy.optimize
 
 from .mergertree import MergerTree
-from ...utils import COSMO
+from ...share import COSMO
 
 
 logger = logging.getLogger(__name__)

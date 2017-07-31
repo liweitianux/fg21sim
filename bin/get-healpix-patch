@@ -18,7 +18,7 @@ import scipy.ndimage
 import healpy as hp
 from reproject import reproject_from_healpix
 
-from fg21sim.configs import CONFIGS
+from fg21sim.share import CONFIGS
 from fg21sim.sky import SkyPatch
 from fg21sim.utils import setup_logging
 from fg21sim.utils.fits import read_fits_healpix

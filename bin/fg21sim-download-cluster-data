@@ -65,7 +65,7 @@ import csv
 import urllib.request
 import tarfile
 
-from fg21sim.configs import CONFIGS
+from fg21sim.share import CONFIGS
 from fg21sim.utils import setup_logging
 
 

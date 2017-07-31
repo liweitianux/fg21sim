@@ -31,8 +31,7 @@ References
 import numpy as np
 from scipy import integrate
 
-from ...configs import CONFIGS
-from ...utils import COSMO
+from ...share import CONFIGS, COSMO
 from ...utils.units import (Units as AU,
                             Constants as AC,
                             UnitConversions as AUC)

@@ -18,7 +18,7 @@ import logging
 
 from pkg_resources import resource_exists, resource_filename
 
-from fg21sim.configs import CONFIGS
+from fg21sim.share import CONFIGS
 from fg21sim.utils import setup_logging
 from fg21sim.uvsim import telescope
 
