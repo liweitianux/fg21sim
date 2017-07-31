@@ -8,7 +8,7 @@ NOTE: ``global`` and ``globals`` are both preserved by Python :-(
 """
 
 from .configs import ConfigManager
-from .utils import Cosmology
+from .utils.cosmology import Cosmology
 
 
 # The globally shared `~ConfigManager` instance/object, that holds the

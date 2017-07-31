@@ -44,7 +44,10 @@ class PSFormalism:
         self.datafile = self.configs.get_path(comp+"/ps_data")
         self.f_darkmatter = self.configs.getn(comp+"/f_darkmatter")
         self.Mmin_cluster = self.configs.getn(comp+"/mass_min")  # [Msun]
-        self.Mmin_halo = self.Mmin_cluster * self.f_darkmatter
+
+    @property
+    def Mmin_halo(self):
+        return self.Mmin_cluster * self.f_darkmatter
 
     def _load_data(self, filepath=None):
         """
@@ -116,7 +119,7 @@ class PSFormalism:
         dM = self.delta(self.masses)
         dMgrip, dzgrip = np.meshgrid(dM, dz)
         Mgrip, zgrip = np.meshgrid(self.masses, self.redshifts)
-        dVcgrip = COSMO.differential_comoving_volume(zgrip).value  # [Mpc^3/sr]
+        dVcgrip = COSMO.dVc(zgrip)  # [Mpc^3/sr]
         numgrid = self.densities * dVcgrip * dzgrip * dMgrip
         return numgrid
 
@@ -193,7 +196,7 @@ class PSFormalism:
         i = 0
         while i < counts:
             z = random.uniform(zmin, zmax)
-            M = random.uniform(self.mass_min, Mmax)
+            M = random.uniform(self.Mmin_halo, Mmax)
             r = random.random()
             zi1 = (self.redshifts < z).sum()
             zi2 = zi1 - 1
@@ -215,7 +218,10 @@ class PSFormalism:
                 z_list.append(z)
                 M_list.append(M)
                 i += 1
-        logger.info("Sampled %d (z, mass) pairs for each cluster" % counts)
+                if i % 100 == 0:
+                    logger.debug("[%d/%d] %.1f%% done ..." %
+                                 (i, counts, 100*i/counts))
+        logger.info("Sampled %d pairs of (z, mass) for each cluster" % counts)
 
         df = pd.DataFrame(np.column_stack([z_list, M_list]),
                           columns=["z", "mass"])
