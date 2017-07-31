@@ -20,10 +20,19 @@
   # The configurations in this ``[[clusters]]`` section may also be
   # used by the following ``[[halos]]`` section.
   [[clusters]]
-  # The clusters catalog derived from the Hubble Volume Project (CSV file)
-  catalog = string(default=None)
+  # The Press-Schechter formalism predicted halo distribution densities.
+  ps_data = string(default=None)
+
   # Output the effective/inuse clusters catalog data (CSV file)
   catalog_outfile = string(default=None)
+
+  # The fraction of the dark matter mass in galaxy clusters.
+  f_darkmatter = float(default=0.8, min=0.5, max=1.0)
+
+  # The minimum mass for clusters when to determine the galaxy clusters
+  # total counts and their distributions.
+  # Unit: [Msun]
+  mass_min = float(default=2e14, min=1e12)
 
   # Minimum mass change of the main cluster to be regarded as a merger
   # event instead of an accretion event.
