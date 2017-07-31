@@ -7,6 +7,7 @@ Input/output utilities.
 
 import os
 import logging
+import pickle
 from datetime import datetime
 
 import pandas as pd
@@ -77,3 +78,33 @@ def dataframe_to_csv(df, outfile, comment=None, clobber=False):
         fh.write("".join(["# "+line.strip()+"\n" for line in comment]))
         df.to_csv(fh, header=True, index=False)
     logger.info("Wrote DataFrame to CSV file: {0}".format(outfile))
+
+
+def pickle_dump(obj, outfile, clobber=False):
+    """
+    Dump the given object into the output file using ``pickle.dump()``.
+
+    NOTE
+    ----
+    The dumped output file is in binary format, and can be loaded back
+    using ``pickle.load()``.
+
+    Example
+    -------
+    >>> a = [1, 2, 3]
+    >>> pickle.dump(a, file=open("a.pkl", "wb"))
+    >>> b = pickle.load(open("a.pkl", "rb))
+    >>> a == b
+    True
+
+    Parameters
+    ----------
+    """
+    _create_dir(outfile)
+    _check_existence(outfile, clobber=clobber, remove=True)
+    pickle.dump(obj, file=open(outfile, "wb"))
+    logger.info("Pickled data to file: %s" % outfile)
+
+
+def pickle_load(infile):
+    return pickle.load(open(infile, "rb"))
