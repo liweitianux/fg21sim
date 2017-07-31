@@ -247,8 +247,8 @@ class GalaxyClusters:
             emissivity = halo.calc_emissivity(frequencies=self.frequencies)
             flux = halo.calc_flux(emissivity)
             data = {
-                "z0": halo.z,
-                "M0": halo.mass,  # [Msun]
+                "z0": halo.z_obs,
+                "M0": halo.M_obs,  # [Msun]
                 "z_merger": halo.z_merger,
                 "M_main": halo.M_main,  # [Msun]
                 "M_sub": halo.M_sub,  # [Msun]

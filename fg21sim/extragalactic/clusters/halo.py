@@ -170,7 +170,7 @@ class RadioHalo:
         The angular radius of the radio halo.
         Unit: [arcsec]
         """
-        DA = COSMO.DA(self.z) * 1e3  # [Mpc] -> [kpc]
+        DA = COSMO.DA(self.z_obs) * 1e3  # [Mpc] -> [kpc]
         theta = self.radius / DA  # [rad]
         return theta * AUC.rad2arcsec
 
@@ -316,7 +316,7 @@ class RadioHalo:
             Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz] = 1e-26 [W/m^2/Hz]
         """
         power = self.calc_power(emissivity)  # [W/Hz]
-        DL = COSMO.DL(self.z) * AUC.Mpc2m  # [m]
+        DL = COSMO.DL(self.z_obs) * AUC.Mpc2m  # [m]
         flux = 1e26 * power / (4*np.pi * DL*DL)  # [Jy]
         return flux
 
