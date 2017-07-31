@@ -22,6 +22,7 @@ import logging
 import numpy as np
 import pandas as pd
 
+from .psformalism import PSFormalism
 from .formation import ClusterFormation
 from .halo import RadioHalo
 from ...share import CONFIGS, COSMO
@@ -67,7 +68,6 @@ class GalaxyClusters:
         Load the configs and set the corresponding class attributes.
         """
         comp = "extragalactic/clusters"
-        self.catalog_path = self.configs.get_path(comp+"/catalog")
         self.catalog_outfile = self.configs.get_path(comp+"/catalog_outfile")
         self.prefix = self.configs.getn(comp+"/prefix")
         self.save = self.configs.getn(comp+"/save")
@@ -90,23 +90,21 @@ class GalaxyClusters:
 
         logger.info("Loaded and set up configurations")
 
-    def _load_catalog(self):
+    def _simulate_catalog(self):
         """
-        Load the sampled (z, mass) catalogs from the Press-Schechter
-        formalism for the clusters in this sky patch.
+        Simulate the (z, mass) catalog of the cluster distribution
+        according to the Press-Schechter formalism.
 
         Catalog columns
         ---------------
         * ``z`` : redshifts
-        * ``mass`` : cluster mass; unit: [Msun]
+        * ``mass`` : cluster total mass; unit: [Msun]
         """
-        self.catalog = pd.read_csv(self.catalog_path, comment="#")
-        self.catalog_comment = [
-            "z : redshift",
-            "mass : cluster total mass [Msun]",
-        ]
-        num = len(self.catalog)
-        logger.info("Loaded (z, mass) catalog: %d clusters" % num)
+        logger.info("Simulating the clusters (z, mass) catalog ...")
+        psform = PSFormalism(configs=self.configs)
+        counts = psform.calc_cluster_counts(coverage=self.sky.area)
+        self.catalog, self.catalog_comment = psform.sample_z_m(counts)
+        logger.info("Simulated cluster catalog of counts %d." % counts)
 
     def _process_catalog(self):
         """
@@ -281,7 +279,7 @@ class GalaxyClusters:
             return
 
         logger.info("{name}: preprocessing ...".format(name=self.name))
-        self._load_catalog()
+        self._simulate_catalog()
         self._process_catalog()
         # self._simulate_mergers()
 
