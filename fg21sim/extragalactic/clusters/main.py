@@ -26,7 +26,7 @@ from .psformalism import PSFormalism
 from .formation import ClusterFormation
 from .halo import RadioHalo
 from ...share import CONFIGS, COSMO
-from ...utils.io import dataframe_to_csv
+from ...utils.io import dataframe_to_csv, pickle_dump
 from ...sky import get_sky
 
 
@@ -69,6 +69,7 @@ class GalaxyClusters:
         """
         comp = "extragalactic/clusters"
         self.catalog_outfile = self.configs.get_path(comp+"/catalog_outfile")
+        self.halos_dumpfile = self.configs.get_path(comp+"/halos_dumpfile")
         self.prefix = self.configs.getn(comp+"/prefix")
         self.save = self.configs.getn(comp+"/save")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
@@ -300,3 +301,9 @@ class GalaxyClusters:
             dataframe_to_csv(self.catalog, outfile=self.catalog_outfile,
                              comment=self.catalog_comment,
                              clobber=self.clobber)
+        # Dump the simulated clusters data
+        if self.halos_dumpfile is None:
+            logger.warning("Missing dump outfile; skip dump cluster data!")
+        else:
+            pickle_dump(self.halos, outfile=self.halos_dumpfile,
+                        clobber=self.clobber)

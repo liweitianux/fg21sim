@@ -26,6 +26,10 @@
   # Output the effective/inuse clusters catalog data (CSV file)
   catalog_outfile = string(default=None)
 
+  # Output file for dumping the simulated cluster halos data in Python
+  # native *pickle* format (i.e., .pkl)
+  halos_dumpfile = string(default=None)
+
   # The fraction of the dark matter mass in galaxy clusters.
   f_darkmatter = float(default=0.8, min=0.5, max=1.0)
 
