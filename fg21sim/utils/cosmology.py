@@ -295,3 +295,11 @@ class Cosmology:
         if self._growth_factor0 is None:
             self._growth_factor0 = self.growth_factor(0)
         return self._growth_factor0
+
+    def dVc(self, z):
+        """
+        Calculate the differential comoving volume.
+
+        The dimensions is [Mpc^3]/[sr]/[unit redshift].
+        """
+        return self._cosmo.differential_comoving_volume(z).value
