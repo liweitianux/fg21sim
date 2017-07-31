@@ -68,9 +68,19 @@ class RadioHalo:
        only during merger crossing), and then been disabled (i.e.,
        only radiation and ionization losses later);
     3. Assume the electrons are constantly injected and has a power-law
-       energy spectrum;
-    4. Determine the initial electron density
-    TODO...
+       energy spectrum, determine the injection rate by further assuming
+       that the total injected electrons has energy of a fraction (eta_e)
+       of the ICM total thermal energy;
+    4. Set the initial electron density/spectrum be the total injected
+       electrons during t_merger time;
+    5. Calculate the magnetic field from the cluster total mass (which
+       is assumed to be growth linearly from M_main+M_sub to M_obs);
+    6. Calculate the energy losses for the coefficients of Fokker-Planck
+       equation;
+    7. Solve the Fokker-Planck equation to derive the relativistic
+       electron spectrum at t_obs (i.e., z_obs);
+    8. Calculate the synchrotron emissivity from the derived electron
+       spectrum.
 
     Parameters
     ----------
