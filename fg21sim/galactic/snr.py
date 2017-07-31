@@ -3,6 +3,24 @@
 
 """
 Galactic supernova remnants (SNRs) emission simulations.
+
+References
+----------
+.. [Jelic2008]
+   Jelić, V. et al.,
+   "Foreground simulations for the LOFAR-epoch of reionization experiment",
+   2008, MNRAS, 389, 1319-1335,
+   http://adsabs.harvard.edu/abs/2008MNRAS.389.1319J
+
+.. [Green2014]
+   Green, D. A.,
+   "A catalogue of 294 Galactic supernova remnants",
+   2014, Bulletin of the Astronomical Society of India, 42, 47-58,
+   http://adsabs.harvard.edu/abs/2014BASI...42...47G
+
+.. [GreenSNRDataWeb]
+   A Catalogue of Galactic Supernova Remnants
+   http://www.mrao.cam.ac.uk/surveys/snrs/
 """
 
 import os
@@ -48,25 +66,7 @@ class SuperNovaRemnants:
 
     Attributes
     ----------
-    ???
-
-    References
-    ----------
-    .. [Jelic2008]
-       Jelić, V. et al.,
-       "Foreground simulations for the LOFAR-epoch of reionization experiment",
-       2008, MNRAS, 389, 1319-1335,
-       http://adsabs.harvard.edu/abs/2008MNRAS.389.1319J
-
-    .. [Green2014]
-       Green, D. A.,
-       "A catalogue of 294 Galactic supernova remnants",
-       2014, Bulletin of the Astronomical Society of India, 42, 47-58,
-       http://adsabs.harvard.edu/abs/2014BASI...42...47G
-
-    .. [GreenSNRDataWeb]
-       A Catalogue of Galactic Supernova Remnants
-       http://www.mrao.cam.ac.uk/surveys/snrs/
+    TODO
     """
     # Component name
     name = "Galactic SNRs"

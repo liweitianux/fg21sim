@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -7,10 +7,13 @@ Press-Schechter formalism.
 
 References
 ----------
-[1] Randall, Sarazin & Ricker 2002, ApJ, 577, 579
-    http://adsabs.harvard.edu/abs/2002ApJ...577..579R
-[2] Cassano & Brunetti 2005, MNRAS, 357, 1313
-    http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
+.. [randall2002]
+   Randall, Sarazin & Ricker 2002, ApJ, 577, 579
+   http://adsabs.harvard.edu/abs/2002ApJ...577..579R
+
+.. [cassano2005]
+   Cassano & Brunetti 2005, MNRAS, 357, 1313
+   http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
 """
 
 import logging
@@ -31,13 +34,6 @@ class ClusterFormation:
     """
     Simulate the cluster formation (i.e., merging history) using the extended
     Press-Schechter formalism by Monte Carlo methods.
-
-    References
-    ----------
-    [1] Randall, Sarazin & Ricker 2002, ApJ, 577, 579
-        http://adsabs.harvard.edu/abs/2002ApJ...577..579R
-    [2] Cassano & Brunetti 2005, MNRAS, 357, 1313
-        http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
 
     Parameters
     ----------
@@ -81,7 +77,7 @@ class ClusterFormation:
         The power-law spectral index assumed for the following density
         perturbations sigma(M).
 
-        References: Ref.[1],Eq.(2)
+        References: Ref.[randall2002],Eq.(2)
         """
         n = -7/5
         alpha = (n+3) / 6
@@ -95,7 +91,7 @@ class ClusterFormation:
         It is generally sufficient to consider a power-law spectrum of
         density perturbations, which is consistent with the CDM models.
 
-        References: Ref.[1],Eq.(2)
+        References: Ref.[randall2002],Eq.(2)
         """
         alpha = self.sigma_index
         sigma = COSMO.sigma8 * (mass / COSMO.M8) ** (-alpha)
@@ -108,7 +104,7 @@ class ClusterFormation:
 
         This is a monotone decreasing function.
 
-        References: Ref.[1],App.A,Eq.(A1)
+        References: Ref.[randall2002],App.A,Eq.(A1)
         """
         return COSMO.overdensity_crit(z)
 
@@ -121,7 +117,7 @@ class ClusterFormation:
         dw^2 ~< abs(d(ln(sigma(M)^2)) / d(ln(M))) * (dMc / M) * sigma(M)^2
               = 2 * alpha * sigma(M)^2 * dMc / M
 
-        References: Ref.[1],Sec.(3.1),Para.(1)
+        References: Ref.[randall2002],Sec.(3.1),Para.(1)
         """
         alpha = self.sigma_index
         dMc = self.merger_mass_min
@@ -142,7 +138,7 @@ class ClusterFormation:
 
         S = sigma(M)^2
 
-        References: Ref.[1],Sec.(3)
+        References: Ref.[randall2002],Sec.(3)
         """
         alpha = self.sigma_index
         mass = COSMO.M8 * (S / COSMO.sigma8**2)**(-1/(2*alpha))
@@ -154,7 +150,7 @@ class ClusterFormation:
         The cumulative probability distribution function of sub-cluster
         masses.
 
-        References: Ref.[1],Eq.(5)
+        References: Ref.[randall2002],Eq.(5)
         """
         p = scipy.special.erfc(dw / np.sqrt(2*dS))
         return p
@@ -187,7 +183,7 @@ class ClusterFormation:
             halo/cluster.
             (default: True)
 
-        References: Ref.[1],Sec.(3.1)
+        References: Ref.[randall2002],Sec.(3.1)
         """
         logger.debug("Simulating cluster formation: " +
                      "M0={:.3g}[Msun] from z={:.3f} to z={zmax} ...".format(
