@@ -143,7 +143,7 @@ sigma8 = float(default=0.81, min=0.0)
 #           perform some function.
 # CRITICAL: A serious error, indicating that the program itself may be unable
 #           to continue running.
-level = option("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", default="DEBUG")
+level = option("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", default="INFO")
 
 # Set the format of displayed messages
 format = string(default="%(asctime)s [%(levelname)s] <%(name)s> %(message)s")

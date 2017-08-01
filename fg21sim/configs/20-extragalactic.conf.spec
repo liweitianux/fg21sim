@@ -63,11 +63,6 @@
   # The index of the scaling relation
   b_index = float(default=1.5, min=0.0, max=3.0)
 
-  # Resolution for simulating each cluster templates, which are finally
-  # mapped to the all-sky HEALPix map if used.
-  # Unit: [arcsec]
-  resolution = float(default=30.0, min=5.0)
-
   # Filename prefix for this component
   prefix = string(default="cluster")
   # Whether save this component to disk
