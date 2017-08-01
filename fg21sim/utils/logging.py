@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -9,6 +9,9 @@ import os
 import sys
 import logging
 from logging import FileHandler, StreamHandler
+
+
+logger = logging.getLogger(__name__)
 
 
 def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
@@ -104,3 +107,4 @@ def setup_logging(dict_config=None, level=None, stream=None, logfile=None):
             handler = FileHandler(logfile, mode=filemode)
             handler.setFormatter(formatter)
             root_logger.addHandler(handler)
+    logger.info("Set up logging.")

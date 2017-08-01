@@ -381,11 +381,11 @@ class FokkerPlanckSolver:
         """
         uc = u0
         tc = tstart
-        logger.info("Solving Fokker-Planck equation: " +
-                    "time: %.3f - %.3f" % (tstart, tstop))
+        logger.debug("Solving Fokker-Planck equation: " +
+                     "time: %.3f - %.3f" % (tstart, tstop))
         nstep = int((tstop - tc) / self.tstep)
-        logger.info("Constant time step: %.3f (#%d steps)" %
-                    (self.tstep, nstep))
+        logger.debug("Constant time step: %.3f (#%d steps)" %
+                     (self.tstep, nstep))
         i = 0
         while tc < tstop:
             i += 1

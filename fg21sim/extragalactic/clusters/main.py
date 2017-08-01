@@ -241,6 +241,10 @@ class GalaxyClusters:
             i += 1
             if i % 50 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
+            logger.info("[%d/%d] " % (i, num) +
+                        "M1[%.2e] & M2[%.2e] @ z[%.3f] -> M[%.2e] @ z[%.3f]" %
+                        (row.rmm_mass1, row.rmm_mass2, row.rmm_z,
+                         row.mass, row.z))
             halo = RadioHalo(M_obs=row.mass, z_obs=row.z,
                              M_main=row.rmm_mass1, M_sub=row.rmm_mass2,
                              z_merger=row.rmm_z, configs=self.configs)
@@ -302,6 +306,7 @@ class GalaxyClusters:
                              comment=self.catalog_comment,
                              clobber=self.clobber)
         # Dump the simulated clusters data
+        logger.info("Dumping the simulated halos data ...")
         if self.halos_dumpfile is None:
             logger.warning("Missing dump outfile; skip dump cluster data!")
         else:
