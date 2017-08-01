@@ -48,6 +48,14 @@ class SynchrotronEmission:
         The assumed uniform magnetic field within the cluster ICM.
         Unit: [uG]
     """
+    # The lower and upper cuts for the kernel function ``F(x)``.
+    Fxmin = 1e-5
+    Fxmax = 20.0
+    # Number of samples within [Fxmin, Fxmax] to do interpolation
+    # for the kernel function.
+    # NOTE: The kernel function is quiet smooth and slow-varying.
+    Fsamples = 128
+
     def __init__(self, gamma, n_e, B):
         self.gamma = np.asarray(gamma)
         self.n_e = np.asarray(n_e)
@@ -120,24 +128,17 @@ class SynchrotronEmission:
             Calculated kernel function values.
         """
         if not hasattr(self, "_F_interp"):
-            # Interpolate the kernel function and cache the results
-            #
-            # The lower and upper cuts
-            xmin = 1e-5
-            xmax = 20.0
-            # Number of samples within [xmin, xmax]
-            # NOTE: this kernel function is quiet smooth and slow-varying.
-            nsamples = 128
-            # Make an interpolation
-            xx = np.logspace(np.log10(xmin), np.log10(xmax), num=nsamples)
+            # Make an interpolation and cache
+            xx = np.logspace(np.log10(self.Fxmin), np.log10(self.Fxmax),
+                             num=self.Fsamples)
             Fxx = [xp * integrate.quad(lambda t: scipy.special.kv(5/3, t),
                                        a=xp, b=np.inf)[0]
                    for xp in xx]
             self._F_interp = interpolate.interp1d(xx, Fxx, kind="quadratic")
 
-        x = np.array(x)  # Make a copy!
-        x[x < xmin] = xmin
-        x[x > xmax] = xmax
+        x = np.array(x)  # Make a copy as it will be modified below!
+        x[x < self.Fxmin] = self.Fxmin
+        x[x > self.Fxmax] = self.Fxmax
         y = self._F_interp(x)
         return y
 
