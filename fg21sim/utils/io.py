@@ -19,9 +19,11 @@ logger = logging.getLogger(__name__)
 def _create_dir(filepath):
     """
     Check the existence of the target directory, and create it if necessary.
+
     """
     dirname = os.path.dirname(filepath)
-    if not os.path.exists(dirname):
+    # ``dirname == ""`` if ``filepath`` does not contain directory path
+    if dirname and not os.path.exists(dirname):
         os.makedirs(dirname)
         logger.info("Created output directory: {0}".format(dirname))
 
