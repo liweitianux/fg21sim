@@ -32,6 +32,36 @@ from ...utils.units import (Units as AU, Constants as AC)
 logger = logging.getLogger(__name__)
 
 
+def _interp_sync_kernel(xmin=1e-5, xmax=20.0, xsample=128):
+    """
+    Sample the synchrotron kernel function at the specified X
+    positions and make an interpolation, to optimize the speed
+    when invoked to calculate the synchrotron emissivity.
+
+    Parameters
+    ----------
+    xmin, xmax : float, optional
+        The lower and upper cuts for the kernel function.
+        Default: [1e-5, 20.0]
+    xsample : int, optional
+        Number of samples within [xmin, xmax] used to do interpolation.
+        NOTE: The kernel function is quiet smooth and slow-varying.
+
+    Returns
+    -------
+    F_interp : function
+        The interpolated kernel function ``F(x)``.
+    """
+    xx = np.logspace(np.log10(xmin), np.log10(xmax), num=xsample)
+    Fxx = [xp * integrate.quad(lambda t: scipy.special.kv(5/3, t),
+                               a=xp, b=np.inf)[0]
+           for xp in xx]
+    F_interp = interpolate.interp1d(
+        xx, Fxx, kind="quadratic", bounds_error=False,
+        fill_value=(Fxx[0], Fxx[-1]), assume_sorted=True)
+    return F_interp
+
+
 class SynchrotronEmission:
     """
     Calculate the synchrotron emissivity from a given population
@@ -48,13 +78,8 @@ class SynchrotronEmission:
         The assumed uniform magnetic field within the cluster ICM.
         Unit: [uG]
     """
-    # The lower and upper cuts for the kernel function ``F(x)``.
-    Fxmin = 1e-5
-    Fxmax = 20.0
-    # Number of samples within [Fxmin, Fxmax] to do interpolation
-    # for the kernel function.
-    # NOTE: The kernel function is quiet smooth and slow-varying.
-    Fsamples = 128
+    # The interpolated synchrotron kernel function ``F(x)``.
+    F_interp = _interp_sync_kernel()
 
     def __init__(self, gamma, n_e, B):
         self.gamma = np.asarray(gamma)
@@ -104,7 +129,8 @@ class SynchrotronEmission:
         nu_c = 1.5 * gamma**2 * np.sin(theta) * self.frequency_larmor
         return nu_c
 
-    def F(self, x):
+    @classmethod
+    def F(cls, x):
         """
         Synchrotron kernel function.
 
@@ -127,20 +153,7 @@ class SynchrotronEmission:
         y : `~numpy.ndarray`
             Calculated kernel function values.
         """
-        if not hasattr(self, "_F_interp"):
-            # Make an interpolation and cache
-            xx = np.logspace(np.log10(self.Fxmin), np.log10(self.Fxmax),
-                             num=self.Fsamples)
-            Fxx = [xp * integrate.quad(lambda t: scipy.special.kv(5/3, t),
-                                       a=xp, b=np.inf)[0]
-                   for xp in xx]
-            self._F_interp = interpolate.interp1d(xx, Fxx, kind="quadratic")
-
-        x = np.array(x)  # Make a copy as it will be modified below!
-        x[x < self.Fxmin] = self.Fxmin
-        x[x > self.Fxmax] = self.Fxmax
-        y = self._F_interp(x)
-        return y
+        return cls.F_interp(x)
 
     def emissivity(self, frequencies):
         """
