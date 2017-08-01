@@ -7,7 +7,7 @@ Globally shared instances/objects shared throughout ``fg21sim``.
 NOTE: ``global`` and ``globals`` are both preserved by Python :-(
 """
 
-from .configs import ConfigManager
+from .configs.manager import ConfigManager
 from .utils.cosmology import Cosmology
 
 
