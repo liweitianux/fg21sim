@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -11,7 +11,8 @@ import numba
 
 
 def Fnu_to_Tb(Fnu, omega, freq):
-    """Convert flux density to brightness temperature, using the
+    """
+    Convert flux density to brightness temperature, using the
     Rayleigh-Jeans law, in the Rayleigh-Jeans limit.
 
     Parameters
@@ -19,9 +20,9 @@ def Fnu_to_Tb(Fnu, omega, freq):
     Fnu : `~astropy.units.Quantity`
         Input flux density, e.g., `1.0*au.Jy`
     omega : `~astropy.units.Quantity`
-        Source angular size/area, e.g., `1.0*au.sr`
+        Source angular size/area, e.g., `100*au.arcsec**2`
     freq : `~astropy.units.Quantity`
-        Frequency where the flux density measured, e.g., `1.0*au.MHz`
+        Frequency where the flux density measured, e.g., `120*au.MHz`
 
     Returns
     -------
@@ -45,15 +46,16 @@ def Fnu_to_Tb(Fnu, omega, freq):
 
 
 def Sb_to_Tb(Sb, freq):
-    """Convert surface brightness to brightness temperature, using the
+    """
+    Convert surface brightness to brightness temperature, using the
     Rayleigh-Jeans law, in the Rayleigh-Jeans limit.
 
     Parameters
     ----------
     Sb : `~astropy.units.Quantity`
-        Input surface brightness, e.g., `1.0*au.Jy/au.sr`
+        Input surface brightness, e.g., `1.0*(au.Jy/au.arcsec**2)`
     freq : `~astropy.units.Quantity`
-        Frequency where the flux density measured, e.g., `1.0*au.MHz`
+        Frequency where the flux density measured, e.g., `120*au.MHz`
 
     Returns
     -------
@@ -67,29 +69,33 @@ def Sb_to_Tb(Sb, freq):
 
 @numba.jit(nopython=True)
 def Sb_to_Tb_fast(Sb, freq):
-    """Convert surface brightness to brightness temperature, using the
+    """
+    Convert surface brightness to brightness temperature, using the
     Rayleigh-Jeans law, in the Rayleigh-Jeans limit.
 
     This function does the calculations explicitly, and does NOT rely
-    on the `astropy.units`, therefore it is faster.  However, the input
-    parameters must be in right units.
+    on the `astropy.units`, therefore it is much faster.  However, the
+    input parameters must be in right units.
 
         Tb = Sb * c^2 / (2 * k_B * nu^2)
 
-    where `SB` is the surface brightness density measured at a certain
+    where `Sb` is the surface brightness density measured at a certain
     frequency (unit: [ Jy/rad^2 ] = [ erg/s/cm^2/Hz/rad^2 ]).
 
     Parameters
     ----------
     Sb : float
-        Input surface brightness, unit [ Jy/deg^2 ]
+        Input surface brightness
+        Unit: [Jy/deg^2]
     freq : float
-        Frequency where the flux density measured, unit [ MHz ]
+        Frequency where the flux density measured
+        Unit: [MHz]
 
     Returns
     -------
     Tb : float
-        Calculated brightness temperature, unit [ K ]
+        Calculated brightness temperature
+        Unit: [K]
     """
     # NOTE: `radian` is dimensionless
     rad2_to_deg2 = np.rad2deg(1.0) * np.rad2deg(1.0)
@@ -103,26 +109,30 @@ def Sb_to_Tb_fast(Sb, freq):
 
 @numba.jit(nopython=True)
 def Fnu_to_Tb_fast(Fnu, omega, freq):
-    """Convert flux density to brightness temperature, using the
+    """
+    Convert flux density to brightness temperature, using the
     Rayleigh-Jeans law, in the Rayleigh-Jeans limit.
 
-    This function does the calculations explicitly, and does NOT rely
-    on the `astropy.units`, therefore it is faster.  However, the input
-    parameters must be in right units.
+    This function does NOT invoke the `astropy.units`, therefore it is
+    much faster.
 
     Parameters
     ----------
     Fnu : float
-        Input flux density, unit [ Jy ]
+        Input flux density
+        Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz] = 1e-26 [W/m^2/Hz]
     omega : float
-        Source angular size/area, unit [ deg^2 ]
+        Source angular size/area
+        Unit: [deg^2]
     freq : float
-        Frequency where the flux density measured, unit [ MHz ]
+        Frequency where the flux density measured
+        Unit: [MHz]
 
     Returns
     -------
     Tb : float
-        Calculated brightness temperature, unit [ K ]
+        Calculated brightness temperature
+        Unit: [K]
     """
-    Sb = Fnu / omega
+    Sb = Fnu / omega  # [Jy/deg^2]
     return Sb_to_Tb_fast(Sb, freq)
