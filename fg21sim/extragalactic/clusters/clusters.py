@@ -25,6 +25,7 @@ from ...utils.wcs import make_wcs
 from ...utils.random import spherical_uniform
 from ...utils.convert import Fnu_to_Tb_fast
 from ...utils.grid import make_ellipse
+from ...utils.units import UnitConversions as AUC
 
 
 logger = logging.getLogger(__name__)
@@ -480,7 +481,7 @@ class GalaxyClusters:
         # Conversion coefficient: [ W/Hz/Mpc^2 ] => [ Jy ]
         coef = 1.0502650403056097e-19
         Fnu = coef * Lnu / (4*np.pi * distance**2)  # [ Jy ]
-        omega = size[0] * size[1]  # [ deg^2 ]
+        omega = size[0] * size[1] * AUC.arcsec2deg**2  # [ arcsec^2 ]
         Tb = Fnu_to_Tb_fast(Fnu, omega, freq)
         return Tb
 

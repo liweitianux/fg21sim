@@ -283,8 +283,9 @@ class FRI(BasePointSource):
 
         Parameters
         ------------
-        area: `~astropy.units.Quantity`
-              Area of the PS, e.g., `1.0*au.sr`
+        area: float
+            Area of the PS
+            Unit: [arcsec^2]
         freq: `~astropy.units.Quantity`
               Frequency, e.g., `1.0*au.MHz`
 
@@ -318,7 +319,8 @@ class FRI(BasePointSource):
         flux_core = 10**lgs  # [Jy]
         # core area
         npix = hp.nside2npix(self.nside)
-        core_area = 4 * np.pi / npix  # [sr]
+        sr_to_arcsec2 = (np.rad2deg(1) * 3600) ** 2  # [sr] -> [arcsec^2]
+        core_area = 4 * np.pi / npix * sr_to_arcsec2  # [arcsec^2]
         Tb_core = convert.Fnu_to_Tb_fast(flux_core, core_area, freq)  # [K]
         # lobe
         lumo_lobe = lumo_151 * (1 - ratio_obs) / (1 + ratio_obs)  # [Jy]
@@ -334,8 +336,6 @@ class FRI(BasePointSource):
 
         Parameters
         ------------
-        area: `~astropy.units.Quantity`
-             Area of the PS, e.g., `1.0*au.sr`
         freq: `~astropy.units.Quantity`
              Frequency, e.g., `1.0*au.MHz`
 
@@ -347,9 +347,11 @@ class FRI(BasePointSource):
         # Tb_list
         num_ps = self.ps_catalog.shape[0]
         Tb_list = np.zeros((num_ps, 2))
+        sr_to_arcsec2 = (np.rad2deg(1) * 3600) ** 2  # [sr] -> [arcsec^2]
         # Iteratively calculate Tb
         for i in range(num_ps):
             ps_area = self.ps_catalog['Area (sr)'][i]  # [sr]
-            Tb_list[i, :] = self.calc_single_Tb(ps_area, freq)
+            area = ps_area * sr_to_arcsec2
+            Tb_list[i, :] = self.calc_single_Tb(area, freq)
 
         return Tb_list

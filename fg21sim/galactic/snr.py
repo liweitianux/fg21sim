@@ -244,8 +244,8 @@ class SuperNovaRemnants:
         """
         freq_ref = self.catalog_flux_freq  # [ MHz ]
         Fnu = flux * (frequency / freq_ref) ** (-specindex)  # [ Jy ]
-        omega = size[0] * size[1]  # [ deg^2 ]
-        pixelarea = (self.sky.pixelsize * AUC.arcsec2deg) ** 2  # [ deg^2 ]
+        omega = size[0] * size[1] * AUC.arcsec2deg**2  # [ arcsec^2 ]
+        pixelarea = self.sky.pixelsize ** 2  # [ arcsec^2 ]
         if omega < pixelarea:
             # The object is smaller than a pixel, so round up to a pixel area
             omega = pixelarea
