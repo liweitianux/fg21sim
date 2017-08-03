@@ -17,6 +17,7 @@ References
    http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
 """
 
+import os
 import logging
 
 import numpy as np
@@ -27,6 +28,7 @@ from .formation import ClusterFormation
 from .halo import RadioHalo
 from ...share import CONFIGS, COSMO
 from ...utils.io import dataframe_to_csv, pickle_dump
+from ...utils.ds import dictlist_to_dataframe
 from ...sky import get_sky
 
 
@@ -230,6 +232,8 @@ class GalaxyClusters:
         ----------
         halos : list[dict]
             Simulated data for each cluster with recent major merger.
+        halos_df : `~pandas.DataFrame`
+            The Pandas DataFrame converted from the above ``halos`` data.
         """
         # Select out the clusters with recent major mergers
         idx_rmm = ~self.catalog["rmm_z"].isnull()
@@ -269,6 +273,17 @@ class GalaxyClusters:
             }
             self.halos.append(data)
         logger.info("Simulated radio halos for merging cluster.")
+        #
+        logger.info("Converting halos data to be a Pandas DataFrame ...")
+        # Ignore the ``gamma`` and ``n_e`` items
+        keys = ["z0", "M0", "z_merger", "M_main", "M_sub",
+                "time_crossing", "radius", "angular_radius",
+                "B", "frequencies", "emissivity", "flux"]
+        self.halos_df = dictlist_to_dataframe(self.halos, keys=keys)
+        logger.info("Done halos data conversion.")
+
+    def _draw_halos(self):
+        pass
 
     def preprocess(self):
         """
@@ -312,3 +327,7 @@ class GalaxyClusters:
         else:
             pickle_dump(self.halos, outfile=self.halos_dumpfile,
                         clobber=self.clobber)
+        # Also save converted DataFrame of halos data
+        outfile = os.path.splitext(self.halos_dumpfile)[0] + ".csv"
+        dataframe_to_csv(self.halos_df, outfile, clobber=self.clobber)
+        logger.info("Saved DataFrame of halos data to file: %s" % outfile)
