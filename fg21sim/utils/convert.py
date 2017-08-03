@@ -60,8 +60,8 @@ def Sb_to_Tb(Sb, freq):
     Tb : `~astropy.units.Quantity`
         Brightness temperature, with default unit `au.K`
     """
-    omega = 1.0 * au.sr
-    Fnu = Sb * omega
+    omega = 1.0 * au.arcsec**2
+    Fnu = (Sb * omega).to(au.Jy)  # [Jy]
     return Fnu_to_Tb(Fnu, omega, freq)
 
 
