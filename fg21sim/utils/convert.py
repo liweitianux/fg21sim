@@ -80,13 +80,15 @@ def Sb_to_Tb_fast(Sb, freq):
         Tb = Sb * c^2 / (2 * k_B * nu^2)
 
     where `Sb` is the surface brightness density measured at a certain
-    frequency (unit: [ Jy/rad^2 ] = [ erg/s/cm^2/Hz/rad^2 ]).
+    frequency, in units of [Jy/arcsec^2].
+
+    1 [Jy] = 1e-23 [erg/s/cm^2/Hz] = 1e-26 [W/m^2/Hz]
 
     Parameters
     ----------
     Sb : float
         Input surface brightness
-        Unit: [Jy/deg^2]
+        Unit: [Jy/arcsec^2]
     freq : float
         Frequency where the flux density measured
         Unit: [MHz]
@@ -97,13 +99,12 @@ def Sb_to_Tb_fast(Sb, freq):
         Calculated brightness temperature
         Unit: [K]
     """
-    # NOTE: `radian` is dimensionless
-    rad2_to_deg2 = np.rad2deg(1.0) * np.rad2deg(1.0)
-    Sb_rad2 = Sb * rad2_to_deg2  # unit: [ Jy/rad^2 ] -> [ Jy ]
-    c = 29979245800.0  # speed of light, [ cm/s ]
-    k_B = 1.3806488e-16  # Boltzmann constant, [ erg/K ]
+    # NOTE: [rad] & [sr] are dimensionless
+    arcsec2 = (np.deg2rad(1) / 3600) ** 2  # [sr]
+    c = 29979245800.0  # speed of light, [cm/s]
+    k_B = 1.3806488e-16  # Boltzmann constant, [erg/K]
     coef = 1e-35  # take care the unit conversions
-    Tb = coef * (Sb_rad2 * c*c) / (2 * k_B * freq*freq)  # unit: [ K ]
+    Tb = coef * (Sb * c*c) / (2 * k_B * freq*freq * arcsec2)  # [K]
     return Tb
 
 
@@ -123,7 +124,7 @@ def Fnu_to_Tb_fast(Fnu, omega, freq):
         Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz] = 1e-26 [W/m^2/Hz]
     omega : float
         Source angular size/area
-        Unit: [deg^2]
+        Unit: [arcsec^2]
     freq : float
         Frequency where the flux density measured
         Unit: [MHz]
@@ -134,5 +135,5 @@ def Fnu_to_Tb_fast(Fnu, omega, freq):
         Calculated brightness temperature
         Unit: [K]
     """
-    Sb = Fnu / omega  # [Jy/deg^2]
+    Sb = Fnu / omega  # [Jy/arcsec^2]
     return Sb_to_Tb_fast(Sb, freq)
