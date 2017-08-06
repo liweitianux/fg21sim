@@ -365,7 +365,7 @@ class RadioHalo:
             pixelarea = pixelsize ** 2  # [arcsec^2]
             if omega < pixelarea:
                 omega = pixelarea
-                logger.warning("Halo sky coverage (%.2f [arcsec^2])" % omega,
+                logger.warning("Halo sky coverage (%.2f [arcsec^2])" % omega +
                                " < pixel area (%.2f [arcsec^2])" % pixelarea)
 
         flux = self.calc_flux(emissivity)

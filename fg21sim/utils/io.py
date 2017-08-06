@@ -20,6 +20,10 @@ def _create_dir(filepath):
     """
     Check the existence of the target directory, and create it if necessary.
 
+    NOTE
+    ----
+    If the given ``filepath`` is simply the filename without any directory
+    path, then just returns.
     """
     dirname = os.path.dirname(filepath)
     # ``dirname == ""`` if ``filepath`` does not contain directory path
