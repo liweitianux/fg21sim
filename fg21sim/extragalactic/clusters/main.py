@@ -254,7 +254,10 @@ class GalaxyClusters:
                              z_merger=row.rmm_z, configs=self.configs)
             n_e = halo.calc_electron_spectrum()
             emissivity = halo.calc_emissivity(frequencies=self.frequencies)
+            power = halo.calc_power(emissivity)
             flux = halo.calc_flux(emissivity)
+            Tb_mean = halo.calc_brightness_mean(emissivity, self.frequencies,
+                                                pixelsize=self.sky.pixelsize)
             data = {
                 "z0": halo.z_obs,
                 "M0": halo.M_obs,  # [Msun]
@@ -265,11 +268,14 @@ class GalaxyClusters:
                 "gamma": halo.gamma,  # Lorentz factors
                 "radius": halo.radius,  # [kpc]
                 "angular_radius": halo.angular_radius,  # [arcsec]
+                "volume": halo.volume,  # [cm^3]
                 "B": halo.magnetic_field,  # [uG]
                 "n_e": n_e,  # [cm^-3]
                 "frequencies": self.frequencies,  # [MHz]
                 "emissivity": emissivity,  # [erg/s/cm^3/Hz]
+                "power": power,  # [W/Hz]
                 "flux": flux,  # [Jy]
+                "Tb_mean": Tb_mean,  # [K]
             }
             self.halos.append(data)
         logger.info("Simulated radio halos for merging cluster.")
@@ -278,7 +284,7 @@ class GalaxyClusters:
         # Ignore the ``gamma`` and ``n_e`` items
         keys = ["z0", "M0", "z_merger", "M_main", "M_sub",
                 "time_crossing", "radius", "angular_radius",
-                "B", "frequencies", "emissivity", "flux"]
+                "B", "frequencies", "emissivity", "flux", "Tb_mean"]
         self.halos_df = dictlist_to_dataframe(self.halos, keys=keys)
         logger.info("Done halos data conversion.")
 
@@ -301,10 +307,9 @@ class GalaxyClusters:
         logger.info("{name}: preprocessing ...".format(name=self.name))
         self._simulate_catalog()
         self._process_catalog()
-        # self._simulate_mergers()
-
+        self._simulate_mergers()
+        self._simulate_halos()
         # TODO ???
-
         self._preprocessed = True
 
     def postprocess(self):
