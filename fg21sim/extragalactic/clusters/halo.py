@@ -48,7 +48,6 @@ from .emission import SynchrotronEmission
 from ...share import CONFIGS, COSMO
 from ...utils.units import (Units as AU,
                             UnitConversions as AUC)
-from ...utils.convert import Fnu_to_Tb_fast
 
 
 logger = logging.getLogger(__name__)
@@ -285,14 +284,8 @@ class RadioHalo:
 
     def calc_power(self, emissivity):
         """
-        Calculate the synchrotron power (i.e., power *emitted* per
+        Calculate the halo synchrotron power (i.e., power *emitted* per
         unit frequency) from emissivity.
-
-        NOTE
-        ----
-        The calculated power (a.k.a. spectral luminosity) is in units of
-        [W/Hz] which is common in radio astronomy, instead of [erg/s/Hz]!
-            1 [W] = 1e7 [erg/s]
 
         Parameters
         ----------
@@ -306,10 +299,7 @@ class RadioHalo:
             The calculated synchrotron power w.r.t. each input emissivity.
             Unit: [W/Hz]
         """
-        emissivity = np.asarray(emissivity)
-        power = emissivity * self.volume  # [erg/s/Hz]
-        power *= 1e-7  # [erg/s/Hz] -> [W/Hz]
-        return power
+        return helper.calc_power(emissivity, volume=self.volume)
 
     def calc_flux(self, emissivity):
         """
@@ -329,29 +319,21 @@ class RadioHalo:
             Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz] = 1e-26 [W/m^2/Hz]
         """
         power = self.calc_power(emissivity)  # [W/Hz]
-        DL = COSMO.DL(self.z_obs) * AUC.Mpc2m  # [m]
-        flux = 1e26 * power / (4*np.pi * DL*DL)  # [Jy]
-        return flux
+        return helper.calc_flux(power, z=self.z_obs)
 
-    def calc_brightness_mean(self, emissivity, frequencies, pixelsize=None):
+    def calc_brightness_mean(self, emissivity, frequency, pixelsize=None):
         """
         Calculate the mean surface brightness (power observed per unit
-        frequency and per unit solid angle) at the specified frequencies
-        from emissivity.
-
-        NOTE
-        ----
-        If the solid angle that the radio halo extends is smaller than
-        the specified pixel area, then the halo is assumed to cover a
-        solid angle of 1 pixel.
+        frequency and per unit solid angle) expressed in *brightness
+        temperature* at the specified frequencies from emissivity.
 
         Parameters
         ----------
         emissivity : float, or 1D `~numpy.ndarray`
             The synchrotron emissivity at multiple frequencies.
             Unit: [erg/s/cm^3/Hz]
-        frequencies : float, or 1D `~numpy.ndarray`
-            The frequencies where to calculate the synchrotron emissivity.
+        frequency : float, or 1D `~numpy.ndarray`
+            The frequencies where the synchrotron emissivity is calculated.
             Unit: [MHz]
         pixelsize : float, optional
             The pixel size of the output simulated sky image.
@@ -364,21 +346,9 @@ class RadioHalo:
             Unit: [K] <-> [Jy/pixel]
         """
         omega = np.pi * self.angular_radius**2  # [arcsec^2]
-        if pixelsize:
-            pixelarea = pixelsize ** 2  # [arcsec^2]
-            if omega < pixelarea:
-                omega = pixelarea
-                logger.warning("Halo sky coverage (%.2f [arcsec^2])" % omega +
-                               " < pixel area (%.2f [arcsec^2])" % pixelarea)
-
         flux = self.calc_flux(emissivity)
-        Tb = [Fnu_to_Tb_fast(Fnu, omega, freq)
-              for Fnu, freq in zip(np.array(flux, ndmin=1),
-                                   np.array(frequencies, ndmin=1))]
-        if len(Tb) == 1:
-            return Tb[0]
-        else:
-            return np.array(Tb)
+        return helper.calc_brightness_mean(flux, frequency=frequency,
+                                           omega=omega, pixelsize=pixelsize)
 
     def fp_injection(self, gamma, t=None):
         """
