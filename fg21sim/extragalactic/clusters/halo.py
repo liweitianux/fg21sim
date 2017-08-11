@@ -158,6 +158,7 @@ class RadioHalo:
         The time duration of the sub-cluster crossing the main cluster,
         which is also used to approximate the merging time, during which
         the turbulence acceleration is regarded as effective.
+
         Unit: [Gyr]
         """
         return helper.time_crossing(self.M_main, self.M_sub,
@@ -168,6 +169,7 @@ class RadioHalo:
         """
         The halo radius derived from the virial radius by a scaling
         relation.
+
         Unit: [kpc]
         """
         mass = self.M_main + self.M_sub  # [Msun]
@@ -178,6 +180,7 @@ class RadioHalo:
     def angular_radius(self):
         """
         The angular radius of the radio halo.
+
         Unit: [arcsec]
         """
         DA = COSMO.DA(self.z_obs) * 1e3  # [Mpc] -> [kpc]
@@ -188,10 +191,10 @@ class RadioHalo:
     def volume(self):
         """
         The halo volume, calculated from the above radius.
-        Unit: [cm^3]
+
+        Unit: [kpc^3]
         """
-        r_cm = self.radius * AUC.kpc2cm
-        return (4*np.pi/3) * r_cm**3
+        return (4*np.pi/3) * self.radius**3
 
     @property
     def magnetic_field(self):

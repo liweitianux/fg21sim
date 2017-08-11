@@ -268,7 +268,7 @@ class GalaxyClusters:
                 "gamma": halo.gamma,  # Lorentz factors
                 "radius": halo.radius,  # [kpc]
                 "angular_radius": halo.angular_radius,  # [arcsec]
-                "volume": halo.volume,  # [cm^3]
+                "volume": halo.volume,  # [kpc^3]
                 "B": halo.magnetic_field,  # [uG]
                 "n_e": n_e,  # [cm^-3]
                 "frequencies": self.frequencies,  # [MHz]
