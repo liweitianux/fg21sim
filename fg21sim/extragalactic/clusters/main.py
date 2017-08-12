@@ -261,6 +261,10 @@ class GalaxyClusters:
             data = {
                 "z0": halo.z_obs,
                 "M0": halo.M_obs,  # [Msun]
+                "lon": row.lon,  # [deg] longitude
+                "lat": row.lat,  # [deg] longitude
+                "felong": row.felong,  # Fraction of elongation
+                "rotation": row.rotation,  # [deg] ellipse rotation angle
                 "z_merger": halo.z_merger,
                 "M_main": halo.M_main,  # [Msun]
                 "M_sub": halo.M_sub,  # [Msun]
@@ -271,7 +275,7 @@ class GalaxyClusters:
                 "volume": halo.volume,  # [kpc^3]
                 "B": halo.magnetic_field,  # [uG]
                 "n_e": n_e,  # [cm^-3]
-                "frequencies": self.frequencies,  # [MHz]
+                "frequency": self.frequencies,  # [MHz]
                 "emissivity": emissivity,  # [erg/s/cm^3/Hz]
                 "power": power,  # [W/Hz]
                 "flux": flux,  # [Jy]
@@ -282,9 +286,10 @@ class GalaxyClusters:
         #
         logger.info("Converting halos data to be a Pandas DataFrame ...")
         # Ignore the ``gamma`` and ``n_e`` items
-        keys = ["z0", "M0", "z_merger", "M_main", "M_sub",
-                "time_crossing", "radius", "angular_radius", "volume",
-                "B", "frequencies", "emissivity", "power", "flux", "Tb_mean"]
+        keys = ["z0", "M0", "lon", "lat", "felong", "rotation",
+                "z_merger", "M_main", "M_sub", "time_crossing",
+                "radius", "angular_radius", "volume", "B", "frequency",
+                "emissivity", "power", "flux", "Tb_mean"]
         self.halos_df = dictlist_to_dataframe(self.halos, keys=keys)
         logger.info("Done halos data conversion.")
 
