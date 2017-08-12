@@ -29,6 +29,119 @@ logger = logging.getLogger(__name__)
 
 
 class SkyPatch:
+class SkyBase:
+    """
+    The base class for both the sky patch and HEALPix all-sky
+    map classes.
+    """
+
+    @property
+    def frequency(self):
+        """
+        The frequency of the sky image.
+        Unit: [MHz]
+        """
+        return self.frequency_
+
+    @frequency.setter
+    def frequency(self, value):
+        """
+        Set the frequency of the sky image.
+        Unit: [MHz]
+        """
+        self.frequency_ = value
+
+    def copy(self):
+        """
+        Return a (deep) copy of this instance.
+        """
+        return copy.deepcopy(self)
+
+    def load(self, infile, frequency=None):
+        """
+        Make a new *copy* of this instance, then read the given sky
+        image in and return the loaded new instance.
+        """
+        sky = self.copy()
+        sky.read(infile=infile, frequency=frequency)
+        return sky
+
+    def read(self, infile, frequency=None):
+        """
+        Read the given sky image into this instance.
+
+        Parameters
+        ----------
+        infile : str
+            The path to the given input sky image.
+        frequency : float, optional
+            The frequency of the  given sky image if applicable.
+            Unit: [MHz]
+        """
+        raise NotImplementedError
+
+    def write(self, outfile, clobber=False, checksum=False):
+        """
+        Write the sky image (with current data) into a FITS file.
+
+        Parameters
+        ----------
+        outfile : str
+            The path/filename to the output FITS file.
+        clobber : bool, optional
+            Whether to overwrite the existing output file.
+            Default: False
+        checksum : bool, optional
+            Whether to calculate the checksum data for the output
+            FITS file, which may cost some time.
+            Default: False
+        """
+        raise NotImplementedError
+
+    @property
+    def shape(self):
+        """
+        Numpy array shape of the (current/output) sky data.
+        """
+        raise NotImplementedError
+
+    @property
+    def area(self):
+        """
+        Sky coverage of the sky.
+        Unit: [deg^2]
+        """
+        raise NotImplementedError
+
+    @property
+    def pixelsize(self):
+        """
+        Pixel size of the sky image.
+        Unit: [arcsec]
+        """
+        raise NotImplementedError
+
+    def random_points(self, n=1):
+        """
+        Generate uniformly distributed random points within the
+        sky image (coverage).
+
+        Parameters
+        ----------
+        n : int, optional
+            The number of random points required.
+            Default: 1
+
+        Returns
+        -------
+        lon, lat : float, or 1D `~numpy.ndarray`
+            The longitudes and latitudes (in world coordinate)
+            generated.
+            Unit: [deg]
+        """
+        raise NotImplementedError
+
+
     """
     Support reading & writing FITS file of sky patches.
 
