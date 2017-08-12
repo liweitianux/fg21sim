@@ -93,7 +93,7 @@ def pickle_dump(obj, outfile, clobber=False):
     NOTE
     ----
     The dumped output file is in binary format, and can be loaded back
-    using ``pickle.load()``.
+    using ``pickle.load()``, e.g., the ``pickle_load()`` function below.
 
     Example
     -------
@@ -105,6 +105,11 @@ def pickle_dump(obj, outfile, clobber=False):
 
     Parameters
     ----------
+    outfile : str
+        The path/filename to the output file storing the pickled object.
+    clobber : bool, optional
+        Whether to overwrite the existing output file.
+        Default: False
     """
     _create_dir(outfile)
     _check_existence(outfile, clobber=clobber, remove=True)
@@ -113,4 +118,17 @@ def pickle_dump(obj, outfile, clobber=False):
 
 
 def pickle_load(infile):
+    """
+    Load the pickled Python back from the given file.
+
+    Parameters
+    ----------
+    infile : str
+        The path/filename to the data file, e.g., dumped by the above
+        ``pickle_dump()`` function.
+
+    Returns
+    -------
+    obj : The loaded Python object from the input file.
+    """
     return pickle.load(open(infile, "rb"))
