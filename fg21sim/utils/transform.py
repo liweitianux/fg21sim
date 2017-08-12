@@ -156,7 +156,7 @@ def circle2ellipse(imgcirc, bfraction, rotation=0.0):
         Input image grid containing a circle at the center
     bfraction : float
         The fraction of the semi-minor axis w.r.t. the semi-major axis
-        (assumed to be the width of the input image), to determine the
+        (i.e., the half width of the input image), to determine the
         shrunk size (height) of the output image.
         Should be a fraction within [0, 1]
     rotation : float, optional
@@ -175,9 +175,7 @@ def circle2ellipse(imgcirc, bfraction, rotation=0.0):
     # Pad the shrunk image to have the same size as input
     imgout = np.zeros(shape=(nrow, ncol))
     r1 = int((nrow - nrow2) / 2)
-    r2 = r1 + nrow2
-    imgout[r1:r2, :] = img2
+    imgout[r1:(r1+nrow2), :] = img2
     # Rotate the ellipse
-    imgout = ndimage.rotate(imgout, angle=rotation, reshape=False,
-                            order=1)
+    imgout = ndimage.rotate(imgout, angle=rotation, reshape=False, order=1)
     return imgout
