@@ -283,8 +283,8 @@ class GalaxyClusters:
         logger.info("Converting halos data to be a Pandas DataFrame ...")
         # Ignore the ``gamma`` and ``n_e`` items
         keys = ["z0", "M0", "z_merger", "M_main", "M_sub",
-                "time_crossing", "radius", "angular_radius",
-                "B", "frequencies", "emissivity", "flux", "Tb_mean"]
+                "time_crossing", "radius", "angular_radius", "volume",
+                "B", "frequencies", "emissivity", "power", "flux", "Tb_mean"]
         self.halos_df = dictlist_to_dataframe(self.halos, keys=keys)
         logger.info("Done halos data conversion.")
 
