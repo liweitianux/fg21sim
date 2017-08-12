@@ -10,7 +10,9 @@ import logging
 import pickle
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
+from astropy.io import fits
 
 
 logger = logging.getLogger(__name__)
@@ -132,3 +134,38 @@ def pickle_load(infile):
     obj : The loaded Python object from the input file.
     """
     return pickle.load(open(infile, "rb"))
+
+
+def write_fits_image(outfile, image, header=None, float32=True,
+                     clobber=False, checksum=False):
+    """
+    Write the supplied image (together with header information) into
+    the output FITS file.
+
+    Parameters
+    ----------
+    outfile : str
+        The path/filename to the output file storing the pickled object.
+    image : 2D `~numpy.ndarray`
+        The image data to be written out to the FITS file.
+        NOTE: image.shape: (nrow, ncol)  <->  FITS image: (ncol, nrow)
+    header : `~astropy.io.fits.Header`
+        The FITS header information for this image
+    float32 : bool, optional
+        Whether coerce the image data (generally double/float64 data type)
+        into single/float32 (in order to save space)?
+        Default: True
+    clobber : bool, optional
+        Whether to overwrite the existing output file.
+        Default: False
+    checksum : bool, optional
+        Whether to calculate the data checksum, which may cost some time?
+        Default: False
+    """
+    _create_dir(outfile)
+    _check_existence(outfile, clobber=clobber, remove=True)
+    if float32:
+        image = np.asarray(image, dtype=float32)
+    hdu = fits.PrimaryHDU(data=image, header=header)
+    hdu.writeto(outfile, checksum=checksum)
+    logger.info("Wrote image to FITS file: %s" % outfile)
