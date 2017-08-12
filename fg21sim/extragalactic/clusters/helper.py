@@ -22,6 +22,10 @@ References
    Cassano et al. 2012, A&A, 548, A100
    http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
 
+.. [murgia2009]
+   Murgia et al. 2009, A&A, 499, 679
+   http://adsabs.harvard.edu/abs/2009A%26A...499..679M
+
 .. [zandanel2014]
    Zandanel, Pfrommer & Prada 2014, MNRAS, 438, 124
    http://adsabs.harvard.edu/abs/2014MNRAS.438..124Z
@@ -37,6 +41,8 @@ from ...utils.units import (Units as AU,
                             Constants as AC,
                             UnitConversions as AUC)
 from ...utils.convert import Fnu_to_Tb_fast
+from ...utils.draw import circle
+from ...utils.transform import circle2ellipse
 
 
 logger = logging.getLogger(__name__)
@@ -399,3 +405,59 @@ def calc_brightness_mean(flux, frequency, omega, pixelsize=None):
         return Tb[0]
     else:
         return np.array(Tb)
+
+
+def halo_rprofile(re, num_re=5, I0=1.0):
+    """
+    Generate the radial profile of a halo.
+
+    NOTE
+    ----
+    The exponential radial profile is adopted for the radio halos:
+        I(r) = I0 * exp(-r/re)
+    with the e-folding radius ``re ~ R_halo / 3``.
+
+    Parameters
+    ----------
+    re : float
+        The e-folding radius in unit of pixels.
+    num_re : float, optional
+        The times of ``re`` to determine the maximum radius.
+        Default: 5, i.e., rmax = 5 * re
+    I0 : float
+        The intensity/brightness at the center (i.e., r=0)
+        Default: 1.0
+
+    Returns
+    -------
+    rprofile : 1D `~numpy.ndarray`
+        The values along the radial pixels (0, 1, 2, ...)
+
+    References: Ref.[murgia2009],Eq.(1)
+    """
+    rmax = round(re * num_re)
+    r = np.arange(rmax+1)
+    rprofile = I0 * np.exp(-r/re)
+    return rprofile
+
+
+def draw_halo(rprofile, felong, rotation=0.0):
+    """
+    Draw the template image of one halo, which is used to simulate
+    the image at requested frequencies by adjusting the brightness
+    values.
+
+    Parameters
+    ----------
+    rprofile
+
+    Returns
+    -------
+    image : 2D `~numpy.ndarray`
+        2D array of the drawn halo template image.
+        The image is normalized to have sum of 1.
+    """
+    image = circle(rprofile=rprofile)
+    image = circle2ellipse(image, bfraction=felong, rotation=rotation)
+    image /= image.sum()
+    return image

@@ -30,6 +30,7 @@ from ...share import CONFIGS, COSMO
 from ...utils.io import dataframe_to_csv, pickle_dump
 from ...utils.ds import dictlist_to_dataframe
 from ...sky import get_sky
+from . import helper
 
 
 logger = logging.getLogger(__name__)
@@ -294,7 +295,30 @@ class GalaxyClusters:
         logger.info("Done halos data conversion.")
 
     def _draw_halos(self):
-        pass
+        """
+        Draw the template images for each halo, and cache them for
+        simulating the superimposed halos at requested frequencies.
+
+        NOTE
+        ----
+        The drawn template images are append to the dictionaries of
+        the corresponding halo within the ``self.halos``.
+        The templates are normalized to have sum of 1.
+        """
+        num = len(self.halos)
+        logger.info("Draw template images for %d halos ..." % num)
+        self.halos = []
+        i = 0
+        for hdict in self.halos:
+            i += 1
+            if i % 50 == 0:
+                logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
+            theta_e = hdict["angular_radius"] / self.sky.pixelsize
+            rprofile = helper.halo_rprofile(re=theta_e)
+            template = helper.draw_halo(rprofile, felong=hdict["felong"],
+                                        rotation=hdict["rotation"])
+            hdict["template"] = template
+        logger.info("Done drawn halo template images.")
 
     def preprocess(self):
         """
@@ -314,7 +338,8 @@ class GalaxyClusters:
         self._process_catalog()
         self._simulate_mergers()
         self._simulate_halos()
-        # TODO ???
+        self._draw_halos()
+
         self._preprocessed = True
 
     def postprocess(self):
