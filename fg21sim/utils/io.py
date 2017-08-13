@@ -176,7 +176,7 @@ def pickle_load(infile):
     return pickle.load(open(infile, "rb"))
 
 
-def write_fits_image(outfile, image, header=None, float32=True,
+def write_fits_image(outfile, image, header=None, float32=False,
                      clobber=False, checksum=False):
     """
     Write the supplied image (together with header information) into
@@ -194,7 +194,7 @@ def write_fits_image(outfile, image, header=None, float32=True,
     float32 : bool, optional
         Whether coerce the image data (generally double/float64 data type)
         into single/float32 (in order to save space)?
-        Default: True
+        Default: False (i.e., preserve the data type unchanged)
     clobber : bool, optional
         Whether to overwrite the existing output file.
         Default: False
@@ -255,7 +255,7 @@ def read_fits_healpix(filename):
     return (data.astype(dtype), header)
 
 
-def write_fits_healpix(outfile, hpmap, header=None, float32=True,
+def write_fits_healpix(outfile, hpmap, header=None, float32=False,
                        clobber=False, checksum=False):
     """
     Write the HEALPix map to a FITS file with proper header as well
@@ -283,7 +283,7 @@ def write_fits_healpix(outfile, hpmap, header=None, float32=True,
     float32 : bool, optional
         Whether coerce the image data (generally double/float64 data type)
         into single/float32 (in order to save space)?
-        Default: True
+        Default: False (i.e., preserve the data type unchanged)
     clobber : bool, optional
         Whether to overwrite the existing output file?
         Default: False
