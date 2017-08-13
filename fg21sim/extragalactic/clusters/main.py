@@ -29,6 +29,7 @@ from .halo import RadioHalo
 from ...share import CONFIGS, COSMO
 from ...utils.io import dataframe_to_csv, pickle_dump
 from ...utils.ds import dictlist_to_dataframe
+from ...utils.convert import JyPerPix_to_K
 from ...sky import get_sky
 from . import helper
 
@@ -363,6 +364,51 @@ class GalaxyClusters:
         self._draw_halos()
 
         self._preprocessed = True
+
+    def simulate_frequency(self, freqidx):
+        """
+        Simulate the superimposed radio halos image at frequency (by
+        frequency index) based on the above simulated halo templates.
+
+        Parameters
+        ----------
+        freqidx : int
+            The index of the frequency in the ``self.frequencies`` where
+            to simulate the radio halos image.
+
+        Returns
+        -------
+        sky : `~fg21sim.sky.SkyPatch`
+            The simulated sky image of radio halos as a new sky instance.
+        """
+        freq = self.frequencies[freqidx]
+        logger.info("Simulating radio halo map at %.2f [MHz] ..." % freq)
+        sky = self.sky.copy()
+        sky.frequency = freq
+        # Conversion factor for [Jy/pixel] to [K]
+        JyPP2K = JyPerPix_to_K(freq, sky.pixelsize)
+
+        for hdict in self.halos:
+            center = (hdict["lon"], hdict["lat"])
+            template = hdict["template"]  # normalized to have mean of 1
+            Npix = template.size
+            flux = hdict["flux[%d]" % freqidx]  # [Jy]
+            Tmean = (flux/Npix) * JyPP2K  # [K]
+            Timg = Tmean * template  # [K]
+            sky.add(Timg, center=center)
+
+        return sky
+
+    def simulate(self):
+        """
+        Simulate the sky images of radio halos at each frequency.
+        """
+        logger.info("Simulating {name} ...".format(name=self.name))
+        for idx, freq in enumerate(self.frequencies):
+            sky = self.simulate_frequency(freqidx=idx)
+            outfile = self._outfilepath(frequency=freq)
+            sky.write(outfile)
+        logger.info("Done simulate {name}!".format(name=self.name))
 
     def postprocess(self):
         """
