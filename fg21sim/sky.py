@@ -239,30 +239,23 @@ class SkyPatch(SkyBase):
 
     Attributes
     ----------
-    type_ : str, "patch" or "healpix"
-        The type of this sky map
-    data : 1D `numpy.ndarray`
-        The flattened 1D array of map data
-        NOTE: The 2D image is flattened to 1D, making it easier to be
-              manipulated in a similar way as the HEALPix map.
-    shape : int tuple, (nrow*ncol, )
-        The shape of the flattened image array
-        NOTE: nrow=height, ncol=width
+    type_ : "patch"
+        This is a sky patch.
+    data : 2D `~numpy.ndarray`
+        The 2D data array of sky image.
+        (HEALPix map stores data in an 1D array.)
     """
-    type_ = "patch"
-    # Input sky patch and its frequency [ MHz ]
-    infile = None
-    frequency = None
-    # Sky data; should be a 1D ``numpy.ndarray`` (i.e., flattened)
-    data = None
-    # Coordinates of each pixel
-    coordinates = None
-
     def __init__(self, size, pixelsize, center=(0.0, 0.0),
                  infile=None, frequency=None, **kwargs):
         super().__init__(**kwargs)
+
+        self.type_ = "patch"
         self.xsize, self.ysize = size
+        # Initialize an empty image
+        self.data = np.zeros(shape=(self.ysize, self.xsize))
         self.pixelsize = pixelsize
+        self.xcenter, self.ycenter = center
+
         if infile is not None:
             self.read(infile, frequency)
 
@@ -278,7 +271,7 @@ class SkyPatch(SkyBase):
         Consider the spherical coordination and WCS sky projection!!
         """
         lonsize, latsize = self.size
-        return lonsize * latsize
+        return (lonsize * latsize)
 
     @property
     def size(self):
@@ -293,13 +286,6 @@ class SkyPatch(SkyBase):
         """
         return (self.xsize * self.pixelsize * AUC.arcsec2deg,
                 self.ysize * self.pixelsize * AUC.arcsec2deg)
-
-    @property
-    def shape(self):
-        if self.data is not None:
-            return self.data.shape
-        else:
-            return (self.ysize * self.xsize, )
 
     @property
     def center(self):
@@ -352,38 +338,22 @@ class SkyPatch(SkyBase):
             self.frequency = frequency
         with fits.open(infile) as f:
             self.data = f[0].data
-            self.header = f[0].header
+            header = f[0].header.copy(strip=True)
+            self.header_.extend(header, update=True)
         self.ysize_in, self.xsize_in = self.data.shape
         logger.info("Read sky patch from: %s (%dx%d)" %
                     (infile, self.xsize_in, self.ysize_in))
+
         if (self.xsize_in != self.xsize) or (self.ysize_in != self.ysize):
             logger.warning("Scale input sky patch to size %dx%d" %
                            (self.xsize, self.ysize))
             zoom = (self.ysize/self.ysize_in, self.xsize/self.xsize_in)
             self.data = ndimage.zoom(self.data, zoom=zoom, order=1)
-        # Flatten the image
-        self.data = self.data.flatten()
-        logger.info("Flattened the image to an 1D array")
 
-    def load(self, infile, frequency=None):
-        """
-        Make a new copy of this instance, then read the input sky patch
-        and return the loaded new instance.
-
-        Returns
-        -------
-        A new copy of this instance with the given sky patch loaded.
-        """
-        sky = self.copy()
-        sky.read(infile=infile, frequency=frequency)
-        return sky
-
-    def copy(self):
     def write(self, outfile):
         """
-        Return a copy of this instance.
+        Write current data to file.
         """
-        return copy.deepcopy(self)
         write_fits_image(outfile, image=self.data, header=self.header,
                          float32=self.float32_,
                          clobber=self.clobber_,
@@ -392,7 +362,6 @@ class SkyPatch(SkyBase):
     @property
     def header(self):
         """
-        Write current data to file.
         FITS header of the sky for storing information in the output file.
         """
         hdr = super().header
@@ -517,8 +486,6 @@ class SkyHealpix(SkyBase):
     """
     Support the HEALPix all-sky map.
 
-    XXX/TODO: Update against ``SkyBase`` and ``SkyPatch``!!
-
     Parameters
     ----------
     nside : int
@@ -537,17 +504,13 @@ class SkyHealpix(SkyBase):
         The pixel size of the HEALPix map
         Unit: [arcsec]
     """
-    type_ = "healpix"
-    # Input sky patch and its frequency [ MHz ]
-    infile = None
-    frequency = None
-    # Sky data; should be a `~numpy.ndarray`
-    data = None
-    # Coordinates of each pixel
-    coordinates = None
+    def __init__(self, nside, infile=None, frequency=None, **kwargs):
+        super().__init__(**kwargs)
 
-    def __init__(self, nside, infile=None, frequency=None):
+        self.type_ = "healpix"
         self.nside = nside
+        self.data = np.zeros(shape=hp.nside2npix(self.nside))
+
         if infile is not None:
             self.read(infile, frequency)
 
@@ -557,14 +520,7 @@ class SkyHealpix(SkyBase):
         The sky coverage of this HEALPix map, i.e., all sky = 4π,
         Unit: [deg^2]
         """
-        return 4*np.pi * np.rad2deg(1)**2
-
-    @property
-    def shape(self):
-        if self.data is not None:
-            return self.data.shape
-        else:
-            return (hp.nside2npix(self.nside), )
+        return 4*np.pi * AUC.rad2deg**2
 
     @property
     def pixelsize(self):
@@ -587,33 +543,15 @@ class SkyHealpix(SkyBase):
         self.infile = infile
         if frequency is not None:
             self.frequency = frequency
-        self.data, self.header = read_fits_healpix(infile)
-        self.nside_in = self.header["NSIDE"]
+        self.data, header = read_fits_healpix(infile)
+        self.header_.extend(header, update=True)
+        self.nside_in = header["NSIDE"]
         logger.info("Read HEALPix sky map from: {0} (Nside={1})".format(
             infile, self.nside_in))
         if self.nside_in != self.nside:
             self.data = hp.ud_grade(self.data, nside_out=self.nside)
             logger.warning("Upgrade/downgrade sky map from Nside " +
                            "{0} to {1}".format(self.nside_in, self.nside))
-
-    def load(self, infile, frequency=None):
-        """
-        Make a new copy of this instance, then read the input sky map
-        and return the loaded new instance.
-
-        Returns
-        -------
-        A new copy of this instance with the given sky map loaded.
-        """
-        sky = self.copy()
-        sky.read(infile=infile, frequency=frequency)
-        return sky
-
-    def copy(self):
-        """
-        Return a copy of this instance.
-        """
-        return copy.deepcopy(self)
 
     def write(self, outfile):
         """
