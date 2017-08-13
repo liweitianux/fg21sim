@@ -157,7 +157,7 @@ class SkyBase:
         """
         raise NotImplementedError
 
-    def write(self, outfile):
+    def write(self, outfile, clobber=None):
         """
         Write the sky image (with current data) into a FITS file.
 
@@ -165,6 +165,10 @@ class SkyBase:
         ----------
         outfile : str
             The path/filename to the output FITS file.
+        clobber : bool, optional
+            If not ``None``, then overwrite the default ``self.clobber_``
+            from the configuration file, to determine whether to overwrite
+            the existing output file.
         """
         raise NotImplementedError
 
@@ -350,13 +354,15 @@ class SkyPatch(SkyBase):
             zoom = (self.ysize/self.ysize_in, self.xsize/self.xsize_in)
             self.data = ndimage.zoom(self.data, zoom=zoom, order=1)
 
-    def write(self, outfile):
+    def write(self, outfile, clobber=None):
         """
         Write current data to file.
         """
+        if clobber is None:
+            clobber = self.clobber_
         write_fits_image(outfile, image=self.data, header=self.header,
                          float32=self.float32_,
-                         clobber=self.clobber_,
+                         clobber=clobber,
                          checksum=self.checksum_)
 
     @property
@@ -553,10 +559,12 @@ class SkyHealpix(SkyBase):
             logger.warning("Upgrade/downgrade sky map from Nside " +
                            "{0} to {1}".format(self.nside_in, self.nside))
 
-    def write(self, outfile):
+    def write(self, outfile, clobber=None):
         """
         Write current data to file.
         """
+        if clobber is None:
+            clobber = self.clobber_
         write_fits_healpix(outfile, hpmap=self.data, header=self.header,
                            float32=self.float32_,
                            clobber=self.clobber_,
