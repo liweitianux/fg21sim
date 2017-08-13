@@ -137,3 +137,20 @@ def Fnu_to_Tb_fast(Fnu, omega, freq):
     """
     Sb = Fnu / omega  # [Jy/arcsec^2]
     return Sb_to_Tb_fast(Sb, freq)
+
+
+def JyPerPix_to_K(freq, pixelsize):
+    """
+    The factor that converts [Jy/pixel] to [K] (brightness temperature).
+
+    Parameters
+    ----------
+    freq : float
+        The frequency where the flux density measured.
+        Unit: [Jy]
+    pixelsize : float
+        The pixel size.
+        Unit: [arcsec]
+    """
+    factor = Fnu_to_Tb_fast(Fnu=1.0, omega=pixelsize**2, freq=freq)
+    return factor
