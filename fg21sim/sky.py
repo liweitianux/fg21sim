@@ -427,7 +427,10 @@ class SkyPatch(SkyBase):
         # Index ranges (inclusive at both ends) for the supplied object
         # image on the sky array
         rimin0, rimax0 = ric - nrow//2, ric + (nrow-1)//2
-        cimin0, cimax0 = cic - ncol//2, ric + (ncol-1)//2
+        cimin0, cimax0 = cic - ncol//2, cic + (ncol-1)//2
+        # Index ranges for the supplied object image
+        rimin1, rimax1 = 0, nrow-1
+        cimin1, cimax1 = 0, ncol-1
 
         # Check the object boundaries
         if ((rimin0 >= self.ysize) or (rimax0 < 0) or

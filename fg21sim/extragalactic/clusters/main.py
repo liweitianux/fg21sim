@@ -84,16 +84,9 @@ class GalaxyClusters:
         self.merger_mass_min = self.configs.getn(comp+"/merger_mass_min")
         self.ratio_major = self.configs.getn(comp+"/ratio_major")
         self.tau_merger = self.configs.getn(comp+"/tau_merger")
-
         self.frequencies = self.configs.frequencies
         self.filename_pattern = self.configs.getn("output/filename_pattern")
-
-        # Sky and resolution
-        if self.sky.type_ == "patch":
-            self.resolution = self.sky.pixelsize  # [arcsec]
-        else:
-            raise NotImplementedError("TODO: full-sky simulations")
-
+        self.clobber = self.configs.getn("output/clobber")
         logger.info("Loaded and set up configurations")
 
     def _simulate_catalog(self):
@@ -309,11 +302,10 @@ class GalaxyClusters:
         """
         num = len(self.halos)
         logger.info("Draw template images for %d halos ..." % num)
-        self.halos = []
         i = 0
         for hdict in self.halos:
             i += 1
-            if i % 50 == 0:
+            if i % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
             theta_e = hdict["angular_radius"] / self.sky.pixelsize
             rprofile = helper.halo_rprofile(re=theta_e)
@@ -392,7 +384,7 @@ class GalaxyClusters:
             center = (hdict["lon"], hdict["lat"])
             template = hdict["template"]  # normalized to have mean of 1
             Npix = template.size
-            flux = hdict["flux[%d]" % freqidx]  # [Jy]
+            flux = hdict["flux"][freqidx]  # [Jy]
             Tmean = (flux/Npix) * JyPP2K  # [K]
             Timg = Tmean * template  # [K]
             sky.add(Timg, center=center)
