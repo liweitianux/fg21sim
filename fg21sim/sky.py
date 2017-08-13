@@ -51,6 +51,9 @@ class SkyBase:
     frequency_ : float
         The frequency of the input/output sky image.
         Unit: [MHz]
+    pixelsize_ : float
+        The pixel size of the sky image.
+        Unit: [arcsec]
     creator_ : str
         The creator of the (output) sky image.
         Default: ``__name__``
@@ -70,7 +73,8 @@ class SkyBase:
     def __init__(self, float32=True, clobber=False, checksum=False):
         self.type_ = None
         self.data = None
-        self.frequency_ = None
+        self.frequency_ = None  # [MHz]
+        self.pixelsize_ = None  # [arcsec]
         self.creator_ = __name__
         self.header_ = fits.Header()
         self.float32_ = float32
@@ -161,6 +165,14 @@ class SkyBase:
         Unit: [MHz]
         """
         self.frequency_ = value
+
+    @property
+    def pixelsize(self):
+        """
+        Pixel size of the sky image.
+        Unit: [arcsec]
+        """
+        return self.pixelsize_
 
     @property
     def creator(self):
@@ -254,14 +266,6 @@ class SkyBase:
         """
         raise NotImplementedError
 
-    @property
-    def pixelsize(self):
-        """
-        Pixel size of the sky image.
-        Unit: [arcsec]
-        """
-        raise NotImplementedError
-
     def random_points(self, n=1):
         """
         Generate uniformly distributed random points within the
@@ -332,7 +336,7 @@ class SkyPatch(SkyBase):
         self.xsize, self.ysize = size
         # Initialize an empty image
         self.data = np.zeros(shape=(self.ysize, self.xsize))
-        self.pixelsize = pixelsize
+        self.pixelsize_ = pixelsize
         self.xcenter, self.ycenter = center
 
         if infile is not None:
@@ -661,6 +665,8 @@ class SkyHealpix(SkyBase):
 
         self.type_ = "healpix"
         self.nside = nside
+        self.pixelsize_ = (hp.nside2resol(self.nside, arcmin=True) *
+                           AUC.arcmin2arcsec)
         self.data = np.zeros(shape=hp.nside2npix(self.nside))
 
         if infile is not None:
@@ -673,12 +679,6 @@ class SkyHealpix(SkyBase):
         Unit: [deg^2]
         """
         return 4*np.pi * AUC.rad2deg**2
-
-    @property
-    def pixelsize(self):
-        ps = hp.nside2resol(self.nside, arcmin=True)
-        ps *= AUC.arcmin2arcsec
-        return ps
 
     def read(self, infile, frequency=None):
         """
