@@ -304,7 +304,7 @@ class GalaxyClusters:
         ----
         The drawn template images are append to the dictionaries of
         the corresponding halo within the ``self.halos``.
-        The templates are normalized to have sum of 1.
+        The templates are normalized to have *mean* value of 1.
         """
         num = len(self.halos)
         logger.info("Draw template images for %d halos ..." % num)

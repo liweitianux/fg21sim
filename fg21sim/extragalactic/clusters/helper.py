@@ -449,15 +449,23 @@ def draw_halo(rprofile, felong, rotation=0.0):
 
     Parameters
     ----------
-    rprofile
+    rprofile : 1D `~numpy.ndarray`
+        The values along the radial pixels (0, 1, 2, ...),
+        e.g., calculated by the above ``halo_rprofile()``.
+    felong : float
+        The elongated fraction of the elliptical halo, which is
+        defined as the ratio of semi-minor axis to the semi-major axis.
+    rotation : float
+        The rotation angle of the elliptical halo.
+        Unit: [deg]
 
     Returns
     -------
     image : 2D `~numpy.ndarray`
         2D array of the drawn halo template image.
-        The image is normalized to have sum of 1.
+        The image is normalized to have *mean* value of 1.
     """
     image = circle(rprofile=rprofile)
     image = circle2ellipse(image, bfraction=felong, rotation=rotation)
-    image /= image.sum()
+    image /= image.mean()
     return image
