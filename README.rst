@@ -97,8 +97,8 @@ Installation
 
 Development
 -----------
-To ease development and tests, you may want to install this package in
-an **editable state**::
+To ease the development and tests, you may want to install this package
+in the **editable state**::
 
     $ cd fg21sim/
     $ pip3 install --user -r requirements.txt
@@ -125,10 +125,6 @@ Great!  Be sure to consult the guidelines in |CONTRIBUTING.md|_.
 Authors
 -------
 * Weitian LI <``weitian@aaronly.me``>
-
-
-Contributors
-------------
 * Zhixian MA <``zxma_sjtu@qq.com``>
 
 
