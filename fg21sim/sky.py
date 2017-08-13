@@ -182,6 +182,7 @@ class SkyBase:
         hdr["SkyType"] = (self.type_, "Patch / HEALPix")
         hdr["PixSize"] = (self.pixelsize, "Pixel size [arcsec]")
         hdr["CREATOR"] = (self.creator, "Sky Creator")
+        hdr["FREQ"] = (self.frequency, "Sky frequency [MHz]")
         hdr["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
                        "File creation date")
         return hdr

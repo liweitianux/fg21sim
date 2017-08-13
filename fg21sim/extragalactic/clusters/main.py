@@ -63,8 +63,12 @@ class GalaxyClusters:
 
     def __init__(self, configs=CONFIGS):
         self.configs = configs
-        self.sky = get_sky(configs)
         self._set_configs()
+
+        self.sky = get_sky(configs)
+        self.sky.add_header("CompName", self.name, "Emission component")
+        self.sky.add_header("BUNIT", "K", "Data in units of [Kelvin]")
+        self.sky.creator = __name__
 
     def _set_configs(self):
         """
@@ -82,9 +86,6 @@ class GalaxyClusters:
 
         self.frequencies = self.configs.frequencies
         self.filename_pattern = self.configs.getn("output/filename_pattern")
-        self.use_float = self.configs.getn("output/use_float")
-        self.checksum = self.configs.getn("output/checksum")
-        self.clobber = self.configs.getn("output/clobber")
 
         # Sky and resolution
         if self.sky.type_ == "patch":
