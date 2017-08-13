@@ -4,6 +4,11 @@
 """
 Generic simulation sky supporting both sky patch and HEALPix all-sky
 maps.
+
+References
+----------
+* Python - 3. Data Model
+  https://docs.python.org/3/reference/datamodel.html#special-method-names
 """
 
 import logging
@@ -71,6 +76,59 @@ class SkyBase:
         self.float32_ = float32
         self.clobber_ = clobber
         self.checksum_ = checksum
+
+    def __add__(self, other):
+        """Binary arithmetic operation: ``+``."""
+        if isinstance(other, self.__class__):
+            return self.data + other.data
+        elif isinstance(other, (int, float, np.ndarray)):
+            return self.data + other
+        else:
+            raise NotImplemented
+
+    def __sub__(self, other):
+        """Binary arithmetic operation: ``-``."""
+        if isinstance(other, self.__class__):
+            return self.data - other.data
+        elif isinstance(other, (int, float, np.ndarray)):
+            return self.data - other
+        else:
+            raise NotImplemented
+
+    def __mul__(self, other):
+        """Binary arithmetic operation: ``*``."""
+        if isinstance(other, self.__class__):
+            return self.data * other.data
+        elif isinstance(other, (int, float, np.ndarray)):
+            return self.data * other
+        else:
+            raise NotImplemented
+
+    def __truediv__(self, other):
+        """Binary arithmetic operation: ``/``."""
+        if isinstance(other, self.__class__):
+            return self.data / other.data
+        elif isinstance(other, (int, float, np.ndarray)):
+            return self.data / other
+        else:
+            raise NotImplemented
+
+    def __pow__(self, other):
+        """Binary arithmetic operation: ``**``."""
+        if isinstance(other, self.__class__):
+            return self.data ** other.data
+        elif isinstance(other, (int, float, np.ndarray)):
+            return self.data ** other
+        else:
+            raise NotImplemented
+
+    def __neg__(self):
+        """Unary arithmetic operation: ``-``."""
+        return -self.data
+
+    def __abs__(self):
+        """Unary arithmetic operation: ``abs()``."""
+        return np.abs(self.data)
 
     @property
     def shape(self):
