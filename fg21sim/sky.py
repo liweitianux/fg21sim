@@ -9,6 +9,7 @@ maps.
 import os
 import logging
 import copy
+from datetime import datetime, timezone
 
 import numpy as np
 from scipy import ndimage
@@ -85,7 +86,10 @@ class SkyBase:
         The frequency of the sky image.
         Unit: [MHz]
         """
-        return self.frequency_
+        if self.frequency_ is not None:
+            return self.frequency_
+        else:
+            return self.header_.get("FREQ", None)
 
     @frequency.setter
     def frequency(self, value):
@@ -94,6 +98,36 @@ class SkyBase:
         Unit: [MHz]
         """
         self.frequency_ = value
+
+    @property
+    def creator(self):
+        """
+        The creator of the sky image.
+        """
+        if self.creator_ is not None:
+            return self.creator_
+        else:
+            return self.header_.get("CREATOR", None)
+
+    @creator.setter
+    def creator(self, value):
+        """
+        Set the creator of the sky image.
+        """
+        self.creator_ = value
+
+    @property
+    def header(self):
+        """
+        The FITS header of the current sky.
+        """
+        hdr = self.header_.copy()
+        hdr["SkyType"] = (self.type_, "Patch / HEALPix")
+        hdr["PixSize"] = (self.pixelsize, "Pixel size [arcsec]")
+        hdr["CREATOR"] = (self.creator, "Sky Creator")
+        hdr["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
+                       "File creation date")
+        return hdr
 
     def copy(self):
         """
