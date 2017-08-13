@@ -186,6 +186,15 @@ class SkyBase:
                        "File creation date")
         return hdr
 
+    def add_header(self, key, value, comment=None):
+        """
+        Add/update a key to the FITS header.
+        """
+        if comment is None:
+            self.header_[key] = value
+        else:
+            self.header_[key] = (value, comment)
+
     def copy(self):
         """
         Return a (deep) copy of this instance.
