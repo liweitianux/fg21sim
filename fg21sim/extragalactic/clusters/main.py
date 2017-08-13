@@ -321,6 +321,27 @@ class GalaxyClusters:
             hdict["template"] = template
         logger.info("Done drawn halo template images.")
 
+    def _outfilepath(self, frequency, **kwargs):
+        """
+        Generate the path/filename to the output file for writing
+        the simulate sky images.
+
+        Parameters
+        ----------
+        frequency : float
+            The frequency of the output sky image.
+            Unit: [MHz]
+
+        Returns
+        -------
+        filepath : str
+            The generated filepath for the output sky file.
+        """
+        filename = self.filename_pattern.format(
+            prefix=self.prefix, frequency=frequency, **kwargs)
+        filepath = os.path.join(self.output_dir, filename)
+        return filepath
+
     def preprocess(self):
         """
         Perform the preparation procedures for the later simulations.
