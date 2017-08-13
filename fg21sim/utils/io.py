@@ -4,6 +4,19 @@
 """
 Input/output utilities
 ----------------------
+* dataframe_to_csv:
+  Save the given Pandas DataFrame into a CSV text file.
+
+* pickle_dump:
+  Dump the given object into the output file using ``pickle.dump()``.
+
+* pickle_load:
+  Load the pickled Python back from the given file.
+
+* write_fits_image:
+  Write the supplied image (together with header information) into
+  the output FITS file.
+
 * read_fits_healpix:
   Read the HEALPix map from a FITS file or a BinTableHDU to 1D array
   in *RING* ordering.
@@ -103,8 +116,10 @@ def dataframe_to_csv(df, outfile, comment=None, clobber=False):
 
     # Add a default header comment
     if comment is None:
-        comment = ["by %s" % __name__,
-                   "at %s" % datetime.now().isoformat()]
+        comment = [
+            "by %s" % __name__,
+            "at %s" % datetime.now(timezone.utc).astimezone().isoformat(),
+        ]
 
     with open(outfile, "w") as fh:
         # Write header comments with ``#`` prefixed.
@@ -189,8 +204,16 @@ def write_fits_image(outfile, image, header=None, float32=True,
     """
     _create_dir(outfile)
     _check_existence(outfile, clobber=clobber, remove=True)
+
+    hdr = fits.Header()
+    hdr["CREATOR"] = (__name__, "File creator")
+    hdr["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
+                   "File creation date")
+    if header is not None:
+        hdr.extend(header, update=True)
+
     if float32:
-        image = np.asarray(image, dtype=float32)
+        image = np.asarray(image, dtype=np.float32)
     hdu = fits.PrimaryHDU(data=image, header=header)
     hdu.writeto(outfile, checksum=checksum)
     logger.info("Wrote image to FITS file: %s" % outfile)
