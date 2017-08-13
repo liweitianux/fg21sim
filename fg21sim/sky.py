@@ -130,6 +130,12 @@ class SkyBase:
         """Unary arithmetic operation: ``abs()``."""
         return np.abs(self.data)
 
+    def add(self, obj, *args, **kwargs):
+        """
+        Add/superimpose an object to the sky image.
+        """
+        raise NotImplementedError
+
     @property
     def shape(self):
         """
@@ -284,7 +290,12 @@ class SkyPatch(SkyBase):
     NOTE/XXX
     --------
     Currently just use ``CAR`` (Cartesian) sky projection, i.e.,
-    assuming a flat sky!
+    assuming a flat sky!!
+
+    NOTE
+    ----
+    X: FITS width / sky R.A. <-> data array rows
+    Y: FITS height / sky Dec. <-> data array columns
 
     Parameters
     ----------
@@ -292,10 +303,6 @@ class SkyPatch(SkyBase):
         The (pixel) dimensions of the (output) sky patch.
         If the input sky has a different size, then it will be *scaled*
         to match this output size.
-        NOTE: Due to the FITS using Fortran ordering, while Python/numpy
-              using C ordering, therefore, the read in image/data array
-              has shape ``(ysize, xsize)``, therefore, the ``self.data``
-              should be reshaped to ``(ysize, xsize)`` on output.
     pixelsize : float
         The pixel size of the sky patch, will be used to determine
         the sky coordinates.
@@ -311,10 +318,10 @@ class SkyPatch(SkyBase):
 
     Attributes
     ----------
-    type_ : "patch"
+    type_ : ``patch``
         This is a sky patch.
     data : 2D `~numpy.ndarray`
-        The 2D data array of sky image.
+        The 2D data array of sky image, with shape (self.ysize, self.xsize).
         (HEALPix map stores data in an 1D array.)
     """
     def __init__(self, size, pixelsize, center=(0.0, 0.0),
@@ -339,8 +346,7 @@ class SkyPatch(SkyBase):
 
         XXX/FIXME
         ---------
-        Assumed a flat sky!
-        Consider the spherical coordination and WCS sky projection!!
+        Assumed a flat sky, without WCS projection!!
         """
         lonsize, latsize = self.size
         return (lonsize * latsize)
@@ -392,6 +398,78 @@ class SkyPatch(SkyBase):
         lonsize, latsize = self.size
         return (self.ycenter - 0.5*latsize,
                 self.ycenter + 0.5*latsize)
+
+    def add(self, obj, center):
+        """
+        Add/superimpose the object image into this sky patch.
+
+        XXX/FIXME
+       ----------
+        Assumed a flat sky!!
+
+        Parameters
+        ----------
+        obj : 2D `~numpy.ndarray`
+            The object image to be added into the sky.
+            NOTE: Should have same pixel size as the sky patch.
+        center : (ra, dec) tuple
+            The central coordinate (R.A., Dec.) of the given object.
+        """
+        obj = np.asarray(obj)
+        nrow, ncol = obj.shape
+        xc, yc = center
+        ric, cic = self.world2pix(xc, yc)
+
+        # Index ranges (inclusive at both ends) for the supplied object
+        # image on the sky array
+        rimin0, rimax0 = ric - nrow//2, ric + (nrow-1)//2
+        cimin0, cimax0 = cic - ncol//2, ric + (ncol-1)//2
+
+        # Check the object boundaries
+        if ((rimin0 >= self.ysize) or (rimax0 < 0) or
+                (cimin0 >= self.xsize) or (cimax0 < 0)):
+            logger.warning("The given object is beyond the sky coverage")
+            return
+
+        if rimin0 < 0:
+            rimin1 = -rimin0
+            rimin0 = 0
+        if rimax0 >= self.ysize:
+            rimax1 = nrow - (rimax0-self.ysize) - 2
+            rimax0 = self.ysize-1
+        if cimin0 < 0:
+            cimin1 = -cimin0
+            cimin0 = 0
+        if cimax0 >= self.xsize:
+            cimax1 = nrow - (cimax0-self.xsize) - 2
+            cimax0 = self.xsize-1
+
+        self.data[rimin0:(rimax0+1),
+                  cimin0:(cimax0+1)] += obj[rimin1:(rimax1+1),
+                                            cimin1:(cimax1+1)]
+
+    def world2pix(self, x, y):
+        """
+        Convert the world coordinates (R.A., Dec.) into the pixel
+        coordinates (indexes) within the sky data array.
+
+        Parameters
+        ----------
+        x, y : float, `~numpy.ndarray`
+            The R.A., Dec. world coordinates
+            Unit: [deg]
+
+        Returns
+        -------
+        ri, ci : int, `~numpy.ndarray`
+            The row, column indexes within the sky data array.
+        """
+        pixelsize = self.pixelsize * AUC.arcsec2deg  # [deg]
+        x, y = np.asarray(x), np.asarray(y)  # [deg]
+        ri0, ci0 = self.ysize//2, self.xsize//2
+        ri = np.round((y - self.ycenter) / pixelsize + ri0).astype(np.int)
+        ci = np.round((x - self.xcenter) / pixelsize + ci0).astype(np.int)
+        return (ri, ci)
 
     def read(self, infile, frequency=None):
         """
