@@ -20,7 +20,9 @@ from reproject import reproject_interp, reproject_to_healpix
 import healpy as hp
 
 from .utils.wcs import make_wcs
-from .utils.fits import read_fits_healpix, write_fits_healpix
+from .utils.io import (read_fits_healpix,
+                       write_fits_healpix,
+                       write_fits_image)
 from .utils.random import spherical_uniform
 from .utils.units import UnitConversions as AUC
 
