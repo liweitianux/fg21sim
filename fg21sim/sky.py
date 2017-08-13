@@ -6,7 +6,6 @@ Generic simulation sky supporting both sky patch and HEALPix all-sky
 maps.
 """
 
-import os
 import logging
 import copy
 from datetime import datetime, timezone
@@ -158,7 +157,7 @@ class SkyBase:
         """
         raise NotImplementedError
 
-    def write(self, outfile, clobber=False, checksum=False):
+    def write(self, outfile):
         """
         Write the sky image (with current data) into a FITS file.
 
@@ -166,20 +165,6 @@ class SkyBase:
         ----------
         outfile : str
             The path/filename to the output FITS file.
-        clobber : bool, optional
-            Whether to overwrite the existing output file.
-            Default: False
-        checksum : bool, optional
-            Whether to calculate the checksum data for the output
-            FITS file, which may cost some time.
-            Default: False
-        """
-        raise NotImplementedError
-
-    @property
-    def shape(self):
-        """
-        Numpy array shape of the (current/output) sky data.
         """
         raise NotImplementedError
 
@@ -394,31 +379,27 @@ class SkyPatch(SkyBase):
         return sky
 
     def copy(self):
+    def write(self, outfile):
         """
         Return a copy of this instance.
         """
         return copy.deepcopy(self)
+        write_fits_image(outfile, image=self.data, header=self.header,
+                         float32=self.float32_,
+                         clobber=self.clobber_,
+                         checksum=self.checksum_)
 
-    def write(self, outfile, clobber=False, checksum=True):
+    @property
+    def header(self):
         """
         Write current data to file.
+        FITS header of the sky for storing information in the output file.
         """
-        outdir = os.path.dirname(outfile)
-        if outdir and (not os.path.exists(outdir)):
-            os.makedirs(outdir)
-            logger.info("Created output directory: %s" % outdir)
-        # NOTE: output image shape be (ysize, xsize)!
-        image = self.data.reshape(self.ysize, self.xsize)
-        if hasattr(self, "header"):
-            header = self.header.copy(strip=True)
-        wcs_header = self.wcs.to_header()
-        header.extend(wcs_header, update=True)
-        header["PIXSIZE"] = (self.pixelsize, "Pixel size [arcsec]")
-        header["RA0"] = (self.center[0], "R.A. of patch center [deg]")
-        header["DEC0"] = (self.center[1], "Dec. of patch center [deg]")
-        hdu = fits.PrimaryHDU(data=image, header=header)
-        hdu.writeto(outfile, clobber=clobber, checksum=checksum)
-        logger.info("Write sky map to file: %s" % outfile)
+        hdr = super().header
+        hdr.extend(self.wcs.to_header(), update=True)
+        hdr["RA0"] = (self.center[0], "R.A. of patch center [deg]")
+        hdr["DEC0"] = (self.center[1], "Dec. of patch center [deg]")
+        return hdr
 
     @property
     def wcs(self):
@@ -634,19 +615,14 @@ class SkyHealpix(SkyBase):
         """
         return copy.deepcopy(self)
 
-    def write(self, outfile, clobber=False, checksum=True):
+    def write(self, outfile):
         """
         Write current data to file.
         """
-        outdir = os.path.dirname(outfile)
-        if outdir and (not os.path.exists(outdir)):
-            os.makedirs(outdir)
-            logger.info("Created output directory: %s" % outdir)
-        if hasattr(self, "header"):
-            header = self.header
-        write_fits_healpix(outfile, self.data, header=header,
-                           clobber=clobber, checksum=checksum)
-        logger.info("Write sky map to file: %s" % outfile)
+        write_fits_healpix(outfile, hpmap=self.data, header=self.header,
+                           float32=self.float32_,
+                           clobber=self.clobber_,
+                           checksum=self.checksum_)
 
     def contains(self, skycoord):
         """
