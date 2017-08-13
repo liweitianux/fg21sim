@@ -14,15 +14,8 @@ import sys
 import argparse
 import logging
 
-import scipy.ndimage
-import healpy as hp
-from reproject import reproject_from_healpix
-
 from fg21sim.share import CONFIGS
-from fg21sim.sky import SkyPatch
 from fg21sim.utils import setup_logging
-from fg21sim.utils.io import read_fits_healpix
-from fg21sim.utils.units import UnitConversions as AUC
 
 
 def main():
@@ -53,6 +46,15 @@ def main():
     tool = os.path.basename(sys.argv[0])
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
+    logger.info("Importing necessary modules + Numba JIT, waiting ...")
+    import scipy.ndimage
+    import healpy as hp
+    from reproject import reproject_from_healpix
+    #
+    from fg21sim.sky import SkyPatch
+    from fg21sim.utils.io import read_fits_healpix
+    from fg21sim.utils.units import UnitConversions as AUC
 
     if args.config:
         CONFIGS.read_userconfig(args.config)
