@@ -220,7 +220,8 @@ def write_fits_image(outfile, image, header=None, float32=True,
 
 
 def read_fits_healpix(filename):
-    """Read the HEALPix map from a FITS file or a BinTableHDU to 1D array
+    """
+    Read the HEALPix map from a FITS file or a BinTableHDU to 1D array
     in *RING* ordering.
 
     Parameters
@@ -240,7 +241,7 @@ def read_fits_healpix(filename):
     ----
     This function wraps on `healpy.read_map()`, but set the data type of
     data array to its original value as in FITS file, as well as return
-    FITS header as `~astropy.io.fits.Header` instance.
+    the header of input FITS file.
     """
     if isinstance(filename, fits.BinTableHDU):
         hdu = filename
@@ -254,9 +255,10 @@ def read_fits_healpix(filename):
     return (data.astype(dtype), header)
 
 
-def write_fits_healpix(filename, hpmap, header=None, clobber=False,
-                       checksum=False):
-    """Write the HEALPix map to a FITS file with proper header as well
+def write_fits_healpix(outfile, hpmap, header=None, float32=True,
+                       clobber=False, checksum=False):
+    """
+    Write the HEALPix map to a FITS file with proper header as well
     as the user-provided header.
 
     This function currently only support one style of HEALPix with the
@@ -269,34 +271,46 @@ def write_fits_healpix(filename, hpmap, header=None, clobber=False,
 
     Parameters
     ----------
-    filename : str
+    outfile : str
         Filename of the output file to write the HEALPix map data
     hpmap : 1D `~numpy.ndarray`
         1D array containing the HEALPix map data, and the ordering
         scheme should be "RING";
-        The data type is preserved in the output FITS file.
+        The data type is preserved or cast into single/float32 if the
+        below ``float32`` parameter is True, in the output FITS file.
     header : `~astropy.io.fits.Header`, optional
         Extra header to be appended to the output FITS
+    float32 : bool, optional
+        Whether coerce the image data (generally double/float64 data type)
+        into single/float32 (in order to save space)?
+        Default: True
     clobber : bool, optional
-        Whether overwrite the existing file?
+        Whether to overwrite the existing output file?
+        Default: False
     checksum : bool, optional
-        Whether calculate the checksum for the output file, which is
-        recorded as the "CHECKSUM" header keyword.
+        Whether to calculate the data checksum, which may cost some time?
+        Default: False
 
     NOTE
     ----
     - This function is intended to replace the most common case of
       `healpy.write_map()`, which still uses some deprecated functions of
-      `numpy` and `astropy`, meanwhile, it interface/arguments is not very
+      `numpy` and `astropy`, meanwhile, its interface/arguments is not very
       handy.
     - This function (currently) only implement the very basic feature of
       the `healpy.write_map()`.
     """
+    _create_dir(outfile)
+    _check_existence(outfile, clobber=clobber, remove=True)
+
     hpmap = np.asarray(hpmap)
     if hpmap.ndim != 1:
         raise ValueError("Invalid HEALPix data: only support 1D array")
-    # Hack to ignore the dtype byteorder, use native endianness
-    dtype = np.dtype(hpmap.dtype.type)
+    if float32:
+        dtype = np.float32
+    else:
+        # HACK: ignore the dtype byteorder, use native endianness
+        dtype = np.dtype(hpmap.dtype.type)
     hpmap = hpmap.astype(dtype)
     #
     npix = hpmap.size
@@ -326,9 +340,10 @@ def write_fits_healpix(filename, hpmap, header=None, clobber=False,
     # Merge user-provided header
     # NOTE: use the `.extend()` method instead of `.update()` method
     if header is not None:
-        hdr.extend(fits.Header(header))
+        hdr.extend(header, update=True)
     #
     hdu = fits.BinTableHDU.from_columns([
         fits.Column(name="I", array=hpmap, format=colfmt)
     ], header=hdr)
-    hdu.writeto(filename, clobber=clobber, checksum=checksum)
+    hdu.writeto(outfile, checksum=checksum)
+    logger.info("Wrote HEALPix map to FITS file: %s" % outfile)
