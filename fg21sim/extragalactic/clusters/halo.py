@@ -558,9 +558,8 @@ class RadioHalo:
         """
         z = COSMO.redshift(t)
         mass = self._mass(t)
-        n_th = helper.density_number_thermal(mass, z)
-        coef = -1.20e-12 * AUC.Gyr2s  # [Gyr^-1]
-        loss = coef * n_th * (1 + np.log(gamma/n_th) / 75)
+        n_th = helper.density_number_thermal(mass, z)  # [cm^-3]
+        loss = -3.79e4 * n_th * (1 + np.log(gamma/n_th) / 75)
         return loss
 
     def _loss_rad(self, gamma, t):
@@ -573,8 +572,7 @@ class RadioHalo:
         Ref.[sarazin1999],Eq.(6,7)
         """
         z = COSMO.redshift(t)
-        mass = self._mass(t)
-        B = helper.magnetic_field(mass)
-        coef = -1.37e-20 * AUC.Gyr2s  # [Gyr^-1]
-        loss = coef * gamma**2 * ((B/3.25)**2 + (1+z)**4)
+        mass = self._mass(t)  # [Msun]
+        B = helper.magnetic_field(mass)  # [uG]
+        loss = -4.32e-4 * gamma**2 * ((B/3.25)**2 + (1+z)**4)
         return loss
