@@ -107,7 +107,7 @@
   [[pointsources]]
   # Whether save this point source catelogue to disk
   save = boolean(default=True)
-  # Output directory to save the simulated catelogues
+  # Output directory to save the simulated catalog
   output_dir = string(default="PS_tables")
   # PS components to be simulated
   pscomponents = string_list(default=list())
