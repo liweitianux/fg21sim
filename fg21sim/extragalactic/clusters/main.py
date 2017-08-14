@@ -19,6 +19,7 @@ References
 
 import os
 import logging
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -254,39 +255,39 @@ class GalaxyClusters:
             flux = halo.calc_flux(emissivity)
             Tb_mean = halo.calc_brightness_mean(emissivity, self.frequencies,
                                                 pixelsize=self.sky.pixelsize)
-            data = {
-                "z0": halo.z_obs,
-                "M0": halo.M_obs,  # [Msun]
-                "lon": row.lon,  # [deg] longitude
-                "lat": row.lat,  # [deg] longitude
-                "felong": row.felong,  # Fraction of elongation
-                "rotation": row.rotation,  # [deg] ellipse rotation angle
-                "z_merger": halo.z_merger,
-                "M_main": halo.M_main,  # [Msun]
-                "M_sub": halo.M_sub,  # [Msun]
-                "time_crossing": halo.time_crossing,  # [Gyr]
-                "gamma": halo.gamma,  # Lorentz factors
-                "radius": halo.radius,  # [kpc]
-                "angular_radius": halo.angular_radius,  # [arcsec]
-                "volume": halo.volume,  # [kpc^3]
-                "B": halo.magnetic_field,  # [uG]
-                "Ke": halo.injection_rate,  # [cm^-3 Gyr^-1]
-                "n_e": n_e,  # [cm^-3]
-                "frequency": self.frequencies,  # [MHz]
-                "emissivity": emissivity,  # [erg/s/cm^3/Hz]
-                "power": power,  # [W/Hz]
-                "flux": flux,  # [Jy]
-                "Tb_mean": Tb_mean,  # [K]
-            }
+            data = OrderedDict([
+                ("z0", halo.z_obs),
+                ("M0", halo.M_obs),  # [Msun]
+                ("lon", row.lon),  # [deg] longitude
+                ("lat", row.lat),  # [deg] longitude
+                ("felong", row.felong),  # Fraction of elongation
+                ("rotation", row.rotation),  # [deg] ellipse rotation angle
+                ("z_merger", halo.z_merger),
+                ("M_main", halo.M_main),  # [Msun]
+                ("M_sub", halo.M_sub),  # [Msun]
+                ("time_crossing", halo.time_crossing),  # [Gyr]
+                ("gamma", halo.gamma),  # Lorentz factors
+                ("radius", halo.radius),  # [kpc]
+                ("angular_radius", halo.angular_radius),  # [arcsec]
+                ("volume", halo.volume),  # [kpc^3]
+                ("B", halo.magnetic_field),  # [uG]
+                ("Ke", halo.injection_rate),  # [cm^-3 Gyr^-1]
+                ("n_e", n_e),  # [cm^-3]
+                ("frequency", self.frequencies),  # [MHz]
+                ("emissivity", emissivity),  # [erg/s/cm^3/Hz]
+                ("power", power),  # [W/Hz]
+                ("flux", flux),  # [Jy]
+                ("Tb_mean", Tb_mean),  # [K]
+            ])
             self.halos.append(data)
+
         logger.info("Simulated radio halos for merging cluster.")
-        #
+
         logger.info("Converting halos data to be a Pandas DataFrame ...")
+        keys = list(self.halos[0].keys())
         # Ignore the ``gamma`` and ``n_e`` items
-        keys = ["z0", "M0", "lon", "lat", "felong", "rotation",
-                "z_merger", "M_main", "M_sub", "time_crossing",
-                "radius", "angular_radius", "volume", "B", "frequency",
-                "emissivity", "power", "flux", "Tb_mean"]
+        for k in ["gamma", "n_e"]:
+            keys.remove(k)
         self.halos_df = dictlist_to_dataframe(self.halos, keys=keys)
         logger.info("Done halos data conversion.")
 
@@ -390,6 +391,7 @@ class GalaxyClusters:
             Timg = Tmean * template  # [K]
             sky.add(Timg, center=center)
 
+        logger.info("Done Simulate map at %.2f [MHz]." % freq)
         return sky
 
     def simulate(self):
