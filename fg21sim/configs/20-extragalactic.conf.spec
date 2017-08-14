@@ -73,8 +73,9 @@
 
   # Giant radio halos for clusters with recent major mergers
   [[halos]]
-  # Intensity of the turbulence acceleration.
-  beta_turb = float(default=1.0, min=0.2, max=3.0)
+  # Roughly the fraction of turbulence energy transformed to accelerate
+  # the electrons, describing the efficiency of turbulence acceleration.
+  eta_turb = float(default=0.3, min=0.1, max=1.0)
 
   # Ratio of the total energy injected into cosmic-ray electrons during
   # the cluster life to its total thermal energy.

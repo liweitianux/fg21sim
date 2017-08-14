@@ -116,7 +116,7 @@ class RadioHalo:
 
     def _set_configs(self):
         comp = "extragalactic/halos"
-        self.beta_turb = self.configs.getn(comp+"/beta_turb")
+        self.eta_turb = self.configs.getn(comp+"/eta_turb")
         self.eta_e = self.configs.getn(comp+"/eta_e")
         self.gamma_min = self.configs.getn(comp+"/gamma_min")
         self.gamma_max = self.configs.getn(comp+"/gamma_max")
@@ -205,6 +205,18 @@ class RadioHalo:
         Unit: [uG]
         """
         return helper.magnetic_field(self.M_obs)
+
+    @property
+    def kT_merger(self):
+        """
+        The cluster ICM mean temperature at z_merger when the merger
+        begins.
+
+        Unit: [keV]
+        """
+        mass = self.M_main + self.M_sub
+        kT = helper.mass_to_kT(mass, z=self.z_merger)
+        return kT
 
     @property
     def injection_rate(self):
@@ -428,8 +440,8 @@ class RadioHalo:
         NOTE
         ----
         The diffusion coefficients cannot be zero or negative, which
-        may cause unstable or wrong results.  So constrain ``tau_acc``
-        be a sufficient large but finite number.
+        may cause unstable or wrong results.  So constrain ``chi_acc``
+        be a small positive number (e.g., 0.01 [Gyr^-1]).
 
         Parameters
         ----------
@@ -449,8 +461,8 @@ class RadioHalo:
         ----------
         Ref.[donnert2013],Eq.(15)
         """
-        tau_acc = self._tau_acceleration(t)  # [Gyr]
-        diffusion = gamma**2 / (4 * tau_acc)
+        chi_acc = self._chi_acceleration(t)  # [Gyr^-1]
+        diffusion = gamma**2 * chi_acc / 4
         return diffusion
 
     def fp_advection(self, gamma, t):
@@ -500,39 +512,52 @@ class RadioHalo:
         mass = rate * (t - t_merger) + self.M_main
         return mass
 
-    def _tau_acceleration(self, t):
+    def _chi_acceleration(self, t=None):
         """
-        Calculate the systematic acceleration timescale at the
-        given (cosmic) time.
+        Calculate the electron acceleration coefficient due to turbulent
+        waves at the given (cosmic) time.
 
-        NOTE
-        ----
-        A reference value of the acceleration time due to TTD
-        (transit-time damping) resonance is ~0.1 Gyr (Ref.[brunetti2011],
-        Eq.(27) below); the formula derived by [cassano2005] (Eq.(40))
-        has a dependence on ``beta_turb``.
+        Considering that the turbulence acceleration lies a 2nd-order
+        Fermi process, it has only a effective acceleration time of
+        several 1e8 years.  Therefore, the turbulence is assumed to
+        only accelerate the electrons during the merging period, i.e.,
+        this coefficient "chi" is zero after "t_merger + time_cross".
 
         NOTE
         ----
         A zero diffusion coefficient may lead to unstable/wrong results,
-        so constrain this acceleration timescale be finite.
+        so constrain this acceleration coefficient to be a small positive
+        but non-zero number.
+
+        Parameters
+        ----------
+        t : float, optional
+            The (cosmic) time/age.
+            If not given, then assumed to be within the merging process.
+            Unit: [Gyr]
 
         Returns
         -------
-        tau : float
-            The acceleration timescale.
-            Unit: [Gyr]
-        """
-        # The reference/typical acceleration timescale
-        tau_ref = 0.1  # [Gyr]
-        # The maximum timescale to avoid unstable results
-        tau_max = 100.0  # [Gyr]
+        chi : float
+            The electron acceleration coefficient.
+            Unit: [Gyr^-1]
 
-        if t > self.age_merger + self.time_crossing:
-            tau = tau_max
+        References
+        ----------
+        Ref.[cassano2005],Eq.(40,B12)
+        """
+        # The minimum acceleration coefficient to avoid unstable results
+        chi_min = 0.01  # [Gyr^-1]
+
+        if (t is None) or (t < self.age_merger + self.time_crossing):
+            mass = self.M_main + self.M_sub
+            term1 = (mass / 2e15) ** 1.5
+            term2 = (self.kT_merger / 7) ** (-0.5)
+            term3 = 500 / self.radius
+            chi = 6.3 * self.eta_turb * term1 * term2 * term3
         else:
-            tau = tau_ref / self.beta_turb
-        return tau
+            chi = chi_min
+        return chi
 
     def _loss_ion(self, gamma, t):
         """
