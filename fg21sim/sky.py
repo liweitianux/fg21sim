@@ -504,7 +504,8 @@ class SkyPatch(SkyBase):
         if (self.xsize_in != self.xsize) or (self.ysize_in != self.ysize):
             logger.warning("Scale input sky patch to size %dx%d" %
                            (self.xsize, self.ysize))
-            zoom = (self.ysize/self.ysize_in, self.xsize/self.xsize_in)
+            zoom = ((self.ysize+0.1)/self.ysize_in,
+                    (self.xsize+0.1)/self.xsize_in)
             self.data = ndimage.zoom(self.data, zoom=zoom, order=1)
 
     def write(self, outfile, clobber=None):

@@ -171,7 +171,10 @@ def circle2ellipse(imgcirc, bfraction, rotation=0.0):
     # Shrink the circle to be elliptical
     nrow2 = nrow * bfraction
     nrow2 = int(nrow2 / 2) * 2 + 1  # be odd
-    img2 = ndimage.zoom(imgcirc, zoom=(nrow2/nrow, 1.0), order=1)
+    # NOTE: zoom() calculate the output shape with round() instead of int();
+    #       fix the warning about they may be different.
+    zoom = ((nrow2+0.1)/nrow, 1)
+    img2 = ndimage.zoom(imgcirc, zoom=zoom, order=1)
     # Pad the shrunk image to have the same size as input
     imgout = np.zeros(shape=(nrow, ncol))
     r1 = int((nrow - nrow2) / 2)
