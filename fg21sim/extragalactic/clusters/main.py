@@ -270,6 +270,7 @@ class GalaxyClusters:
                 "angular_radius": halo.angular_radius,  # [arcsec]
                 "volume": halo.volume,  # [kpc^3]
                 "B": halo.magnetic_field,  # [uG]
+                "Ke": halo.injection_rate,  # [cm^-3 Gyr^-1]
                 "n_e": n_e,  # [cm^-3]
                 "frequency": self.frequencies,  # [MHz]
                 "emissivity": emissivity,  # [erg/s/cm^3/Hz]

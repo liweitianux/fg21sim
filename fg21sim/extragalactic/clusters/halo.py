@@ -206,6 +206,42 @@ class RadioHalo:
         """
         return helper.magnetic_field(self.M_obs)
 
+    @property
+    def injection_rate(self):
+        """
+        The constant electron injection rate assumed.
+        Unit: [cm^-3 Gyr^-1]
+
+        The injection rate is parametrized by assuming that the total
+        energy injected in the relativistic electrons during the cluster
+        life (e.g., ``age_obs`` here) is a fraction (``self.eta_e``)
+        of the total thermal energy of the cluster.
+
+        Note that we assume that the relativistic electrons only permeate
+        the halo volume (i.e., of radius ``self.radius``) instead of the
+        whole cluster volume (of virial radius).
+
+        Qe(γ) = Ke * γ^(-s),
+        int[ Qe(γ) γ me c^2 ]dγ * t_cluster * V_halo =
+            eta_e * e_th * V_cluster
+        =>
+        Ke = [(s-2) * eta_e * e_th * γ_min^(s-2) * (R_vir/R_halo)^3 /
+              me / c^2 / t_cluster]
+
+        References
+        ----------
+        Ref.[cassano2005],Eqs.(31,32,33)
+        """
+        s = self.injection_index
+        R_halo = self.radius  # [kpc]
+        R_vir = helper.radius_virial(self.M_obs, self.z_obs)  # [kpc]
+        e_thermal = helper.density_energy_thermal(self.M_obs, self.z_obs)
+        term1 = (s-2) * self.eta_e * e_thermal  # [erg cm^-3]
+        term2 = self.gamma_min**(s-2) * (R_vir/R_halo)**3
+        term3 = AU.mec2 * self.age_obs  # [erg Gyr]
+        Ke = term1 * term2 / term3  # [cm^-3 Gyr^-1]
+        return Ke
+
     def calc_electron_spectrum(self, zbegin=None, zend=None, n0_e=None):
         """
         Calculate the relativistic electron spectrum by solving the
@@ -381,7 +417,7 @@ class RadioHalo:
         ----------
         Ref.[cassano2005],Eqs.(31,32,33)
         """
-        Ke = self._injection_rate
+        Ke = self.injection_rate  # [cm^-3 Gyr^-1]
         Qe = Ke * gamma**(-self.injection_index)
         return Qe
 
@@ -497,42 +533,6 @@ class RadioHalo:
         else:
             tau = tau_ref / self.beta_turb
         return tau
-
-    @property
-    def _injection_rate(self):
-        """
-        The constant electron injection rate assumed.
-        Unit: [cm^-3 Gyr^-1]
-
-        The injection rate is parametrized by assuming that the total
-        energy injected in the relativistic electrons during the cluster
-        life (e.g., ``age_obs`` here) is a fraction (``self.eta_e``)
-        of the total thermal energy of the cluster.
-
-        Note that we assume that the relativistic electrons only permeate
-        the halo volume (i.e., of radius ``self.radius``) instead of the
-        whole cluster volume (of virial radius).
-
-        Qe(γ) = Ke * γ^(-s),
-        int[ Qe(γ) γ me c^2 ]dγ * t_cluster * V_halo =
-            eta_e * e_th * V_cluster
-        =>
-        Ke = [(s-2) * eta_e * e_th * γ_min^(s-2) * (R_vir/R_halo)^3 /
-              me / c^2 / t_cluster]
-
-        References
-        ----------
-        Ref.[cassano2005],Eqs.(31,32,33)
-        """
-        s = self.injection_index
-        R_halo = self.radius  # [kpc]
-        R_vir = helper.radius_virial(self.M_obs, self.z_obs)  # [kpc]
-        e_thermal = helper.density_energy_thermal(self.M_obs, self.z_obs)
-        term1 = (s-2) * self.eta_e * e_thermal  # [erg cm^-3]
-        term2 = self.gamma_min**(s-2) * (R_vir/R_halo)**3
-        term3 = AU.mec2 * self.age_obs  # [erg Gyr]
-        Ke = term1 * term2 / term3  # [cm^-3 Gyr^-1]
-        return Ke
 
     def _loss_ion(self, gamma, t):
         """
