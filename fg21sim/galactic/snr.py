@@ -90,6 +90,7 @@ class SuperNovaRemnants:
         self.use_float = self.configs.getn("output/use_float")
         self.checksum = self.configs.getn("output/checksum")
         self.clobber = self.configs.getn("output/clobber")
+        self.frequencies = self.configs.frequencies  # [MHz]
         self.freq_unit = au.Unit(self.configs.getn("frequency/unit"))
         logger.info("Loaded and set up configurations")
 
@@ -454,16 +455,18 @@ class SuperNovaRemnants:
             filepath = None
         return (skymap_f, filepath)
 
-    def simulate(self, frequencies):
+    def simulate(self, frequencies=None):
         """
         Simulate the sky maps of all Galactic SNRs emission at every
         specified frequency.
 
         Parameters
         ----------
-        frequency : list[float]
-            List of frequencies (unit: `self.freq_unit`) where the
-            simulation performed.
+        frequencies : float, or list[float]
+            The frequencies where to simulate the foreground map.
+            Unit: [MHz]
+            Default: None (i.e., use ``self.frequencies``)
+
 
         Returns
         -------
@@ -472,10 +475,15 @@ class SuperNovaRemnants:
         paths : list[str]
             List of (absolute) path to the output sky maps.
         """
+        if frequencies is not None:
+            frequencies = np.array(frequencies, ndmin=1)
+        else:
+            frequencies = self.frequencies
+
         skymaps = []
         paths = []
-        for f in np.array(frequencies, ndmin=1):
-            skymap_f, outfile = self.simulate_frequency(f)
+        for freq in frequencies:
+            skymap_f, outfile = self.simulate_frequency(freq)
             skymaps.append(skymap_f)
             paths.append(outfile)
         return (skymaps, paths)
