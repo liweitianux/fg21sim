@@ -223,7 +223,8 @@ class Synchrotron:
         logger.info("Simulating {name} map at {freq} ({unit}) ...".format(
             name=self.name, freq=frequency, unit=self.freq_unit))
         skymap_f = (self.template.data *
-                    (frequency / self.template_freq) ** self.indexmap.data)
+                    (frequency/self.template_freq) **
+                    (-np.abs(self.indexmap.data)))
         #
         if self.save:
             filepath = self.output(skymap_f, frequency)
