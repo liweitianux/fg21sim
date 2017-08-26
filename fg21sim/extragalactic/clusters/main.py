@@ -55,12 +55,13 @@ class GalaxyClusters:
         For more details, see the example configuration specifications.
     halo_configs : dict
         A dictionary containing the configurations for halo simulation.
-    sky : `~SkyPatch` or `SkyHealpix`
+    sky : `~SkyBase`
         The sky instance to deal with the simulation sky as well as the
         output map.
         XXX: current full-sky HEALPix map is NOT supported!
     """
     # Component name
+    compID = "extragalactic/clusters"
     name = "galaxy clusters (halos)"
 
     def __init__(self, configs=CONFIGS):
@@ -68,15 +69,16 @@ class GalaxyClusters:
         self._set_configs()
 
         self.sky = get_sky(configs)
+        self.sky.add_header("CompID", self.compID, "Emission component ID")
         self.sky.add_header("CompName", self.name, "Emission component")
-        self.sky.add_header("BUNIT", "K", "Data in units of [Kelvin]")
+        self.sky.add_header("BUNIT", "K", "[Kelvin] Data unit")
         self.sky.creator = __name__
 
     def _set_configs(self):
         """
         Load the configs and set the corresponding class attributes.
         """
-        comp = "extragalactic/clusters"
+        comp = self.compID
         self.catalog_outfile = self.configs.get_path(comp+"/catalog_outfile")
         self.halos_dumpfile = self.configs.get_path(comp+"/halos_dumpfile")
         self.prefix = self.configs.getn(comp+"/prefix")
@@ -373,7 +375,7 @@ class GalaxyClusters:
 
         Returns
         -------
-        sky : `~fg21sim.sky.SkyPatch`
+        sky : `~SkyBase`
             The simulated sky image of radio halos as a new sky instance.
         """
         freq = self.frequencies[freqidx]
@@ -392,7 +394,7 @@ class GalaxyClusters:
             Timg = Tmean * template  # [K]
             sky.add(Timg, center=center)
 
-        logger.info("Done Simulate map at %.2f [MHz]." % freq)
+        logger.info("Done simulate map at %.2f [MHz]." % freq)
         return sky
 
     def simulate(self):
