@@ -14,6 +14,7 @@ Currently supported foregrounds:
 """
 
 import logging
+import time
 from collections import OrderedDict
 
 from .galactic import (Synchrotron as GalacticSynchrotron,
@@ -25,6 +26,15 @@ from .products import Products
 
 
 logger = logging.getLogger(__name__)
+
+# All supported foreground components:
+COMPONENTS_ALL = OrderedDict([
+    ("galactic/synchrotron",       GalacticSynchrotron),
+    ("galactic/freefree",          GalacticFreeFree),
+    ("galactic/snr",               GalacticSNR),
+    ("extragalactic/clusters",     EGGalaxyClusters),
+    ("extragalactic/pointsources", EGPointSources),
+])
 
 
 class Foregrounds:
@@ -40,28 +50,11 @@ class Foregrounds:
 
     Attributes
     ----------
-    COMPONENTS_ALL : `OrderedDict`
-        Ordered dictionary of all supported simulation components, with keys
-        the IDs of the components, and values the corresponding component
-        class.
-    components_id : list[str]
+    componentsID : list[str]
         List of IDs of the enabled simulation components
-    components : `OrderedDict`
-        Ordered dictionary of the enabled simulation components, with keys
-        the IDs of the components, and values the corresponding component
-        instance/object.
     frequencies : 1D `~numpy.ndarray`
         List of frequencies where the foreground components are simulated.
     """
-    # All supported foreground components
-    COMPONENTS_ALL = OrderedDict([
-        ("galactic/synchrotron",       GalacticSynchrotron),
-        ("galactic/freefree",          GalacticFreeFree),
-        ("galactic/snr",               GalacticSNR),
-        ("extragalactic/clusters",     EGGalaxyClusters),
-        ("extragalactic/pointsources", EGPointSources),
-    ])
-
     def __init__(self, configs):
         self.configs = configs
         self._set_configs()
@@ -71,27 +64,21 @@ class Foregrounds:
         self.manifestfile = self.configs.get_path("output/manifest")
         if self.manifestfile:
             self.products = Products(self.manifestfile, load=False)
+            self.products.frequencies = (self.frequencies, "MHz")
         else:
             self.products = None
             logger.warning("Output products manifest not configured!")
-
-        # Initialize enabled components
-        self.components = OrderedDict()
-        for comp in self.components_id:
-            logger.info("Initialize component: {0}".format(comp))
-            comp_cls = self.COMPONENTS_ALL[comp]
-            self.components[comp] = comp_cls(configs)
-        logger.info("Done initialize %d components!" % len(self.components))
 
     def _set_configs(self):
         """
         Load the configs and set the corresponding class attributes.
         """
-        self.components_id = self.configs.foregrounds[0]
+        comp_enabled, comp_available = self.configs.foregrounds
+        self.componentsID = comp_enabled
         logger.info("All supported simulation components: {0}".format(
-            ", ".join(list(self.COMPONENTS_ALL.keys()))))
+            ", ".join(comp_available)))
         logger.info("Enabled components: {0}".format(
-            ", ".join(self.components_id)))
+            ", ".join(self.componentsID)))
         #
         self.frequencies = self.configs.frequencies
         logger.info("Simulation frequencies: "
@@ -104,34 +91,58 @@ class Foregrounds:
 
     def preprocess(self):
         """
-        Perform the preparation procedures for the final simulations.
+        Perform the (global) preparation procedures for the simulations.
         """
+        logger.info("Perform preprocessing for foreground simulations ...")
+        logger.info("^_^ nothing to do :-)")
+
+    def simulate_component(self, compID):
+        """
+        Do simulation for the specified foreground component.
+        """
+        logger.info("==================================================")
+        logger.info(">>> Simulate component: %s <<<" % compID)
+        logger.info("==================================================")
+        t1_start = time.perf_counter()
+        t2_start = time.process_time()
+
+        comp_cls = COMPONENTS_ALL[compID]
+        comp_obj = comp_cls(self.configs)
+        comp_obj.preprocess()
+        skyfiles = comp_obj.simulate()
         if self.products:
-            self.products.frequencies = (self.frequencies, "MHz")
-        logger.info("Perform preprocessing for all enabled components ...")
-        for comp_obj in self.components.values():
-            comp_obj.preprocess()
+            self.products.add_component(compID, skyfiles)
+        comp_obj.postprocess()
+
+        t1_stop = time.perf_counter()
+        t2_stop = time.process_time()
+        logger.info("--------------------------------------------------")
+        logger.info("Elapsed time: %.3f [s]" % (t1_stop-t1_start))
+        logger.info("CPU process time: %.3f [s]" % (t2_stop-t2_start))
+        logger.info("--------------------------------------------------")
 
     def simulate(self):
         """
-        Simulate the enabled components.
+        Do simulation for all enabled components.
         """
-        nfreq = len(self.frequencies)
-        for freq_id, freq in enumerate(self.frequencies):
-            logger.info("[#{0}/{1}] ".format(freq_id+1, nfreq) +
-                        "Simulating components at %.2f [MHz] ..." % freq)
-            for comp_id, comp_obj in self.components.items():
-                skymap, filepath = comp_obj.simulate_frequency(freq)
-                if filepath and self.products:
-                    self.products.add_product(comp_id, freq_id, filepath)
+        timers = []
+        for compID in self.componentsID:
+            t1 = time.perf_counter()
+            self.simulate_component(compID)
+            t2 = time.perf_counter()
+            timers.append((compID, t1, t2))
+
+        logger.info("==================================================")
+        logger.info(">>> Time usage <<<")
+        logger.info("==================================================")
+        for compId, t1, t2 in timers:
+            logger.info("%s : %.3f [s]" % (compID, t2-t1))
 
     def postprocess(self):
         """
-        Perform the post-simulation operations before the end.
+        Perform the (global) post-simulation operations before the end.
         """
-        logger.info("Perform postprocessing for all enabled components ...")
-        for comp_obj in self.components.values():
-            comp_obj.postprocess()
+        logger.info("Foreground simulation - postprocessing ...")
         # Save the products manifest
         if self.products:
             self.products.dump(clobber=self.clobber, backup=True)
