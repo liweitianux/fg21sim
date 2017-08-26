@@ -400,13 +400,21 @@ class GalaxyClusters:
     def simulate(self):
         """
         Simulate the sky images of radio halos at each frequency.
+
+        Returns
+        -------
+        skyfiles : list[str]
+            List of the filepath to the written sky files
         """
         logger.info("Simulating {name} ...".format(name=self.name))
+        skyfiles = []
         for idx, freq in enumerate(self.frequencies):
             sky = self.simulate_frequency(freqidx=idx)
             outfile = self._outfilepath(frequency=freq)
             sky.write(outfile)
+            skyfiles.append(outfile)
         logger.info("Done simulate {name}!".format(name=self.name))
+        return skyfiles
 
     def postprocess(self):
         """

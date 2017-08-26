@@ -265,6 +265,11 @@ class FreeFree:
             The frequencies where to simulate the emission map.
             Unit: [MHz]
             Default: None (i.e., use ``self.frequencies``)
+
+        Returns
+        -------
+        skyfiles : list[str]
+            List of the filepath to the written sky files
         """
         if frequencies is None:
             frequencies = self.frequencies
@@ -272,11 +277,14 @@ class FreeFree:
             frequencies = np.array(frequencies, ndmin=1)
 
         logger.info("Simulating {name} ...".format(name=self.name))
+        skyfiles = []
         for freq in frequencies:
             sky = self.simulate_frequency(freq)
             outfile = self._outfilepath(frequency=freq)
             sky.write(outfile)
+            skyfiles.append(outfile)
         logger.info("Done simulate {name}!".format(name=self.name))
+        return skyfiles
 
     def postprocess(self):
         """Perform the post-simulation operations before the end."""
