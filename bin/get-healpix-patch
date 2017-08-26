@@ -101,7 +101,7 @@ def main():
         image = scipy.ndimage.gaussian_filter(image, sigma=sigma)
         logger.info("Smoothed sky patch using Gaussian filter of " +
                     "sigma = %.2f [pixel]" % sigma)
-    sky.header = hpheader.copy(strip=True)
+    sky.merge_header(hpheader.copy(strip=True))
     sky.add_history(" ".join(sys.argv))
     sky.data = image
     sky.write(args.outfile, clobber=args.clobber)

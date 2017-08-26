@@ -257,13 +257,12 @@ class SkyBase:
                        "File creation date")
         return hdr
 
-    @header.setter
-    def header(self, hdr):
+    def merge_header(self, header, update=False):
         """
-        Update the supplied header to the FITS header, but do NOT
-        overwrite the original keywords.
+        Merge the supplied header to the instance's FITS header.
+        Do not overwrite the original keywords by default (``update=False``).
         """
-        self.header_.extend(hdr, update=False)
+        self.header_.extend(header, update=update)
 
     def add_header(self, key, value, comment=None):
         """
@@ -603,13 +602,6 @@ class SkyPatch(SkyBase):
         hdr["RA0"] = (self.center[0], "R.A. of patch center [deg]")
         hdr["DEC0"] = (self.center[1], "Dec. of patch center [deg]")
         return hdr
-
-    @header.setter
-    def header(self, hdr):
-        """
-        XXX: How to avoid this duplicate???
-        """
-        self.header_.extend(hdr, update=False)
 
     @property
     def wcs(self):
