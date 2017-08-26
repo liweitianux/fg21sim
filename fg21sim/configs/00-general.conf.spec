@@ -84,23 +84,18 @@ step = float(default=None, min=0.0)
 
 # Configuration for output products
 [output]
-# Unit of the sky map pixel value
-unit = option("K", default="K")
-
-
 # Filename pattern for the output products, which will be finally
 # formatted using `str.format()`.
 filename_pattern = string(default="{prefix}_{frequency:06.2f}.fits")
 
-# Whether calculate the checksum for the output file (e.g., "CHECKSUM"
-# keyword in FITS header)?
-# NOTE:
-# FITS checksum calculation may account for half the time to output the data.
 # Use single-precision float instead of double (to save spaces)
 float32 = boolean(default=True)
+
+# Whether to calculate the checksum for the output FITS file?
+# NOTE: May cost significantly more time on writing FITS file.
 checksum = boolean(default=False)
 
-# Whether overwrite existing files
+# Whether to overwrite existing files (e.g., maps, catalogs, manifest, ...)
 clobber = boolean(default=False)
 
 # Filename of the simulation products manifest (JSON format), which
