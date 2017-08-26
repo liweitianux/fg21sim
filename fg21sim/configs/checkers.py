@@ -118,8 +118,7 @@ def check_galactic_synchrotron(configs):
                 results[key] = "not greater than 'lmin'"
         else:
             results.update(res)
-    if configs.getn(comp+"/save"):
-        results.update(_check_missing(configs, comp+"/output_dir"))
+    results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 
 
@@ -137,8 +136,7 @@ def check_galactic_freefree(configs):
         results.update(
             _check_existence(configs, [comp+"/halphamap", comp+"/dustmap"])
         )
-        if configs.getn(comp+"/save"):
-            results.update(_check_missing(configs, comp+"/output_dir"))
+        results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 
 
@@ -152,8 +150,7 @@ def check_galactic_snr(configs):
         results.update(
             _check_existence(configs, comp+"/catalog")
         )
-        if configs.getn(comp+"/save"):
-            results.update(_check_missing(configs, comp+"/output_dir"))
+        results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 
 
@@ -169,8 +166,7 @@ def check_extragalactic_clusters(configs):
         results.update(
             _check_existence(configs, comp+"/catalog")
         )
-        if configs.getn(comp+"/save"):
-            results.update(_check_missing(configs, comp+"/output_dir"))
+        results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 
 

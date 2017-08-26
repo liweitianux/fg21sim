@@ -45,8 +45,6 @@
 
   # Filename prefix for this component
   prefix = string(default="gsync")
-  # Whether save this component to disk
-  save = boolean(default=True)
   # Output directory to save the simulated results
   output_dir = string(default=None)
 
@@ -81,8 +79,6 @@
 
   # Filename prefix for this component
   prefix = string(default="gfree")
-  # Whether save this component to disk
-  save = boolean(default=True)
   # Output directory to save the simulated results
   output_dir = string(default=None)
 
@@ -100,7 +96,5 @@
 
   # Filename prefix for this component
   prefix = string(default="gsnr")
-  # Whether save this component to disk
-  save = boolean(default=True)
   # Output directory to save the simulated results
   output_dir = string(default=None)

@@ -59,7 +59,6 @@ class Synchrotron:
         self.lmin = self.configs.getn(comp+"/lmin")
         self.lmax = self.configs.getn(comp+"/lmax")
         self.prefix = self.configs.getn(comp+"/prefix")
-        self.save = self.configs.getn(comp+"/save")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
         # output
         self.filename_pattern = self.configs.getn("output/filename_pattern")

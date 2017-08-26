@@ -80,7 +80,6 @@ class GalaxyClusters:
         self.catalog_outfile = self.configs.get_path(comp+"/catalog_outfile")
         self.halos_dumpfile = self.configs.get_path(comp+"/halos_dumpfile")
         self.prefix = self.configs.getn(comp+"/prefix")
-        self.save = self.configs.getn(comp+"/save")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
         self.merger_mass_min = self.configs.getn(comp+"/merger_mass_min")
         self.ratio_major = self.configs.getn(comp+"/ratio_major")

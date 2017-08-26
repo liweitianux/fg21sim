@@ -65,8 +65,6 @@
 
   # Filename prefix for this component
   prefix = string(default="cluster")
-  # Whether save this component to disk
-  save = boolean(default=True)
   # Output directory to save the simulated results
   output_dir = string(default=None)
 
@@ -106,8 +104,6 @@
 
   # Extragalactic point sources
   [[pointsources]]
-  # Whether save this point source catelogue to disk
-  save = boolean(default=True)
   # Output directory to save the simulated catalog
   output_dir = string(default="PS_tables")
   # PS components to be simulated
