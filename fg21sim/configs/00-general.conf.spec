@@ -87,8 +87,6 @@ step = float(default=None, min=0.0)
 # Unit of the sky map pixel value
 unit = option("K", default="K")
 
-# Use single-precision float instead of double (also save spaces)
-use_float = boolean(default=True)
 
 # Filename pattern for the output products, which will be finally
 # formatted using `str.format()`.
@@ -98,6 +96,8 @@ filename_pattern = string(default="{prefix}_{frequency:06.2f}.fits")
 # keyword in FITS header)?
 # NOTE:
 # FITS checksum calculation may account for half the time to output the data.
+# Use single-precision float instead of double (to save spaces)
+float32 = boolean(default=True)
 checksum = boolean(default=False)
 
 # Whether overwrite existing files

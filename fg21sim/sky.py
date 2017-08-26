@@ -812,7 +812,7 @@ def get_sky(configs):
     """
     # Parameters for the base sky class
     kwargs = {
-        "float32": configs.getn("output/use_float"),
+        "float32": configs.getn("output/float32"),
         "clobber": configs.getn("output/clobber"),
         "checksum": configs.getn("output/checksum"),
     }
