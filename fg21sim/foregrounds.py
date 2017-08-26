@@ -137,6 +137,7 @@ class Foregrounds:
         logger.info("==================================================")
         for compId, t1, t2 in timers:
             logger.info("%s : %.3f [s]" % (compID, t2-t1))
+        logger.info("--------------------------------------------------")
 
     def postprocess(self):
         """

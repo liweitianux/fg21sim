@@ -84,7 +84,6 @@ def main():
     logger.info("patch pixel size: %.1f [arcsec]" % pixelsize)
 
     sky = SkyPatch(size=size, pixelsize=pixelsize, center=center)
-    sky.creator = __name__
     logger.info("Read HEALPix map from file: %s" % args.infile)
     hpdata, hpheader = read_fits_healpix(args.infile)
     nside = hpheader["NSIDE"]
@@ -92,12 +91,13 @@ def main():
     try:
         coordsys = hpheader["COORDSYS"]
     except KeyError:
-        logger.warning("missing COORDSYS keyword: %s" % args.infile)
-        logger.warning("assuming 'Galactic'")
+        logger.warning("No 'COORDSYS' keyword for file: %s" % args.infile)
+        logger.warning("Assume to use the 'Galactic' coordinate")
         coordsys = "Galactic"
-    image, __ = reproject_from_healpix(
-        input_data=(hpdata, coordsys),
-        output_projection=sky.wcs, shape_out=size)
+    image, __ = reproject_from_healpix(input_data=(hpdata, coordsys),
+                                       output_projection=sky.wcs,
+                                       shape_out=size)
+
     if args.smooth:
         logger.info("Smoothing the sky patch with a Gaussian filter ...")
         sigma = (args.sigma_npix * hp.nside2resol(nside, arcmin=True) *
@@ -105,11 +105,12 @@ def main():
         image = scipy.ndimage.gaussian_filter(image, sigma=sigma)
         logger.info("Smoothed sky patch using Gaussian filter of " +
                     "sigma = %.2f [pixel]" % sigma)
+
     sky.merge_header(hpheader.copy(strip=True))
     sky.add_history(" ".join(sys.argv))
     sky.data = image
     sky.write(args.outfile, clobber=args.clobber)
-    logger.info("Write sky patch to file: %s" % args.outfile)
+    logger.info("Written extracted sky patch to file: %s" % args.outfile)
 
 
 if __name__ == "__main__":
