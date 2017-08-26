@@ -103,8 +103,7 @@ def check_galactic_synchrotron(configs):
     results = {}
     # Only validate the configs if this component is enabled
     results.update(
-        _check_missing(configs, [comp+"/template_freq",
-                                 comp+"/template_unit"])
+        _check_missing(configs, comp+"/template_freq")
     )
     results.update(
         _check_existence(configs, [comp+"/template", comp+"/indexmap"])

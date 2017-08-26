@@ -62,9 +62,6 @@ type = option("patch", "healpix", default="patch")
 
 # Frequencies specification of the simulation products
 [frequency]
-# Unit of the frequency value
-unit = option("MHz", default="MHz")
-
 # How to specify the frequencies
 # + custom:
 #       directly specify the frequency values using the "frequencies" config
@@ -73,10 +70,12 @@ unit = option("MHz", default="MHz")
 type = option("custom", "calc", default="custom")
 
 # The frequency values to be simulated if above "type" is "custom".
+# Unit: [MHz]
 frequencies = float_list(default=list())
 
 # Parameters to calculate the frequencies
-# start and stop frequency value (both inclusive)
+# NOTE: "start" and "stop" frequencies are both inclusive.
+# Unit: [MHz]
 start = float(default=None, min=0.0)
 stop = float(default=None, min=0.0)
 step = float(default=None, min=0.0)

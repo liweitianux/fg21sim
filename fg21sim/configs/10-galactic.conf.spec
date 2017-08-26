@@ -27,8 +27,6 @@
   template = string(default=None)
   # The frequency of the template map (same unit as in [frequency] section)
   template_freq = float(default=None, min=0.0)
-  # The unit of the template map pixel
-  template_unit = string(default=None)
 
   # Spectral index map
   indexmap = string(default=None)
