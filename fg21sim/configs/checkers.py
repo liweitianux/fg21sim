@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -93,14 +93,6 @@ def check_frequency(configs):
     return results
 
 
-def check_output(configs):
-    """Check the "[output]" section of the configurations."""
-    results = {}
-    if configs.getn("output/combine"):
-        results.update(_check_missing(configs, "output/output_dir"))
-    return results
-
-
 def check_galactic_synchrotron(configs):
     """Check the "[galactic][synchrotron]" section of the configurations."""
     comp = "galactic/synchrotron"
@@ -187,7 +179,6 @@ _CHECKERS = [
     check_foregrounds,
     check_sky,
     check_frequency,
-    check_output,
     check_galactic_synchrotron,
     check_galactic_freefree,
     check_galactic_snr,
@@ -205,13 +196,13 @@ def check_configs(configs, raise_exception=True, checkers=_CHECKERS):
 
     Parameters
     ----------
-    configs : `ConfigManager` instance
+    configs : `~ConfigManager`
         An ``ConfigManager`` instance contains both default and user
         configurations.
     raise_exception : bool, optional
         Whether raise a ``ConfigError`` exception if there is any invalid
         config options?
-    checkers : list of functions, optional
+    checkers : list[function], optional
         List of checker functions through which the configurations
         will be checked.
 

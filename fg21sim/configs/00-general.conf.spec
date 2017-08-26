@@ -103,15 +103,6 @@ checksum = boolean(default=False)
 # Whether overwrite existing files
 clobber = boolean(default=False)
 
-# Whether combine all components and output
-combine = boolean(default=True)
-# Prefix for the combined files
-combine_prefix = string(default="fg")
-# Output directory to place the combined products
-# NOTE: This config is mandatory and should be provided by the user
-#       if above "combine=True".
-output_dir = string(default=None)
-
 # Filename of the simulation products manifest (JSON format), which
 # records all output products together with their sizes and MD5 hashes.
 # Do not create such a manifest if this option is not specified.
