@@ -97,13 +97,13 @@ class FreeFree:
         """
         sky = get_sky(self.configs)
         logger.info("Loading H[alpha] map ...")
-        self.halphamap = sky.load(self.halphamap_path)
+        self.halphamap = sky.open(self.halphamap_path)
         # Validate input map unit
         if self.halphamap_unit != au.Unit("Rayleigh"):
             raise ValueError("unsupported Halpha map unit: {0}".format(
                 self.halphamap_unit))
         logger.info("Loading dust map ...")
-        self.dustmap = sky.load(self.dustmap_path)
+        self.dustmap = sky.open(self.dustmap_path)
         # Validate input map unit
         if self.dustmap_unit != au.Unit("MJy / sr"):
             raise ValueError("unsupported dust map unit: {0}".format(
@@ -256,7 +256,7 @@ class FreeFree:
         _preprocessed : bool
             This attribute presents and is ``True`` after the preparation
             procedures are performed, which indicates that it is ready to
-            do the final simulations.
+            do the subsequent simulations.
         """
         if hasattr(self, "_preprocessed") and self._preprocessed:
             return

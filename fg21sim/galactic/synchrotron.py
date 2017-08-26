@@ -75,9 +75,9 @@ class Synchrotron:
         """Load the template map and spectral index map."""
         sky = get_sky(self.configs)
         logger.info("Loading template map ...")
-        self.template = sky.load(self.template_path)
+        self.template = sky.open(self.template_path)
         logger.info("Loading spectral index map ...")
-        self.indexmap = sky.load(self.indexmap_path)
+        self.indexmap = sky.open(self.indexmap_path)
 
     def _add_smallscales(self):
         """
@@ -194,7 +194,7 @@ class Synchrotron:
         _preprocessed : bool
             This attribute presents and is ``True`` after the preparation
             procedures are performed, which indicates that it is ready to
-            do the final simulations.
+            do the subsequent simulations.
         """
         if hasattr(self, "_preprocessed") and self._preprocessed:
             return

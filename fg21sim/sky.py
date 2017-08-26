@@ -222,16 +222,7 @@ class SkyBase:
 
     def load(self, infile, frequency=None):
         """
-        Make a new *copy* of this instance, then read the given sky
-        image in and return the loaded new instance.
-        """
-        sky = self.copy()
-        sky.read(infile=infile, frequency=frequency)
-        return sky
-
-    def read(self, infile, frequency=None):
-        """
-        Read the given sky image into this instance.
+        Load the given sky image into this instance.
 
         Parameters
         ----------
@@ -242,6 +233,21 @@ class SkyBase:
             Unit: [MHz]
         """
         raise NotImplementedError
+
+    def open(self, infile, frequency=None):
+        """
+        Open the given input file as a *new* instance.
+
+        The current instance is *copied*, load the given sky image,
+        and then returned.
+
+        Returns
+        -------
+        sky : a *new* instance with given sky image loaded.
+        """
+        sky = self.copy()
+        sky.load(infile=infile, frequency=frequency)
+        return sky
 
     def write(self, outfile, clobber=None):
         """
@@ -340,7 +346,7 @@ class SkyPatch(SkyBase):
         self.xcenter, self.ycenter = center
 
         if infile is not None:
-            self.read(infile, frequency)
+            self.load(infile, frequency)
 
     @property
     def area(self):
@@ -478,9 +484,9 @@ class SkyPatch(SkyBase):
         ci = np.round((x - self.xcenter) / pixelsize + ci0).astype(np.int)
         return (ri, ci)
 
-    def read(self, infile, frequency=None):
+    def load(self, infile, frequency=None):
         """
-        Read input sky data from file.
+        Load input sky image from file into this instance.
 
         Parameters
         ----------
@@ -498,7 +504,7 @@ class SkyPatch(SkyBase):
             header = f[0].header.copy(strip=True)
             self.header_.extend(header, update=True)
         self.ysize_in, self.xsize_in = self.data.shape
-        logger.info("Read sky patch from: %s (%dx%d)" %
+        logger.info("Loaded sky patch from: %s (%dx%d)" %
                     (infile, self.xsize_in, self.ysize_in))
 
         if (self.xsize_in != self.xsize) or (self.ysize_in != self.ysize):
@@ -674,7 +680,7 @@ class SkyHealpix(SkyBase):
         self.data = np.zeros(shape=hp.nside2npix(self.nside))
 
         if infile is not None:
-            self.read(infile, frequency)
+            self.load(infile, frequency)
 
     @property
     def area(self):
@@ -684,9 +690,9 @@ class SkyHealpix(SkyBase):
         """
         return 4*np.pi * AUC.rad2deg**2
 
-    def read(self, infile, frequency=None):
+    def load(self, infile, frequency=None):
         """
-        Read input HEALPix all-sky map.
+        Load input HEALPix all-sky map into this instance.
 
         Parameters
         ----------
@@ -702,7 +708,7 @@ class SkyHealpix(SkyBase):
         self.data, header = read_fits_healpix(infile)
         self.header_.extend(header, update=True)
         self.nside_in = header["NSIDE"]
-        logger.info("Read HEALPix sky map from: {0} (Nside={1})".format(
+        logger.info("Loaded HEALPix sky map from: {0} (Nside={1})".format(
             infile, self.nside_in))
         if self.nside_in != self.nside:
             self.data = hp.ud_grade(self.data, nside_out=self.nside)
