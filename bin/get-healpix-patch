@@ -35,9 +35,12 @@ def main():
     parser.add_argument("--pixelsize", dest="pixelsize", type=float,
                         help="pixel size of the sky patch; unit: [arcsec]")
     parser.add_argument("-S", "--smooth", dest="smooth", action="store_true",
-                        help="Smooth the output patch using a Gaussian " +
-                        "filter whose sigma is 2x the pixel size " +
-                        "of the input HEALPix map")
+                        help="Smooth the output patch with a Gaussian " +
+                        "filter of sigma 'sigma-npix' (next argument) " +
+                        "pixel size of the input HEALPix map")
+    parser.add_argument("--sigma-npix", dest="sigma_npix",
+                        type=float, default=2.0,
+                        help="number of pixels for the above Gaussian filter")
     parser.add_argument("infile", help="input all-sky HEALPix map")
     parser.add_argument("outfile", help="output extracted sky patch")
     args = parser.parse_args()
@@ -96,7 +99,8 @@ def main():
         input_data=(hpdata, coordsys),
         output_projection=sky.wcs, shape_out=size)
     if args.smooth:
-        sigma = (2.0 * hp.nside2resol(nside, arcmin=True) *
+        logger.info("Smoothing the sky patch with a Gaussian filter ...")
+        sigma = (args.sigma_npix * hp.nside2resol(nside, arcmin=True) *
                  AUC.arcmin2arcsec / pixelsize)
         image = scipy.ndimage.gaussian_filter(image, sigma=sigma)
         logger.info("Smoothed sky patch using Gaussian filter of " +
