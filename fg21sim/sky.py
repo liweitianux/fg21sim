@@ -126,6 +126,58 @@ class SkyBase:
         else:
             raise NotImplemented
 
+    def __iadd__(self, other):
+        """
+        Augmented arithmetic assignment: ``+=``.
+
+        NOTE
+        ----
+        These augmented arithmetic assignment methods should attempt
+        to do the operation in-place (modifying ``self``) and return
+        the result (which could be, but does not have to be, ``self``).
+        """
+        if isinstance(other, self.__class__):
+            self.data += other.data
+            return self
+        elif isinstance(other, (int, float, np.ndarray)):
+            self.data += other
+            return self
+        else:
+            raise NotImplemented
+
+    def __isub__(self, other):
+        """Augmented arithmetic assignment: ``-=``."""
+        if isinstance(other, self.__class__):
+            self.data -= other.data
+            return self
+        elif isinstance(other, (int, float, np.ndarray)):
+            self.data -= other
+            return self
+        else:
+            raise NotImplemented
+
+    def __imul__(self, other):
+        """Augmented arithmetic assignment: ``*=``."""
+        if isinstance(other, self.__class__):
+            self.data *= other.data
+            return self
+        elif isinstance(other, (int, float, np.ndarray)):
+            self.data *= other
+            return self
+        else:
+            raise NotImplemented
+
+    def __itruediv__(self, other):
+        """Augmented arithmetic assignment: ``/=``."""
+        if isinstance(other, self.__class__):
+            self.data /= other.data
+            return self
+        elif isinstance(other, (int, float, np.ndarray)):
+            self.data /= other
+            return self
+        else:
+            raise NotImplemented
+
     def __neg__(self):
         """Unary arithmetic operation: ``-``."""
         return -self.data
