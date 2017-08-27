@@ -57,7 +57,7 @@ class FreeFree:
     TODO
     """
     # Component name
-    comp = "galactic/freefree"
+    compID = "galactic/freefree"
     name = "Galactic free-free"
 
     def __init__(self, configs):
