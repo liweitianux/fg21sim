@@ -1,6 +1,6 @@
-==============================================================
-Realistic Foregrounds Simulation for EoR 21cm Signal Detection
-==============================================================
+=============================================================
+Realistic Foreground Simulation for EoR 21cm Signal Detection
+=============================================================
 
 **WARNING:**
 This package is still under heavy development, and may lack some
@@ -26,13 +26,13 @@ Features
     Galactic free-free emission
   + ``galactic/snr``:
     Emission from Galactic supernovae remnants (SNRs)
+    (*Note:* need update to simulate within sky patches)
   + ``extragalactic/clusters``:
-    Emission from extragalactic clusters of galaxies
+    Emission from extragalactic galaxy clusters
     (*Note:* only radio *halos* considered at the moment)
   + ``extragalactic/pointsources``:
     Emission from multiple types of extragalactic discrete point sources
-    (*Note:* contributed by Zhixian MA)
-    (*WARNING:* not well integrated and tested at the moment!)
+    (*WARNING:* need significant updates and integration!)
 
     Current supported point sources types:
 
@@ -42,16 +42,15 @@ Features
     - Fanaroff-Riley type I (FR-I) AGNs
     - Fanaroff-Riley type II (FR-II) AGNs
 
-* All-sky simulation using HEALPix
-  (*Note:* optimize the speed, and more tests)
+* All-sky simulation by utilizing HEALPix
+  (*Note:* only support some of the components)
 * High-resolution simulation within sky patches
-  (*Note:* assumes a flat sky)
+  (*Note:* assume a flat sky for the moment)
 * Configuration file allowing fine-grained control
 * Modular and well-designed API
 * Easy-to-use command line tools (CLI)
 * Simple Web UI
-  (*Note:* recent Firefox, Chrome/Chromium, Edge, and IE >=11 are supported)
-  (*WARNING:* needs significant updates against recent changes!)
+  (*WARNING:* need significant updates against recent changes!)
 * Other handy utilities
 
 
