@@ -23,9 +23,11 @@
 
   # Synchrotron emission component (unpolarized)
   [[synchrotron]]
-  # The template map for the simulation.
+  # The template map for the simulation, e.g., Haslam 408 MHz survey.
+  # Unit: [K] (Kelvin)
   template = string(default=None)
-  # The frequency of the template map (same unit as in [frequency] section)
+  # The frequency of the template map.
+  # Unit: [MHz]
   template_freq = float(default=None, min=0.0)
 
   # Spectral index map
@@ -33,7 +35,7 @@
 
   # Whether add fluctuations on the small scales according the angular
   # power spectrum prediction?
-  add_smallscales = boolean(default=True)
+  add_smallscales = boolean(default=False)
   # Range of multipole moments (l) of the angular power spectrum.
   # The power spectrum will be cut off to a constant for multipole l < lmin.
   # NOTE: Update the ``lmax`` accordingly w.r.t. ``sky/healpix/nside``.
