@@ -148,9 +148,11 @@ class ConfigManager:
         """
         configspec = _get_configspec()
         self._configspec = ConfigObj(configspec, interpolation=False,
-                                     list_values=False, _inspec=True)
+                                     list_values=False, _inspec=True,
+                                     encoding="utf-8")
         configs_default = ConfigObj(interpolation=False,
-                                    configspec=self._configspec)
+                                    configspec=self._configspec,
+                                    encoding="utf-8")
         # Keep a copy of the default configurations
         self._config_default = self._validate(configs_default)
         # NOTE: use ``copy.deepcopy``; see ``self.reset()`` for more details
@@ -164,12 +166,13 @@ class ConfigManager:
 
         Parameters
         ----------
-        config : `~ConfigObj`, dict, str, or list[str]
+        config : `~configobj.ConfigObj`, dict, str, or list[str]
             Supplied configurations to be merged.
         """
         if not isinstance(config, ConfigObj):
             try:
-                config = ConfigObj(config, interpolation=False)
+                config = ConfigObj(config, interpolation=False,
+                                   encoding="utf-8")
             except ConfigObjError as e:
                 logger.exception(e)
                 raise ConfigError(e)
@@ -188,7 +191,8 @@ class ConfigManager:
         """
         try:
             newconfig = ConfigObj(config, interpolation=False,
-                                  configspec=self._configspec)
+                                  configspec=self._configspec,
+                                  encoding="utf-8")
         except ConfigObjError as e:
             raise ConfigError(e)
         newconfig = self._validate(newconfig)
@@ -404,7 +408,8 @@ class ConfigManager:
         d = reduce(lambda x, y: {y: x}, reversed(key), value)
         # Create the temporary ``ConfigObj`` instance and validate it
         config_new = ConfigObj(d, interpolation=False,
-                               configspec=self._configspec)
+                               configspec=self._configspec,
+                               encoding="utf-8")
         # NOTE:
         # May raise ``ConfigError`` if fails to pass the validation
         config_new = self._validate(config_new)
