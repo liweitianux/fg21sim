@@ -129,10 +129,6 @@ def check_galactic_freefree(configs):
     if comp in comp_enabled:
         # Only validate the configs if this component is enabled
         results.update(
-            _check_missing(configs, [comp+"/halphamap_unit",
-                                     comp+"/dustmap_unit"])
-        )
-        results.update(
             _check_existence(configs, [comp+"/halphamap", comp+"/dustmap"])
         )
         results.update(_check_missing(configs, comp+"/output_dir"))
