@@ -77,7 +77,7 @@
 
   # Ratio of the total energy injected into cosmic-ray electrons during
   # the cluster life to its total thermal energy.
-  eta_e = float(default=0.01, min=0.0, max=0.1)
+  eta_e = float(default=0.005, min=0.001, max=0.1)
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.

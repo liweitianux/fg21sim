@@ -41,18 +41,20 @@ type = option("patch", "healpix", default="patch")
 
   # Configurations for input/output sky patch
   [[patch]]
-  # The (R.A., Dec.) coordinate of the sky patch center [deg]
+  # The (R.A., Dec.) coordinate of the sky patch center
+  # Unit: [deg]
+  # (MWA EoR0 field center: (0, -27))
   xcenter = float(default=0.0, min=0.0, max=360.0)
-  ycenter = float(default=0.0, min=-90.0, max=90.0)
+  ycenter = float(default=-27.0, min=-90.0, max=90.0)
 
   # The image dimensions (i.e., number of pixels) of the sky patch,
   # along the X (R.A./longitude) and Y (Dec./latitude) axes.
-  # Default: 1200x1200 => 10x10 [deg^2] (30 arcsec/pixel)
-  xsize = integer(default=1200, min=1)
-  ysize = integer(default=1200, min=1)
+  # Default: 1800x1800 => 10x10 [deg^2] (20 arcsec/pixel)
+  xsize = integer(default=1800, min=1)
+  ysize = integer(default=1800, min=1)
 
   # Pixel size [arcsec]
-  pixelsize = float(default=30.0, min=0.0)
+  pixelsize = float(default=20.0, min=0.0)
 
   # Configurations for input/output HEALPix sky
   [[healpix]]
