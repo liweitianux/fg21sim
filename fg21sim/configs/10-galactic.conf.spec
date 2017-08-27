@@ -48,15 +48,13 @@
 
   # Free-free bremsstrahlung emission component
   [[freefree]]
-  # The H{\alpha} map used as the free-free emission template
+  # The Hα map from which to derive the free-free emission
+  # Unit: [Rayleigh]
   halphamap = string(default=None)
-  # The unit of the H{\alpha} template (e.g., "Rayleigh")
-  halphamap_unit = string(default=None)
 
-  # The 100-{\mu}m dust map used for dust absorption correction
+  # The 100-μm dust map used to correct Hα dust absorption
+  # Unit: [MJy/sr]
   dustmap = string(default=None)
-  # The unit of the above dust map (e.g., "MJy/sr")
-  dustmap_unit = string(default=None)
 
   # Effective dust fraction in the LoS actually absorbing Halpha
   dust_fraction = float(default=0.33, min=0.1, max=1.0)

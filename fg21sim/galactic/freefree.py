@@ -30,7 +30,6 @@ import os
 import logging
 
 import numpy as np
-import astropy.units as au
 
 from ..sky import get_sky
 
@@ -77,11 +76,7 @@ class FreeFree:
         """
         comp = self.compID
         self.halphamap_path = self.configs.get_path(comp+"/halphamap")
-        self.halphamap_unit = au.Unit(
-            self.configs.getn(comp+"/halphamap_unit"))
         self.dustmap_path = self.configs.get_path(comp+"/dustmap")
-        self.dustmap_unit = au.Unit(
-            self.configs.getn(comp+"/dustmap_unit"))
         self.f_dust = self.configs.getn(comp+"/dust_fraction")
         self.halpha_abs_th = self.configs.getn(comp+"/halpha_abs_th")  # [mag]
         self.Te = self.configs.getn(comp+"/electron_temperature")  # [K]
@@ -100,16 +95,8 @@ class FreeFree:
         """
         logger.info("Loading H[alpha] map ...")
         self.halphamap = self.sky.open(self.halphamap_path)
-        # Validate input map unit
-        if self.halphamap_unit != au.Unit("Rayleigh"):
-            raise ValueError("unsupported Halpha map unit: {0}".format(
-                self.halphamap_unit))
         logger.info("Loading dust map ...")
         self.dustmap = self.sky.open(self.dustmap_path)
-        # Validate input map unit
-        if self.dustmap_unit != au.Unit("MJy / sr"):
-            raise ValueError("unsupported dust map unit: {0}".format(
-                self.dustmap_unit))
 
     def _correct_dust_absorption(self):
         """
