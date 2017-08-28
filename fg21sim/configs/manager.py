@@ -22,6 +22,7 @@ import shutil
 
 from configobj import ConfigObj, ConfigObjError, flatten_errors
 from validate import Validator
+import numpy as np
 
 from .checkers import check_configs
 from ..errors import ConfigError
@@ -498,19 +499,19 @@ class ConfigManager:
 
         Returns
         -------
-        frequencies : list[float]
-            List of frequencies where the simulations are requested.
+        frequencies : 1D `~numpy.ndarray`
+            List of frequencies where to simulate the foreground.
+            Unit: [MHz]
         """
         if self.getn("frequency/type") == "custom":
             # The value is validated to be a float list
-            frequencies = self.getn("frequency/frequencies")
+            frequencies = np.array(self.getn("frequency/frequencies"))
         else:
-            # Calculate the frequency values
+            # Calculate the frequency values, including the stop frequency
             start = self.getn("frequency/start")
             stop = self.getn("frequency/stop")
             step = self.getn("frequency/step")
-            num = int((stop - start) / step + 1)
-            frequencies = [start + step*i for i in range(num)]
+            frequencies = np.arange(start, stop+step/2, step)
         return frequencies
 
     @property
