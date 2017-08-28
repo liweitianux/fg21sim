@@ -5,9 +5,9 @@
 Utilities for conversion among common astronomical quantities.
 """
 
-import numpy as np
 import astropy.units as au
-import numba
+
+from .units import (UnitConversions as AUC, Constants as AC)
 
 
 def Fnu_to_Tb(Fnu, omega, freq):
@@ -67,15 +67,12 @@ def Sb_to_Tb(Sb, freq):
     return Fnu_to_Tb(Fnu, omega, freq)
 
 
-@numba.jit(nopython=True)
 def Sb_to_Tb_fast(Sb, freq):
     """
     Convert surface brightness to brightness temperature, using the
     Rayleigh-Jeans law, in the Rayleigh-Jeans limit.
 
-    This function does the calculations explicitly, and does NOT rely
-    on the `astropy.units`, therefore it is much faster.  However, the
-    input parameters must be in right units.
+    Avoid using `astropy.units` to optimize the speed.
 
         Tb = Sb * c^2 / (2 * k_B * nu^2)
 
@@ -100,22 +97,19 @@ def Sb_to_Tb_fast(Sb, freq):
         Unit: [K]
     """
     # NOTE: [rad] & [sr] are dimensionless
-    arcsec2 = (np.deg2rad(1) / 3600) ** 2  # [sr]
-    c = 29979245800.0  # speed of light, [cm/s]
-    k_B = 1.3806488e-16  # Boltzmann constant, [erg/K]
-    coef = 1e-35  # take care the unit conversions
-    Tb = coef * (Sb * c*c) / (2 * k_B * freq*freq * arcsec2)  # [K]
+    arcsec2 = AUC.arcsec2rad ** 2  # [sr]
+    Sb /= arcsec2  # [Jy/arcsec^2] -> [Jy/sr]
+    coef = 1e-35  # unit conversion coefficient
+    Tb = coef * (Sb * AC.c**2) / (2*AC.k_B * freq**2)  # [K]
     return Tb
 
 
-@numba.jit(nopython=True)
 def Fnu_to_Tb_fast(Fnu, omega, freq):
     """
     Convert flux density to brightness temperature, using the
     Rayleigh-Jeans law, in the Rayleigh-Jeans limit.
 
-    This function does NOT invoke the `astropy.units`, therefore it is
-    much faster.
+    Avoid using `astropy.units` to optimize the speed.
 
     Parameters
     ----------
