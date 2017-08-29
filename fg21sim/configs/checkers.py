@@ -159,7 +159,7 @@ def check_extragalactic_clusters(configs):
     if comp in comp_enabled:
         # Only validate the configs if this component is enabled
         results.update(
-            _check_existence(configs, comp+"/catalog")
+            _check_existence(configs, comp+"/ps_data")
         )
         results.update(_check_missing(configs, comp+"/output_dir"))
     return results
