@@ -30,9 +30,6 @@
   # native *pickle* format (i.e., .pkl)
   halos_dumpfile = string(default=None)
 
-  # The fraction of the dark matter mass in galaxy clusters.
-  f_darkmatter = float(default=0.8, min=0.5, max=1.0)
-
   # The minimum mass for clusters when to determine the galaxy clusters
   # total counts and their distributions.
   # Unit: [Msun]

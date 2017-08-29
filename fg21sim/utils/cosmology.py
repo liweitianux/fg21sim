@@ -248,6 +248,16 @@ class Cosmology:
         """
         return self.Ob0 / self.Om0
 
+    @property
+    def darkmatter_fraction(self):
+        """
+        The cosmological mean dark matter fraction (w.r.t. matter),
+        assumed to be *constant* regardless of redshifts!
+
+        See also: ``self.baryon_fraction``
+        """
+        return 1 - self.baryon_fraction
+
     def overdensity_virial(self, z):
         """
         Calculate the virial overdensity, which generally used to

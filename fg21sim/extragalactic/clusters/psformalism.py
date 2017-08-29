@@ -42,12 +42,11 @@ class PSFormalism:
         """
         comp = "extragalactic/clusters"
         self.datafile = self.configs.get_path(comp+"/ps_data")
-        self.f_darkmatter = self.configs.getn(comp+"/f_darkmatter")
         self.Mmin_cluster = self.configs.getn(comp+"/mass_min")  # [Msun]
 
     @property
     def Mmin_halo(self):
-        return self.Mmin_cluster * self.f_darkmatter
+        return self.Mmin_cluster * COSMO.darkmatter_fraction
 
     def _load_data(self, filepath=None):
         """
@@ -225,7 +224,7 @@ class PSFormalism:
 
         df = pd.DataFrame(np.column_stack([z_list, M_list]),
                           columns=["z", "mass"])
-        df["mass"] /= self.f_darkmatter
+        df["mass"] /= COSMO.darkmatter_fraction
         comment = [
             "cluster number counts : %d" % counts,
             "z : redshift",
