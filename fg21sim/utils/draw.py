@@ -4,12 +4,16 @@
 
 """
 Generic drawers (a.k.a. painters) that draw some commonly used shapes.
+
+Credit
+------
+* scikit-image - skimage/draw/draw.py
+  https://github.com/scikit-image/scikit-image/blob/master/skimage/draw/draw.py
 """
 
 import logging
 
 import numpy as np
-import numba as nb
 from scipy import interpolate
 
 
@@ -72,19 +76,50 @@ def circle(radius=None, rprofile=None, fill_value=0.0):
     return img
 
 
-@nb.jit(nb.types.UniTuple(nb.int64[:], 2)(nb.types.UniTuple(nb.int64, 2),
-                                          nb.types.UniTuple(nb.int64, 2),
-                                          nb.types.UniTuple(nb.int64, 2)),
-        nopython=True)
-def ellipse(center, radii, shape):
+def _ellipse_in_shape(shape, center, radii, rotation=0.0):
+    """
+    Generate coordinates of points within ellipse bounded by shape.
+
+    Parameters
+    ----------
+    shape : int tuple (nrow, ncol)
+        Shape of the input image.  Must be length 2.
+    center : iterable of floats
+        (row, column) position of center inside the given shape.
+    radii : iterable of floats
+        Size of two half axes (for row and column)
+    rotation : float, optional
+        Rotation of the ellipse defined by the above, in counter-clockwise
+        direction, with respect to the column-axis.
+        Unit: [deg]
+
+    Returns
+    -------
+    rows : iterable of ints
+        Row coordinates representing values within the ellipse.
+    cols : iterable of ints
+        Corresponding column coordinates representing values within
+        the ellipse.
+
+    Credit
+    ------
+    * scikit-image - skimage/draw/draw.py
+    """
+    rotation = np.deg2rad(rotation)
+    r_lim, c_lim = np.ogrid[0:float(shape[0]), 0:float(shape[1])]
+    r_org, c_org = center
+    r_rad, c_rad = radii
+    rotation %= np.pi
+    sin_alpha, cos_alpha = np.sin(rotation), np.cos(rotation)
+    r, c = (r_lim - r_org), (c_lim - c_org)
+    distances = (((r * cos_alpha + c * sin_alpha) / r_rad) ** 2 +
+                 ((r * sin_alpha - c * cos_alpha) / c_rad) ** 2)
+    return np.nonzero(distances < 1)
+
+
+def ellipse(center, radii, shape=None, rotation=0.0):
     """
     Generate coordinates of pixels within the ellipse.
-
-    XXX/NOTE
-    --------
-    * Cannot figure out why ``nb.optional(nb.types.UniTuple(nb.int64, 2))``
-      does NOT work.  Therefore, make ``shape`` as mandatory parameter
-      instead of optional.
 
     Parameters
     ----------
@@ -96,6 +131,9 @@ def ellipse(center, radii, shape):
         Image shape which is used to determine the maximum extent of output
         pixel coordinates.  This is useful for ellipses that exceed the image
         size.  If None, the full extent of the ellipse is used.
+    rotation : float, optional
+        Set the ellipse rotation in counter-clockwise direction.
+        Unit: [deg]
 
     Returns
     -------
@@ -103,19 +141,50 @@ def ellipse(center, radii, shape):
         Pixel coordinates of the ellipse.
         May be used to directly index into an array, e.g.
         ``img[rr, cc] = 1``.
-    """
-    # XXX: ``numba`` currently does not support ``numpy.meshgrid``
-    nrow, ncol = shape
-    r_lim = np.zeros((nrow, ncol))
-    for i in range(nrow):
-        r_lim[i, :] = np.arange(float(ncol))
-    c_lim = np.zeros((nrow, ncol))
-    for i in range(ncol):
-        c_lim[:, i] = np.arange(float(nrow))
 
-    r_o, c_o = center
-    r_r, c_r = radii
-    distances = (((r_lim-r_o) / r_r) * ((r_lim-r_o) / r_r) +
-                 ((c_lim-c_o) / c_r) * ((c_lim-c_o) / c_r))
-    r_idx, c_idx = np.nonzero(distances <= 1.0)
-    return (r_idx, c_idx)
+    Notes
+    -----
+    The ellipse equation::
+        ((x * cos(alpha) + y * sin(alpha)) / x_radius) ** 2 +
+        ((x * sin(alpha) - y * cos(alpha)) / y_radius) ** 2 = 1
+    Note that the positions of `ellipse` without specified `shape` can have
+    also, negative values, as this is correct on the plane. On the other
+    hand using these ellipse positions for an image afterwards may lead to
+    appearing on the other side of image, because
+    ``image[-1, -1] = image[end-1, end-1]``
+
+    Credit
+    ------
+    * scikit-image - skimage/draw/draw.py
+    """
+    center = np.asarray(center)
+    radii = np.asarray(radii)
+    # allow just rotation with in range +/- 180 degree
+    rotation %= np.pi
+
+    # compute rotated radii by given rotation
+    r_radius_rot = (abs(radii[0] * np.cos(rotation)) +
+                    radii[1] * np.sin(rotation))
+    c_radius_rot = (radii[0] * np.sin(rotation) +
+                    abs(radii[1] * np.cos(rotation)))
+    # The upper_left and lower_right corners of the smallest rectangle
+    # containing the ellipse.
+    radii_rot = np.array([r_radius_rot, c_radius_rot])
+    upper_left = np.ceil(center - radii_rot).astype(int)
+    lower_right = np.floor(center + radii_rot).astype(int)
+
+    if shape is not None:
+        # Constrain upper_left and lower_right by shape boundary.
+        upper_left = np.maximum(upper_left, np.array([0, 0]))
+        lower_right = np.minimum(lower_right, np.array(shape[:2]) - 1)
+
+    shifted_center = center - upper_left
+    bounding_shape = lower_right - upper_left + 1
+
+    rr, cc = _ellipse_in_shape(bounding_shape, shifted_center,
+                               radii, rotation)
+    rr.flags.writeable = True
+    cc.flags.writeable = True
+    rr += upper_left[0]
+    cc += upper_left[1]
+    return rr, cc
