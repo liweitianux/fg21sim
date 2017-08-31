@@ -49,7 +49,7 @@
   # the merger crossing time (~1 Gyr), and is also longer than the lifetime
   # of radio halos.
   # Unit: [Gyr]
-  tau_merger = float(default=3.0, min=1.0, max=5.0)
+  tau_merger = float(default=2.0, min=1.0, max=5.0)
 
   # Magnetic field scaling relation for clusters
   # Reference: Cassano et al. 2012, A&A, 548, A100, Eq.(1)
@@ -70,11 +70,11 @@
   [[halos]]
   # Roughly the fraction of turbulence energy transformed to accelerate
   # the electrons, describing the efficiency of turbulence acceleration.
-  eta_turb = float(default=0.3, min=0.1, max=1.0)
+  eta_turb = float(default=0.2, min=0.1, max=1.0)
 
   # Ratio of the total energy injected into cosmic-ray electrons during
   # the cluster life to its total thermal energy.
-  eta_e = float(default=0.005, min=0.001, max=0.1)
+  eta_e = float(default=0.003, min=0.001, max=0.1)
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
@@ -96,7 +96,7 @@
 
   # Electron injection, which is assumed to have a constant injection
   # rate and a power-law spectrum.
-  injection_index = float(default=2.5, min=2.1, max=3.5)
+  injection_index = float(default=2.4, min=2.1, max=3.5)
 
 
   # Extragalactic point sources
