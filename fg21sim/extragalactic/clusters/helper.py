@@ -40,7 +40,7 @@ from ...share import CONFIGS, COSMO
 from ...utils.units import (Units as AU,
                             Constants as AC,
                             UnitConversions as AUC)
-from ...utils.convert import Fnu_to_Tb_fast
+from ...utils.convert import Fnu_to_Tb
 from ...utils.draw import circle
 from ...utils.transform import circle2ellipse
 
@@ -398,7 +398,7 @@ def calc_brightness_mean(flux, frequency, omega, pixelsize=None):
         omega = pixelsize ** 2  # [arcsec^2]
         logger.warning("Object sky coverage < 1 pixel; force to be 1 pixel")
 
-    Tb = [Fnu_to_Tb_fast(Fnu, omega, freq)
+    Tb = [Fnu_to_Tb(Fnu, omega, freq)
           for Fnu, freq in zip(np.array(flux, ndmin=1),
                                np.array(frequency, ndmin=1))]
     if len(Tb) == 1:

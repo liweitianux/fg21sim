@@ -32,7 +32,7 @@ from astropy.coordinates import SkyCoord
 
 from ..sky import get_sky
 from ..utils.wcs import make_wcs
-from ..utils.convert import Fnu_to_Tb_fast
+from ..utils.convert import Fnu_to_Tb
 from ..utils.grid import make_ellipse
 from ..utils.units import UnitConversions as AUC
 
@@ -251,7 +251,7 @@ class SuperNovaRemnants:
         if omega < pixelarea:
             # The object is smaller than a pixel, so round up to a pixel area
             omega = pixelarea
-        Tb = Fnu_to_Tb_fast(Fnu, omega, frequency)
+        Tb = Fnu_to_Tb(Fnu, omega, frequency)
         return Tb
 
     def _simulate_templates(self):

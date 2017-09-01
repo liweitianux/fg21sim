@@ -340,11 +340,11 @@ class FRII(BasePointSource):
         npix = hp.nside2npix(self.nside)
         sr_to_arcsec2 = (np.rad2deg(1) * 3600) ** 2  # [sr] -> [arcsec^2]
         core_area = 4 * np.pi / npix * sr_to_arcsec2  # [arcsec^2]
-        Tb_core = convert.Fnu_to_Tb_fast(flux_core, core_area, freq)  # [K]
+        Tb_core = convert.Fnu_to_Tb(flux_core, core_area, freq)  # [K]
         # lobe
         lumo_lobe = lumo_151 * (1 - ratio_obs) / (1 + ratio_obs)  # [Jy]
         flux_lobe = (freq / freq_ref)**(-0.75) * lumo_lobe
-        Tb_lobe = convert.Fnu_to_Tb_fast(flux_lobe, area, freq)  # [K]
+        Tb_lobe = convert.Fnu_to_Tb(flux_lobe, area, freq)  # [K]
 
         # hotspots
         # Willman Eq. (3)
