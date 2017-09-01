@@ -117,8 +117,8 @@ class Foregrounds:
         t1_stop = time.perf_counter()
         t2_stop = time.process_time()
         logger.info("--------------------------------------------------")
-        logger.info("Elapsed time: %.3f [s]" % (t1_stop-t1_start))
-        logger.info("CPU process time: %.3f [s]" % (t2_stop-t2_start))
+        logger.info("Elapsed time: %.1f [min]" % ((t1_stop-t1_start)/60))
+        logger.info("CPU process time: %.1f [min]" % ((t2_stop-t2_start)/60))
         logger.info("--------------------------------------------------")
 
     def simulate(self):
@@ -135,8 +135,8 @@ class Foregrounds:
         logger.info("==================================================")
         logger.info(">>> Time usage <<<")
         logger.info("==================================================")
-        for compId, t1, t2 in timers:
-            logger.info("%s : %.3f [s]" % (compID, t2-t1))
+        for compID, t1, t2 in timers:
+            logger.info("%s : %.1f [min]" % (compID, (t2-t1)/60))
         logger.info("--------------------------------------------------")
 
     def postprocess(self):
