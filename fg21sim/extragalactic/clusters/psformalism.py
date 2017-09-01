@@ -43,6 +43,7 @@ class PSFormalism:
         comp = "extragalactic/clusters"
         self.datafile = self.configs.get_path(comp+"/ps_data")
         self.Mmin_cluster = self.configs.getn(comp+"/mass_min")  # [Msun]
+        self.boost = self.configs.getn(comp+"/boost")
 
     @property
     def Mmin_halo(self):
@@ -150,6 +151,7 @@ class PSFormalism:
         midx = (self.masses >= self.Mmin_halo)
         numgrid = self.number_grid
         counts = np.sum(numgrid[:, midx]) * coverage
+        counts *= self.boost  # number boost factor
         self.counts = int(np.round(counts))
         logger.info("Total number of clusters: %d" % self.counts)
         return self.counts
@@ -218,8 +220,8 @@ class PSFormalism:
                 M_list.append(M)
                 i += 1
                 if i % 100 == 0:
-                    logger.debug("[%d/%d] %.1f%% done ..." %
-                                 (i, counts, 100*i/counts))
+                    logger.info("[%d/%d] %.1f%% ..." %
+                                (i, counts, 100*i/counts))
         logger.info("Sampled %d pairs of (z, mass) for each cluster" % counts)
 
         df = pd.DataFrame(np.column_stack([z_list, M_list]),
@@ -227,6 +229,7 @@ class PSFormalism:
         df["mass"] /= COSMO.darkmatter_fraction
         comment = [
             "cluster number counts : %d" % counts,
+            "number boost : %s" % self.boost,
             "z : redshift",
             "mass : cluster total mass [Msun]",
         ]

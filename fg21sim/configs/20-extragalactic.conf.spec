@@ -35,6 +35,11 @@
   # Unit: [Msun]
   mass_min = float(default=2e14, min=1e12)
 
+  # Boost the number of expected cluster number within the sky coverage
+  # by the specified times.
+  # (NOTE: mainly for testing purpose.)
+  boost = float(default=1.0, min=0.1, max=1e4)
+
   # Minimum mass change of the main cluster to be regarded as a merger
   # event instead of an accretion event.
   # Unit: [Msun]
