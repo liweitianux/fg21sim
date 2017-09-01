@@ -136,7 +136,7 @@ level = option("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", default="INFO")
 format = string(default="%(asctime)s [%(levelname)s] <%(name)s> %(message)s")
 
 # Set the date/time format in messages
-datefmt = string(default="%Y-%m-%dT%H:%M:%S")
+datefmt = string(default="%H:%M:%S")
 
 # Set the logging filename (will create a `FileHandler`)
 # If set to "" (empty string), then the `FileHandler` will be disabled.
