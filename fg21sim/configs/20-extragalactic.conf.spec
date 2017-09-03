@@ -35,6 +35,20 @@
   # mass, redshift, position, shape, and the recent major merger info.
   catalog_outfile = string(default=None)
 
+  # Directly use the (previously simulated) catalog file specified
+  # as the above "catalog_outfile" option.
+  # NOTE:
+  # By using an existing catalog, the steps to derive these data are
+  # simply skipped.
+  # Due to the small number density of the galaxy clusters, the simulated
+  # results within a small patch of sky (e.g., 100 [deg^2]) show
+  # significant fluctuations (several or even several tens of times
+  # of differences between simulations).  Therefore, one may run many
+  # tests and only create images at some frequencies necessary for
+  # testing, then select the satisfying one to continue the simulation
+  # to generate images at all frequencies.
+  use_output_catalog = boolean(default=False)
+
   # Output file for dumping the simulated cluster halos data in Python
   # native *pickle* format (i.e., .pkl)
   halos_dumpfile = string(default=None)

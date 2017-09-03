@@ -28,7 +28,7 @@ from .psformalism import PSFormalism
 from .formation import ClusterFormation
 from .halo import RadioHalo
 from ...share import CONFIGS, COSMO
-from ...utils.io import dataframe_to_csv, pickle_dump
+from ...utils.io import dataframe_to_csv, csv_to_dataframe, pickle_dump
 from ...utils.ds import dictlist_to_dataframe
 from ...utils.convert import JyPerPix_to_K
 from ...sky import get_sky
@@ -80,6 +80,7 @@ class GalaxyClusters:
         """
         comp = self.compID
         self.catalog_outfile = self.configs.get_path(comp+"/catalog_outfile")
+        self.use_output_catalog = self.configs.getn(comp+"/use_output_catalog")
         self.halos_dumpfile = self.configs.get_path(comp+"/halos_dumpfile")
         self.prefix = self.configs.getn(comp+"/prefix")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
@@ -354,9 +355,21 @@ class GalaxyClusters:
             return
 
         logger.info("{name}: preprocessing ...".format(name=self.name))
-        self._simulate_catalog()
-        self._process_catalog()
-        self._simulate_mergers()
+        if self.use_output_catalog:
+            logger.info("Use existing cluster & halo catalog: %s" %
+                        self.catalog_outfile)
+            self.catalog, self.catalog_comment = csv_to_dataframe(
+                self.catalog_outfile)
+            ncluster = len(self.catalog)
+            idx_rmm = ~self.catalog["rmm_z"].isnull()
+            nhalo = idx_rmm.sum()
+            logger.info("Loaded cluster catalog: %d clusters with %d halos" %
+                        (ncluster, nhalo))
+        else:
+            self._simulate_catalog()
+            self._process_catalog()
+            self._simulate_mergers()
+
         self._simulate_halos()
         self._draw_halos()
 
@@ -425,6 +438,8 @@ class GalaxyClusters:
         logger.info("Save the resulting catalog ...")
         if self.catalog_outfile is None:
             logger.warning("Catalog output file not set; skip saving!")
+        elif self.use_output_catalog:
+            logger.info("No need to save the cluster catalog.")
         else:
             dataframe_to_csv(self.catalog, outfile=self.catalog_outfile,
                              comment=self.catalog_comment,
