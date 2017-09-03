@@ -142,9 +142,7 @@ def check_galactic_snr(configs):
     results = {}
     if comp in comp_enabled:
         # Only validate the configs if this component is enabled
-        results.update(
-            _check_existence(configs, comp+"/catalog")
-        )
+        results.update(_check_existence(configs, comp+"/catalog"))
         results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 
@@ -158,9 +156,7 @@ def check_extragalactic_clusters(configs):
     results = {}
     if comp in comp_enabled:
         # Only validate the configs if this component is enabled
-        results.update(
-            _check_existence(configs, comp+"/ps_data")
-        )
+        results.update(_check_existence(configs, comp+"/ps_data"))
         results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 

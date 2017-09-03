@@ -21,9 +21,18 @@
   # used by the following ``[[halos]]`` section.
   [[clusters]]
   # The Press-Schechter formalism predicted halo distribution densities.
+  # This data file is in plain text with 3 columns organized like:
+  # ---------------------
+  # z1  mass1  density1
+  # z1  mass2  density2
+  # z1  ..     density3
+  # z2  mass1  density4
+  # z2  mass2  density5
+  # z2  ..     density6
   ps_data = string(default=None)
 
-  # Output the effective/inuse clusters catalog data (CSV file)
+  # Output CSV file of the clusters catalog containing the simulated
+  # mass, redshift, position, shape, and the recent major merger info.
   catalog_outfile = string(default=None)
 
   # Output file for dumping the simulated cluster halos data in Python
