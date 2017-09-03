@@ -93,13 +93,14 @@ def _check_existence(filepath, clobber=False, remove=False):
 
 def dataframe_to_csv(df, outfile, comment=None, clobber=False):
     """
-    Save the given Pandas DataFrame into a CSV text file.
+    Save the given Pandas DataFrame into a CSV text file with comments
+    prepended at the file head.
 
     Parameters
     ----------
     df : `~pandas.DataFrame`
         The DataFrame to be saved to the CSV text file.
-    outfile : string
+    outfile : str
         The path to the output CSV file.
     comment : list[str], optional
         A list of comments to be prepended to the output CSV file header.
@@ -126,6 +127,38 @@ def dataframe_to_csv(df, outfile, comment=None, clobber=False):
         fh.write("".join(["# "+line.strip()+"\n" for line in comment]))
         df.to_csv(fh, header=True, index=False)
     logger.info("Wrote DataFrame to CSV file: {0}".format(outfile))
+
+
+def csv_to_dataframe(infile):
+    """
+    Read the given CSV file as a Pandas DataFrame, with head comments
+    also considered and returned.
+
+    Parameters
+    ----------
+    infile : str
+        The path to the input CSV file.
+
+    Returns
+    df : `~pandas.DataFrame`
+        The DataFrame read from the CSV text file.
+    comment : list[str]
+        A list of comments read from the lines prefixing with ``#``
+        at the CSV file header.
+        The prefix ``#`` is striped.
+    """
+    comments = []
+    for line in open(infile):
+        line = line.strip()
+        if line == "":
+            continue
+        elif line[0] == "#":
+            comments.append(line.lstrip("# "))
+        else:
+            break
+
+    df = pd.read_csv(infile, comment="#")
+    return (df, comments)
 
 
 def pickle_dump(obj, outfile, clobber=False):
