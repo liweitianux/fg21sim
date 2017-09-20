@@ -17,6 +17,11 @@ References
    Essential Radio Astronomy
    https://science.nrao.edu/opportunities/courses/era/
    Chapter.5
+
+.. [you1998]
+   You 1998
+   The Radiation Mechanisms in Astrophysics, 2nd Edition, Beijing
+   Sec.4.2.3, p.187
 """
 
 import logging
@@ -32,20 +37,27 @@ from ...utils.units import (Units as AU, Constants as AC)
 logger = logging.getLogger(__name__)
 
 
-def _interp_sync_kernel(xmin=1e-5, xmax=20.0, xsample=128):
+def _interp_sync_kernel(xmin=1e-3, xmax=10.0, xsample=256):
     """
     Sample the synchrotron kernel function at the specified X
     positions and make an interpolation, to optimize the speed
     when invoked to calculate the synchrotron emissivity.
 
+    WARNING
+    -------
+    Do NOT simply bound the synchrotron kernel within the specified
+    [xmin, xmax] range, since it decreases as a power law of index
+    1/3 at the left end, and decreases exponentially at the right end.
+    Bounding it with interpolation will cause the synchrotron emissivity
+    been *overestimated* on the higher frequencies.
+
     Parameters
     ----------
     xmin, xmax : float, optional
         The lower and upper cuts for the kernel function.
-        Default: [1e-5, 20.0]
+        Default: [1e-3, 10.0]
     xsample : int, optional
         Number of samples within [xmin, xmax] used to do interpolation.
-        NOTE: The kernel function is quiet smooth and slow-varying.
 
     Returns
     -------
@@ -56,9 +68,8 @@ def _interp_sync_kernel(xmin=1e-5, xmax=20.0, xsample=128):
     Fxx = [xp * integrate.quad(lambda t: scipy.special.kv(5/3, t),
                                a=xp, b=np.inf)[0]
            for xp in xx]
-    F_interp = interpolate.interp1d(
-        xx, Fxx, kind="quadratic", bounds_error=False,
-        fill_value=(Fxx[0], Fxx[-1]), assume_sorted=True)
+    F_interp = interpolate.interp1d(xx, Fxx, kind="quadratic",
+                                    bounds_error=True, assume_sorted=True)
     return F_interp
 
 
@@ -78,8 +89,13 @@ class SynchrotronEmission:
         The assumed uniform magnetic field within the cluster ICM.
         Unit: [uG]
     """
-    # The interpolated synchrotron kernel function ``F(x)``.
-    F_interp = _interp_sync_kernel()
+    # The interpolated synchrotron kernel function ``F(x)`` within
+    # the specified range.
+    # NOTE: See the *WARNING* above.
+    F_xmin = 1e-3
+    F_xmax = 10.0
+    F_xsample = 256
+    F_interp = _interp_sync_kernel(F_xmin, F_xmax, F_xsample)
 
     def __init__(self, gamma, n_e, B):
         self.gamma = np.asarray(gamma)
@@ -152,8 +168,21 @@ class SynchrotronEmission:
         -------
         y : `~numpy.ndarray`
             Calculated kernel function values.
+
+        References: Ref.[you1998]
         """
-        return cls.F_interp(x)
+        x = np.array(x, ndmin=1)
+        y = np.zeros(x.shape)
+        idx = (x >= cls.F_xmin) & (x <= cls.F_xmax)
+        y[idx] = cls.F_interp(x[idx])
+        # Left end: power law of index 1/3
+        idx = (x < cls.F_xmin)
+        A = cls.F_interp(cls.F_xmin)
+        y[idx] = A * (x[idx] / cls.F_xmin)**(1/3)
+        # Right end: exponentially decrease
+        idx = (x > cls.F_xmax)
+        y[idx] = (0.5*np.pi * x[idx])**0.5 * np.exp(-x[idx])
+        return y
 
     def emissivity(self, frequencies):
         """
