@@ -28,8 +28,7 @@ import logging
 
 import numpy as np
 import scipy.special
-from scipy import integrate
-from scipy import interpolate
+from scipy import integrate, interpolate
 
 from ...utils.units import (Units as AU, Constants as AC)
 
@@ -105,7 +104,7 @@ class SynchrotronEmission:
     @property
     def B_gauss(self):
         """
-        Magnetic field in unit of [G] (i.e., gauss)
+        Magnetic field in unit of [G] (i.e., Gauss)
         """
         return self.B * 1e-6  # [uG] -> [G]
 
@@ -133,7 +132,8 @@ class SynchrotronEmission:
         gamma : `~numpy.ndarray`
             Electron Lorentz factors γ
         theta : `~numpy.ndarray`, optional
-            The angles between the electron velocity and the magnetic field.
+            The angles between the electron velocity and the magnetic field,
+            the pitch angle.
             Unit: [rad]
 
         Returns
@@ -152,11 +152,8 @@ class SynchrotronEmission:
 
         NOTE
         ----
-        * Use interpolation to optimize the speed, also avoid instabilities
-          near the lower end (e.g., x < 1e-5).
-        * Interpolation also helps vectorize this function for easier calling.
-        * Cache the interpolation results, since this function will be called
-          multiple times for each frequency.
+        * Use interpolation to optimize the speed, as well as to
+          help vectorize this function for easier calling.
 
         Parameters
         ----------
@@ -196,6 +193,12 @@ class SynchrotronEmission:
             I = int_gmin^gmax f(g) d(g)
               = int_ln(gmin)^ln(gmax) f(g) g d(ln(g))
 
+        XXX
+        ---
+        Assume that the electrons have a pitch angle of ``pi/2`` with
+        respect to the magnetic field. (I think it is a good simplification
+        considering that the magnetic field is also assumed to be uniform.)
+
         Parameters
         ----------
         frequencies : float, or 1D `~numpy.ndarray`
@@ -210,25 +213,16 @@ class SynchrotronEmission:
             Unit: [erg/s/cm^3/Hz]
         """
         j_coef = np.sqrt(3) * AC.e**3 * self.B_gauss / AU.mec2
-        # Ignore the zero angle
-        theta = np.linspace(0, np.pi/2, num=len(self.gamma))[1:]
-        theta_grid, gamma_grid = np.meshgrid(theta, self.gamma)
-        nu_c = self.frequency_crit(gamma_grid, theta_grid)
-        # 2D grid of ``n_e(gamma) * sin^2(theta)``
-        nsin2 = np.outer(self.n_e, np.sin(theta)**2)
+        nu_c = self.frequency_crit(self.gamma)
 
         frequencies = np.array(frequencies, ndmin=1)
         syncem = np.zeros(shape=frequencies.shape)
-        for i, freq in zip(range(len(frequencies)), frequencies):
-            logger.debug("Calc synchrotron emissivity at %.2f [MHz]" % freq)
+        for i, freq in enumerate(frequencies):
+            logger.debug("Calculating emissivity at %.2f [MHz]" % freq)
             kernel = self.F(freq / nu_c)
-            # 2D samples over width to do the integration
-            s2d = kernel * nsin2
-            # Integrate over ``theta`` (the last axis)
-            s1d = integrate.simps(s2d, x=theta)
             # Integrate over energy ``gamma`` in logarithmic grid
-            syncem[i] = j_coef * integrate.simps(s1d*self.gamma,
-                                                 np.log(self.gamma))
+            syncem[i] = j_coef * integrate.simps(
+                self.n_e*kernel*self.gamma, x=np.log(self.gamma))
 
         if len(syncem) == 1:
             return syncem[0]
