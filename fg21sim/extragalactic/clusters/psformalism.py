@@ -228,10 +228,13 @@ class PSFormalism:
                           columns=["z", "mass"])
         df["mass"] /= COSMO.darkmatter_fraction
         comment = [
-            "cluster number counts : %d" % counts,
-            "number boost : %s" % self.boost,
-            "z : redshift",
-            "mass : cluster total mass [Msun]",
+            "dndM data: %s" % self.datafile,
+            "cluster minimum mass: %.2e [Msun]" % self.Mmin_cluster,
+            "dark matter fraction: %.2f" % COSMO.darkmatter_fraction,
+            "cluster counts: %d" % counts,
+            "boost factor for cluster counts: %s" % self.boost,
+            "z - redshift",
+            "mass - cluster total mass [Msun]",
         ]
         self.clusters = df
         self.clusters_comment = comment
