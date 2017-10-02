@@ -38,6 +38,7 @@ import logging
 
 import numpy as np
 from scipy import integrate
+from scipy import interpolate
 from astropy.cosmology import FlatLambdaCDM
 
 from .units import (UnitConversions as AUC, Constants as AC)
@@ -119,8 +120,55 @@ class Cosmology:
     def H(self, z):
         """
         Hubble parameter at redshift z.
+        Unit: [km/s/Mpc]
         """
         return self.H0 * self.E(z)
+
+    def Dc(self, z):
+        """
+        Comoving distance at redshift z.
+        Unit: [Mpc]
+        """
+        return self._cosmo.comoving_distance(z).value
+
+    def Dc_to_redshift(self, Dc, zmin=0, zmax=3, zstep=0.01):
+        """
+        Calculate the redshifts corresponding to the given comoving
+        distances by interpolation.
+
+        Parameters
+        ----------
+        Dc : float, or `~numpy.ndarray`
+            Comoving distances
+            Unit: [Mpc]
+        zmin, zmax : float, optional
+            The minimum and maximum redshift within which the input
+            comoving distances are enclosed; otherwise, a error will be
+            raised during the calculation.
+        zstep : float, optional
+            The redshift step size adopted to do the interpolation.
+
+        Returns
+        -------
+        redshift : float, or `~numpy.ndarray`
+            Calculated redshifts w.r.t. the input comoving distances.
+
+        Raises
+        ------
+        ValueError :
+            The ``zmin`` or ``zmax`` is not enough to enclose the input
+            comoving distance range.
+        """
+        Dc_min, Dc_max = self.Dc([zmin, zmax])  # [Mpc]
+        if np.sum(Dc < Dc_min) > 0:
+            raise ValueError("zmin=%s is too big for input Dc" % zmin)
+        if np.sum(Dc > Dc_max) > 0:
+            raise ValueError("zmax=%s is too small for input Dc" % zmax)
+
+        z_ = np.arange(zmin, zmax+zstep/2, zstep)
+        Dc_ = self.Dc(z_)
+        Dc_interp = interpolate.interp1d(Dc_, z_, kind="linear")
+        return Dc_interp(Dc)
 
     def DA(self, z):
         """
