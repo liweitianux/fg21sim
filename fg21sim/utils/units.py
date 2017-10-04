@@ -69,7 +69,9 @@ class UnitConversions:
     arcsec2arcmin = au.arcsec.to(au.arcmin)
     # Temperature
     eV2K = au.eV.to(ac.k_B*au.K)
+    K2eV = 1 / eV2K
     keV2K = au.keV.to(ac.k_B*au.K)
+    K2keV = 1 / keV2K
 
 
 class Constants:
