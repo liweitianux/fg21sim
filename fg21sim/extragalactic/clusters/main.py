@@ -104,6 +104,8 @@ class GalaxyClusters:
         """
         logger.info("Simulating the clusters (z, mass) catalog ...")
         psform = PSFormalism(configs=self.configs)
+        psform.calc_dndlnm()
+        psform.write()
         counts = psform.calc_cluster_counts(coverage=self.sky.area)
         self.catalog, self.catalog_comment = psform.sample_z_m(counts)
         logger.info("Simulated cluster catalog of counts %d." % counts)

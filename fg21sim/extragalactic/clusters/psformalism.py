@@ -18,7 +18,6 @@ import pandas as pd
 import hmf
 
 from ...share import CONFIGS, COSMO
-from ...utils.interpolate import bilinear
 from ...utils.units import UnitConversions as AUC
 from ...utils.io import write_dndlnm
 
@@ -228,6 +227,19 @@ class PSFormalism:
         Randomly generate the requested number of pairs of (z, M) following
         the halo number distribution.
 
+        NOTE
+        ----
+        First derive the cluster (M>=Mmin) number distribution w.r.t.
+        redshifts, from which the redshift for each cluster is sampled
+        using the acceptance-rejection algorithm.  Then for each cluster
+        at redshift z, the corresponding halo mass distribution is used
+        to generate the cluster mass using the same algorithm.
+
+        NOTE
+        ----
+        Sampling masses in logarithmic scale improve the speed very
+        significantly (~30x)!
+
         Parameters
         ----------
         counts : int, optional
@@ -250,52 +262,54 @@ class PSFormalism:
             counts = self.counts
         logger.info("Sampling (z, mass) pairs for %d clusters ..." % counts)
 
-        redshifts = self.redshifts
-        masses = self.masses
-        zmin = redshifts.min()
-        zmax = redshifts.max()
-        Mmax = masses.max()
-        midx = (masses >= self.Mmin_halo)
-        numgrid = self.number_grid
-        numgrid2 = numgrid[:, midx]
-        NM = numgrid2.max()
+        z = self.z
+        zmin = z.min()
+        zmax = z.max()
+        log10mass = np.log10(self.mass)
+        log10Mmin = np.log10(self.Mmin_halo)
+        log10Mmax = log10mass.max()
+        midx = (log10mass >= log10Mmin)
+        log10mass = log10mass[midx]
+        Ngrid = self.number_grid[:, midx]
+
+        logger.info("Sampling redshifts ...")
         z_list = []
-        M_list = []
+        zi_list = []
+        Nzdist = Ngrid.sum(axis=1)
+        NMax = Nzdist.max()
         i = 0
         while i < counts:
-            z = random.uniform(zmin, zmax)
-            M = random.uniform(self.Mmin_halo, Mmax)
+            zc = random.uniform(zmin, zmax)
+            zi = (z < zc).sum()
+            Nzc = Nzdist[zi]
             r = random.random()
-            zi1 = (self.redshifts < z).sum()
-            zi2 = zi1 - 1
-            if zi2 < 0:
-                zi2 += 1
-                zi1 += 1
-            Mi1 = (self.masses < M).sum()
-            Mi2 = Mi1 - 1
-            if Mi2 < 0:
-                Mi2 += 1
-                Mi1 += 1
-            N = bilinear(
-                z, np.log(M),
-                p11=(redshifts[zi1], np.log(masses[Mi1]), numgrid[zi1, Mi1]),
-                p12=(redshifts[zi1], np.log(masses[Mi2]), numgrid[zi1, Mi2]),
-                p21=(redshifts[zi2], np.log(masses[Mi1]), numgrid[zi2, Mi1]),
-                p22=(redshifts[zi2], np.log(masses[Mi2]), numgrid[zi2, Mi2]))
-            if r < N/NM:
-                z_list.append(z)
-                M_list.append(M)
+            if r < Nzc/NMax:
+                z_list.append(zc)
+                zi_list.append(zi)
                 i += 1
-                if i % 100 == 0:
-                    logger.info("[%d/%d] %.1f%% ..." %
-                                (i, counts, 100*i/counts))
-        logger.info("Sampled %d pairs of (z, mass) for each cluster" % counts)
 
-        df = pd.DataFrame(np.column_stack([z_list, M_list]),
+        logger.info("Sampling masses ...")
+        mass_list = []
+        NMax_list = Ngrid.max(axis=1)
+        i = 0
+        while i < counts:
+            zi = zi_list[i]
+            NMax = NMax_list[zi]
+            Nmassdist = Ngrid[zi, :]
+            log10Mc = random.uniform(log10Mmin, log10Mmax)
+            Mi = (log10mass < log10Mc).sum()
+            NMc = Nmassdist[Mi]
+            r = random.random()
+            if r < NMc/NMax:
+                mass_list.append(10**log10Mc)
+                i += 1
+
+        logger.info("Sampled %d pairs of (z, mass) for each cluster" % counts)
+        df = pd.DataFrame(np.column_stack([z_list, mass_list]),
                           columns=["z", "mass"])
         df["mass"] /= COSMO.darkmatter_fraction
         comment = [
-            "dndM data: %s" % self.datafile,
+            "halo mass function model: %s" % self.hmf_model,
             "cluster minimum mass: %.2e [Msun]" % self.Mmin_cluster,
             "dark matter fraction: %.2f" % COSMO.darkmatter_fraction,
             "cluster counts: %d" % counts,
