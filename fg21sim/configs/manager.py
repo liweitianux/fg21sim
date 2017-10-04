@@ -562,6 +562,8 @@ class ConfigManager:
             "H0": conf["H0"],
             "Om0": conf["OmegaM0"],
             "Ob0": conf["Omegab0"],
+            "Tcmb0": conf["Tcmb0"],
+            "ns": conf["ns"],
             "sigma8": conf["sigma8"],
         }
         return cosmoconf
