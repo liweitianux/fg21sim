@@ -63,7 +63,9 @@ class Cosmology:
     Ode0 : float
         Density parameter of dark energy at present day
     sigma8 : float
-        Present-day rms density fluctuation on a scale of 8 h^-1 [Mpc].
+        Present-day rms density fluctuation on a scale of 8 h^-1 [Mpc]
+    ns : float
+        Scalar spectral index
 
     Internal attributes
     -------------------
@@ -75,15 +77,15 @@ class Cosmology:
     # Present day (z=0) growth factor
     _growth_factor0 = None
 
-    def __init__(self, H0=71.0, Om0=0.27, Ob0=0.046, sigma8=0.81):
-        self.setup(H0=H0, Om0=Om0, Ob0=Ob0, sigma8=sigma8)
+    def __init__(self, H0=71.0, Om0=0.27, Ob0=0.046, sigma8=0.81, ns=0.96):
+        self.setup(H0=H0, Om0=Om0, Ob0=Ob0, sigma8=sigma8, ns=ns)
 
     def setup(self, **kwargs):
         """
         Setup/update the parameters of the cosmology model.
         """
         for key, value in kwargs.items():
-            if key in ["H0", "Om0", "Ob0", "sigma8"]:
+            if key in ["H0", "Om0", "Ob0", "sigma8", "ns"]:
                 setattr(self, key, value)
             else:
                 raise ValueError("unknown parameter: %s" % key)

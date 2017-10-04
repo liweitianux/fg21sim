@@ -116,6 +116,8 @@ OmegaM0 = float(default=0.27, min=0.0, max=1.0)
 Omegab0 = float(default=0.046, min=0.0, max=1.0)
 # Present-day rms density fluctuations on a scale of 8 h^-1 Mpc
 sigma8 = float(default=0.81, min=0.0)
+# Scalar spectral index
+ns = float(default=0.96, min=0.0)
 
 
 # Configurations for initialization/reconfiguration of the `logging` module
