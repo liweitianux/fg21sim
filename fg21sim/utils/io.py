@@ -380,3 +380,49 @@ def write_fits_healpix(outfile, hpmap, header=None, float32=False,
     ], header=hdr)
     hdu.writeto(outfile, checksum=checksum)
     logger.info("Wrote HEALPix map to FITS file: %s" % outfile)
+
+
+def write_dndlnm(outfile, dndlnm, z, mass, clobber=False):
+    """
+    Write the halo mass distribution data into file in NumPy's ".npz"
+    format, which packs the ``dndlnm``, ``z``, and ``mass`` arrays.
+
+    Parameters
+    ----------
+    outfile : str
+        The output file to store the dndlnm data, in ".npz" format.
+    dndlnm : 2D float `~numpy.ndarray`
+        Shape: (len(z), len(mass))
+        Differential mass function in terms of natural log of M.
+        Unit: [Mpc^-3] (the little "h" is folded into the values)
+    z : 1D float `~numpy.ndarray`
+        Redshifts where the halo mass distribution is calculated.
+    mass : 1D float `~numpy.ndarray`
+        (Logarithmic-distributed) masses points.
+        Unit: [Msun] (the little "h" is folded into the values)
+    clobber : bool, optional
+        Whether to overwrite the existing output file?
+    """
+    _create_dir(outfile)
+    _check_existence(outfile, clobber=clobber, remove=True)
+    np.savez(outfile, dndlnm=dndlnm, z=z, mass=mass)
+
+
+def read_dndlnm(infile):
+    """
+    Read the halo mass distribution data from the above saved file.
+
+    Parameters
+    ----------
+    infile : str
+        The ".npz" file from which to read the dndlnm data.
+
+    Returns
+    -------
+    (dndlnm, z, mass)
+    """
+    with np.load(infile) as npzfile:
+        dndlnm = npzfile["dndlnm"]
+        z = npzfile["z"]
+        mass = npzfile["mass"]
+    return (dndlnm, z, mass)

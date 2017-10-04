@@ -150,13 +150,16 @@ def check_galactic_snr(configs):
 def check_extragalactic_clusters(configs):
     """
     Check the "[extragalactic][clusters]" section of the configurations.
+    The related sections ("[extragalactic][psformalism]",
+    "[extragalactic][halos]") are also checked.
     """
     comp = "extragalactic/clusters"
     comp_enabled = configs.foregrounds[0]
     results = {}
     if comp in comp_enabled:
-        # Only validate the configs if this component is enabled
-        results.update(_check_existence(configs, comp+"/ps_data"))
+        # output dndlnm data file required
+        key = "extragalactic/psformalism/dndlnm_outfile"
+        results.update(_check_missing(configs, key))
         # catalog required when enabled to use it
         if configs.get(comp+"/use_output_catalog"):
             results.update(_check_existence(configs, comp+"/catalog_outfile"))

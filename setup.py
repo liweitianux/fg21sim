@@ -89,6 +89,7 @@ setup(
         "requests",
         "tornado",
         "reproject",
+        "hmf",
     ],
     dependency_links=[
         "git+https://github.com/astropy/regions.git",

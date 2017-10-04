@@ -9,4 +9,5 @@ beautifulsoup4
 requests
 tornado
 reproject
+hmf
 git+https://github.com/astropy/regions.git

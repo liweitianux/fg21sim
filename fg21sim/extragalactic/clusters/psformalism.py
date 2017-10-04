@@ -6,7 +6,7 @@ Press-Schechter (PS) formalism
 
 First determine the number of clusters within a sky patch (i.e., sky
 coverage) according to the cluster distribution predicted by the PS
-formalism; then sampling from the PS mass function to derive the mass
+formalism; then sampling from the halo mass function to derive the mass
 and redshift for each cluster.
 """
 
@@ -15,10 +15,12 @@ import random
 
 import numpy as np
 import pandas as pd
+import hmf
 
 from ...share import CONFIGS, COSMO
 from ...utils.interpolate import bilinear
 from ...utils.units import UnitConversions as AUC
+from ...utils.io import write_dndlnm
 
 
 logger = logging.getLogger(__name__)
@@ -28,106 +30,171 @@ class PSFormalism:
     """
     Press-Schechter (PS) formalism
 
-    Simulate the clusters number and their distribution (mass and z)
-    within a sky patch of certain coverage.
+    Calculate the halo mass distribution with respect to mass and redshift,
+    determine the clusters number counts and generate their distribution
+    (mass and z) within a sky patch of certain coverage.
     """
     def __init__(self, configs=CONFIGS):
         self.configs = configs
         self._set_configs()
-        self._load_data()
 
     def _set_configs(self):
         """
         Load the required configurations and set them.
         """
+        comp = "extragalactic/psformalism"
+        self.model = self.configs.getn(comp+"/model")
+        self.M_min = self.configs.getn(comp+"/M_min")
+        self.M_max = self.configs.getn(comp+"/M_max")
+        self.M_step = self.configs.getn(comp+"/M_step")
+        self.z_min = self.configs.getn(comp+"/z_min")
+        self.z_max = self.configs.getn(comp+"/z_max")
+        self.z_step = self.configs.getn(comp+"/z_step")
+        self.dndlnm_outfile = self.configs.get_path(comp+"/dndlnm_outfile")
+
         comp = "extragalactic/clusters"
-        self.datafile = self.configs.get_path(comp+"/ps_data")
         self.Mmin_cluster = self.configs.getn(comp+"/mass_min")  # [Msun]
         self.boost = self.configs.getn(comp+"/boost")
+
+        self.clobber = self.configs.getn("output/clobber")
+
+    @property
+    def hmf_model(self):
+        return {"PS": "PS",
+                "SMT": "SMT",
+                "JENKINS": "Jenkins"}[self.model.upper()]
+
+    def hmf_massfunc(self, z=0.0):
+        """
+        Halo mass function as a `~hmf.MassFunction` instance.
+        """
+        if not hasattr(self, "_hmf_massfunc"):
+            h = COSMO.h
+            cosmo = COSMO._cosmo
+            self._hmf_massfunc = hmf.MassFunction(
+                Mmin=np.log10(self.M_min*h),
+                Mmax=np.log10(self.M_max*h),
+                dlog10m=self.M_step,
+                hmf_model=self.hmf_model,
+                cosmo_model=cosmo,
+                n=COSMO.ns,
+                sigma_8=COSMO.sigma8)
+            logger.info("Initialized '%s' halo mass function." %
+                        self.hmf_model)
+
+        massfunc = self._hmf_massfunc
+        massfunc.update(z=z)
+        return massfunc
+
+    @property
+    def z(self):
+        """
+        The redshift points where to calculate the dndlnm data.
+        """
+        return np.arange(self.z_min, self.z_max+self.z_step/2, self.z_step)
+
+    @property
+    def mass(self):
+        """
+        The mass points where to calculate the dndlnm data.
+
+        NOTE:
+        The maximum mass end is exclusive, to be  consistent with hmf's
+        mass function!
+        """
+        return 10 ** np.arange(np.log10(self.M_min),
+                               np.log10(self.M_max),
+                               self.M_step)
+
+    @property
+    def dndlnm(self):
+        """
+        The calculated halo mass distributions data.
+        """
+        if not hasattr(self, "_dndlnm"):
+            self._dndlnm = self.calc_dndlnm()
+        return self._dndlnm
+
+    def calc_dndlnm(self):
+        """
+        Calculate the halo mass distributions expressed in ``dndlnm``,
+        the differential mass distribution in terms of natural log of
+        masses.
+        Unit: [Mpc^-3] (the little "h" is folded into the values)
+
+        NOTE
+        ----
+        dndlnm = d n(M,z) / d ln(M); [Mpc^-3]
+        describes the number of halos per comoving volume (Mpc^3) at
+        redshift z per unit logarithmic mass interval at mass M.
+        """
+        logger.info("Calculating dndlnm data ...")
+        dndlnm = []
+        h = COSMO.h
+        for z_ in self.z:
+            massfunc = self.hmf_massfunc(z_)
+            dndlnm.append(massfunc.dndlnm * h**3)
+        self._dndlnm = np.array(dndlnm)
+        logger.info("Calculated dndlnm within redshift: %.1f - %.1f" %
+                    (self.z_min, self.z_max))
+        return self._dndlnm
+
+    def write(self, outfile=None):
+        """
+        Write the calculate dndlnm data into file as NumPy ".npz" format.
+        """
+        if outfile is None:
+            outfile = self.dndlnm_outfile
+        write_dndlnm(outfile, dndlnm=self.dndlnm, z=self.z, mass=self.mass,
+                     clobber=self.clobber)
+        logger.info("Wrote dndlnm data into file: %s" % outfile)
 
     @property
     def Mmin_halo(self):
         return self.Mmin_cluster * COSMO.darkmatter_fraction
-
-    def _load_data(self, filepath=None):
-        """
-        Load dndM data and reformat into a 2D density grid together with
-        redshifts and masses vectors.
-
-        Data File Description
-        ---------------------
-        z1  mass1  density1
-        z1  mass2  density2
-        z1  ..     density3
-        z2  mass1  density4
-        z2  mass2  density5
-        z2  ..     density6
-        ...
-
-        where,
-        * Redshifts: 0.0 -> 3.02, even-spacing, step 0.02
-        * Mass: unit 1e12 -> 9.12e15 [Msun], log-even (dark matter)
-        * Density: [number]/dVc/dM
-          with,
-          - dVc: differential comvoing volume, [Mpc^3]/[sr]/[unit redshift]
-        """
-        if filepath is None:
-            filepath = self.datafile
-        data = np.loadtxt(filepath)
-        redshifts = data[:, 0]
-        masses = data[:, 1]
-        densities = data[:, 2]
-
-        redshifts = np.array(list(set(redshifts)))
-        redshifts.sort()
-        masses = np.array(list(set(masses)))
-        masses.sort()
-        densities = densities.reshape((len(redshifts), len(masses)))
-
-        logger.info("Loaded PS data from file: %s" % filepath)
-        logger.info("Number of redshift bins: %d" % len(redshifts))
-        logger.info("Number of mass bins: %d" % len(masses))
-        self.redshifts = redshifts
-        self.masses = masses
-        self.densities = densities
 
     @staticmethod
     def delta(x, logeven=False):
         """
         Calculate the delta values for each element of a vector,
         assuming they are evenly or log-evenly distributed,
-        with extrapolating.
+        by extrapolating.
         """
         x = np.asarray(x)
         if logeven:
-            x = np.log(x)
-        step = x[1] - x[0]
-        x1 = np.concatenate([[x[0]-step], x[:-1]])
-        x2 = np.concatenate([x[1:], [x[-1]+step]])
-        dx = (x2 - x1) * 0.5
-        if logeven:
-            dx = np.exp(dx)
+            ratio = x[1] / x[0]
+            x_left = x[0] / ratio
+            x_right = x[-1] * ratio
+        else:
+            step = x[1] - x[0]
+            x_left = x[0] - step
+            x_right = x[-1] + step
+        x2 = np.concatenate([[x_left], x, [x_right]])
+        dx = (x2[2:] - x2[:-2]) / 2
         return dx
 
     @property
     def number_grid(self):
         """
-        Calculate the number distribution w.r.t. redshift, mass, and
-        unit coverage [sr] from the density distribution.
+        The halo number per unit solid angle [sr] distribution w.r.t.
+        mass and redshift.
+        Unit: [/sr]
         """
-        dz = self.delta(self.redshifts)
-        dM = self.delta(self.masses)
-        dMgrip, dzgrip = np.meshgrid(dM, dz)
-        Mgrip, zgrip = np.meshgrid(self.masses, self.redshifts)
-        dVcgrip = COSMO.dVc(zgrip)  # [Mpc^3/sr]
-        numgrid = self.densities * dVcgrip * dzgrip * dMgrip
-        return numgrid
+        if not hasattr(self, "_number_grid"):
+            dz = self.delta(self.z)
+            dM = self.delta(self.mass, logeven=True)
+            dlnM = dM / self.mass
+            dlnMgrid, dzgrid = np.meshgrid(dlnM, dz)
+            __, zgrid = np.meshgrid(self.mass, self.z)
+            dVcgrid = COSMO.dVc(zgrid)  # [Mpc^3/sr]
+            self._number_grid = self.dndlnm * dlnMgrid * (dVcgrid*dzgrid)
+
+        return self._number_grid
 
     def calc_cluster_counts(self, coverage):
         """
         Calculate the total number of clusters (>= minimum mass) within
-        the FoV coverage according to the number density distribution
-        (e.g., predicted by the Press-Schechter mass function)
+        the FoV coverage according to the halo number density distribution.
 
         Parameters
         ----------
@@ -145,10 +212,10 @@ class PSFormalism:
         ----------
         counts
         """
-        logger.info("Determine the total number of clusters within "
+        logger.info("Calculating the total number of clusters within "
                     "sky patch of coverage %.1f [deg^2]" % coverage)
         coverage *= AUC.deg2rad**2  # [deg^2] -> [rad^2] = [sr]
-        midx = (self.masses >= self.Mmin_halo)
+        midx = (self.mass >= self.Mmin_halo)
         numgrid = self.number_grid
         counts = np.sum(numgrid[:, midx]) * coverage
         counts *= self.boost  # number boost factor
@@ -159,7 +226,7 @@ class PSFormalism:
     def sample_z_m(self, counts=None):
         """
         Randomly generate the requested number of pairs of (z, M) following
-        the specified number distribution.
+        the halo number distribution.
 
         Parameters
         ----------

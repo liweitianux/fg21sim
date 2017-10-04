@@ -11,21 +11,51 @@
 
 [extragalactic]
 
+  # Press-Schechter formalism to determine the dark matter halos
+  # distribution with respect to masses and redshifts, from which
+  # to further determine the total number of halos within a sky
+  # patch and to sample the masses and redshifts for each halo.
+  # NOTE: only consider the *dark matter* mass within the halo!
+  [[psformalism]]
+  # The model of the fitting function for halo mass distribution
+  # For all models and more details:
+  # https://hmf.readthedocs.io/en/latest/_autosummary/hmf.fitting_functions.html
+  model = option("jenkins", "ps", "smt", default="smt")
+
+  # The minimum (inclusive) and maximum (exclusive) halo mass (dark
+  # matter only) within which to calculate the halo mass distribution.
+  # Unit: [Msun]
+  M_min = float(default=1e13, min=1e10, max=1e14)
+  M_max = float(default=1e16, min=1e14, max=1e18)
+  # The logarithmic (base 10) step size for the halo masses; therefore
+  # the number of intervals is: (log10(M_max) - log10(M_min)) / M_step
+  M_step = float(default=0.01, min=0.001, max=0.1)
+
+  # The minimum and maximum redshift within which to calculate the
+  # halo mass distribution; as well as the step size.
+  z_min = float(default=0.01, min=0.001, max=1.0)
+  z_max = float(default=4.0, min=1.0, max=100)
+  z_step = float(default=0.01, min=0.001, max=1.0)
+
+  # Output file (NumPy ".npz" format) to save the calculated halo mass
+  # distributions at every redshift.
+  #
+  # This file packs the following 3 NumPy arrays:
+  # * ``dndlnm``:
+  #   Shape: (len(z), len(mass))
+  #   Differential mass function in terms of natural log of M.
+  #   Unit: [Mpc^-3] (the little "h" is folded into the values)
+  # * ``z``:
+  #   Redshifts where the halo mass distribution is calculated.
+  # * ``mass``:
+  #   (Logarithmic-distributed) masses points.
+  #   Unit: [Msun] (the little "h" is folded into the values)
+  dndlnm_outfile = string(default=None)
+
   # Extended emissions from the clusters of galaxies
   # The configurations in this ``[[clusters]]`` section may also be
   # used by the following ``[[halos]]`` section.
   [[clusters]]
-  # The Press-Schechter formalism predicted halo distribution densities.
-  # This data file is in plain text with 3 columns organized like:
-  # ---------------------
-  # z1  mass1  density1
-  # z1  mass2  density2
-  # z1  ..     density3
-  # z2  mass1  density4
-  # z2  mass2  density5
-  # z2  ..     density6
-  ps_data = string(default=None)
-
   # Output CSV file of the clusters catalog containing the simulated
   # mass, redshift, position, shape, and the recent major merger info.
   catalog_outfile = string(default=None)
