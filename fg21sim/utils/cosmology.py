@@ -62,6 +62,9 @@ class Cosmology:
         Density parameter of baryon at present day
     Ode0 : float
         Density parameter of dark energy at present day
+    Tcmb0 : float
+        Present-day CMB temperature
+        Unit: [K]
     sigma8 : float
         Present-day rms density fluctuation on a scale of 8 h^-1 [Mpc]
     ns : float
@@ -77,21 +80,23 @@ class Cosmology:
     # Present day (z=0) growth factor
     _growth_factor0 = None
 
-    def __init__(self, H0=71.0, Om0=0.27, Ob0=0.046, sigma8=0.81, ns=0.96):
-        self.setup(H0=H0, Om0=Om0, Ob0=Ob0, sigma8=sigma8, ns=ns)
+    def __init__(self, H0=71.0, Om0=0.27, Ob0=0.046,
+                 Tcmb0=2.725, sigma8=0.81, ns=0.96):
+        self.setup(H0=H0, Om0=Om0, Ob0=Ob0, Tcmb0=Tcmb0, sigma8=sigma8, ns=ns)
 
     def setup(self, **kwargs):
         """
         Setup/update the parameters of the cosmology model.
         """
         for key, value in kwargs.items():
-            if key in ["H0", "Om0", "Ob0", "sigma8", "ns"]:
+            if key in ["H0", "Om0", "Ob0", "Tcmb0", "sigma8", "ns"]:
                 setattr(self, key, value)
             else:
                 raise ValueError("unknown parameter: %s" % key)
 
         self.Ode0 = 1.0 - self.Om0
-        self._cosmo = FlatLambdaCDM(H0=self.H0, Om0=self.Om0, Ob0=self.Ob0)
+        self._cosmo = FlatLambdaCDM(H0=self.H0, Om0=self.Om0, Ob0=self.Ob0,
+                                    Tcmb0=self.Tcmb0)
         self._growth_factor0 = None
         logger.info("Setup cosmology with: {0}".format(kwargs))
 

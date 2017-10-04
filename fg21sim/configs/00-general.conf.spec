@@ -108,13 +108,15 @@ manifest = string(default=None)
 # Cosmological parameters
 # References: Komatsu et al. 2011, ApJS, 192, 18; Tab.(1)
 [cosmology]
-# Hubble constant at z=0 [ km/s/Mpc ]
+# Hubble constant at z=0; [km/s/Mpc]
 H0 = float(default=71.0, min=0.0)
 # Density of non-relativistic matter in units of the critical density at z=0
 OmegaM0 = float(default=0.27, min=0.0, max=1.0)
 # Density of the baryon at present day
 Omegab0 = float(default=0.046, min=0.0, max=1.0)
-# Present-day rms density fluctuations on a scale of 8 h^-1 Mpc
+# Present-day CMB temperature; [K]
+Tcmb0 = float(default=2.725)
+# Present-day rms density fluctuations on a scale of 8 h^-1 [Mpc]
 sigma8 = float(default=0.81, min=0.0)
 # Scalar spectral index
 ns = float(default=0.96, min=0.0)
