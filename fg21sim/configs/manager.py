@@ -519,15 +519,9 @@ class ConfigManager:
         """
         Get and prepare the logging configurations for
         ``logging.basicConfig()`` to initialize the logging module.
-
-        NOTE
-        ----
-        ``basicConfig()`` will automatically create a ``Formatter`` with the
-        giving ``format`` and ``datefmt`` for each handlers if necessary,
-        and then adding the handlers to the "root" logger.
         """
         conf = self.get("logging")
-        level = conf["level"]
+        level = conf["level"].upper()
         if os.environ.get("DEBUG_FG21SIM"):
             print("DEBUG: Force 'DEBUG' logging level", file=sys.stderr)
             level = "DEBUG"
@@ -542,7 +536,7 @@ class ConfigManager:
         if logfile:
             handlers.append(FileHandler(logfile, mode=filemode))
 
-        # Explicitly add formatter to each handler
+        # Explicitly add the formatter to each handler
         formatter = logging.Formatter(fmt=conf["format"],
                                       datefmt=conf["datefmt"])
         for handler in handlers:

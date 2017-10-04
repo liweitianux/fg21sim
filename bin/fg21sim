@@ -24,8 +24,8 @@ def main():
         epilog="Set environment variable 'DEBUG_FG21SIM=1' to force debug!")
     parser.add_argument("config", help="user configuration file")
     parser.add_argument("-l", "--log", dest="loglevel", default=None,
-                        choices=["DEBUG", "INFO", "WARNING",
-                                 "ERROR", "CRITICAL"],
+                        choices=["debug", "info", "warning",
+                                 "error", "critical"],
                         help="set the log level")
     parser.add_argument("-L", "--logfile", default=None,
                         help="filename where to save the log messages")

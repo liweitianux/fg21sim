@@ -42,8 +42,8 @@ def main():
     parser.add_argument("-C", "--clobber", action="store_true",
                         help="overwrite the existing output file")
     parser.add_argument("-l", "--log", dest="loglevel", default=None,
-                        choices=["DEBUG", "INFO", "WARNING",
-                                 "ERROR", "CRITICAL"],
+                        choices=["debug", "info", "warning",
+                                 "error", "critical"],
                         help="set the log level")
     parser.add_argument("-L", "--logfile", default=None,
                         help="filename where to save the log messages")
