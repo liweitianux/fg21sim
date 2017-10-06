@@ -271,7 +271,7 @@ class FokkerPlanckSolver:
         Wminus = W * np.exp(-ww/2)
         return Wminus
 
-    def tridiagonal_coefs(self, tc, uc):
+    def tridiagonal_coefs(self, tc, uc, tstep=None):
         """
         Calculate the coefficients for the tridiagonal system of linear
         equations corresponding to the original Fokker-Planck equation.
@@ -287,11 +287,14 @@ class FokkerPlanckSolver:
 
         References: Ref.[park1996],Eqs.(16,18,34)
         """
+        if tstep is None:
+            dt = self.tstep
+        else:
+            dt = tstep
         x = self.x
         dx = self.dx
         dx_phalf = self.dx_phalf
         dx_mhalf = self.dx_mhalf
-        dt = self.tstep
         B = self.f_advection(x, tc)
         C = self.f_diffusion(x, tc)
         Q = self.f_injection(x, tc)
@@ -364,20 +367,20 @@ class FokkerPlanckSolver:
         """
         pass
 
-    def solve_step(self, tc, uc):
+    def solve_step(self, tc, uc, tstep=None):
         """
         Solve the Fokker-Planck equation by a single step.
         """
-        a, b, c, r = self.tridiagonal_coefs(tc=tc, uc=uc)
+        if tstep is None:
+            tstep = self.tstep
+        a, b, c, r = self.tridiagonal_coefs(tc=tc, uc=uc, tstep=tstep)
         TDM_a = -a[1:]  # Also drop the first element
         TDM_b = b
         TDM_c = -c[:-1]  # Also drop the last element
         TDM_rhs = r
-        t2 = tc + self.tstep
+        t2 = tc + tstep
         u2 = TDMAsolver(TDM_a, TDM_b, TDM_c, TDM_rhs)
         u2 = self.fix_boundary(u2)
-        # Clear negative number densities
-        # u2[u2 < 0] = 0
         return (t2, u2)
 
     def solve(self, u0, tstart, tstop):
@@ -387,14 +390,18 @@ class FokkerPlanckSolver:
         """
         uc = u0
         tc = tstart
+        tstep = self.tstep
         logger.debug("Solving Fokker-Planck equation: " +
                      "time: %.3f - %.3f" % (tstart, tstop))
-        nstep = int((tstop - tc) / self.tstep)
-        logger.debug("Constant time step: %.3f (#%d steps)" %
-                     (self.tstep, nstep))
+        nstep = int((tstop - tc) / tstep)
+        logger.debug("Constant time step: %.3f (#%d steps)" % (tstep, nstep))
         i = 0
-        while tc < tstop:
+        while tc+tstep < tstop:
             i += 1
             logger.debug("[%d/%d] t=%.3f ..." % (i, nstep, tc))
-            tc, uc = self.solve_step(tc, uc)
+            tc, uc = self.solve_step(tc, uc, tstep=tstep)
+        # Last step
+        tstep = tstop - tc
+        logger.debug("Last step: t=%.3f (tstep=%.3f) ..." % (tc, tstep))
+        tc, uc = self.solve_step(tc, uc, tstep=tstep)
         return uc
