@@ -78,7 +78,10 @@ class FokkerPlanckSolver:
     Q(x,t) : injection coefficient (>=0)
     T(x,t) : escape coefficient
 
-    NOTE: The no-flux boundary condition is used.
+    NOTE
+    ----
+    The no-flux boundary condition is used, and optional boundary fix
+    may be applied.
 
     Parameters
     ----------
@@ -94,7 +97,7 @@ class FokkerPlanckSolver:
         Function f(x,t) to calculate the diffusion coefficient C(x,t)
     f_injection : function
         Function f(x,t) to calculate the injection coefficient Q(x,t)
-    f_escape : optional
+    f_escape : function, optional
         Function f(x,t) to calculate the escape coefficient T(x,t)
     buffer_np : int, optional
         Number of grid points taking as the buffer region near the lower
@@ -118,10 +121,12 @@ class FokkerPlanckSolver:
 
     References
     ----------
-    [1] Park & Petrosian 1996, ApJS, 103, 255
-        http://adsabs.harvard.edu/abs/1996ApJS..103..255P
-    [2] Donnert & Brunetti 2014, MNRAS, 443, 3564
-        http://adsabs.harvard.edu/abs/2014MNRAS.443.3564D
+    .. [park1996]
+       Park & Petrosian 1996, ApJS, 103, 255
+       http://adsabs.harvard.edu/abs/1996ApJS..103..255P
+    .. [donnert2014]
+       Donnert & Brunetti 2014, MNRAS, 443, 3564
+       http://adsabs.harvard.edu/abs/2014MNRAS.443.3564D
     """
 
     def __init__(self, xmin, xmax, x_np, tstep,
@@ -153,15 +158,16 @@ class FokkerPlanckSolver:
 
         dx[i] = (x[i+1] - x[i-1]) / 2
 
-        NOTE:
-        Extrapolate the x grid by 1 point beyond each side, therefore
+        NOTE
+        ----
+        Extrapolate the X grid by 1 point beyond each side, therefore
         avoid NaN for the first and last element of dx[i].
-        Otherwise, the following calculation of tridiagonal coefficients
-        may be invalid on the boundary elements.
+        Otherwise, the subsequent calculation of tridiagonal coefficients
+        may be invalid for the boundary elements.
 
-        References: Ref.[1],Eq.(8)
+        References: Ref.[park1996],Eq.(8)
         """
-        x = self.x
+        x = self.x  # log scale
         # Extrapolate the x grid by 1 point beyond each side
         x2 = np.concatenate([
             [x[0]**2/x[1]],
@@ -179,7 +185,7 @@ class FokkerPlanckSolver:
         dx[i+1/2] = x[i+1] - x[i]
         Thus the last element is NaN.
 
-        References: Ref.[1],Eq.(8)
+        References: Ref.[park1996],Eq.(8)
         """
         x = self.x
         dx_ = x[1:] - x[:-1]
@@ -207,7 +213,7 @@ class FokkerPlanckSolver:
         X[i+1/2] = (X[i] + X[i+1]) / 2
         Thus the last element is NaN.
 
-        References: Ref.[1],Eq.(10)
+        References: Ref.[park1996],Eq.(10)
         """
         Xmid = (X[1:] + X[:-1]) / 2
         return np.concatenate([Xmid, [np.nan]])
@@ -225,7 +231,7 @@ class FokkerPlanckSolver:
 
     @staticmethod
     def W(w):
-        # References: Ref.[1],Eqs.(27,35)
+        # References: Ref.[park1996],Eqs.(27,35)
         with np.errstate(invalid="ignore"):
             # Ignore NaN's
             w = np.abs(w)
@@ -239,10 +245,8 @@ class FokkerPlanckSolver:
     @staticmethod
     def bound_w(w, wmin=1e-8, wmax=1e3):
         """
-        Bound the absolute values of w within [wmin, wmax].
-
-        To avoid the underflow/overflow during later W/Wplus/Wminus
-        calculations.
+        Bound the absolute values of ``w`` within [wmin, wmax], to avoid
+        the underflow/overflow during later W/Wplus/Wminus calculations.
         """
         with np.errstate(invalid="ignore"):
             # Ignore NaN's
@@ -254,14 +258,14 @@ class FokkerPlanckSolver:
         return ww
 
     def Wplus(self, w):
-        # References: Ref.[1],Eq.(32)
+        # References: Ref.[park1996],Eq.(32)
         ww = self.bound_w(w)
         W = self.W(ww)
         Wplus = W * np.exp(ww/2)
         return Wplus
 
     def Wminus(self, w):
-        # References: Ref.[1],Eq.(32)
+        # References: Ref.[park1996],Eq.(32)
         ww = self.bound_w(w)
         W = self.W(ww)
         Wminus = W * np.exp(-ww/2)
@@ -281,7 +285,7 @@ class FokkerPlanckSolver:
         invalid. Therefore, b[0] and b[N-1] should be alternatively
         calculated with (e.g., no-flux) boundary condition considered.
 
-        References: Ref.[1],Eqs.(16,18,34)
+        References: Ref.[park1996],Eqs.(16,18,34)
         """
         x = self.x
         dx = self.dx
@@ -330,16 +334,18 @@ class FokkerPlanckSolver:
         is determined by fitting to the data points of ``self.buffer_np``
         cells on the upper side of the buffer region.
 
-        References: Ref.[2],Sec.(3.3)
+        TODO: also fix the upper boundary in the same way?
+
+        References: Ref.[donnert2014],Sec.(3.3)
         """
         if self.buffer_np is None:
             return uc
         if (uc <= 0.0).sum() > 0:
-            logger.warning("solved density has negative values!")
+            logger.warning("solved density has zero/negative values!")
             return uc
 
         x = self.x
-        # Calculate the power-law index from ``self.buffer_np`` data
+        # Calculate the power-law index for ``self.buffer_np`` from data
         # points just right of the buffer region.
         xp = x[self.buffer_np:(self.buffer_np*2)]
         yp = uc[self.buffer_np:(self.buffer_np*2)]
