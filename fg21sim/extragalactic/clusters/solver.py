@@ -169,11 +169,8 @@ class FokkerPlanckSolver:
         """
         x = self.x  # log scale
         # Extrapolate the x grid by 1 point beyond each side
-        x2 = np.concatenate([
-            [x[0]**2/x[1]],
-            x,
-            [x[-1]**2/x[-2]],
-        ])
+        ratio = x[1] / x[0]
+        x2 = np.concatenate([[x[0]/ratio], x, [x[-1]*ratio]])
         dx_ = (x2[2:] - x2[:-2]) / 2
         return dx_
 
@@ -232,6 +229,7 @@ class FokkerPlanckSolver:
     @staticmethod
     def W(w):
         # References: Ref.[park1996],Eqs.(27,35)
+        w = np.asarray(w)
         with np.errstate(invalid="ignore"):
             # Ignore NaN's
             w = np.abs(w)
@@ -248,11 +246,11 @@ class FokkerPlanckSolver:
         Bound the absolute values of ``w`` within [wmin, wmax], to avoid
         the underflow/overflow during later W/Wplus/Wminus calculations.
         """
+        ww = np.array(w)
         with np.errstate(invalid="ignore"):
             # Ignore NaN's
-            m1 = (np.abs(w) < wmin)
-            m2 = (np.abs(w) > wmax)
-        ww = np.array(w)
+            m1 = (np.abs(ww) < wmin)
+            m2 = (np.abs(ww) > wmax)
         ww[m1] = wmin * np.sign(ww[m1])
         ww[m2] = wmax * np.sign(ww[m2])
         return ww
