@@ -104,6 +104,7 @@ class FokkerPlanckSolver:
         boundary.  The densities within this buffer region will be replaced
         by extrapolating an power law to avoid unphysical accumulations.
         This fix is ignored if this parameter is not specified.
+        (This parameter is suggested to be about 5%-10% of ``x_np``.)
 
     NOTE
     ----
@@ -332,7 +333,11 @@ class FokkerPlanckSolver:
         is determined by fitting to the data points of ``self.buffer_np``
         cells on the upper side of the buffer region.
 
-        TODO: also fix the upper boundary in the same way?
+        NOTE
+        ----
+        * Also fix the upper boundary in the same way.
+        * Fix the boundaries only when the particles are piling up at the
+          boundaries.
 
         References: Ref.[donnert2014],Sec.(3.3)
         """
@@ -343,15 +348,30 @@ class FokkerPlanckSolver:
             return uc
 
         x = self.x
-        # Calculate the power-law index for ``self.buffer_np`` from data
-        # points just right of the buffer region.
-        xp = x[self.buffer_np:(self.buffer_np*2)]
-        yp = uc[self.buffer_np:(self.buffer_np*2)]
-        # Power-law fit
-        pfit = np.polyfit(np.log10(xp), np.log10(yp), deg=1)
-        xbuf = x[:self.buffer_np]
-        ybuf = 10 ** np.polyval(pfit, np.log10(xbuf))
-        uc[:self.buffer_np] = ybuf
+        # Lower boundary
+        ybuf = uc[:self.buffer_np]
+        if ybuf[0] > ybuf[1]:
+            # Particles are piling up at the lower boundary, to fix it...
+            #
+            # Power-law fit
+            xp = x[self.buffer_np:(self.buffer_np*2)]
+            yp = uc[self.buffer_np:(self.buffer_np*2)]
+            pfit = np.polyfit(np.log(xp), np.log(yp), deg=1)
+            xbuf = x[:self.buffer_np]
+            ybuf = np.exp(np.polyval(pfit, np.log(xbuf)))
+            uc[:self.buffer_np] = ybuf
+
+        # Upper boundary
+        ybuf = uc[(-self.buffer_np):]
+        if ybuf[-1] > ybuf[-2]:
+            # Particles are piling up at the upper boundary, to fix it...
+            xp = x[(-self.buffer_np*2):(-self.buffer_np)]
+            yp = uc[(-self.buffer_np*2):(-self.buffer_np)]
+            pfit = np.polyfit(np.log(xp), np.log(yp), deg=1)
+            xbuf = x[(-self.buffer_np):]
+            ybuf = np.exp(np.polyval(pfit, np.log(xbuf)))
+            uc[(-self.buffer_np):] = ybuf
+
         return uc
 
     def time_step(self):
