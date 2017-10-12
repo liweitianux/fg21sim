@@ -4,6 +4,15 @@
 """
 Solve the Fokker-Planck equation to derive the time evolution
 of the electron spectrum (or number density distribution).
+
+References
+----------
+.. [park1996]
+   Park & Petrosian 1996, ApJS, 103, 255
+   http://adsabs.harvard.edu/abs/1996ApJS..103..255P
+.. [donnert2014]
+   Donnert & Brunetti 2014, MNRAS, 443, 3564
+   http://adsabs.harvard.edu/abs/2014MNRAS.443.3564D
 """
 
 import logging
@@ -119,15 +128,6 @@ class FokkerPlanckSolver:
     should be *positive* (i.e., C(x) > 0), otherwise unstable or wrong
     results may occur, due to the current numerical scheme/algorithm
     adopted.
-
-    References
-    ----------
-    .. [park1996]
-       Park & Petrosian 1996, ApJS, 103, 255
-       http://adsabs.harvard.edu/abs/1996ApJS..103..255P
-    .. [donnert2014]
-       Donnert & Brunetti 2014, MNRAS, 443, 3564
-       http://adsabs.harvard.edu/abs/2014MNRAS.443.3564D
     """
 
     def __init__(self, xmin, xmax, x_np, tstep,
@@ -420,3 +420,152 @@ class FokkerPlanckSolver:
         logger.debug("Last step: t=%.3f (tstep=%.3f) ..." % (tc, tstep))
         uc, __ = self.solve_step(uc=uc, tc=tc, tstep=tstep)
         return uc
+
+
+class FokkerPlanckTests:
+    """
+    Several Fokker-Planck equation test cases that have analytical solutions
+    (hard-sphere approximation) to validate the above solver implementation.
+    """
+    xmin, xmax = 1e-4, 1e4
+    x_np = 200
+    x = np.logspace(np.log10(xmin), np.log10(xmax), x_np)
+    tstep = 1e-3
+    buffer_np = 20
+    # Particle injection position/energy
+    x_inj = 0.1
+
+    def _f_injection(self, x, t):
+        """
+        Q(x,t) injection coefficient
+        """
+        idx = (self.x < self.x_inj).sum()
+        dx = self.x[idx] - self.x[idx-1]
+        sigma = dx / 2
+
+        x = np.asarray(x)
+        mu = (x - self.x_inj) / sigma
+        coef = 1 / np.sqrt(2*np.pi * sigma**2)
+        y = coef * np.exp(-0.5 * mu**2)
+        return y
+
+    def test1(self):
+        """
+        Fokker-Planck equation test case 1.
+
+        WARNING
+        -------
+        The equations given by [park1996] and [donnert2014] both have a
+        sign error about the advection term B(x).
+
+        Usage
+        -----
+        >>> fpsolver = test1()
+        >>> x = fpsolver.x
+        >>> ts = [0, 0.2, 0.4, 0.7, 1.4, 2.7, 5.2, 10.0]
+        >>> us = [None]*len(ts)
+        >>> us[0] = np.zeros(x.shape)
+        >>> for i, t in enumerate(ts[1:]):
+        ...     tstart = ts[i]
+        ...     tstop = ts[i+1]
+        ...     print("* time: %.1f -> %.1f @ step: %.1e" %
+        ...           (tstart, tstop, fpsolver.tstep))
+        ...     us[i+1] = fpsolver.solve(u0=us[i], tstart=tstart, tstop=tstop)
+
+        References
+        ----------
+        * [park1996], Eq.(22), Fig.(4)
+        * [donnert2014], Eq.(34), Fig.(1:top-left)
+        """
+        def f_advection(x, t):
+            # WARNING:
+            # Both [park1996] and [donnert2014] got a "-1" for this term,
+            # which should be "+1".
+            return -x+1
+
+        def f_diffusion(x, t):
+            return x*x
+
+        def f_injection(x, t):
+            if t >= 0:
+                return self._f_injection(x, t)
+            else:
+                return 0
+
+        def f_escape(x, t):
+            return 1
+
+        fpsolver = FokkerPlanckSolver(xmin=self.xmin, xmax=self.xmax,
+                                      x_np=self.x_np, tstep=self.tstep,
+                                      f_advection=f_advection,
+                                      f_diffusion=f_diffusion,
+                                      f_injection=f_injection,
+                                      f_escape=f_escape,
+                                      buffer_np=self.buffer_np)
+        return fpsolver
+
+    def test2(self):
+        """
+        Fokker-Planck equation test case 2.
+
+        References
+        ----------
+        * [park1996], Eq.(23), Fig.(2)
+        * [donnert2014], Eq.(39), Fig.(1:bottom-left)
+        """
+        def f_advection(x, t):
+            return -x
+
+        def f_diffusion(x, t):
+            return x*x
+
+        def f_injection(x, t):
+            if t >= 0:
+                return self._f_injection(x, t)
+            else:
+                return 0
+
+        def f_escape(x, t):
+            return x
+
+        fpsolver = FokkerPlanckSolver(xmin=self.xmin, xmax=self.xmax,
+                                      x_np=self.x_np, tstep=self.tstep,
+                                      f_advection=f_advection,
+                                      f_diffusion=f_diffusion,
+                                      f_injection=f_injection,
+                                      f_escape=f_escape,
+                                      buffer_np=self.buffer_np)
+        return fpsolver
+
+    def test3(self):
+        """
+        Fokker-Planck equation test case 3.
+
+        References
+        ----------
+        * [park1996], Eq.(24), Fig.(3)
+        * [donnert2014], Eq.(43), Fig.(1:bottom-right)
+        """
+        def f_advection(x, t):
+            return -x**2
+
+        def f_diffusion(x, t):
+            return x**3
+
+        def f_injection(x, t):
+            if t == 0:
+                return self._f_injection(x, 0) / self.tstep
+            else:
+                return 0
+
+        def f_escape(x, t):
+            return 1
+
+        fpsolver = FokkerPlanckSolver(xmin=self.xmin, xmax=self.xmax,
+                                      x_np=self.x_np, tstep=self.tstep,
+                                      f_advection=f_advection,
+                                      f_diffusion=f_diffusion,
+                                      f_injection=f_injection,
+                                      f_escape=f_escape,
+                                      buffer_np=self.buffer_np)
+        return fpsolver
