@@ -2,19 +2,14 @@
 # MIT license
 
 """
-Simulate the extended radio emissions from the galaxy cluster,
-e.g., giant radio halos, radio relics.
+Simulate the extended radio emissions from galaxy clusters due to
+merger-induced turbulence and/or shock accelerations,
+e.g., (giant) radio halos, (elongated double) radio relics.
 
 NOTE
 ----
 There are other types of extended radio emissions not considered
 yet, e.g., mini-halos, roundish radio relics, etc.
-
-References
-----------
-.. [cassano2012]
-   Cassano et al. 2012, A&A, 548, A100
-   http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
 """
 
 import os
@@ -175,7 +170,7 @@ class GalaxyClusters:
         NOTE
         ----
         There may be no such recent major merger event satisfying the
-        criteria, since we only tracing ``tau_merger`` (~3 Gyr) back.
+        criteria, since we only tracing ``tau_merger`` (~2-3 Gyr) back.
         On the other hand, the cluster may only experience minor merger
         or accretion events.
 

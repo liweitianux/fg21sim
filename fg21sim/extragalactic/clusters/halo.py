@@ -2,7 +2,7 @@
 # MIT license
 
 """
-Simulate (giant) radio halo originating from the last/ most recent
+Simulate (giant) radio halo originating from the last/recent
 cluster-cluster major merger event, following the "statistical
 magneto-turbulent model" proposed by [cassano2005]_, but with many
 modifications and simplifications.
@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 
 class RadioHalo:
     """
-    Simulate the extended radio halo emission from galaxy cluster
+    Simulate the extended radio halo emission from the galaxy cluster
     experiencing on-going/recent merger.
 
     Description
