@@ -127,7 +127,7 @@ ns = float(default=0.96, min=0.0)
 # debug:    Detailed information, typically of interest only when diagnosing
 #           problems.
 # info:     Confirmation that things are working as expected.
-# warning:  An dinciation that something unexpected happended, or indicative
+# warning:  An indication that something unexpected happended, or indicative
 #           of some problem in the near future (e.g., "disk space low").
 #           The software is still working as expected.
 # error:    Due to a more serious problem, the software has not been able to
@@ -145,8 +145,6 @@ datefmt = string(default="%H:%M:%S")
 # Set the logging filename (will create a `FileHandler`)
 # If set to "" (empty string), then the `FileHandler` will be disabled.
 filename = string(default="")
-# Whether append messages to the above logging file instead of overwrite
-appendmode = boolean(default=True)
 
 # Set the stream used to initialize the `StreamHandler`
 # If set to "" (empty string), then the `StreamHandler` will be disabled.

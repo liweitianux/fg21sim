@@ -532,9 +532,8 @@ class ConfigManager:
         if stream:
             handlers.append(StreamHandler(getattr(sys, stream)))
         logfile = conf["filename"]
-        filemode = "a" if conf["appendmode"] else "w"
         if logfile:
-            handlers.append(FileHandler(logfile, mode=filemode))
+            handlers.append(FileHandler(logfile))
 
         # Explicitly add the formatter to each handler
         formatter = logging.Formatter(fmt=conf["format"],
@@ -546,7 +545,6 @@ class ConfigManager:
             "level": getattr(logging, level),
             "format": conf["format"],
             "datefmt": conf["datefmt"],
-            "filemode": filemode,
             "handlers": handlers,
         }
         return logconf
