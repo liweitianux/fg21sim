@@ -127,11 +127,10 @@ class GalaxyClusters:
         ----
         felong (elongated fraction) ::
             Adopt a definition (felong = b/a) similar to the Hubble
-            classification for the elliptical galaxies.  As for the
-            elliptical galaxies classification, E7 is the limit (e.g.,
-            Wikipedia), therefore felong is also restricted within
-            [0.3, 1.0], and sampled from a cut and absolute normal
-            distribution centered at 1.0 with sigma ~0.7/3 (<= 3σ).
+            classification for the elliptical galaxies.  Considering that
+            radio halos are generally regular, ``felong`` is thus restricted
+            within [0.6, 1.0], and sampled from a cut and absolute normal
+            distribution centered at 1.0 with sigma ~0.4/3 (<= 3σ).
         """
         logger.info("Preliminary processes to the catalog ...")
         num = len(self.catalog)
@@ -142,7 +141,7 @@ class GalaxyClusters:
             "lon, lat : longitudes and latitudes [deg]")
         logger.info("Added catalog columns: lon, lat.")
 
-        felong_min = 0.3
+        felong_min = 0.6
         sigma = (1.0 - felong_min) / 3.0
         felong = 1.0 - np.abs(np.random.normal(scale=sigma, size=num))
         felong[felong < felong_min] = felong_min
