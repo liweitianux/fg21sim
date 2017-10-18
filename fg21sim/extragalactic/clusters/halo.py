@@ -290,6 +290,13 @@ class RadioHalo:
             n_inj = self.fp_injection(self.gamma)
             n0_e = n_inj * tstart
 
+        # When the evolution time is too short, decrease the time step
+        # to improve the results.
+        # XXX: is this necessary???
+        nstep_min = 20
+        if (tstop - tstart) / self.fpsolver.tstep < nstep_min:
+            self.fpsolver.tstep = (tstop - tstart) / nstep_min
+
         self.electron_spec = self.fpsolver.solve(u0=n0_e, tstart=tstart,
                                                  tstop=tstop)
         return self.electron_spec

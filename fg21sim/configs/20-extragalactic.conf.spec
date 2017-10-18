@@ -145,7 +145,7 @@
 
   # Time step for solving the Fokker-Planck equation
   # Unit: [Gyr]
-  time_step = float(default=0.01, min=1e-5, max=0.1)
+  time_step = float(default=0.02, min=1e-4, max=0.1)
 
   # Electron injection, which is assumed to have a constant injection
   # rate and a power-law spectrum.
