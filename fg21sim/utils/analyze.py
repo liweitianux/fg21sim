@@ -23,7 +23,7 @@ def inverse_cumsum(x):
     return x[::-1].cumsum()[::-1]
 
 
-def countdist_integrated(x, nbin, log=True):
+def countdist_integrated(x, nbin, log=True, xmin=None, xmax=None):
     """
     Calculate the integrated counts distribution (i.e., luminosity
     function), representing the counts (number of objects) with a
@@ -39,6 +39,10 @@ def countdist_integrated(x, nbin, log=True):
         Whether to take logarithm on the ``x`` quantities to determine
         the bin edges?
         Default: True
+    xmin, xmax : float, optional
+        The lower and upper boundaries within which to calculate the
+        counts distribution.  They are default to the minimum and
+        maximum of the given ``x``.
 
     Returns
     -------
@@ -50,10 +54,19 @@ def countdist_integrated(x, nbin, log=True):
         The edge positions of every bin, of length ``nbin+1``.
     """
     x = np.asarray(x)
-    if log is True:
-        x = np.log(x)
+    if xmin is None:
+        xmin = x.min()
+    if xmax is None:
+        xmax = x.max()
+    x = x[(x >= xmin) & (x <= xmax)]
 
-    binedges = np.linspace(x.min(), x.max(), num=nbin+1)
+    if log is True:
+        if xmin <= 0:
+            raise ValueError("log=True but x have elements <= 0")
+        x = np.log(x)
+        xmin, xmax = np.log([xmin, xmax])
+
+    binedges = np.linspace(xmin, xmax, num=nbin+1)
     bins = (binedges[1:] + binedges[:-1]) / 2
     counts, __ = np.histogram(x, bins=binedges)
     # Convert to the integrated counts distribution
