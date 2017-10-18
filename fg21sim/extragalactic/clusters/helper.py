@@ -54,16 +54,16 @@ def radius_virial(mass, z=0.0):
 
     Parameters
     ----------
-    mass : float
+    mass : float, `~numpy.ndarray`
         Total (virial) mass of the cluster
         Unit: [Msun]
-    z : float, optional
+    z : float, `~numpy.ndarray`, optional
         Redshift
         Default: 0.0 (i.e., present day)
 
     Returns
     -------
-    R_vir : float
+    R_vir : float, `~numpy.ndarray`
         Virial radius of the cluster
         Unit: [kpc]
     """
@@ -74,35 +74,33 @@ def radius_virial(mass, z=0.0):
     return R_vir
 
 
-def radius_halo(mass, z=0.0):
+def radius_halo(M_main, M_sub, z=0.0):
     """
-    Calculate the radius of (giant) radio halo for a cluster.
+    Calculate the (predicted) radius of (giant) radio halo for a cluster.
 
-    The halo radius is assumed to linearly scale with the virial radius,
-    and is estimated by:
-        R_halo = R_vir / 4
-    * halo radius is ~3-6 times smaller than the virial radius;
-      Ref.[cassano2007],Sec.(1)
-    * halo half radius is ~R500/4, therefore, R_halo ~ R_vir/4;
-      Ref.[zandanel2014],Sec.(6.2)
+    NOTE
+    ----
+    It can be intuitively assumed that a merger will generate turbulences
+    within a region of size of the falling sub-cluster.  And this
+    estimation can agree with the currently observed radio halos, which
+    generally have a angular diameter size ~2-7 [arcmin].
 
     Parameters
     ----------
-    mass : float
-        Total (virial) mass of the cluster
+    M_main, M_sub : float, `~numpy.ndarray`
+        Total (virial) masses of the main and sub clusters
         Unit: [Msun]
-    z : float, optional
+    z : float, `~numpy.ndarray`, optional
         Redshift
         Default: 0.0 (i.e., present day)
 
     Returns
     -------
-    R_halo : float
-        Radius of the (expected) giant radio halo
+    R_halo : float, `~numpy.ndarray`
+        Radius of the (simulated/predicted) giant radio halo
         Unit: [kpc]
     """
-    R_vir = radius_virial(mass=mass, z=z)  # [kpc]
-    R_halo = R_vir / 4.0  # [kpc]
+    R_halo = radius_virial(mass=M_sub, z=z)  # [kpc]
     return R_halo
 
 

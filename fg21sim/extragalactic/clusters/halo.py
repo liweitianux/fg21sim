@@ -166,13 +166,17 @@ class RadioHalo:
     @property
     def radius(self):
         """
-        The halo radius derived from the virial radius by a scaling
-        relation.
+        The estimated radius for the simulated radio halo.
+
+        NOTE
+        ----
+        The halo radius is assumed to be the virial radius of the falling
+        sub-cluster.  See ``helper.radius_halo()`` for more details.
 
         Unit: [kpc]
         """
-        mass = self.M_main + self.M_sub  # [Msun]
-        r_halo = helper.radius_halo(mass, self.z_merger)  # [kpc]
+        r_halo = helper.radius_halo(self.M_main, self.M_sub,
+                                    self.z_merger)
         return r_halo
 
     @property
