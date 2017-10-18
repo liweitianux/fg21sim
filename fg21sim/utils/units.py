@@ -21,7 +21,7 @@ class Units:
     """
     # Unit for electron momentum (p), thus its value is the Lorentz factor
     # Unit: [g cm / s]
-    mec = ac.m_e.cgs.value*ac.c.cgs.value
+    mec = ac.m_e.cgs.value * ac.c.cgs.value
     # Energy of a still electron
     # Unit: [erg]
     mec2 = (ac.m_e * ac.c**2).to(au.erg).value
@@ -36,42 +36,46 @@ class UnitConversions:
     """
     # Mass
     Msun2g = au.solMass.to(au.g)
-    g2Msun = au.g.to(au.solMass)
+    g2Msun = 1.0 / Msun2g
     # Time
     Gyr2s = au.Gyr.to(au.s)
-    s2Gyr = au.s.to(au.Gyr)
+    s2Gyr = 1.0 / Gyr2s
     # Length
     kpc2m = au.kpc.to(au.m)
-    m2kpc = au.m.to(au.kpc)
+    m2kpc = 1.0 / kpc2m
     Mpc2m = au.Mpc.to(au.m)
-    m2Mpc = au.m.to(au.Mpc)
+    m2Mpc = 1.0 / Mpc2m
     kpc2cm = au.kpc.to(au.cm)
-    cm2kpc = au.cm.to(au.kpc)
+    cm2kpc = 1.0 / kpc2cm
     Mpc2cm = au.Mpc.to(au.cm)
-    cm2Mpc = au.cm.to(au.Mpc)
+    cm2Mpc = 1.0 / Mpc2cm
     Mpc2km = au.Mpc.to(au.km)
-    km2Mpc = au.km.to(au.Mpc)
+    km2Mpc = 1.0 / Mpc2km
     kpc2km = au.kpc.to(au.km)
-    km2kpc = au.km.to(au.kpc)
+    km2kpc = 1.0 / kpc2km
     km2cm = au.km.to(au.cm)
+    cm2km = 1.0 / km2cm
     # Energy
     keV2erg = au.keV.to(au.erg)
+    erg2keV = 1.0 / keV2erg
     # Angle
     rad2deg = au.rad.to(au.deg)
-    deg2rad = au.deg.to(au.rad)
+    deg2rad = 1.0 / rad2deg
     rad2arcsec = au.rad.to(au.arcsec)
-    arcsec2rad = au.arcsec.to(au.rad)
-    arcmin2deg = au.arcmin.to(au.deg)
+    arcsec2rad = 1.0 / rad2arcsec
+    rad2arcmin = au.rad.to(au.arcmin)
+    arcmin2rad = 1.0 / rad2arcmin
     deg2arcmin = au.deg.to(au.arcmin)
-    arcsec2deg = au.arcsec.to(au.deg)
+    arcmin2deg = 1.0 / deg2arcmin
     deg2arcsec = au.deg.to(au.arcsec)
+    arcsec2deg = 1.0 / deg2arcsec
     arcmin2arcsec = au.arcmin.to(au.arcsec)
-    arcsec2arcmin = au.arcsec.to(au.arcmin)
+    arcsec2arcmin = 1.0 / arcmin2arcsec
     # Temperature
     eV2K = au.eV.to(ac.k_B*au.K)
-    K2eV = 1 / eV2K
+    K2eV = 1.0 / eV2K
     keV2K = au.keV.to(ac.k_B*au.K)
-    K2keV = 1 / keV2K
+    K2keV = 1.0 / keV2K
 
 
 class Constants:
