@@ -78,6 +78,8 @@ class GalaxyClusters:
         self.use_output_catalog = self.configs.getn(comp+"/use_output_catalog")
         self.halos_catalog_outfile = self.configs.get_path(
             comp+"/halos_catalog_outfile")
+        self.halos_data_dumpfile = os.path.splitext(
+            self.halos_catalog_outfile)[0] + ".pkl"
         self.dump_halos_data = self.configs.getn(comp+"/dump_halos_data")
         self.prefix = self.configs.getn(comp+"/prefix")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
@@ -308,7 +310,7 @@ class GalaxyClusters:
         the emissions at additional frequencies.
         """
         if outfile is None:
-            outfile = os.path.splitext(self.halos_catalog_outfile)[0] + ".pkl"
+            outfile = self.halos_data_dumpfile
         pickle_dump(self.halos, outfile=outfile, clobber=self.clobber)
 
     def _draw_halos(self):
@@ -466,7 +468,7 @@ class GalaxyClusters:
             os.rename(filepath, filepath+".old")
             logger.warning("Backed up halos catalog: %s -> %s" %
                            (filepath, filepath+".old"))
-            filepath = os.path.splitext(self.halos_catalog_outfile)[0]+".pkl"
+            filepath = self.halos_data_dumpfile
             os.rename(filepath, filepath+".old")
             logger.warning("Backed up halos data dump file: %s -> %s" %
                            (filepath, filepath+".old"))
