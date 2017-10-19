@@ -165,6 +165,14 @@ class RadioHalo:
         return COSMO.age(self.z_merger)
 
     @property
+    def tback_merger(self):
+        """
+        The time from the observation (``z_obs``) back to the merger
+        (``z_merger``).
+        """
+        return (self.age_obs - self.age_merger)  # [Gyr]
+
+    @property
     def time_crossing(self):
         """
         The time duration of the sub-cluster crossing the main cluster,
@@ -226,7 +234,7 @@ class RadioHalo:
     @property
     def kT_merger(self):
         """
-        The cluster ICM mean temperature at z_merger when the merger
+        The cluster ICM mean temperature at ``z_merger`` when the merger
         begins.
 
         Unit: [keV]
@@ -234,6 +242,13 @@ class RadioHalo:
         mass = self.M_main + self.M_sub
         kT = helper.kT_cluster(mass, z=self.z_merger)
         return kT
+
+    @property
+    def kT_obs(self):
+        """
+        The cluster ICM mean temperature at ``z_obs``.
+        """
+        return helper.kT_cluster(self.M_obs, z=self.z_obs)  # [keV]
 
     @property
     def injection_rate(self):

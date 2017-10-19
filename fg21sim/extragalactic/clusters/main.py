@@ -263,13 +263,15 @@ class GalaxyClusters:
             data = OrderedDict([
                 ("z0", halo.z_obs),
                 ("M0", halo.M_obs),  # [Msun]
+                ("kT0", halo.kT_obs),  # [keV]
                 ("lon", row.lon),  # [deg] longitude
                 ("lat", row.lat),  # [deg] longitude
                 ("felong", row.felong),  # Fraction of elongation
                 ("rotation", row.rotation),  # [deg] ellipse rotation angle
-                ("z_merger", halo.z_merger),
                 ("M_main", halo.M_main),  # [Msun]
                 ("M_sub", halo.M_sub),  # [Msun]
+                ("z_merger", halo.z_merger),
+                ("tback_merger", halo.tback_merger),  # [Gyr]
                 ("time_crossing", halo.time_crossing),  # [Gyr]
                 ("radius", halo.radius),  # [kpc]
                 ("angular_radius", halo.angular_radius),  # [arcsec]
