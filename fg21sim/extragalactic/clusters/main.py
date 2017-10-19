@@ -252,11 +252,6 @@ class GalaxyClusters:
                              M_main=row.rmm_mass1, M_sub=row.rmm_mass2,
                              z_merger=row.rmm_z, configs=self.configs)
             n_e = halo.calc_electron_spectrum()
-            emissivity = halo.calc_emissivity(frequencies=self.frequencies)
-            power = halo.calc_power(emissivity)
-            flux = halo.calc_flux(emissivity)
-            Tb_mean = halo.calc_brightness_mean(emissivity, self.frequencies,
-                                                pixelsize=self.sky.pixelsize)
             data = OrderedDict([
                 ("z0", halo.z_obs),
                 ("M0", halo.M_obs),  # [Msun]
@@ -268,7 +263,6 @@ class GalaxyClusters:
                 ("M_main", halo.M_main),  # [Msun]
                 ("M_sub", halo.M_sub),  # [Msun]
                 ("time_crossing", halo.time_crossing),  # [Gyr]
-                ("gamma", halo.gamma),  # Lorentz factors
                 ("radius", halo.radius),  # [kpc]
                 ("angular_radius", halo.angular_radius),  # [arcsec]
                 ("volume", halo.volume),  # [kpc^3]
@@ -276,15 +270,42 @@ class GalaxyClusters:
                 ("kT_merger", halo.kT_merger),  # [keV] ICM kT at z_merger
                 ("Ke", halo.injection_rate),  # [cm^-3 Gyr^-1]
                 ("chi", halo._chi_acceleration()),  # [Gyr^-1]
+                ("gamma", halo.gamma),  # Lorentz factors
                 ("n_e", n_e),  # [cm^-3]
-                ("frequency", self.frequencies),  # [MHz]
-                ("emissivity", emissivity),  # [erg/s/cm^3/Hz]
-                ("power", power),  # [W/Hz]
-                ("flux", flux),  # [Jy]
-                ("Tb_mean", Tb_mean),  # [K]
             ])
             self.halos.append(data)
         logger.info("Simulated radio halos for merging cluster.")
+
+    def _calc_halos_emission(self):
+        """
+        Calculate the radio emissions at configured frequencies.
+        """
+        logger.info("Calculating the radio emissions for halos ...")
+        num = len(self.halos)
+        i = 0
+        for hdict in self.halos:
+            i += 1
+            if i % 100 == 0:
+                logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
+
+            halo = RadioHalo(M_obs=hdict["M0"], z_obs=hdict["z0"],
+                             M_main=hdict["M_main"], M_sub=hdict["M_sub"],
+                             z_merger=hdict["z_merger"],
+                             configs=self.configs)
+            halo.set_electron_spectrum(hdict["n_e"])
+
+            emissivity = halo.calc_emissivity(frequencies=self.frequencies)
+            power = halo.calc_power(emissivity)
+            flux = halo.calc_flux(emissivity)
+            Tb_mean = halo.calc_brightness_mean(emissivity, self.frequencies,
+                                                pixelsize=self.sky.pixelsize)
+            # Update or add new items
+            hdict["frequency"] = self.frequencies  # [MHz]
+            hdict["emissivity"] = emissivity  # [erg/s/cm^3/Hz]
+            hdict["power"] = power  # [W/Hz]
+            hdict["flux"] = flux  # [Jy]
+            hdict["Tb_mean"] = Tb_mean  # [K]
+        logger.info("Done calculate the radio emissions.")
 
     def _save_halos_catalog(self, outfile=None):
         """
