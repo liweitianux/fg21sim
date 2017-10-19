@@ -294,8 +294,11 @@ class RadioHalo:
         # to improve the results.
         # XXX: is this necessary???
         nstep_min = 20
-        if (tstop - tstart) / self.fpsolver.tstep < nstep_min:
-            self.fpsolver.tstep = (tstop - tstart) / nstep_min
+        if (tstop - tstart) / self.time_step < nstep_min:
+            tstep = (tstop - tstart) / nstep_min
+            logger.debug("Decreased time step: %g -> %g [Gyr]" %
+                         (self.time_step, self.fpsolver.tstep))
+            self.fpsolver.tstep = tstep
 
         self.electron_spec = self.fpsolver.solve(u0=n0_e, tstart=tstart,
                                                  tstop=tstop)

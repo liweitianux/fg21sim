@@ -408,7 +408,7 @@ class FokkerPlanckSolver:
         tstep = self.tstep
         logger.debug("Solving Fokker-Planck equation: " +
                      "time: %.3f - %.3f" % (tstart, tstop))
-        nstep = int((tstop - tc) / tstep)
+        nstep = int(np.ceil((tstop - tc) / tstep))
         logger.debug("Constant time step: %.3f (#%d steps)" % (tstep, nstep))
         i = 0
         while tc+tstep < tstop:
