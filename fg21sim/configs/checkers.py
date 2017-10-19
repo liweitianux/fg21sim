@@ -150,6 +150,7 @@ def check_galactic_snr(configs):
 def check_extragalactic_clusters(configs):
     """
     Check the "[extragalactic][clusters]" section of the configurations.
+
     The related sections ("[extragalactic][psformalism]",
     "[extragalactic][halos]") are also checked.
     """
@@ -165,6 +166,13 @@ def check_extragalactic_clusters(configs):
             results.update(_check_existence(configs, comp+"/catalog_outfile"))
         else:
             results.update(_check_missing(configs, comp+"/catalog_outfile"))
+        # dumped halos data required when enabled to use it
+        if configs.get(comp+"/use_dump_halos_data"):
+            results.update(_check_existence(configs,
+                                            comp+"/halos_catalog_outfile"))
+        else:
+            results.update(_check_missing(configs,
+                                          comp+"/halos_catalog_outfile"))
         results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 

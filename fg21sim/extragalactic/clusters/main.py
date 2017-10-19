@@ -81,6 +81,8 @@ class GalaxyClusters:
         self.halos_data_dumpfile = os.path.splitext(
             self.halos_catalog_outfile)[0] + ".pkl"
         self.dump_halos_data = self.configs.getn(comp+"/dump_halos_data")
+        self.use_dump_halos_data = self.configs.getn(
+            comp+"/use_dump_halos_data")
         self.prefix = self.configs.getn(comp+"/prefix")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
         self.merger_mass_min = self.configs.getn(comp+"/merger_mass_min")
@@ -409,7 +411,15 @@ class GalaxyClusters:
             self._process_catalog()
             self._simulate_mergers()
 
-        self._simulate_halos()
+        if self.use_dump_halos_data:
+            logger.info("Use existing dumped halos raw data: %s" %
+                        self.halos_data_dumpfile)
+            self.halos = pickle_load(self.halos_data_dumpfile)
+            logger.info("Loaded data of %d halos" % len(self.halos))
+        else:
+            self._simulate_halos()
+
+        self._calc_halos_emission()
         self._draw_halos()
 
         self._preprocessed = True

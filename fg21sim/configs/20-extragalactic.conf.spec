@@ -86,6 +86,13 @@
   # calculate the emissions at other frequencies.
   dump_halos_data = boolean(default=True)
 
+  # Whether to directly use the (previously dumped) halos data (".pkl")
+  # as specified by the above ``halos_catalog_outfile`` and
+  # ``dump_halos_data`` options?
+  # In this way, the radio emissions at additional frequencies can be
+  # easily (and consistently) calculated.
+  use_dump_halos_data = boolean(default=False)
+
   # The minimum mass for clusters when to determine the galaxy clusters
   # total counts and their distributions.
   # Unit: [Msun]
