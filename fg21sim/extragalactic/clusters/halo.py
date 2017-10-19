@@ -99,8 +99,16 @@ class RadioHalo:
     fpsolver : `~FokkerPlanckSolver`
         The solver instance to calculate the electron spectrum evolution.
     radius : float
-        The halo radius (scales with the virial radius)
+        The halo radius
         Unit: [kpc]
+    gamma : 1D float `~numpy.ndarray`
+        The Lorentz factors of the adopted logarithmic grid to solve the
+        equation.
+    electron_spec : 1D float `~numpy.ndarray`
+        The derived electron (number density) distribution/spectrum at
+        the final time (``zend``), which is set by the methods
+        ``self.calc_electron_spectrum()`` or ``self.set_electron_spectrum()``.
+        Unit: [cm^-3]
     """
     def __init__(self, M_obs, z_obs, M_main, M_sub, z_merger,
                  configs=CONFIGS):
@@ -303,6 +311,23 @@ class RadioHalo:
         self.electron_spec = self.fpsolver.solve(u0=n0_e, tstart=tstart,
                                                  tstop=tstop)
         return self.electron_spec
+
+    def set_electron_spectrum(self, n_e):
+        """
+        Check the given electron spectrum and set it to the
+        ``self.electron_spec``.
+
+        Parameters
+        ----------
+        n_e : float 1D `~numpy.ndarray`
+            The solved electron spectrum at ``zend``.
+            Unit: [cm^-3]
+        """
+        n_e = np.array(n_e)  # make a copy
+        if n_e.shape == self.gamma.shape:
+            self.electron_spec = n_e
+        else:
+            raise ValueError("given electron spectrum has wrong shape!")
 
     def calc_emissivity(self, frequencies, n_e=None, gamma=None):
         """
