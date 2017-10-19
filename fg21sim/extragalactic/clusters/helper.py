@@ -22,6 +22,10 @@ References
    Cassano et al. 2012, A&A, 548, A100
    http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
 
+.. [fujita2003]
+   Fujita et al. 2003, ApJ, 584, 190;
+   http://adsabs.harvard.edu/abs/2003ApJ...584..190F
+
 .. [murgia2009]
    Murgia et al. 2009, A&A, 499, 679
    http://adsabs.harvard.edu/abs/2009A%26A...499..679M
@@ -101,6 +105,38 @@ def radius_halo(M_main, M_sub, z=0.0):
     """
     R_halo = radius_virial(mass=M_sub, z=z)  # [kpc]
     return R_halo
+
+
+def kT_virial(mass, z=0.0, radius=None):
+    """
+    Calculate the virial temperature of a cluster.
+
+    Parameters
+    ----------
+    mass : float
+        The virial mass of the cluster.
+        Unit: [Msun]
+    z : float, optional
+        The redshift of the cluster.
+    radius : float, optional
+        The virial radius of the cluster.
+        If no provided, then invoke the above ``radius_virial()``
+        function to calculate it.
+        Unit: [kpc]
+
+    Returns
+    -------
+    kT : float
+       The virial temperature of the cluster.
+       Unit: [keV]
+
+    Reference: Ref.[fujita2003],Eq.(48)
+    """
+    if radius is None:
+        radius = radius_virial(mass=mass, z=z)  # [kpc]
+    kT = AC.mu*AC.u * AC.G * mass*AUC.Msun2g / (2*radius*AUC.kpc2cm)  # [erg]
+    kT *= AUC.erg2keV  # [keV]
+    return kT
 
 
 def mass_to_kT(mass, z=0.0):
