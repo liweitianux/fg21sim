@@ -93,6 +93,11 @@ class GalaxyClusters:
         self.clobber = self.configs.getn("output/clobber")
         logger.info("Loaded and set up configurations")
 
+        if self.use_dump_halos_data and (not self.use_output_catalog):
+            self.use_output_catalog = True
+            logger.warning("Forced to use existing cluster catalog, "
+                           "due to 'use_dump_halos_data=True'")
+
     def _simulate_catalog(self):
         """
         Simulate the (z, mass) catalog of the cluster distribution
