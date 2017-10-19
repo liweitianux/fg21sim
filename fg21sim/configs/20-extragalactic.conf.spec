@@ -20,12 +20,12 @@
   # The model of the fitting function for halo mass distribution
   # For all models and more details:
   # https://hmf.readthedocs.io/en/latest/_autosummary/hmf.fitting_functions.html
-  model = option("jenkins", "ps", "smt", default="smt")
+  model = option("smt", "jenkins", "ps", default="smt")
 
-  # The minimum (inclusive) and maximum (exclusive) halo mass (dark
+  # The minimum (inclusive) and maximum (exclusive!) halo mass (dark
   # matter only) within which to calculate the halo mass distribution.
   # Unit: [Msun]
-  M_min = float(default=1e13, min=1e10, max=1e14)
+  M_min = float(default=1e12, min=1e10, max=1e14)
   M_max = float(default=1e16, min=1e14, max=1e18)
   # The logarithmic (base 10) step size for the halo masses; therefore
   # the number of intervals is: (log10(M_max) - log10(M_min)) / M_step
@@ -60,8 +60,8 @@
   # mass, redshift, position, shape, and the recent major merger info.
   catalog_outfile = string(default=None)
 
-  # Directly use the (previously simulated) catalog file specified
-  # as the above "catalog_outfile" option.
+  # Whether to directly use the (previously simulated) catalog file
+  # specified as the above "catalog_outfile" option?
   # NOTE:
   # By using an existing catalog, the steps to derive these data are
   # simply skipped.
@@ -96,7 +96,7 @@
   # The minimum mass for clusters when to determine the galaxy clusters
   # total counts and their distributions.
   # Unit: [Msun]
-  mass_min = float(default=2e14, min=1e12)
+  mass_min = float(default=1e14, min=1e12)
 
   # Boost the number of expected cluster number within the sky coverage
   # by the specified times.
@@ -150,13 +150,13 @@
   gamma_max = float(default=1e5)
   # Number of momentum points/cells for solving the Fokker-Planck
   # equation.
-  gamma_np = integer(default=200, min=50)
+  gamma_np = integer(default=200, min=100)
 
-  # Number of grid points used as the buffer region near the lower
-  # boundary, and the value within this buffer region will be fixed to
-  # avoid unphysical pile-up of low-energy electrons.
-  # Reference: Donnert & Brunetti 2014, MNRAS, 443, 3564, Sec.(3.3)
-  buffer_np = integer(default=5, min=0)
+  # Number of cells used as the buffer regions near both the lower
+  # and upper boundaries, and the value within the buffer regions will
+  # be fixed to avoid unphysical pile-ups.
+  # It is suggested to be about 5%-10% of the above ``gamma_np``.
+  buffer_np = integer(default=10, min=0)
 
   # Time step for solving the Fokker-Planck equation
   # Unit: [Gyr]
