@@ -23,7 +23,8 @@ from .psformalism import PSFormalism
 from .formation import ClusterFormation
 from .halo import RadioHalo
 from ...share import CONFIGS, COSMO
-from ...utils.io import dataframe_to_csv, csv_to_dataframe, pickle_dump
+from ...utils.io import (dataframe_to_csv, csv_to_dataframe,
+                         pickle_dump, pickle_load)
 from ...utils.ds import dictlist_to_dataframe
 from ...utils.convert import JyPerPix_to_K
 from ...sky import get_sky
@@ -314,33 +315,6 @@ class GalaxyClusters:
             hdict["Tb_mean"] = Tb_mean  # [K]
         logger.info("Done calculate the radio emissions.")
 
-    def _save_halos_catalog(self, outfile=None):
-        """
-        Convert the halos data (``self.halos``) into a Pandas DataFrame
-        and write into a CSV file.
-        """
-        if outfile is None:
-            outfile = self.halos_catalog_outfile
-
-        logger.info("Converting halos data to be a Pandas DataFrame ...")
-        keys = list(self.halos[0].keys())
-        # Ignore the ``gamma`` and ``n_e`` items
-        for k in ["gamma", "n_e"]:
-            keys.remove(k)
-        halos_df = dictlist_to_dataframe(self.halos, keys=keys)
-        dataframe_to_csv(halos_df, outfile, clobber=self.clobber)
-        logger.info("Saved DataFrame of halos data to file: %s" % outfile)
-
-    def _dump_halos_data(self, outfile=None):
-        """
-        Dump the simulated halos data into Python native pickle format,
-        making it possible to load the data back to quickly calculate
-        the emissions at additional frequencies.
-        """
-        if outfile is None:
-            outfile = self.halos_data_dumpfile
-        pickle_dump(self.halos, outfile=outfile, clobber=self.clobber)
-
     def _draw_halos(self):
         """
         Draw the template images for each halo, and cache them for
@@ -365,6 +339,33 @@ class GalaxyClusters:
                                         rotation=hdict["rotation"])
             hdict["template"] = template
         logger.info("Done drawn halo template images.")
+
+    def _save_halos_catalog(self, outfile=None):
+        """
+        Convert the halos data (``self.halos``) into a Pandas DataFrame
+        and write into a CSV file.
+        """
+        if outfile is None:
+            outfile = self.halos_catalog_outfile
+
+        logger.info("Converting halos data to be a Pandas DataFrame ...")
+        keys = list(self.halos[0].keys())
+        # Ignore the ``gamma`` and ``n_e`` items
+        for k in ["gamma", "n_e", "template"]:
+            keys.remove(k)
+        halos_df = dictlist_to_dataframe(self.halos, keys=keys)
+        dataframe_to_csv(halos_df, outfile, clobber=self.clobber)
+        logger.info("Saved DataFrame of halos data to file: %s" % outfile)
+
+    def _dump_halos_data(self, outfile=None):
+        """
+        Dump the simulated halos data into Python native pickle format,
+        making it possible to load the data back to quickly calculate
+        the emissions at additional frequencies.
+        """
+        if outfile is None:
+            outfile = self.halos_data_dumpfile
+        pickle_dump(self.halos, outfile=outfile, clobber=self.clobber)
 
     def _outfilepath(self, frequency, **kwargs):
         """
