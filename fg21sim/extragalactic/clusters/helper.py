@@ -241,10 +241,10 @@ def density_energy_thermal(mass, z=0.0):
     -------
     e_th : float
         Energy density of the ICM
-        Unit: [erg cm^-3]
+        Unit: [erg/cm^3]
     """
-    n_th = density_number_thermal(mass, z)  # [cm^-3]
-    kT = mass_to_kT(mass, z) * AUC.keV2erg  # [erg]
+    n_th = density_number_thermal(mass=mass, z=z)  # [cm^-3]
+    kT = kT_cluster(mass, z) * AUC.keV2erg  # [erg]
     e_th = (3.0/2) * kT * n_th
     return e_th
 

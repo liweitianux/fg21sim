@@ -232,7 +232,7 @@ class RadioHalo:
         Unit: [keV]
         """
         mass = self.M_main + self.M_sub
-        kT = helper.mass_to_kT(mass, z=self.z_merger)
+        kT = helper.kT_cluster(mass, z=self.z_merger)
         return kT
 
     @property
