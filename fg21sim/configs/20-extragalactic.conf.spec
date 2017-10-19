@@ -74,9 +74,17 @@
   # to generate images at all frequencies.
   use_output_catalog = boolean(default=False)
 
-  # Output file for dumping the simulated cluster halos data in Python
-  # native *pickle* format (i.e., .pkl)
-  halos_dumpfile = string(default=None)
+  # Output CSV file of the halos catalog containing the calculated
+  # properties of the simulated halos.
+  halos_catalog_outfile = string(default=None)
+
+  # Whether to dump the whole data of the simulated halos in Python
+  # native pickle format (i.e., ".pkl") to a file with the same basename
+  # as the above ``halos_catalog_outfile``?
+  # The dumped data also includes the derived electron spectrum for
+  # each halo, therefore this file can be reloaded back in order to
+  # calculate the emissions at other frequencies.
+  dump_halos_data = boolean(default=True)
 
   # The minimum mass for clusters when to determine the galaxy clusters
   # total counts and their distributions.
