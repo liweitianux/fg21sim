@@ -139,6 +139,31 @@ def kT_virial(mass, z=0.0, radius=None):
     return kT
 
 
+def kT_cluster(mass, z=0.0, radius=None):
+    """
+    Calculate the temperature of a cluster ICM.
+
+    NOTE
+    ----
+    When a cluster forms, there are accretion shocks forms around
+    the cluster (near the virial radius) which can heat the gas,
+    therefore the ICM has a higher temperature than the virial
+    temperature, which can be estimated as:
+        T_icm = T_vir + 1.5*T_1 ~ T_vir + 0.8 [keV]
+
+    Reference: Ref.[fujita2003],Eq.(49)
+
+    Returns
+    -------
+    kT_icm : float
+       The temperature of the cluster ICM.
+       Unit: [keV]
+    """
+    kT_vir = kT_virial(mass=mass, z=z, radius=radius)
+    kT_icm = kT_vir + 0.8
+    return kT_icm
+
+
 def mass_to_kT(mass, z=0.0):
     """
     Calculate the cluster ICM temperature from its mass using the
