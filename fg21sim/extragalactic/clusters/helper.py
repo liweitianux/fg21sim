@@ -40,7 +40,6 @@ from ...share import CONFIGS, COSMO
 from ...utils.units import (Units as AU,
                             Constants as AC,
                             UnitConversions as AUC)
-from ...utils.convert import Fnu_to_Tb
 from ...utils.draw import circle
 from ...utils.transform import circle2ellipse
 
@@ -302,107 +301,6 @@ def magnetic_field(mass):
     M_mean = 1.6e15  # [Msun]
     B = b_mean * (mass/M_mean) ** b_index
     return B
-
-
-def calc_power(emissivity, volume):
-    """
-    Calculate the synchrotron power (i.e., power *emitted* per unit
-    frequency) from emissivity, which assumed to be uniform within
-    the volume.
-
-    NOTE
-    ----
-    The calculated power (a.k.a. spectral luminosity) is in units of
-    [W/Hz] which is common in radio astronomy, instead of [erg/s/Hz].
-        1 [W] = 1e7 [erg/s]
-
-    Parameters
-    ----------
-    emissivity : float, or 1D `~numpy.ndarray`
-        The synchrotron emissivity at multiple frequencies.
-        Unit: [erg/s/cm^3/Hz]
-    volume : float
-        The volume of the radio halo
-        Unit: [kpc^3]
-
-    Returns
-    -------
-    power : float, or 1D `~numpy.ndarray`
-        The calculated synchrotron power w.r.t. each input emissivity.
-        Unit: [W/Hz]
-    """
-    emissivity = np.asarray(emissivity)
-    power = emissivity * (volume * AUC.kpc2cm**3)  # [erg/s/Hz]
-    power *= 1e-7  # [erg/s/Hz] -> [W/Hz]
-    return power
-
-
-def calc_flux(power, z):
-    """
-    Calculate the synchrotron flux density (i.e., power *observed*
-    per unit frequency) from radio power at a certain redshift (i.e.,
-    distance).
-
-    Parameters
-    ----------
-    power : float, or 1D `~numpy.ndarray`
-        The synchrotron power at multiple frequencies.
-        Unit: [W/Hz]
-
-    Returns
-    -------
-    flux : float, or 1D `~numpy.ndarray`
-        The calculated synchrotron flux w.r.t. each input power.
-        Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz] = 1e-26 [W/m^2/Hz]
-    """
-    DL = COSMO.DL(z) * AUC.Mpc2m  # [m]
-    flux = 1e26 * power / (4*np.pi * DL*DL)  # [Jy]
-    return flux
-
-
-def calc_brightness_mean(flux, frequency, omega, pixelsize=None):
-    """
-    Calculate the mean surface brightness (power observed per unit
-    frequency and per unit solid angle) expressed in *brightness
-    temperature* at the specified frequencies from flux.
-
-    NOTE
-    ----
-    If the solid angle that the object extends is smaller than the
-    specified pixel area, then is is assumed to have size of 1 pixel.
-
-    Parameters
-    ----------
-    flux : float, or 1D `~numpy.ndarray`
-        The synchrotron flux densities at multiple frequencies.
-        Unit: [Jy]
-    frequency : float, or 1D `~numpy.ndarray`
-        The frequencies where the above flux calculated.
-        Unit: [MHz]
-    omega : float
-        The sky coverage (angular size) of the object.
-        Unit: [arcsec^2]
-    pixelsize : float, optional
-        The pixel size of the output simulated sky image.
-        Unit: [arcsec]
-
-    Returns
-    -------
-    Tb : float, or 1D `~numpy.ndarray`
-        The mean surface brightness at each frequency.
-        Unit: [K] <-> [Jy/pixel]
-    """
-    if pixelsize and (omega < pixelsize**2):
-        omega = pixelsize ** 2  # [arcsec^2]
-        logger.warning("Object sky coverage < 1 pixel; force to be 1 pixel")
-
-    Tb = [Fnu_to_Tb(Fnu, omega, freq)
-          for Fnu, freq in zip(np.array(flux, ndmin=1),
-                               np.array(frequency, ndmin=1))]
-    if len(Tb) == 1:
-        return Tb[0]
-    else:
-        return np.array(Tb)
 
 
 def halo_rprofile(re, num_re=5, I0=1.0):

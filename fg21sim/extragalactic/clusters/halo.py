@@ -36,6 +36,10 @@ References
 .. [sarazin1999]
    Sarazin 1999, ApJ, 520, 529
    http://adsabs.harvard.edu/abs/1999ApJ...520..529S
+
+.. [hogg1999]
+   Hogg 1999, arXiv:astro-ph/9905116
+   http://adsabs.harvard.edu/abs/1999astro.ph..5116H
 """
 
 import logging
@@ -48,6 +52,7 @@ from .emission import SynchrotronEmission
 from ...share import CONFIGS, COSMO
 from ...utils.units import (Units as AU,
                             UnitConversions as AUC)
+from ...utils.convert import Fnu_to_Tb
 
 
 logger = logging.getLogger(__name__)
@@ -364,73 +369,137 @@ class RadioHalo:
         emissivity = syncem.emissivity(frequencies)
         return emissivity
 
-    def calc_power(self, emissivity):
+    def calc_power(self, frequencies, emissivity=None, **kwargs):
         """
         Calculate the halo synchrotron power (i.e., power *emitted* per
-        unit frequency) from emissivity.
+        unit frequency) by assuming the emissivity is uniform throughout
+        the halo volume.
+
+        NOTE
+        ----
+        The calculated power (a.k.a. spectral luminosity) is in units of
+        [W/Hz] which is common in radio astronomy, instead of [erg/s/Hz].
+            1 [W] = 1e7 [erg/s]
 
         Parameters
         ----------
-        emissivity : float, or 1D `~numpy.ndarray`
-            The synchrotron emissivity at multiple frequencies.
+        frequencies : float, or 1D `~numpy.ndarray`
+            The frequencies where to calculate the synchrotron power.
+            Unit: [MHz]
+        emissivity : float, or 1D `~numpy.ndarray`, optional
+            The synchrotron emissivity at the input frequencies.
+            If not provided, then invoke above ``calc_emissivity()``
+            method to calculate them.
             Unit: [erg/s/cm^3/Hz]
+        **kwargs : optional arguments, i.e., ``n_e`` and ``gamma``
 
         Returns
         -------
         power : float, or 1D `~numpy.ndarray`
-            The calculated synchrotron power w.r.t. each input emissivity.
+            The calculated synchrotron power at each input frequency.
             Unit: [W/Hz]
         """
-        return helper.calc_power(emissivity, volume=self.volume)
+        frequencies = np.asarray(frequencies)
+        if emissivity is None:
+            emissivity = self.calc_emissivity(frequencies=frequencies,
+                                              **kwargs)
+        else:
+            emissivity = np.asarray(emissivity)
+            if emissivity.shape != frequencies.shape:
+                raise ValueError("input 'frequencies' and 'emissivity' "
+                                 "do not match")
+        power = emissivity * (self.volume * AUC.kpc2cm**3)  # [erg/s/Hz]
+        power *= 1e-7  # [erg/s/Hz] -> [W/Hz]
+        return power
 
-    def calc_flux(self, emissivity):
+    def calc_flux(self, frequencies, **kwargs):
         """
         Calculate the synchrotron flux density (i.e., power *observed*
-        per unit frequency) from emissivity.
+        per unit frequency) of the halo, with k-correction considered.
+
+        NOTE
+        ----
+        The *k-correction* must be applied to the flux density (Sν) or
+        specific luminosity (Lν) because the redshifted object is emitting
+        flux in a different band than that in which you are observing.
+        And the k-correction depends on the spectrum of the object in
+        question.  For any other spectrum (i.e., vLv != const.), the flux
+        density Sv is related to the specific luminosity Lv by:
+            Sv = (1+z) L_v(1+z) / (4π DL^2),
+        where
+        * L_v(1+z) is the specific luminosity emitting at frequency v(1+z),
+        * DL is the luminosity distance to the object at redshift z.
+
+        Reference: Ref.[hogg1999],Eq.(22)
 
         Parameters
         ----------
-        emissivity : float, or 1D `~numpy.ndarray`
-            The synchrotron emissivity at multiple frequencies.
-            Unit: [erg/s/cm^3/Hz]
+        frequencies : float, or 1D `~numpy.ndarray`
+            The frequencies where to calculate the flux density.
+            Unit: [MHz]
+        **kwargs : optional arguments, i.e., ``n_e`` and ``gamma``
 
         Returns
         -------
         flux : float, or 1D `~numpy.ndarray`
-            The calculated synchrotron flux w.r.t. each input emissivity.
+            The calculated flux density w.r.t. each input frequency.
             Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz] = 1e-26 [W/m^2/Hz]
         """
-        power = self.calc_power(emissivity)  # [W/Hz]
-        return helper.calc_flux(power, z=self.z_obs)
+        z = self.z_obs
+        freqz = np.asarray(frequencies) * (1+z)
+        power = self.calc_power(freqz, **kwargs)  # [W/Hz]
+        DL = COSMO.DL(self.z_obs) * AUC.Mpc2m  # [m]
+        flux = 1e26 * (1+z) * power / (4*np.pi * DL*DL)  # [Jy]
+        return flux
 
-    def calc_brightness_mean(self, emissivity, frequency, pixelsize=None):
+    def calc_brightness_mean(self, frequencies, flux=None, pixelsize=None,
+                             **kwargs):
         """
         Calculate the mean surface brightness (power observed per unit
         frequency and per unit solid angle) expressed in *brightness
-        temperature* at the specified frequencies from emissivity.
+        temperature* at the specified frequencies.
+
+        NOTE
+        ----
+        If the solid angle that the object extends is smaller than the
+        specified pixel area, then is is assumed to have size of 1 pixel.
 
         Parameters
         ----------
-        emissivity : float, or 1D `~numpy.ndarray`
-            The synchrotron emissivity at multiple frequencies.
-            Unit: [erg/s/cm^3/Hz]
-        frequency : float, or 1D `~numpy.ndarray`
-            The frequencies where the synchrotron emissivity is calculated.
+        frequencies : float, or 1D `~numpy.ndarray`
+            The frequencies where to calculate the mean brightness temperature
             Unit: [MHz]
+        flux : float, or 1D `~numpy.ndarray`, optional
+            The flux density w.r.t. each input frequency.
+            Unit: [Jy]
         pixelsize : float, optional
             The pixel size of the output simulated sky image.
+            If not provided, then invoke above ``calc_flux()`` method to
+            calculate them.
             Unit: [arcsec]
+        **kwargs : optional arguments, i.e., ``n_e`` and ``gamma``
 
         Returns
         -------
         Tb : float, or 1D `~numpy.ndarray`
-            The mean surface brightness at each frequency.
+            The mean brightness temperature at each frequency.
             Unit: [K] <-> [Jy/pixel]
         """
+        frequencies = np.asarray(frequencies)
+        if flux is None:
+            flux = self.calc_flux(frequencies=frequencies, **kwargs)  # [Jy]
+        else:
+            flux = np.asarray(flux)
+            if flux.shape != frequencies.shape:
+                raise ValueError("input 'frequencies' and 'flux' do not match")
+
         omega = np.pi * self.angular_radius**2  # [arcsec^2]
-        flux = self.calc_flux(emissivity)
-        return helper.calc_brightness_mean(flux, frequency=frequency,
-                                           omega=omega, pixelsize=pixelsize)
+        if pixelsize and (omega < pixelsize**2):
+            omega = pixelsize ** 2  # [arcsec^2]
+            logger.warning("Object size < 1 pixel; force to be 1 pixel!")
+
+        Tb = Fnu_to_Tb(flux, omega, frequencies)  # [K]
+        return Tb
 
     def fp_injection(self, gamma, t=None):
         """

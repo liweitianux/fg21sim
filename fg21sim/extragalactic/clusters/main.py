@@ -303,9 +303,10 @@ class GalaxyClusters:
             halo.set_electron_spectrum(hdict["n_e"])
 
             emissivity = halo.calc_emissivity(frequencies=self.frequencies)
-            power = halo.calc_power(emissivity)
-            flux = halo.calc_flux(emissivity)
-            Tb_mean = halo.calc_brightness_mean(emissivity, self.frequencies,
+            power = halo.calc_power(self.frequencies, emissivity=emissivity)
+            # k-correction considered
+            flux = halo.calc_flux(self.frequencies)
+            Tb_mean = halo.calc_brightness_mean(self.frequencies, flux=flux,
                                                 pixelsize=self.sky.pixelsize)
             # Update or add new items
             hdict["frequency"] = self.frequencies  # [MHz]
