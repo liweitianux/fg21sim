@@ -432,9 +432,7 @@ class GalaxyClusters:
         logger.info("{name}: postprocessing ...".format(name=self.name))
         # Save the final resulting clusters catalog
         logger.info("Save the resulting catalog ...")
-        if self.catalog_outfile is None:
-            logger.warning("Catalog output file not set; skip saving!")
-        elif self.use_output_catalog:
+        if self.use_output_catalog:
             logger.info("No need to save the cluster catalog.")
         else:
             dataframe_to_csv(self.catalog, outfile=self.catalog_outfile,

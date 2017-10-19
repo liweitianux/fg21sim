@@ -163,6 +163,8 @@ def check_extragalactic_clusters(configs):
         # catalog required when enabled to use it
         if configs.get(comp+"/use_output_catalog"):
             results.update(_check_existence(configs, comp+"/catalog_outfile"))
+        else:
+            results.update(_check_missing(configs, comp+"/catalog_outfile"))
         results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 
