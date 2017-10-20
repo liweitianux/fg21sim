@@ -229,7 +229,7 @@ class RadioHalo:
 
         Unit: [uG]
         """
-        return helper.magnetic_field(self.M_obs)
+        return helper.magnetic_field(mass=self.M_obs, z=self.z_obs)
 
     @property
     def kT_merger(self):
@@ -716,6 +716,6 @@ class RadioHalo:
         """
         z = COSMO.redshift(t)
         mass = self._mass(t)  # [Msun]
-        B = helper.magnetic_field(mass)  # [uG]
+        B = helper.magnetic_field(mass=mass, z=z)  # [uG]
         loss = -4.32e-4 * gamma**2 * ((B/3.25)**2 + (1+z)**4)
         return loss

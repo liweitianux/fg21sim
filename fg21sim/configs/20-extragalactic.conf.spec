@@ -119,14 +119,10 @@
   # Unit: [Gyr]
   tau_merger = float(default=2.0, min=1.0, max=5.0)
 
-  # Magnetic field scaling relation for clusters
-  # Reference: Cassano et al. 2012, A&A, 548, A100, Eq.(1)
-  #
-  # The mean magnetic field assumed
-  # Unit: [uG]
-  b_mean = float(default=1.9, min=0.1, max=10)
-  # The index of the scaling relation
-  b_index = float(default=1.5, min=0.0, max=3.0)
+  # The fraction of the magnetic field energy density w.r.t. the ICM
+  # thermal energy density, which is used to determine the mean magnetic
+  # field strength within the ICM and is also assumed to be uniform.
+  eta_b = float(default=0.001, min=1e-5, max=0.1)
 
   # Filename prefix for this component
   prefix = string(default="cluster")

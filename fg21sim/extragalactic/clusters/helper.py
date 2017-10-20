@@ -210,6 +210,30 @@ def density_energy_thermal(mass, z=0.0):
     return e_th
 
 
+def magnetic_field(mass, z=0.0):
+    """
+    Calculate the mean magnetic field strength within the ICM, which is
+    also assumed to be uniform, according to the assumed fraction of the
+    the magnetic field energy density w.r.t. the ICM thermal energy density.
+
+    NOTE
+    ----
+    Magnetic field energy density: u_B = B^2 / (8π),
+    where "B" in units of [G], then "u_B" has unit of [erg/cm^3].
+
+    Returns
+    -------
+    B : float
+        The mean magnetic field strength within the ICM.
+        Unit: [uG]
+    """
+    key = "extragalactic/clusters/eta_b"
+    eta_b = CONFIGS.getn(key)
+    e_th = density_energy_thermal(mass=mass, z=z)
+    B = np.sqrt(8*np.pi * eta_b * e_th) * 1e6  # [G] -> [uG]
+    return B
+
+
 def density_energy_electron(spectrum, gamma):
     """
     Calculate the energy density of relativistic electrons.
@@ -293,36 +317,6 @@ def time_crossing(M_main, M_sub, z=0.0):
     uconv = AUC.kpc2km * AUC.s2Gyr
     time = uconv * R_vir / vi  # [Gyr]
     return time
-
-
-def magnetic_field(mass):
-    """
-    Calculate the mean magnetic field strength according to the
-    scaling relation between magnetic field and cluster mass.
-
-    Parameters
-    ----------
-    mass : float
-        Cluster mass
-        Unit: [Msun]
-
-    Returns
-    -------
-    B : float
-        The mean magnetic field strength
-        Unit: [uG]
-
-    References
-    ----------
-    Ref.[cassano2012],Eq.(1)
-    """
-    comp = "extragalactic/clusters"
-    b_mean = CONFIGS.getn(comp+"/b_mean")
-    b_index = CONFIGS.getn(comp+"/b_index")
-
-    M_mean = 1.6e15  # [Msun]
-    B = b_mean * (mass/M_mean) ** b_index
-    return B
 
 
 def halo_rprofile(re, num_re=5, I0=1.0):
