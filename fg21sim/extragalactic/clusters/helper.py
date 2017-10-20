@@ -164,45 +164,6 @@ def kT_cluster(mass, z=0.0, radius=None):
     return kT_icm
 
 
-def mass_to_kT(mass, z=0.0):
-    """
-    Calculate the cluster ICM temperature from its mass using the
-    mass-temperature scaling relation (its inversion used here)
-    derived from observations.
-
-    The following M-T scaling relation from Ref.[arnaud2005],Tab.2:
-        M200 * E(z) = A200 * (kT / 5 keV)^α ,
-    where:
-        A200 = (5.34 +/- 0.22) [1e14 Msun]
-        α = (1.72 +/- 0.10)
-    Its inversion:
-        kT = (5 keV) * [M200 * E(z) / A200]^(1/α).
-
-    NOTE: M200 (i.e., Δ=200) is used to approximate the virial mass.
-
-    Parameters
-    ----------
-    mass : float
-        Total (virial) mass of the cluster.
-        Unit: [Msun]
-    z : float, optional
-        Redshift of the cluster
-
-    Returns
-    -------
-    kT : float
-        The ICM mean temperature.
-        Unit: [keV]
-    """
-    # A = (5.34 + np.random.normal(scale=0.22)) * 1e14  # [Msun]
-    A = 5.34 * 1e14  # [Msun]
-    # alpha = 1.72 + np.random.normal(scale=0.10)
-    alpha = 1.72
-    Ez = COSMO.E(z)
-    kT = 5.0 * (mass * Ez / A) ** (1/alpha)
-    return kT
-
-
 def density_number_thermal(mass, z=0.0):
     """
     Calculate the number density of the ICM thermal plasma.
