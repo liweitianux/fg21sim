@@ -154,13 +154,14 @@
   # electron spectrum.
   gamma_min = float(default=1e1)
   gamma_max = float(default=1e5)
-  # Number of momentum points/cells for solving the Fokker-Planck
-  # equation.
+  # Number of cells on the logarithmic momentum grid used to solve the
+  # Fokker-Planck equation.
   gamma_np = integer(default=200, min=100)
 
   # Number of cells used as the buffer regions near both the lower
-  # and upper boundaries, and the value within the buffer regions will
-  # be fixed to avoid unphysical pile-ups.
+  # and upper boundaries, within which the values will be replaced by
+  # extrapolating from the inner-region data, in order to avoid the
+  # unphysical particle pile-ups.
   # It is suggested to be about 5%-10% of the above ``gamma_np``.
   buffer_np = integer(default=10, min=0)
 
