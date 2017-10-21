@@ -33,6 +33,10 @@ References
 .. [zandanel2014]
    Zandanel, Pfrommer & Prada 2014, MNRAS, 438, 124
    http://adsabs.harvard.edu/abs/2014MNRAS.438..124Z
+
+.. [zhuravleva2014]
+   Zhuravleva et al. 2014, Nature, 515, 85;
+   http://adsabs.harvard.edu/abs/2014Natur.515...85Z
 """
 
 import logging
@@ -254,6 +258,30 @@ def density_energy_electron(spectrum, gamma):
     """
     e_re = integrate.trapz(spectrum*gamma*AU.mec2, gamma)
     return e_re
+
+
+def speed_sound(kT):
+    """
+    The adiabatic sound speed in cluster ICM.
+
+    Parameters
+    ----------
+    kT : float
+        The cluster ICM temperature
+        Unit: [keV]
+
+    Returns
+    -------
+    cs : float
+        The speed of sound in cluster ICM.
+        Unit: [km/s]
+
+    Reference: Ref.[zhuravleva2014],Appendix(Methods)
+    """
+    # The gas adiabatic index
+    gamma = AC.gamma
+    cs = np.sqrt(gamma * kT*AUC.keV2erg / (AC.mu * AC.u))  # [cm/s]
+    return cs * AUC.cm2km  # [km/s]
 
 
 def velocity_impact(M_main, M_sub, z=0.0):

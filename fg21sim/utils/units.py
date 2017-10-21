@@ -100,3 +100,6 @@ class Constants:
     # Mean molecular weight
     # Ref.: Ettori et al, 2013, Space Science Review, 177, 119-154, Eq.(6)
     mu = 0.6
+
+    # Adiabatic index of ideal monatomic gas
+    gamma = 5.0/3.0
