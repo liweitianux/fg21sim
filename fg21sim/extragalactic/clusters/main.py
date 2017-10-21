@@ -130,8 +130,7 @@ class GalaxyClusters:
         * ``lon`` : longitudes; unit: [deg]
         * ``lat`` : latitudes; unit: [deg]
         * ``felong`` : elongated fraction, defined as the ratio of
-                       elliptical semi-major axis to semi-minor axis;
-                       restricted within [0.3, 1.0]
+                       elliptical semi-major axis to semi-minor axis
         * ``rotation`` : rotation angle; uniformly distributed within
                          [0, 360.0); unit: [deg]
 
