@@ -281,8 +281,9 @@ class GalaxyClusters:
                 ("Rhalo", halo.radius),  # [kpc]
                 ("Rhalo_angular", halo.angular_radius),  # [arcsec]
                 ("volume", halo.volume),  # [kpc^3]
+                ("Mach_turb", halo.Mach_turbulence),  # turbulence Mach number
+                ("tau_acc", halo.tau_acceleration),  # [Gyr]
                 ("Ke", halo.injection_rate),  # [cm^-3 Gyr^-1]
-                ("chi", halo._chi_acceleration()),  # [Gyr^-1]
                 ("gamma", halo.gamma),  # Lorentz factors
                 ("n_e", n_e),  # [cm^-3]
             ])

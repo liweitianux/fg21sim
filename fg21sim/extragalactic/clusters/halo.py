@@ -13,6 +13,10 @@ References
    Brunetti & Lazarian 2011, MNRAS, 410, 127
    http://adsabs.harvard.edu/abs/2011MNRAS.410..127B
 
+.. [brunetti2016]
+   Brunetti 2016, PPCF, 58, 014011
+   http://adsabs.harvard.edu/abs/2016PPCF...58a4011B
+
 .. [cassano2005]
    Cassano & Brunetti 2005, MNRAS, 357, 1313
    http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
@@ -33,13 +37,17 @@ References
    Donnert & Brunetti 2014, MNRAS, 443, 3564
    http://adsabs.harvard.edu/abs/2014MNRAS.443.3564D
 
-.. [sarazin1999]
-   Sarazin 1999, ApJ, 520, 529
-   http://adsabs.harvard.edu/abs/1999ApJ...520..529S
-
 .. [hogg1999]
    Hogg 1999, arXiv:astro-ph/9905116
    http://adsabs.harvard.edu/abs/1999astro.ph..5116H
+
+.. [miniati2015]
+   Miniati & Beresnyak 2015, Nature, 523, 59
+   http://adsabs.harvard.edu/abs/2015Natur.523...59M
+
+.. [sarazin1999]
+   Sarazin 1999, ApJ, 520, 529
+   http://adsabs.harvard.edu/abs/1999ApJ...520..529S
 """
 
 import logging
@@ -51,7 +59,8 @@ from .solver import FokkerPlanckSolver
 from .emission import SynchrotronEmission
 from ...share import CONFIGS, COSMO
 from ...utils.units import (Units as AU,
-                            UnitConversions as AUC)
+                            UnitConversions as AUC,
+                            Constants as AC)
 from ...utils.convert import Fnu_to_Tb
 
 
@@ -129,6 +138,8 @@ class RadioHalo:
 
     def _set_configs(self):
         comp = "extragalactic/halos"
+        self.f_lturb = self.configs.getn(comp+"/f_lturb")
+        self.f_acc = self.configs.getn(comp+"/f_acc")
         self.eta_turb = self.configs.getn(comp+"/eta_turb")
         self.eta_e = self.configs.getn(comp+"/eta_e")
         self.gamma_min = self.configs.getn(comp+"/gamma_min")
@@ -272,6 +283,61 @@ class RadioHalo:
         The "current" cluster ICM mean temperature at ``z_obs``.
         """
         return helper.kT_cluster(self.M_obs, z=self.z_obs)  # [keV]
+
+    @property
+    def Mach_turbulence(self):
+        """
+        The Mach number of the merger-induced turbulence.
+
+        The turbulence  Mach number:
+            Mach_turb = sqrt(<δv>^2) / c_s
+                      ≅ sqrt(sqrt(3)/α) * sqrt(η_turb/0.37)
+        where:
+        c_s is the sound speed,
+        α is a parameter ranges about 1.5-3, and we take it as:
+            α = 3^(3/2) / 2 ≅ 2.6
+        η_turb describes the fraction of thermal energy originating from
+        turbulent dissipation, ~0.3.
+
+        Reference: Ref.[miniati2015],Eq.(1)
+        """
+        alpha = 3**1.5 / 2
+        mach = np.sqrt(3**0.5 * self.eta_turb / alpha / 0.37)
+        return mach
+
+    @property
+    def tau_acceleration(self):
+        """
+        Calculate the electron acceleration timescale due to turbulent
+        waves at the given (cosmic) time, which describes the turbulent
+        acceleration efficiency.
+
+        Unit: [Gyr]
+
+        NOTE
+        ----
+        Generally, the turbulent acceleration timescale is about 0.1 Gyr.
+        It is shown that this acceleration timescale depends weakly on
+        cluster mass and redshift, therefore, its value is derived at the
+        beginning of the merger and assumed to be constant throughout the
+        merging period.
+
+        Reference: Ref.[brunetti2016],Eq.(8,9)
+        """
+        if not hasattr(self, "_tau_acceleration"):
+            Mach = self.Mach_turbulence
+            Rvir = helper.radius_virial(mass=self.M_main, z=self.z_merger)
+            kT = helper.kT_cluster(mass=self.M_main, z=self.z_merger,
+                                   radius=Rvir)  # [keV]
+            cs = helper.speed_sound(kT)  # [km/s]
+            # Turbulence injection scale
+            L0 = self.f_lturb * Rvir  # [kpc]
+            x = cs*AUC.km2cm / AC.c
+            fx = x * (x**4/4 + x*x - (1+2*x*x) * np.log(x) - 5/4)
+            term1 = self.f_acc * 2.5 / fx / (Mach/0.5)**4
+            term2 = (L0/300) / (cs/1500)
+            self._tau_acceleration = term1 * term2 / 1000  # [Gyr]
+        return self._tau_acceleration
 
     @property
     def injection_rate(self):
@@ -578,11 +644,21 @@ class RadioHalo:
         """
         Diffusion term/coefficient for the Fokker-Planck equation.
 
+        The diffusion is directly related to the electron acceleration
+        which is described by the ``tau_acc`` acceleration timescale
+        parameter.
+
         NOTE
         ----
-        The diffusion coefficients cannot be zero or negative, which
-        may cause unstable or wrong results.  So constrain ``chi_acc``
-        be a small positive number (e.g., 0.01 [Gyr^-1]).
+        Considering that the turbulence acceleration is a 2nd-order Fermi
+        process, it has only an effective acceleration time of several 1e8
+        years.  Therefore, the turbulence is assumed to only accelerate
+        the electrons during the merging period, i.e., the acceleration
+        timescale is set to be infinite after "t_merger + time_cross".
+
+        However, a zero diffusion coefficient may lead to unstable/wrong
+        results, so constrain the acceleration timescale to be a large
+        enough but finite number (e.g., 10 Gyr).
 
         Parameters
         ----------
@@ -602,8 +678,12 @@ class RadioHalo:
         ----------
         Ref.[donnert2013],Eq.(15)
         """
-        chi_acc = self._chi_acceleration(t)  # [Gyr^-1]
-        diffusion = gamma**2 * chi_acc / 4
+        if t < (self.age_merger + self.time_crossing):
+            tau_acc = self.tau_acceleration  # [Gyr]
+        else:
+            # The large enough timescale to avoid unstable results
+            tau_acc = 10.0  # [Gyr]
+        diffusion = gamma**2 / 4 / tau_acc
         return diffusion
 
     def fp_advection(self, gamma, t):
@@ -652,53 +732,6 @@ class RadioHalo:
         rate = (self.M_obs - self.M_main) / (self.age_obs - t_merger)
         mass = rate * (t - t_merger) + self.M_main
         return mass
-
-    def _chi_acceleration(self, t=None):
-        """
-        Calculate the electron acceleration coefficient due to turbulent
-        waves at the given (cosmic) time.
-
-        Considering that the turbulence acceleration lies a 2nd-order
-        Fermi process, it has only a effective acceleration time of
-        several 1e8 years.  Therefore, the turbulence is assumed to
-        only accelerate the electrons during the merging period, i.e.,
-        this coefficient "chi" is zero after "t_merger + time_cross".
-
-        NOTE
-        ----
-        A zero diffusion coefficient may lead to unstable/wrong results,
-        so constrain this acceleration coefficient to be a small positive
-        but non-zero number.
-
-        Parameters
-        ----------
-        t : float, optional
-            The (cosmic) time/age.
-            If not given, then assumed to be within the merging process.
-            Unit: [Gyr]
-
-        Returns
-        -------
-        chi : float
-            The electron acceleration coefficient.
-            Unit: [Gyr^-1]
-
-        References
-        ----------
-        Ref.[cassano2005],Eq.(40,B12)
-        """
-        # The minimum acceleration coefficient to avoid unstable results
-        chi_min = 0.01  # [Gyr^-1]
-
-        if (t is None) or (t < self.age_merger + self.time_crossing):
-            mass = self.M_main + self.M_sub
-            term1 = (mass / 2e15) ** 1.5
-            term2 = (self.kT_merger / 7) ** (-0.5)
-            term3 = 500 / self.radius
-            chi = 6.3 * self.eta_turb * term1 * term2 * term3
-        else:
-            chi = chi_min
-        return chi
 
     def _loss_ion(self, gamma, t):
         """

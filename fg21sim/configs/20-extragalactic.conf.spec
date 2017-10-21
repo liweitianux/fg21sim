@@ -132,8 +132,18 @@
 
   # Giant radio halos for clusters with recent major mergers
   [[halos]]
-  # Roughly the fraction of turbulence energy transformed to accelerate
-  # the electrons, describing the efficiency of turbulence acceleration.
+  # The turbulence is generally injected at the cluster center during
+  # a merger.  This option parameterize the turbulence injection scale
+  # to be a fraction of the virial radius of the (main) cluster.
+  f_lturb = float(default=0.5, min=0.1, max=1.0)
+
+  # The custom option to tune the turbulent acceleration timescale, which
+  # controls the relativistic particle acceleration efficiencies.
+  f_acc = float(default=1.5, min=0.1, max=10)
+
+  # The fraction of cluster thermal energy originating from turbulent
+  # dissipation, which describes the turbulence intensity in the ICM,
+  # and determines its Mach number.
   eta_turb = float(default=0.2, min=0.1, max=1.0)
 
   # Ratio of the total energy injected into cosmic-ray electrons during
