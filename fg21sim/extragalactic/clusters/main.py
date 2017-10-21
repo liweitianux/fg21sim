@@ -262,7 +262,9 @@ class GalaxyClusters:
             data = OrderedDict([
                 ("z0", halo.z_obs),
                 ("M0", halo.M_obs),  # [Msun]
+                ("Rvir0", halo.radius_virial_obs),  # [kpc]
                 ("kT0", halo.kT_obs),  # [keV]
+                ("B0", halo.magnetic_field),  # [uG] magnetic field at z_obs
                 ("lon", row.lon),  # [deg] longitude
                 ("lat", row.lat),  # [deg] longitude
                 ("felong", row.felong),  # Fraction of elongation
@@ -270,13 +272,15 @@ class GalaxyClusters:
                 ("M_main", halo.M_main),  # [Msun]
                 ("M_sub", halo.M_sub),  # [Msun]
                 ("z_merger", halo.z_merger),
+                ("kT_main", halo.kT_main),  # [keV] main cluster kT at z_merger
+                ("kT_sub", halo.kT_sub),  # [keV] sub-cluster kT at z_merger
+                ("Rvir_main", halo.radius_virial_main),  # [kpc] at z_merger
+                ("Rvir_sub", halo.radius_virial_sub),  # [kpc] at z_merger
                 ("tback_merger", halo.tback_merger),  # [Gyr]
                 ("time_crossing", halo.time_crossing),  # [Gyr]
-                ("radius", halo.radius),  # [kpc]
-                ("angular_radius", halo.angular_radius),  # [arcsec]
+                ("Rhalo", halo.radius),  # [kpc]
+                ("Rhalo_angular", halo.angular_radius),  # [arcsec]
                 ("volume", halo.volume),  # [kpc^3]
-                ("B", halo.magnetic_field),  # [uG]
-                ("kT_merger", halo.kT_merger),  # [keV] ICM kT at z_merger
                 ("Ke", halo.injection_rate),  # [cm^-3 Gyr^-1]
                 ("chi", halo._chi_acceleration()),  # [Gyr^-1]
                 ("gamma", halo.gamma),  # Lorentz factors
@@ -335,7 +339,7 @@ class GalaxyClusters:
             i += 1
             if i % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
-            theta_e = hdict["angular_radius"] / self.sky.pixelsize
+            theta_e = hdict["Rhalo_angular"] / self.sky.pixelsize
             rprofile = helper.halo_rprofile(re=theta_e)
             template = helper.draw_halo(rprofile, felong=hdict["felong"],
                                         rotation=hdict["rotation"])

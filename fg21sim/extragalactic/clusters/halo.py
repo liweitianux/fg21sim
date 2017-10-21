@@ -185,6 +185,27 @@ class RadioHalo:
                                     z=self.z_merger)
 
     @property
+    def radius_virial_obs(self):
+        """
+        The virial radius of the "current" cluster (``M_obs``) at
+        ``z_obs``.
+
+        Unit: [kpc]
+        """
+        return helper.radius_virial(mass=self.M_obs, z=self.z_obs)
+
+    @property
+    def radius_virial_main(self):
+        """
+        The virial radius of the main cluster at ``z_merger``.
+        """
+        return helper.radius_virial(mass=self.M_main, z=self.z_merger)
+
+    @property
+    def radius_virial_sub(self):
+        return helper.radius_virial(mass=self.M_sub, z=self.z_merger)
+
+    @property
     def radius(self):
         """
         The estimated radius for the simulated radio halo.
@@ -232,21 +253,23 @@ class RadioHalo:
         return helper.magnetic_field(mass=self.M_obs, z=self.z_obs)
 
     @property
-    def kT_merger(self):
+    def kT_main(self):
         """
-        The cluster ICM mean temperature at ``z_merger`` when the merger
-        begins.
+        The mean temperature of the main cluster ICM at ``z_merger``
+        when the merger begins.
 
         Unit: [keV]
         """
-        mass = self.M_main + self.M_sub
-        kT = helper.kT_cluster(mass, z=self.z_merger)
-        return kT
+        return helper.kT_cluster(mass=self.M_main, z=self.z_merger)
+
+    @property
+    def kT_sub(self):
+        return helper.kT_cluster(mass=self.M_sub, z=self.z_merger)
 
     @property
     def kT_obs(self):
         """
-        The cluster ICM mean temperature at ``z_obs``.
+        The "current" cluster ICM mean temperature at ``z_obs``.
         """
         return helper.kT_cluster(self.M_obs, z=self.z_obs)  # [keV]
 
