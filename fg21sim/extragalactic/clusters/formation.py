@@ -256,9 +256,11 @@ class ClusterFormation:
         event :
             A dictionary representing this merger event, same format as
             the above ``self.recent_major_event``.
+            ``None`` if no mergers occurred during the traced period.
         """
         mtree = self.mtree
-        event_max = {"M_main": 0, "M_sub": 0, "R_mass": 0, "z": 0, "age": 0}
+        event_max = {"M_main": -1, "M_sub": -1, "R_mass": -1,
+                     "z": -1, "age": -1}
         event_major = None  # Record the most recent major merger event
         while mtree and mtree.main:
             if mtree.sub is None:
@@ -286,7 +288,11 @@ class ClusterFormation:
         if event_major and abs(event_major["z"]-event_max["z"]) > 1e-4:
             logger.warning("recent major merger != maximum merger")
 
-        return event_max
+        if event_max["z"] <= 0:
+            logger.warning("no mergers occurred at all!!")
+            return None
+        else:
+            return event_max
 
     def _trace_main(self):
         """

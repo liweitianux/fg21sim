@@ -216,6 +216,7 @@ class GalaxyClusters:
                                       merger_mass_min=self.merger_mass_min)
             clform.simulate_mergertree(main_only=True)
             if self.use_max_merger:
+                # NOTE: may be ``None`` due to no mergers occurred at all!
                 mmev = clform.max_merger
             else:
                 mmev = clform.recent_major_merger
