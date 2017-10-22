@@ -217,6 +217,7 @@ class ClusterFormation:
         event = None
         while mtree and mtree.main:
             if mtree.sub is None:
+                # Accretion
                 mtree = mtree.main
                 continue
 
@@ -224,7 +225,7 @@ class ClusterFormation:
             M_sub = mtree.sub.data["mass"]
             z = mtree.main.data["z"]
             age = mtree.main.data["age"]
-            if M_main / M_sub < self.ratio_major:
+            if M_main / M_sub <= self.ratio_major:
                 # Found a major merger event
                 event = {"M_main": M_main,
                          "M_sub": M_sub,
@@ -237,6 +238,55 @@ class ClusterFormation:
             mtree = mtree.main
 
         return event
+
+    @property
+    def max_merger(self):
+        """
+        The merger event corresponding to the biggest sub cluster, i.e.,
+        the main cluster gains most mass.
+
+        NOTE
+        ----
+        Generally, the above most recent major merger event, if identified,
+        should also be maximum merger found here.  Otherwise, a warning
+        message is logged.
+
+        Returns
+        -------
+        event :
+            A dictionary representing this merger event, same format as
+            the above ``self.recent_major_event``.
+        """
+        mtree = self.mtree
+        event_max = {"M_main": 0, "M_sub": 0, "R_mass": 0, "z": 0, "age": 0}
+        event_major = None  # Record the most recent major merger event
+        while mtree and mtree.main:
+            if mtree.sub is None:
+                mtree = mtree.main
+                continue
+
+            M_main = mtree.main.data["mass"]
+            M_sub = mtree.sub.data["mass"]
+            z = mtree.main.data["z"]
+            age = mtree.main.data["age"]
+            if (M_sub > event_max["M_sub"]):
+                # Track the found maximum merger
+                event_max = {"M_main": M_main, "M_sub": M_sub,
+                             "R_mass": M_main / M_sub,
+                             "z": z, "age": age}
+            if (event_major is None) and (M_main/M_sub <= self.ratio_major):
+                # Most recent major merger event
+                event_major = {"M_main": M_main, "M_sub": M_sub,
+                               "R_mass": M_main / M_sub,
+                               "z": z, "age": age}
+
+            # Continue
+            mtree = mtree.main
+
+        if event_major and abs(event_major["z"]-event_max["z"]) > 1e-4:
+            logger.warning("recent major merger != maximum merger")
+
+        return event_max
 
     def _trace_main(self):
         """
