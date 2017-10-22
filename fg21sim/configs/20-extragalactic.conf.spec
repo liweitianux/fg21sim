@@ -108,16 +108,22 @@
   # Unit: [Msun]
   merger_mass_min = float(default=1e12, min=1e10, max=1e14)
 
-  # Mass ratio of the main and sub clusters, below which is regarded as
-  # a major merger event.
-  ratio_major = float(default=3.0, min=1.0, max=10.0)
-
   # The merger timescale, which roughly describes the duration of the
   # merger-induced disturbance (~2-3 Gyr).  This timescale is much longer
   # the merger crossing time (~1 Gyr), and is also longer than the lifetime
   # of radio halos.
   # Unit: [Gyr]
   tau_merger = float(default=2.0, min=1.0, max=5.0)
+
+  # Mass ratio of the main and sub clusters, below which is regarded as
+  # a major merger event.
+  ratio_major = float(default=3.0, min=1.0, max=10.0)
+
+  # Whether to use the maximum merger event (i.e., biggest mass of the
+  # sub cluster) within the above ``tau_merger`` timescale to simulate the
+  # subsequent radio halo simulation?  Otherwise only the most recent major
+  # merger event will be used.
+  use_max_merger = boolean(default=False)
 
   # The fraction of the magnetic field energy density w.r.t. the ICM
   # thermal energy density, which is used to determine the mean magnetic
