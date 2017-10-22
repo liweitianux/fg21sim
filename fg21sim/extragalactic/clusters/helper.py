@@ -153,7 +153,9 @@ def kT_cluster(mass, z=0.0, radius=None):
     the cluster (near the virial radius) which can heat the gas,
     therefore the ICM has a higher temperature than the virial
     temperature, which can be estimated as:
-        T_icm = T_vir + 1.5*T_1 ~ T_vir + 0.8 [keV]
+        kT_icm ~ kT_vir + 1.5 * kT_out
+    where kT_out the temperature of the outer gas surround the cluster,
+    which may be ~0.5-1.0 keV.
 
     Reference: Ref.[fujita2003],Eq.(49)
 
@@ -163,8 +165,10 @@ def kT_cluster(mass, z=0.0, radius=None):
        The temperature of the cluster ICM.
        Unit: [keV]
     """
+    key = "extragalactic/clusters/kT_out"
+    kT_out = CONFIGS.getn(key)
     kT_vir = kT_virial(mass=mass, z=z, radius=radius)
-    kT_icm = kT_vir + 0.8
+    kT_icm = kT_vir + 1.5*kT_out
     return kT_icm
 
 

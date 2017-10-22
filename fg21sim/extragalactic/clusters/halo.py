@@ -327,9 +327,7 @@ class RadioHalo:
         if not hasattr(self, "_tau_acceleration"):
             Mach = self.Mach_turbulence
             Rvir = helper.radius_virial(mass=self.M_main, z=self.z_merger)
-            kT = helper.kT_cluster(mass=self.M_main, z=self.z_merger,
-                                   radius=Rvir)  # [keV]
-            cs = helper.speed_sound(kT)  # [km/s]
+            cs = helper.speed_sound(self.kT_main)  # [km/s]
             # Turbulence injection scale
             L0 = self.f_lturb * Rvir  # [kpc]
             x = cs*AUC.km2cm / AC.c

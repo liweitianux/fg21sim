@@ -124,6 +124,15 @@
   # field strength within the ICM and is also assumed to be uniform.
   eta_b = float(default=0.001, min=1e-5, max=0.1)
 
+  # The temperature of the outer gas surrounding the cluster.  Accretion
+  # shocks form near the cluster virial radius during the cluster formation,
+  # which can heat the cluster ICM to have a higher temperature than the
+  # virial temperature:
+  #     kT_icm ~ kT_vir + 1.5 * kT_out
+  # Reference: Fujita et al. 2003, ApJ, 584, 190; Eq.(49)
+  # Unit: [keV]
+  kT_out = float(default=0.5, min=0, max=1)
+
   # Filename prefix for this component
   prefix = string(default="cluster")
   # Output directory to save the simulated results
