@@ -352,8 +352,8 @@ class GalaxyClusters:
             if i % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
             theta_e = hdict["Rhalo_angular"] / self.sky.pixelsize
-            rprofile = helper.halo_rprofile(re=theta_e)
-            template = helper.draw_halo(rprofile, felong=hdict["felong"],
+            template = helper.draw_halo(radius=theta_e,
+                                        felong=hdict["felong"],
                                         rotation=hdict["rotation"])
             hdict["template"] = template
         logger.info("Done drawn halo template images.")

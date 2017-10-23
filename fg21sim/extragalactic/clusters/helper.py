@@ -351,57 +351,36 @@ def time_crossing(M_main, M_sub, z=0.0):
     return time
 
 
-def halo_rprofile(re, num_re=5, I0=1.0):
-    """
-    Generate the radial profile of a halo.
-
-    NOTE
-    ----
-    The exponential radial profile is adopted for the radio halos:
-        I(r) = I0 * exp(-r/re)
-    with the e-folding radius ``re ~ R_halo / 3``.
-
-    Parameters
-    ----------
-    re : float
-        The e-folding radius in unit of pixels.
-    num_re : float, optional
-        The times of ``re`` to determine the maximum radius.
-        Default: 5, i.e., rmax = 5 * re
-    I0 : float
-        The intensity/brightness at the center (i.e., r=0)
-        Default: 1.0
-
-    Returns
-    -------
-    rprofile : 1D `~numpy.ndarray`
-        The values along the radial pixels (0, 1, 2, ...)
-
-    References: Ref.[murgia2009],Eq.(1)
-    """
-    rmax = round(re * num_re)
-    r = np.arange(rmax+1)
-    rprofile = I0 * np.exp(-r/re)
-    return rprofile
-
-
-def draw_halo(rprofile, felong, rotation=0.0):
+def draw_halo(radius, nr=1.5, felong=None, rotation=None):
     """
     Draw the template image of one halo, which is used to simulate
     the image at requested frequencies by adjusting the brightness
     values.
 
+    NOTE
+    ----
+    The exponential radial profile is adopted for radio halos:
+        I(r) = I0 * exp(-r/re)
+    with the e-folding radius ``re ~ R_halo / 3``.
+
+    Reference: Ref.[murgia2009],Eq.(1)
+
     Parameters
     ----------
-    rprofile : 1D `~numpy.ndarray`
-        The values along the radial pixels (0, 1, 2, ...),
-        e.g., calculated by the above ``halo_rprofile()``.
-    felong : float
+    radius : float
+        The halo radius in number of pixels.
+    nr : float, optional
+        The times of ``radius`` to determine the size of the template
+        image.
+        Default: 1.5 (corresponding to 3*1.5=4.5 re)
+    felong : float, optional
         The elongated fraction of the elliptical halo, which is
         defined as the ratio of semi-minor axis to the semi-major axis.
-    rotation : float
+        Default: ``None`` (i.e., circular halo)
+    rotation : float, optional
         The rotation angle of the elliptical halo.
         Unit: [deg]
+        Default: ``None`` (i.e., no rotation)
 
     Returns
     -------
@@ -409,7 +388,16 @@ def draw_halo(rprofile, felong, rotation=0.0):
         2D array of the drawn halo template image.
         The image is normalized to have *mean* value of 1.
     """
+    # Make halo radial brightness profile
+    re = radius / 3.0  # e-folding radius
+    rmax = round(re * nr)
+    r = np.arange(rmax+1)
+    rprofile = np.exp(-r/re)
+
     image = circle(rprofile=rprofile)
-    image = circle2ellipse(image, bfraction=felong, rotation=rotation)
+    if felong:
+        image = circle2ellipse(image, bfraction=felong, rotation=rotation)
+
+    # Normalized to have *mean* value of 1
     image /= image.mean()
     return image
