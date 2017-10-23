@@ -144,7 +144,7 @@ def rotate_center(imgin, angle, interp=True, reshape=True, fill_value=0.0):
     return imgout
 
 
-def circle2ellipse(imgcirc, bfraction, rotation=0.0):
+def circle2ellipse(imgcirc, bfraction, rotation=None):
     """
     Shrink the input circle image with respect to the center along the
     column (axis) to transform the circle to an ellipse, and then rotate
@@ -160,7 +160,8 @@ def circle2ellipse(imgcirc, bfraction, rotation=0.0):
         shrunk size (height) of the output image.
         Should be a fraction within [0, 1]
     rotation : float, optional
-        Rotation angle (unit: [ degree ])
+        Rotation angle (unit: [deg])
+        Default: ``None`` (i.e., no rotation)
 
     Returns
     -------
@@ -179,6 +180,6 @@ def circle2ellipse(imgcirc, bfraction, rotation=0.0):
     imgout = np.zeros(shape=(nrow, ncol))
     r1 = int((nrow - nrow2) / 2)
     imgout[r1:(r1+nrow2), :] = img2
-    # Rotate the ellipse
-    imgout = ndimage.rotate(imgout, angle=rotation, reshape=False, order=1)
+    if rotation:
+        imgout = ndimage.rotate(imgout, angle=rotation, reshape=False, order=1)
     return imgout
