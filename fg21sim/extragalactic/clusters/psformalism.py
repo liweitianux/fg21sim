@@ -12,6 +12,7 @@ and redshift for each cluster.
 
 import logging
 import random
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -86,6 +87,7 @@ class PSFormalism:
         return massfunc
 
     @property
+    @lru_cache()
     def z(self):
         """
         The redshift points where to calculate the dndlnm data.
@@ -93,6 +95,7 @@ class PSFormalism:
         return np.arange(self.z_min, self.z_max+self.z_step/2, self.z_step)
 
     @property
+    @lru_cache()
     def mass(self):
         """
         The mass points where to calculate the dndlnm data.
