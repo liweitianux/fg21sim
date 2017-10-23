@@ -25,6 +25,7 @@ References
 """
 
 import logging
+from functools import lru_cache
 
 import numpy as np
 import scipy.special
@@ -102,6 +103,7 @@ class SynchrotronEmission:
         self.B = B  # [uG]
 
     @property
+    @lru_cache()
     def B_gauss(self):
         """
         Magnetic field in unit of [G] (i.e., Gauss)
@@ -109,6 +111,7 @@ class SynchrotronEmission:
         return self.B * 1e-6  # [uG] -> [G]
 
     @property
+    @lru_cache()
     def frequency_larmor(self):
         """
         Electron Larmor frequency (a.k.a. gyro frequency):

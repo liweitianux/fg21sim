@@ -311,7 +311,7 @@ def velocity_impact(M_main, M_sub, z=0.0):
     ----------
     Ref.[cassano2005],Eq.(9)
     """
-    eta_v = 4 * (1 + M_main/M_sub) ** (1/3)
+    eta_v = 4 * (1 + M_main/M_sub) ** 0.333333
     R_vir = radius_virial(M_main, z) * AUC.kpc2cm  # [cm]
     vi = np.sqrt(2*AC.G * (1-1/eta_v) *
                  (M_main+M_sub)*AUC.Msun2g / R_vir)  # [cm/s]

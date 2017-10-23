@@ -51,6 +51,7 @@ References
 """
 
 import logging
+from functools import lru_cache
 
 import numpy as np
 
@@ -161,6 +162,7 @@ class RadioHalo:
         )
 
     @property
+    @lru_cache()
     def gamma(self):
         """
         The logarithmic grid adopted for solving the equation.
@@ -184,6 +186,7 @@ class RadioHalo:
         return (self.age_obs - self.age_merger)  # [Gyr]
 
     @property
+    @lru_cache()
     def time_crossing(self):
         """
         The time duration of the sub-cluster crossing the main cluster,
@@ -217,6 +220,7 @@ class RadioHalo:
         return helper.radius_virial(mass=self.M_sub, z=self.z_merger)
 
     @property
+    @lru_cache()
     def radius(self):
         """
         The estimated radius for the simulated radio halo.
@@ -253,6 +257,7 @@ class RadioHalo:
         return (4*np.pi/3) * self.radius**3
 
     @property
+    @lru_cache()
     def magnetic_field(self):
         """
         The magnetic field strength at the simulated observation
@@ -264,6 +269,7 @@ class RadioHalo:
         return helper.magnetic_field(mass=self.M_obs, z=self.z_obs)
 
     @property
+    @lru_cache()
     def kT_main(self):
         """
         The mean temperature of the main cluster ICM at ``z_merger``
@@ -274,10 +280,12 @@ class RadioHalo:
         return helper.kT_cluster(mass=self.M_main, z=self.z_merger)
 
     @property
+    @lru_cache()
     def kT_sub(self):
         return helper.kT_cluster(mass=self.M_sub, z=self.z_merger)
 
     @property
+    @lru_cache()
     def kT_obs(self):
         """
         The "current" cluster ICM mean temperature at ``z_obs``.
@@ -285,6 +293,7 @@ class RadioHalo:
         return helper.kT_cluster(self.M_obs, z=self.z_obs)  # [keV]
 
     @property
+    @lru_cache()
     def Mach_turbulence(self):
         """
         The Mach number of the merger-induced turbulence.
@@ -306,6 +315,7 @@ class RadioHalo:
         return mach
 
     @property
+    @lru_cache()
     def tau_acceleration(self):
         """
         Calculate the electron acceleration timescale due to turbulent
@@ -324,20 +334,20 @@ class RadioHalo:
 
         Reference: Ref.[brunetti2016],Eq.(8,9)
         """
-        if not hasattr(self, "_tau_acceleration"):
-            Mach = self.Mach_turbulence
-            Rvir = helper.radius_virial(mass=self.M_main, z=self.z_merger)
-            cs = helper.speed_sound(self.kT_main)  # [km/s]
-            # Turbulence injection scale
-            L0 = self.f_lturb * Rvir  # [kpc]
-            x = cs*AUC.km2cm / AC.c
-            fx = x * (x**4/4 + x*x - (1+2*x*x) * np.log(x) - 5/4)
-            term1 = self.f_acc * 2.5 / fx / (Mach/0.5)**4
-            term2 = (L0/300) / (cs/1500)
-            self._tau_acceleration = term1 * term2 / 1000  # [Gyr]
-        return self._tau_acceleration
+        Mach = self.Mach_turbulence
+        Rvir = helper.radius_virial(mass=self.M_main, z=self.z_merger)
+        cs = helper.speed_sound(self.kT_main)  # [km/s]
+        # Turbulence injection scale
+        L0 = self.f_lturb * Rvir  # [kpc]
+        x = cs*AUC.km2cm / AC.c
+        fx = x * (x**4/4 + x*x - (1+2*x*x) * np.log(x) - 5/4)
+        term1 = self.f_acc * 2.5 / fx / (Mach/0.5)**4
+        term2 = (L0/300) / (cs/1500)
+        tau = term1 * term2 / 1000  # [Gyr]
+        return tau
 
     @property
+    @lru_cache()
     def injection_rate(self):
         """
         The constant electron injection rate assumed.
