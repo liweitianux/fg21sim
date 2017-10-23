@@ -351,7 +351,7 @@ def time_crossing(M_main, M_sub, z=0.0):
     return time
 
 
-def draw_halo(radius, nr=1.5, felong=None, rotation=None):
+def draw_halo(radius, nr=2.0, felong=None, rotation=None):
     """
     Draw the template image of one halo, which is used to simulate
     the image at requested frequencies by adjusting the brightness
@@ -372,7 +372,7 @@ def draw_halo(radius, nr=1.5, felong=None, rotation=None):
     nr : float, optional
         The times of ``radius`` to determine the size of the template
         image.
-        Default: 1.5 (corresponding to 3*1.5=4.5 re)
+        Default: 2.0 (corresponding to 3*2=6 re)
     felong : float, optional
         The elongated fraction of the elliptical halo, which is
         defined as the ratio of semi-minor axis to the semi-major axis.
@@ -390,7 +390,9 @@ def draw_halo(radius, nr=1.5, felong=None, rotation=None):
     """
     # Make halo radial brightness profile
     re = radius / 3.0  # e-folding radius
-    rmax = round(re * nr)
+    # NOTE: Use ``ceil()`` here to make sure ``rprofile`` has length >= 2,
+    #       therefore the interpolation in ``circle()`` runs well.
+    rmax = int(np.ceil(radius*nr))
     r = np.arange(rmax+1)
     rprofile = np.exp(-r/re)
 
