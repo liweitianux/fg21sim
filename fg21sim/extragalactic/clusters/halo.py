@@ -746,6 +746,28 @@ class RadioHalo:
         mass = rate * (t - t_merger) + self.M_main
         return mass
 
+    def _magnetic_field(self, t):
+        """
+        Calculate the mean magnetic field strength of the main cluster mass
+        at the given (cosmic) time.
+
+        Parameters
+        ----------
+        t : float
+            The (cosmic) time/age.
+            Unit: [Gyr]
+
+        Returns
+        -------
+        B : float
+            The mean magnetic field strength of the main cluster.
+            Unit: [uG]
+        """
+        z = COSMO.redshift(t)
+        mass = self._mass(t)  # [Msun]
+        B = helper.magnetic_field(mass=mass, z=z)  # [uG]
+        return B
+
     def _loss_ion(self, gamma, t):
         """
         Energy loss through ionization and Coulomb collisions.
@@ -783,8 +805,7 @@ class RadioHalo:
         ----------
         Ref.[sarazin1999],Eq.(6,7)
         """
+        B = self._magnetic_field(t)  # [uG]
         z = COSMO.redshift(t)
-        mass = self._mass(t)  # [Msun]
-        B = helper.magnetic_field(mass=mass, z=z)  # [uG]
         loss = -4.32e-4 * gamma**2 * ((B/3.25)**2 + (1+z)**4)
         return loss
