@@ -275,7 +275,7 @@ class GalaxyClusters:
                 ("M0", halo.M_obs),  # [Msun]
                 ("Rvir0", halo.radius_virial_obs),  # [kpc]
                 ("kT0", halo.kT_obs),  # [keV]
-                ("B0", halo.magnetic_field),  # [uG] magnetic field at z_obs
+                ("B0", halo.B_obs),  # [uG] magnetic field at z_obs
                 ("lon", row.lon),  # [deg] longitude
                 ("lat", row.lat),  # [deg] longitude
                 ("felong", row.felong),  # Fraction of elongation

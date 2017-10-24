@@ -258,7 +258,7 @@ class RadioHalo:
 
     @property
     @lru_cache()
-    def magnetic_field(self):
+    def B_obs(self):
         """
         The magnetic field strength at the simulated observation
         time (i.e., cluster mass of ``self.M_obs``), will be used
@@ -466,7 +466,7 @@ class RadioHalo:
             If not provided, then use ``self.gamma``.
         B : float, optional
             The magnetic field strength.
-            If not provided, then use ``self.magnetic_field``.
+            If not provided, then use ``self.B_obs``.
             Unit: [uG]
 
         Returns
@@ -481,7 +481,7 @@ class RadioHalo:
         if gamma is None:
             gamma = self.gamma
         if B is None:
-            B = self.magnetic_field
+            B = self.B_obs
         syncem = SynchrotronEmission(gamma=gamma, n_e=n_e, B=B)
         emissivity = syncem.emissivity(frequencies)
         return emissivity
