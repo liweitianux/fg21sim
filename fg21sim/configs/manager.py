@@ -200,7 +200,7 @@ class ConfigManager:
         self.merge(newconfig)
         logger.info("Loaded additional config")
 
-    def read_userconfig(self, userconfig):
+    def read_userconfig(self, userconfig, reset=False):
         """
         Read user configuration file, validate, and merge into the
         default configurations.
@@ -211,23 +211,31 @@ class ConfigManager:
             Filename/path to the user configuration file.
             Generally, an absolute path should be provided.
             The prefix ``~`` (tilde) is also allowed and will be expanded.
+        reset : bool, optional
+            Whether to reset the loaded configurations before reading
+            in the new user configurations?
+            NOTE: If an user configuration file is already loaded, then it
+                  is required to do a reset.  Otherwise, an error is raised.
 
-        NOTE
-        ----
-        If a user configuration file is already loaded, then the
-        configurations are *reset* before loading the supplied user
-        configuration file.
+        Raises
+        ------
+        ConfigError :
+            An user configuration file is already loaded but ``reset`` is
+            not allowed.
         """
         userconfig = os.path.expanduser(userconfig)
         try:
             config = open(userconfig).read().split("\n")
         except IOError:
-            raise ConfigError('Cannot read config from "%s"' % userconfig)
-        #
-        if self.userconfig is not None:
-            logger.warning('User configuration already loaded from "%s"' %
-                           self.userconfig)
-            self.reset()
+            raise ConfigError("Cannot read config from '%s'" % userconfig)
+
+        if self.userconfig:
+            if not reset:
+                raise ConfigError("User configurations already loaded " +
+                                  "from '%s'" % self.userconfig)
+            else:
+                self.reset()
+
         self.read_config(config)
         self.userconfig = os.path.abspath(userconfig)
         logger.info("Loaded user config: {0}".format(self.userconfig))
