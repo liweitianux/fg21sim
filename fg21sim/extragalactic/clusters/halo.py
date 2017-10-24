@@ -446,7 +446,7 @@ class RadioHalo:
         else:
             raise ValueError("given electron spectrum has wrong shape!")
 
-    def calc_emissivity(self, frequencies, n_e=None, gamma=None):
+    def calc_emissivity(self, frequencies, n_e=None, gamma=None, B=None):
         """
         Calculate the synchrotron emissivity for the derived electron
         spectrum.
@@ -458,12 +458,16 @@ class RadioHalo:
             Unit: [MHz]
         n_e : 1D `~numpy.ndarray`, optional
             The electron spectrum (w.r.t. Lorentz factors γ).
-            If not provided, then used the cached ``self.electron_spec``
-            solved above.
+            If not provided, then use the cached ``self.electron_spec``
+            that was solved at above.
             Unit: [cm^-3]
         gamma : 1D `~numpy.ndarray`, optional
             The Lorentz factors γ of the electron spectrum.
-            If not provided, then used ``self.gamma``.
+            If not provided, then use ``self.gamma``.
+        B : float, optional
+            The magnetic field strength.
+            If not provided, then use ``self.magnetic_field``.
+            Unit: [uG]
 
         Returns
         -------
@@ -476,8 +480,9 @@ class RadioHalo:
             n_e = self.electron_spec
         if gamma is None:
             gamma = self.gamma
-        syncem = SynchrotronEmission(gamma=gamma, n_e=n_e,
-                                     B=self.magnetic_field)
+        if B is None:
+            B = self.magnetic_field
+        syncem = SynchrotronEmission(gamma=gamma, n_e=n_e, B=B)
         emissivity = syncem.emissivity(frequencies)
         return emissivity
 
@@ -503,7 +508,7 @@ class RadioHalo:
             If not provided, then invoke above ``calc_emissivity()``
             method to calculate them.
             Unit: [erg/s/cm^3/Hz]
-        **kwargs : optional arguments, i.e., ``n_e`` and ``gamma``
+        **kwargs : optional arguments, i.e., ``n_e``, ``gamma``, and ``B``.
 
         Returns
         -------
@@ -549,7 +554,7 @@ class RadioHalo:
         frequencies : float, or 1D `~numpy.ndarray`
             The frequencies where to calculate the flux density.
             Unit: [MHz]
-        **kwargs : optional arguments, i.e., ``n_e`` and ``gamma``
+        **kwargs : optional arguments, i.e., ``n_e``, ``gamma``, and ``B``.
 
         Returns
         -------
@@ -589,7 +594,7 @@ class RadioHalo:
             If not provided, then invoke above ``calc_flux()`` method to
             calculate them.
             Unit: [arcsec]
-        **kwargs : optional arguments, i.e., ``n_e`` and ``gamma``
+        **kwargs : optional arguments, i.e., ``n_e``, ``gamma``, and ``B``.
 
         Returns
         -------
