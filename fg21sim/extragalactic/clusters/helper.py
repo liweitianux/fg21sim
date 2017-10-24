@@ -143,7 +143,7 @@ def kT_virial(mass, z=0.0, radius=None):
     return kT
 
 
-def kT_cluster(mass, z=0.0, radius=None):
+def kT_cluster(mass, z=0.0, radius=None, configs=CONFIGS):
     """
     Calculate the temperature of a cluster ICM.
 
@@ -166,7 +166,7 @@ def kT_cluster(mass, z=0.0, radius=None):
        Unit: [keV]
     """
     key = "extragalactic/clusters/kT_out"
-    kT_out = CONFIGS.getn(key)
+    kT_out = configs.getn(key)
     kT_vir = kT_virial(mass=mass, z=z, radius=radius)
     kT_icm = kT_vir + 1.5*kT_out
     return kT_icm
@@ -202,7 +202,7 @@ def density_number_thermal(mass, z=0.0):
     return n_th
 
 
-def density_energy_thermal(mass, z=0.0):
+def density_energy_thermal(mass, z=0.0, configs=CONFIGS):
     """
     Calculate the thermal energy density of the ICM.
 
@@ -213,12 +213,12 @@ def density_energy_thermal(mass, z=0.0):
         Unit: [erg/cm^3]
     """
     n_th = density_number_thermal(mass=mass, z=z)  # [cm^-3]
-    kT = kT_cluster(mass, z) * AUC.keV2erg  # [erg]
+    kT = kT_cluster(mass, z, configs=configs) * AUC.keV2erg  # [erg]
     e_th = (3.0/2) * kT * n_th
     return e_th
 
 
-def magnetic_field(mass, z=0.0):
+def magnetic_field(mass, z=0.0, configs=CONFIGS):
     """
     Calculate the mean magnetic field strength within the ICM, which is
     also assumed to be uniform, according to the assumed fraction of the
@@ -236,7 +236,7 @@ def magnetic_field(mass, z=0.0):
         Unit: [uG]
     """
     key = "extragalactic/clusters/eta_b"
-    eta_b = CONFIGS.getn(key)
+    eta_b = configs.getn(key)
     e_th = density_energy_thermal(mass=mass, z=z)
     B = np.sqrt(8*np.pi * eta_b * e_th) * 1e6  # [G] -> [uG]
     return B

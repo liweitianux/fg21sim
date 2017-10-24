@@ -277,12 +277,14 @@ class RadioHalo:
 
         Unit: [keV]
         """
-        return helper.kT_cluster(mass=self.M_main, z=self.z_merger)
+        return helper.kT_cluster(mass=self.M_main, z=self.z_merger,
+                                 configs=self.configs)
 
     @property
     @lru_cache()
     def kT_sub(self):
-        return helper.kT_cluster(mass=self.M_sub, z=self.z_merger)
+        return helper.kT_cluster(mass=self.M_sub, z=self.z_merger,
+                                 configs=self.configs)
 
     @property
     @lru_cache()
@@ -290,7 +292,8 @@ class RadioHalo:
         """
         The "current" cluster ICM mean temperature at ``z_obs``.
         """
-        return helper.kT_cluster(self.M_obs, z=self.z_obs)  # [keV]
+        return helper.kT_cluster(self.M_obs, z=self.z_obs,
+                                 configs=self.configs)  # [keV]
 
     @property
     @lru_cache()
