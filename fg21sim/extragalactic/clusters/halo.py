@@ -378,38 +378,39 @@ class RadioHalo:
         Ke = term1 * term2 / term3  # [cm^-3 Gyr^-1]
         return Ke
 
-    def calc_electron_spectrum(self, zbegin=None, zend=None, n0_e=None):
+    def calc_electron_spectrum(self, tstart=None, tstop=None, n0_e=None):
         """
         Calculate the relativistic electron spectrum by solving the
         Fokker-Planck equation.
 
         Parameters
         ----------
-        zbegin : float, optional
-            The redshift from where to solve the Fokker-Planck equation.
-            Default: ``self.z_merger``.
-        zend : float, optional
-            The redshift where to stop solving the Fokker-Planck equation.
-            Default: ``self.z_obs``.
+        tstart : float, optional
+            The (cosmic) time from when to solve the Fokker-Planck equation
+            for relativistic electrons evolution.
+            Default: ``self.age_merger``.
+            Unit: [Gyr]
+        tstop : float, optional
+            The (cosmic) time when to derive final relativistic electrons
+            spectrum for synchrotron emission calculations.
+            Default: ``self.age_obs``.
+            Unit: [Gyr]
         n0_e : 1D `~numpy.ndarray`, optional
-            The initial electron number distribution.
-            Unit: [cm^-3].
-            Default: accumulated constantly injected electrons until zbegin.
+            The initial electron spectrum (number distribution).
+            Default: accumulated constantly injected electrons until
+            ``tstart``.
+            Unit: [cm^-3]
 
         Returns
         -------
         electron_spec : float 1D `~numpy.ndarray`
-            The solved electron spectrum at ``zend``.
+            The solved electron spectrum at ``tstop``.
             Unit: [cm^-3]
         """
-        if zbegin is None:
-            tstart = COSMO.age(self.z_merger)
-        else:
-            tstart = COSMO.age(zbegin)
-        if zend is None:
-            tstop = COSMO.age(self.z_obs)
-        else:
-            tstop = COSMO.age(zend)
+        if tstart is None:
+            tstart = self.age_merger
+        if tstop is None:
+            tstop = self.age_obs
         if n0_e is None:
             # Accumulated constantly injected electrons until ``tstart``.
             n_inj = self.fp_injection(self.gamma)
