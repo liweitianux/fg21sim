@@ -233,7 +233,8 @@ class ConfigManager:
         logger.info("Loaded user config: {0}".format(self.userconfig))
 
     def reset(self):
-        """Reset the current configurations to the copy of defaults from
+        """
+        Reset the current configurations to the copy of defaults from
         the specifications.
 
         NOTE: Also reset ``self.userconfig`` to ``None``.
@@ -422,6 +423,12 @@ class ConfigManager:
         self.merge(d2)
         logger.info("Set config: {key}: {val_new} <- {val_old}".format(
             key="/".join(key), val_new=val_new, val_old=val_old))
+
+    def __getitem__(self, key):
+        return self.getn(key=key)
+
+    def __setitem__(self, key, value):
+        self.setn(key=key, value=value)
 
     def get_path(self, key):
         """
