@@ -404,7 +404,7 @@ class RadioHalo:
         """
         # Accumulated electrons constantly injected until ``age_merger``
         n_inj = self.fp_injection(self.gamma)
-        n0_e = n_inj * self.age_merger
+        n0_e = n_inj * (self.age_merger - self.time_init)
 
         logger.debug("Derive the initial electron spectrum ...")
         # NOTE: subtract ``time_step`` to avoid the acceleration at the
@@ -760,7 +760,9 @@ class RadioHalo:
         # Always use the properties at ``age_merger`` to derive the
         # initial electron spectrum.
         if t < self.age_merger:
-            t = self.age_merger
+            # NOTE: subtract ``time_step`` to make sure ``fp_diffusion()``
+            #       gives no acceleration.
+            t = self.age_merger - self.time_step
 
         gamma = np.asarray(gamma)
         advection = (abs(self._loss_ion(gamma, t)) +
