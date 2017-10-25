@@ -266,7 +266,8 @@ class RadioHalo:
 
         Unit: [uG]
         """
-        return helper.magnetic_field(mass=self.M_obs, z=self.z_obs)
+        return helper.magnetic_field(mass=self.M_obs, z=self.z_obs,
+                                     configs=self.configs)
 
     @property
     @lru_cache()
@@ -374,7 +375,8 @@ class RadioHalo:
         Ref.[cassano2005],Eqs.(31,32,33)
         """
         s = self.injection_index
-        e_thermal = helper.density_energy_thermal(self.M_obs, self.z_obs)
+        e_thermal = helper.density_energy_thermal(self.M_obs, self.z_obs,
+                                                  configs=self.configs)
         term1 = (s-2) * self.eta_e * e_thermal  # [erg cm^-3]
         term2 = self.gamma_min**(s-2)
         term3 = AU.mec2 * self.age_obs  # [erg Gyr]
@@ -769,7 +771,7 @@ class RadioHalo:
         """
         z = COSMO.redshift(t)
         mass = self._mass(t)  # [Msun]
-        B = helper.magnetic_field(mass=mass, z=z)  # [uG]
+        B = helper.magnetic_field(mass=mass, z=z, configs=self.configs)
         return B
 
     def _loss_ion(self, gamma, t):

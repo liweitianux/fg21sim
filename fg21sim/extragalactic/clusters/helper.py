@@ -237,7 +237,7 @@ def magnetic_field(mass, z=0.0, configs=CONFIGS):
     """
     key = "extragalactic/clusters/eta_b"
     eta_b = configs.getn(key)
-    e_th = density_energy_thermal(mass=mass, z=z)
+    e_th = density_energy_thermal(mass=mass, z=z, configs=configs)
     B = np.sqrt(8*np.pi * eta_b * e_th) * 1e6  # [G] -> [uG]
     return B
 
