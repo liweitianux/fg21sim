@@ -374,14 +374,6 @@ class FokkerPlanckSolver:
 
         return uc
 
-    def time_step(self):
-        """
-        Adaptively determine the time step for solving the equation.
-
-        TODO/XXX
-        """
-        pass
-
     def solve_step(self, uc, tc, tstep=None):
         """
         Solve the Fokker-Planck equation by a single step.
