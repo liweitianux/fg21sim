@@ -187,6 +187,11 @@
   # Electron injection, which is assumed to have a constant injection
   # rate and a power-law spectrum.
   injection_index = float(default=2.4, min=2.1, max=3.5)
+  # How long the period before the merger begins, which is used to derive
+  # an approximately steady initial electron spectrum.  During this period,
+  # the acceleration is turned off and only leaves energy loss mechanisms.
+  # Unit: [Gyr]
+  time_init = float(default=0.4, min=0)
 
 
   # Extragalactic point sources

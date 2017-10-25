@@ -85,8 +85,10 @@ class RadioHalo:
        energy spectrum, determine the injection rate by further assuming
        that the total injected electrons has energy of a fraction (eta_e)
        of the ICM total thermal energy;
-    4. Set the initial electron density/spectrum be the total injected
-       electrons during t_merger time;
+    4. Set the electron density/spectrum be the accumulated electrons
+       injected during t_merger time, then evolve it for time_init period
+       considering only losses and constant injection, in order to derive
+       an approximately steady electron spectrum for following use;
     5. Calculate the magnetic field from the cluster total mass (which
        is assumed to be growth linearly from M_main+M_sub to M_obs);
     6. Calculate the energy losses for the coefficients of Fokker-Planck
@@ -148,6 +150,7 @@ class RadioHalo:
         self.gamma_np = self.configs.getn(comp+"/gamma_np")
         self.buffer_np = self.configs.getn(comp+"/buffer_np")
         self.time_step = self.configs.getn(comp+"/time_step")
+        self.time_init = self.configs.getn(comp+"/time_init")
         self.injection_index = self.configs.getn(comp+"/injection_index")
 
     def _set_solver(self):
@@ -383,6 +386,36 @@ class RadioHalo:
         Ke = term1 * term2 / term3  # [cm^-3 Gyr^-1]
         return Ke
 
+    @property
+    def electron_spec_init(self):
+        """
+        The (default) initial electron spectrum at ``age_merger`` from
+        which to solve the final electron spectrum at the observation
+        time by solving the Fokker-Planck equation.
+
+        This initial electron spectrum is derived from the accumulated
+        electron spectrum injected throughout the ``age_merger`` period,
+        by solving the same Fokker-Planck equation, but only considering
+        energy losses and constant injection, evolving for a period of
+        ``time_init`` in order to obtain an approximately steady electron
+        spectrum.
+
+        Units: [cm^-3]
+        """
+        # Accumulated electrons constantly injected until ``age_merger``
+        n_inj = self.fp_injection(self.gamma)
+        n0_e = n_inj * self.age_merger
+
+        logger.debug("Derive the initial electron spectrum ...")
+        tstart = self.age_merger - self.time_init
+        tstop = self.age_merger
+        # Use a bigger time step to save time
+        self.fpsolver.tstep *= 2
+        n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
+        # Restore the original time step
+        self.fpsolver.tstep = self.time_step
+        return n_e
+
     def calc_electron_spectrum(self, tstart=None, tstop=None, n0_e=None):
         """
         Calculate the relativistic electron spectrum by solving the
@@ -402,8 +435,7 @@ class RadioHalo:
             Unit: [Gyr]
         n0_e : 1D `~numpy.ndarray`, optional
             The initial electron spectrum (number distribution).
-            Default: accumulated constantly injected electrons until
-            ``tstart``.
+            Default: ``self.electron_spec_init``
             Unit: [cm^-3]
 
         Returns
@@ -417,9 +449,7 @@ class RadioHalo:
         if tstop is None:
             tstop = self.age_obs
         if n0_e is None:
-            # Accumulated constantly injected electrons until ``tstart``.
-            n_inj = self.fp_injection(self.gamma)
-            n0_e = n_inj * tstart
+            n0_e = self.electron_spec_init
 
         # When the evolution time is too short, decrease the time step
         # to improve the results.
@@ -697,11 +727,15 @@ class RadioHalo:
         ----------
         Ref.[donnert2013],Eq.(15)
         """
-        if t < (self.age_merger + self.time_crossing):
-            tau_acc = self.tau_acceleration  # [Gyr]
-        else:
-            # The large enough timescale to avoid unstable results
+        if (t < self.age_merger) or (t > self.age_merger+self.time_crossing):
+            # NO acceleration; use a large enough timescale to avoid
+            # unstable results.
             tau_acc = 10.0  # [Gyr]
+        else:
+            # Turbulence acceleration
+            tau_acc = self.tau_acceleration  # [Gyr]
+
+        gamma = np.asarray(gamma)
         diffusion = gamma**2 / 4 / tau_acc
         return diffusion
 
@@ -721,6 +755,12 @@ class RadioHalo:
             Advection coefficients, describing the energy loss/gain rates.
             Unit: [Gyr^-1]
         """
+        # Always use the properties at ``age_merger`` to derive the
+        # initial electron spectrum.
+        if t < self.age_merger:
+            t = self.age_merger
+
+        gamma = np.asarray(gamma)
         advection = (abs(self._loss_ion(gamma, t)) +
                      abs(self._loss_rad(gamma, t)) -
                      (self.fp_diffusion(gamma, t) * 2 / gamma))
