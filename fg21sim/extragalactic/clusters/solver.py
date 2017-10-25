@@ -109,10 +109,12 @@ class FokkerPlanckSolver:
     f_escape : function, optional
         Function f(x,t) to calculate the escape coefficient T(x,t)
     buffer_np : int, optional
-        Number of grid points taking as the buffer region near the lower
-        boundary.  The densities within this buffer region will be replaced
-        by extrapolating an power law to avoid unphysical accumulations.
-        This fix is ignored if this parameter is not specified.
+        Number of grid cells taken as the buffer regions near both the
+        lower and upper boundaries.  The values within the buffer regions
+        will be replaced by extrapolating with a power law to avoid
+        unphysical pile-ups.
+        The fix will be ignored if this parameter is ``None`` or is less
+        than 2.
         (This parameter is suggested to be about 5%-10% of ``x_np``.)
 
     NOTE
@@ -142,6 +144,9 @@ class FokkerPlanckSolver:
         self.f_injection = f_injection
         self.f_escape = f_escape
         self.buffer_np = buffer_np
+        if (buffer_np is not None) and (buffer_np < 2):
+            logger.warning("buffer_np set but < 2; disable boundary fixes!")
+            self.buffer_np = None
 
     @property
     def x(self):

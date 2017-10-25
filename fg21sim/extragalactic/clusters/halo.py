@@ -149,6 +149,8 @@ class RadioHalo:
         self.gamma_max = self.configs.getn(comp+"/gamma_max")
         self.gamma_np = self.configs.getn(comp+"/gamma_np")
         self.buffer_np = self.configs.getn(comp+"/buffer_np")
+        if self.buffer_np == 0:
+            self.buffer_np = None
         self.time_step = self.configs.getn(comp+"/time_step")
         self.time_init = self.configs.getn(comp+"/time_init")
         self.injection_index = self.configs.getn(comp+"/injection_index")
