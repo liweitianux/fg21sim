@@ -165,6 +165,10 @@
   # the cluster life to its total thermal energy.
   eta_e = float(default=0.003, min=0.001, max=0.1)
 
+  # Electron injection, which is assumed to have a constant injection
+  # rate and a power-law spectrum.
+  injection_index = float(default=2.4, min=2.1, max=3.5)
+
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
   gamma_min = float(default=1e1)
@@ -182,11 +186,8 @@
 
   # Time step for solving the Fokker-Planck equation
   # Unit: [Gyr]
-  time_step = float(default=0.02, min=1e-4, max=0.1)
+  time_step = float(default=0.01, min=1e-4, max=0.1)
 
-  # Electron injection, which is assumed to have a constant injection
-  # rate and a power-law spectrum.
-  injection_index = float(default=2.4, min=2.1, max=3.5)
   # How long the period before the merger begins, which is used to derive
   # an approximately steady initial electron spectrum.  During this period,
   # the acceleration is turned off and only leaves energy loss mechanisms.
