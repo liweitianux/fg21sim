@@ -407,10 +407,12 @@ class RadioHalo:
         n0_e = n_inj * self.age_merger
 
         logger.debug("Derive the initial electron spectrum ...")
-        tstart = self.age_merger - self.time_init
-        tstop = self.age_merger
+        # NOTE: subtract ``time_step`` to avoid the acceleration at the
+        #       last step at ``age_merger``.
+        tstart = self.age_merger - self.time_init - self.time_step
+        tstop = self.age_merger - self.time_step
         # Use a bigger time step to save time
-        self.fpsolver.tstep *= 2
+        self.fpsolver.tstep = 3 * self.time_step
         n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
         # Restore the original time step
         self.fpsolver.tstep = self.time_step
@@ -730,7 +732,7 @@ class RadioHalo:
         if (t < self.age_merger) or (t > self.age_merger+self.time_crossing):
             # NO acceleration; use a large enough timescale to avoid
             # unstable results.
-            tau_acc = 10.0  # [Gyr]
+            tau_acc = 100  # [Gyr]
         else:
             # Turbulence acceleration
             tau_acc = self.tau_acceleration  # [Gyr]

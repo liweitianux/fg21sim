@@ -192,7 +192,7 @@
   # an approximately steady initial electron spectrum.  During this period,
   # the acceleration is turned off and only leaves energy loss mechanisms.
   # Unit: [Gyr]
-  time_init = float(default=0.4, min=0)
+  time_init = float(default=0.6, min=0)
 
 
   # Extragalactic point sources
