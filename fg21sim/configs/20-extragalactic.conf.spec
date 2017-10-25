@@ -171,7 +171,7 @@
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
-  gamma_min = float(default=1e1)
+  gamma_min = float(default=1)
   gamma_max = float(default=1e5)
   # Number of cells on the logarithmic momentum grid used to solve the
   # Fokker-Planck equation.
@@ -182,6 +182,8 @@
   # extrapolating from the inner-region data, in order to avoid the
   # unphysical particle pile-ups.
   # It is suggested to be about 5%-10% of the above ``gamma_np``.
+  # NOTE: * set to 0 to disable boundary fixes;
+  #       * otherwise, set to a number >= 2.
   buffer_np = integer(default=10, min=0)
 
   # Time step for solving the Fokker-Planck equation
