@@ -338,19 +338,21 @@ class RadioHalo:
         Generally, the turbulent acceleration timescale is about 0.1 Gyr.
         It is shown that this acceleration timescale depends weakly on
         cluster mass and redshift, therefore, its value is derived at the
-        beginning of the merger and assumed to be constant throughout the
+        beginning of the merger and assumed to be constant during the
         merging period.
 
         Reference: Ref.[brunetti2016],Eq.(8,9)
         """
-        Mach = self.Mach_turbulence
-        Rvir = helper.radius_virial(mass=self.M_main, z=self.z_merger)
+        # Turbulence injection scale: assumed to be correlated with the
+        # radius of the in-falling sub cluster.
+        Rvir_sub = helper.radius_virial(mass=self.M_sub, z=self.z_merger)
+        L0 = self.f_lturb * Rvir_sub  # [kpc]
+
         cs = helper.speed_sound(self.kT_main)  # [km/s]
-        # Turbulence injection scale
-        L0 = self.f_lturb * Rvir  # [kpc]
         x = cs*AUC.km2cm / AC.c
         fx = x * (x**4/4 + x*x - (1+2*x*x) * np.log(x) - 5/4)
-        term1 = self.f_acc * 2.5 / fx / (Mach/0.5)**4
+
+        term1 = self.f_acc * 2.5 / fx / (self.Mach_turbulence/0.5)**4
         term2 = (L0/300) / (cs/1500)
         tau = term1 * term2 / 1000  # [Gyr]
         return tau
