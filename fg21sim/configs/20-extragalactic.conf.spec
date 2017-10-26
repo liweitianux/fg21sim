@@ -154,11 +154,17 @@
 
   # The custom option to tune the turbulent acceleration timescale, which
   # controls the relativistic particle acceleration efficiencies.
-  f_acc = float(default=1.5, min=0.1, max=10)
+  # NOTE: The smaller this parameter, the shorter the acceleration
+  #       timescale, therefore the more efficient the turbulent acceleration.
+  f_acc = float(default=1.0, min=0.1, max=10)
 
   # The fraction of cluster thermal energy originating from turbulent
   # dissipation, which describes the turbulence intensity in the ICM,
   # and determines its Mach number.
+  # NOTE: Currently, this parameter only determines the turbulence Mach
+  #       number, which affects only the turbulent acceleration efficiency,
+  #       which is also controlled by the above ``f_acc`` parameter.
+  #       So we can just *fix* this parameter to its default value.
   eta_turb = float(default=0.2, min=0.1, max=1.0)
 
   # Ratio of the total energy injected into cosmic-ray electrons during

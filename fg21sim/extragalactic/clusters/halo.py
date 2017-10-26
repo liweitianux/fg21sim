@@ -315,7 +315,7 @@ class RadioHalo:
         α is a parameter ranges about 1.5-3, and we take it as:
             α = 3^(3/2) / 2 ≅ 2.6
         η_turb describes the fraction of thermal energy originating from
-        turbulent dissipation, ~0.3.
+        turbulent dissipation, ~0.2-0.4.
 
         Reference: Ref.[miniati2015],Eq.(1)
         """
