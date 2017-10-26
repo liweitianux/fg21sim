@@ -85,10 +85,6 @@ def make_coordinate_grid(center, size, resolution):
     return (lon, lat)
 
 
-@nb.jit(nb.float64[:, :](nb.types.UniTuple(nb.int64, 2),
-                         nb.types.UniTuple(nb.int64, 2),
-                         nb.float64),
-        nopython=True)
 def make_ellipse(center, radii, rotation):
     """
     Make a square grid map containing the specified rotated ellipse.
@@ -125,10 +121,6 @@ def make_ellipse(center, radii, rotation):
     return gridmap
 
 
-@nb.jit(nb.types.UniTuple(nb.float64[:, :], 3)(
-    nb.types.UniTuple(nb.float64, 2), nb.types.UniTuple(nb.float64, 2),
-    nb.float64, nb.float64),
-        nopython=True)
 def make_grid_ellipse(center, size, resolution, rotation=0.0):
     """
     Make a square coordinate grid just containing the specified
