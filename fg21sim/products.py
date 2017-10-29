@@ -1,8 +1,10 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
 Manage and manipulate the simulation products.
+
+XXX/TODO: update with HEALPix and sky patch, according to ``sky.py``.
 """
 
 import os
