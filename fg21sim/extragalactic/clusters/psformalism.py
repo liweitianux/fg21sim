@@ -216,6 +216,8 @@ class PSFormalism:
         """
         logger.info("Calculating the total number of clusters within "
                     "sky patch of coverage %.1f [deg^2]" % coverage)
+        logger.info("Minimum cluster mass: %.2e [Msun]" % self.Mmin_cluster)
+        logger.info("Minimum halo mass: %.2e [Msun]" % self.Mmin_halo)
         coverage *= AUC.deg2rad**2  # [deg^2] -> [rad^2] = [sr]
         midx = (self.mass >= self.Mmin_halo)
         numgrid = self.number_grid

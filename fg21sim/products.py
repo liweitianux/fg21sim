@@ -347,7 +347,7 @@ class Products:
     def reset(self):
         self.manifest = OrderedDict()
         self.manifestfile = None
-        logger.warning("Reset products manifest")
+        logger.warning("Reset products manifest!")
 
     def dump(self, outfile=None, clobber=False, backup=True):
         """
@@ -381,8 +381,7 @@ class Products:
                                  "self.manifestfile is None")
             else:
                 outfile = self.manifestfile
-                logger.warning("outfile not provided, " +
-                               "use self.manifestfile: {0}".format(outfile))
+                logger.info("Output to self.manifestfile: {0}".format(outfile))
         outfile = os.path.expanduser(outfile)
         if not os.path.isabs(outfile):
             raise ValueError("Not an absolute path: {0}".format(outfile))
@@ -397,6 +396,7 @@ class Products:
         #
         with open(outfile, "w") as fp:
             json.dump(self.manifest, fp, indent=4)
+            fp.write("\n")
         logger.info("Dumped manifest to file: {0}".format(outfile))
 
     def load(self, infile):
