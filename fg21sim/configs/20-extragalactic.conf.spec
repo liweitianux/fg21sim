@@ -20,7 +20,7 @@
   # The model of the fitting function for halo mass distribution
   # For all models and more details:
   # https://hmf.readthedocs.io/en/latest/_autosummary/hmf.fitting_functions.html
-  model = option("smt", "jenkins", "ps", default="smt")
+  model = option("smt", "jenkins", "ps", default="ps")
 
   # The minimum (inclusive) and maximum (exclusive!) halo mass (dark
   # matter only) within which to calculate the halo mass distribution.
@@ -117,7 +117,7 @@
 
   # Mass ratio of the main and sub clusters, below which is regarded as
   # a major merger event.
-  ratio_major = float(default=3.0, min=1.0, max=10.0)
+  ratio_major = float(default=5.0, min=1.0, max=10.0)
 
   # Whether to use the maximum merger event (i.e., biggest mass of the
   # sub cluster) within the above ``tau_merger`` timescale to simulate the
@@ -169,11 +169,11 @@
 
   # Ratio of the total energy injected into cosmic-ray electrons during
   # the cluster life to its total thermal energy.
-  eta_e = float(default=0.003, min=0.001, max=0.1)
+  eta_e = float(default=0.001, min=0.001, max=0.1)
 
   # Electron injection, which is assumed to have a constant injection
   # rate and a power-law spectrum.
-  injection_index = float(default=2.4, min=2.1, max=3.5)
+  injection_index = float(default=2.3, min=2.1, max=3.5)
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
