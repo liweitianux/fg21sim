@@ -156,7 +156,7 @@
   # controls the relativistic particle acceleration efficiencies.
   # NOTE: The smaller this parameter, the shorter the acceleration
   #       timescale, therefore the more efficient the turbulent acceleration.
-  f_acc = float(default=1.0, min=0.1, max=10)
+  f_acc = float(default=1.5, min=0.1, max=10)
 
   # The fraction of cluster thermal energy originating from turbulent
   # dissipation, which describes the turbulence intensity in the ICM,
