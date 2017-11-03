@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -129,7 +129,7 @@ def _image_to_healpix(image, wcs, nside, order=1, hemisphere=None):
         raise ValueError("invalid hemisphere: {0}".format(hemisphere))
     #
     npix = hp.nside2npix(nside)
-    hpidx = np.arange(npix).astype(np.int)
+    hpidx = np.arange(npix, dtype=int)
     logger.info("Output HEALPix: Nside={0}, Npixel={1}".format(nside, npix))
     # Calculate the longitude and latitude in frame of output HEALPix
     logger.info("Calculate the longitudes and latitudes on the HEALPix grid")
@@ -288,7 +288,7 @@ def zea2healpix(img1, img2, nside, order=1, inpaint=False,
     # Merge the two HEALPix data
     hp_nan1 = np.isnan(hp_data1)
     hp_nan2 = np.isnan(hp_data2)
-    hp_mask = (~hp_nan1).astype(np.int) + (~hp_nan2).astype(np.int)
+    hp_mask = (~hp_nan1).astype(int) + (~hp_nan2).astype(int)
     hp_data1[hp_nan1] = 0.0
     hp_data2[hp_nan2] = 0.0
     hp_data = hp_data1 + hp_data2

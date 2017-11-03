@@ -238,9 +238,9 @@ class SKA1Low:
 
         x, y = np.zeros(n), np.zeros(n)
         grid = {
-            "start": np.zeros((grid_size, grid_size), dtype=np.int),
-            "end": np.zeros((grid_size, grid_size), dtype=np.int),
-            "count": np.zeros((grid_size, grid_size), dtype=np.int),
+            "start": np.zeros((grid_size, grid_size), dtype=int),
+            "end": np.zeros((grid_size, grid_size), dtype=int),
+            "count": np.zeros((grid_size, grid_size), dtype=int),
             "next": np.zeros(n, dtype=int)
         }
 

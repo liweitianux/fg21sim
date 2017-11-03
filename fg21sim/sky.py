@@ -545,8 +545,8 @@ class SkyPatch(SkyBase):
         pixelsize = self.pixelsize * AUC.arcsec2deg  # [deg]
         x, y = np.asarray(x), np.asarray(y)  # [deg]
         ri0, ci0 = self.ysize//2, self.xsize//2
-        ri = np.round((y - self.ycenter) / pixelsize + ri0).astype(np.int)
-        ci = np.round((x - self.xcenter) / pixelsize + ci0).astype(np.int)
+        ri = np.round((y - self.ycenter) / pixelsize + ri0).astype(int)
+        ci = np.round((x - self.xcenter) / pixelsize + ci0).astype(int)
         return (ri, ci)
 
     def load(self, infile, frequency=None):

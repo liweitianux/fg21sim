@@ -114,7 +114,7 @@ class Synchrotron:
         alpha = 0.0599
         beta = 0.782
         # angular power spectrum of the Gaussian random field
-        ell = np.arange(self.lmax+1).astype(np.int)
+        ell = np.arange(self.lmax+1, dtype=int)
         cl = np.zeros(ell.shape)
         ell_idx = ell >= self.lmin
         cl[ell_idx] = (ell[ell_idx] ** gamma *
