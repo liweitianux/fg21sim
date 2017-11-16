@@ -711,9 +711,21 @@ class RadioHalo:
         the electrons during the merging period, i.e., the acceleration
         timescale is set to be infinite after "t_merger + time_cross".
 
-        However, a zero diffusion coefficient may lead to unstable/wrong
-        results, so constrain the acceleration timescale to be a large
-        enough but finite number (e.g., 10 Gyr).
+        WARNING
+        -------
+        A zero diffusion coefficient may lead to unstable/wrong results,
+        since it is not properly taken care of by the solver.  Therefore
+        give the acceleration timescale a large enough but finite value
+        after turbulent acceleration.
+        Also note that a very large acceleration timescale (e.g., 1000 or
+        even 10000) will also cause problems (maybe due to some limitations
+        within the current calculation scheme), for example, the energy
+        losses don't seem to have effect in such cases, so the derived
+        initial electron spectrum is almost the same as the raw input one,
+        and the emissivity at medium/high frequencies even decreases when
+        the turbulence acceleration begins!
+        By carrying out some tests, the value of 10 [Gyr] is adopted for
+        the maximum acceleration timescale.
 
         Parameters
         ----------
@@ -734,9 +746,8 @@ class RadioHalo:
         Ref.[donnert2013],Eq.(15)
         """
         if (t < self.age_merger) or (t > self.age_merger+self.time_crossing):
-            # NO acceleration; use a large enough timescale to avoid
-            # unstable results.
-            tau_acc = 100  # [Gyr]
+            # NO acceleration (see also the above NOTE and WARNING!)
+            tau_acc = 10  # [Gyr]
         else:
             # Turbulence acceleration
             tau_acc = self.tau_acceleration  # [Gyr]
