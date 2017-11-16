@@ -137,7 +137,7 @@ ns = float(default=0.96, min=0.0)
 level = option("debug", "info", "warning", "error", "critical", default="info")
 
 # Set the format of displayed messages
-format = string(default="%(asctime)s [%(levelname)s] <%(name)s> %(message)s")
+format = string(default="%(asctime)s [%(levelname)s] <%(name)s:%(lineno)d> %(message)s")
 
 # Set the date/time format in messages
 datefmt = string(default="%H:%M:%S")
