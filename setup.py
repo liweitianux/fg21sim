@@ -46,7 +46,7 @@ def read(fname):
 
 # Check the minimal Python version
 if sys.version_info < (3, 4):
-    sys.exit("Sorry, Python >= 3.4 is required...")
+    sys.exit("%s requires Python >= 3.4 ..." % pkg.__pkgname__)
 
 
 setup(
@@ -58,12 +58,16 @@ setup(
     author_email=pkg.__author_email__,
     url=pkg.__url__,
     license=pkg.__license__,
+    # Trove classifiers
+    # See: https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Environment :: Console",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: POSIX :: BSD",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.4",
