@@ -2,12 +2,6 @@
 Realistic Foreground Simulation for EoR 21cm Signal Detection
 =============================================================
 
-**WARNING:**
-This package is still under heavy development, and may lack some
-necessary features or even fail to run correctly.
-It is *NOT* recommended to use it at the moment!
-
-
 This |fg21sim|_ package provides the tools to simulate the
 *realistic* low-frequency radio foregrounds, which can be further
 used to test various foreground removal or separation methods, for the
@@ -47,11 +41,10 @@ Features
 * High-resolution simulation within sky patches
   (*Note:* assume a flat sky for the moment)
 * Configuration file allowing fine-grained control
-* Modular and well-designed API
-* Easy-to-use command line tools (CLI)
+* Modular and extensible
+* Handy command line tools, utilities, and modules
 * Simple Web UI
-  (*WARNING:* need significant updates against recent changes!)
-* Other handy utilities
+  (*WARNING:* need significant updates!)
 
 
 Requirements
@@ -91,7 +84,6 @@ Installation
 5. You are ready to use this package. Just have a look, e.g.::
 
    $ fg21sim --help
-   $ fg21sim-webui --help
 
 
 Development
