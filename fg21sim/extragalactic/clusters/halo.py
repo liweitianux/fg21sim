@@ -761,17 +761,15 @@ class RadioHalo:
             Advection coefficients, describing the energy loss/gain rates.
             Unit: [Gyr^-1]
         """
-        # Always use the properties at ``age_merger`` to derive the
-        # initial electron spectrum.
         if t < self.age_merger:
-            # NOTE: subtract ``time_step`` to make sure ``fp_diffusion()``
-            #       gives no acceleration.
-            t = self.age_merger - self.time_step
-
-        gamma = np.asarray(gamma)
-        advection = (abs(self._loss_ion(gamma, t)) +
-                     abs(self._loss_rad(gamma, t)) -
-                     (self.fp_diffusion(gamma, t) * 2 / gamma))
+            # To derive the initial electron spectrum
+            advection = (abs(self._loss_ion(gamma, self.age_merger)) +
+                         abs(self._loss_rad(gamma, self.age_merger)))
+        else:
+            # Turbulence acceleration and beyond
+            advection = (abs(self._loss_ion(gamma, t)) +
+                         abs(self._loss_rad(gamma, t)) -
+                         (self.fp_diffusion(gamma, t) * 2 / gamma))
         return advection
 
     def _mass(self, t):
@@ -844,6 +842,7 @@ class RadioHalo:
         ----------
         Ref.[sarazin1999],Eq.(9)
         """
+        gamma = np.asarray(gamma)
         z = COSMO.redshift(t)
         mass = self._mass(t)
         n_th = helper.density_number_thermal(mass, z)  # [cm^-3]
@@ -859,6 +858,7 @@ class RadioHalo:
         ----------
         Ref.[sarazin1999],Eq.(6,7)
         """
+        gamma = np.asarray(gamma)
         B = self._magnetic_field(t)  # [uG]
         z = COSMO.redshift(t)
         loss = -4.32e-4 * gamma**2 * ((B/3.25)**2 + (1+z)**4)
