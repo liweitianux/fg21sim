@@ -288,7 +288,7 @@ class GalaxyClusters:
                 ("Rvir_main", halo.radius_virial_main),  # [kpc] at z_merger
                 ("Rvir_sub", halo.radius_virial_sub),  # [kpc] at z_merger
                 ("tback_merger", halo.tback_merger),  # [Gyr]
-                ("time_crossing", halo.time_crossing),  # [Gyr]
+                ("time_turbulence", halo.time_turbulence),  # [Gyr]
                 ("Rhalo", halo.radius),  # [kpc]
                 ("Rhalo_angular", halo.angular_radius),  # [arcsec]
                 ("volume", halo.volume),  # [kpc^3]

@@ -75,11 +75,11 @@ class RadioHalo:
 
     Description
     -----------
-    1. Calculate the merger crossing time (t_cross; ~1 Gyr);
-    2. Calculate the diffusion coefficient (Dpp) from the systematic
+    1. Calculate the turbulence persistence time (tau_turb; ~<1 Gyr);
+    2. Calculate the diffusion coefficient (D_pp) from the systematic
        acceleration timescale (tau_acc; ~0.1 Gyr).  The acceleration
-       diffusion is assumed to have an action time ~ t_cross (i.e.,
-       only during merger crossing), and then been disabled (i.e.,
+       diffusion is assumed to have an action time ~ tau_turb (i.e.,
+       only during turbulence persistence), and then is disabled (i.e.,
        only radiation and ionization losses later);
     3. Assume the electrons are constantly injected and has a power-law
        energy spectrum, determine the injection rate by further assuming
@@ -192,16 +192,16 @@ class RadioHalo:
 
     @property
     @lru_cache()
-    def time_crossing(self):
+    def time_turbulence(self):
         """
-        The time duration of the sub-cluster crossing the main cluster,
-        which is also used to approximate the merging time, during which
-        the turbulence acceleration is regarded as effective.
+        The time duration the merger-induced turbulence persists, which
+        is used to approximate the effective turbulence acceleration
+        timescale.
 
         Unit: [Gyr]
         """
-        return helper.time_crossing(self.M_main, self.M_sub,
-                                    z=self.z_merger)
+        return helper.time_turbulence(self.M_main, self.M_sub,
+                                      z=self.z_merger, configs=self.configs)
 
     @property
     def radius_virial_obs(self):
@@ -706,10 +706,10 @@ class RadioHalo:
         NOTE
         ----
         Considering that the turbulence acceleration is a 2nd-order Fermi
-        process, it has only an effective acceleration time of several 1e8
-        years.  Therefore, the turbulence is assumed to only accelerate
-        the electrons during the merging period, i.e., the acceleration
-        timescale is set to be infinite after "t_merger + time_cross".
+        process, it has only an effective acceleration time ~<1 Gyr.
+        Therefore, only during the period that strong turbulence persists
+        in the ICM that the turbulence could effectively accelerate the
+        relativistic electrons.
 
         WARNING
         -------
@@ -745,7 +745,7 @@ class RadioHalo:
         ----------
         Ref.[donnert2013],Eq.(15)
         """
-        if (t < self.age_merger) or (t > self.age_merger+self.time_crossing):
+        if (t < self.age_merger) or (t > self.age_merger+self.time_turbulence):
             # NO acceleration (see also the above NOTE and WARNING!)
             tau_acc = 10  # [Gyr]
         else:
