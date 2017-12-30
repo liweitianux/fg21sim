@@ -230,10 +230,10 @@ class GalaxyClusters:
                                     "rmm_z", "rmm_age"])
         self.catalog = self.catalog.join(mdf, how="outer")
         self.catalog_comment += [
-            "rmm_mass1 : [Msun] main cluster mass of recent major/maximum merger",
-            "rmm_mass2 : [Msun] sub cluster mass of recent major/maximum merger",
-            "rmm_z : redshift of the recent major/maximum merger",
-            "rmm_age : [Gyr] cosmic age at the recent major/maximum merger",
+            "rmm_mass1: [Msun] main cluster mass of recent major/max merger",
+            "rmm_mass2: [Msun] sub cluster mass of recent major/max merger",
+            "rmm_z: redshift of the recent major/maximum merger",
+            "rmm_age: [Gyr] cosmic age at the recent major/maximum merger",
         ]
         logger.info("Simulated and identified recent major/maximum mergers.")
         if not self.use_max_merger:

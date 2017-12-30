@@ -177,7 +177,7 @@
 
   # Electron injection, which is assumed to have a constant injection
   # rate and a power-law spectrum.
-  injection_index = float(default=2.3, min=2.1, max=3.5)
+  injection_index = float(default=2.3, min=2.1, max=3.0)
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
@@ -185,7 +185,7 @@
   gamma_max = float(default=1e5)
   # Number of cells on the logarithmic momentum grid used to solve the
   # Fokker-Planck equation.
-  gamma_np = integer(default=200, min=100)
+  gamma_np = integer(default=200)
 
   # Number of cells used as the buffer regions near both the lower
   # and upper boundaries, within which the values will be replaced by
