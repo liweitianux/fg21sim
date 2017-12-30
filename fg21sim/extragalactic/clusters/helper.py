@@ -297,6 +297,18 @@ def speed_sound(kT):
     return cs * AUC.cm2km  # [km/s]
 
 
+def velocity_virial(mass, z=0.0):
+    """
+    Calculate the virial velocity, i.e., free-fall velocity.
+
+    Unit: [km/s]
+    """
+    R_vir = radius_virial(mass, z) * AUC.kpc2cm  # [cm]
+    vv = np.sqrt(AC.G * mass*AUC.Msun2g / R_vir)  # [cm/s]
+    vv /= AUC.km2cm  # [km/s]
+    return vv
+
+
 def velocity_impact(M_main, M_sub, z=0.0):
     """
     Estimate the relative impact velocity between the two merging
@@ -354,8 +366,7 @@ def time_crossing(M_main, M_sub, z=0.0):
     """
     R_vir = radius_virial(M_main, z)  # [kpc]
     vi = velocity_impact(M_main, M_sub, z)  # [km/s]
-    # Unit conversion coefficient: [s kpc/km] => [Gyr]
-    uconv = AUC.kpc2km * AUC.s2Gyr
+    uconv = AUC.kpc2km * AUC.s2Gyr  # [s kpc/km] => [Gyr]
     time = uconv * R_vir / vi  # [Gyr]
     return time
 
