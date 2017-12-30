@@ -84,6 +84,7 @@ class GalaxyClusters:
         self.dump_halos_data = self.configs.getn(comp+"/dump_halos_data")
         self.use_dump_halos_data = self.configs.getn(
             comp+"/use_dump_halos_data")
+        self.halo_dropout = self.configs.getn(comp+"/halo_dropout")
         self.prefix = self.configs.getn(comp+"/prefix")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
         self.merger_mass_min = self.configs.getn(comp+"/merger_mass_min")
@@ -333,6 +334,30 @@ class GalaxyClusters:
             hdict["Tb_mean"] = Tb_mean  # [K]
         logger.info("Done calculate the radio emissions.")
 
+    def _dropout_halos(self):
+        """
+        Considering that the (very) massive galaxy clusters are very rare,
+        while the simulation sky area is rather small, therefore, once a
+        very massive cluster appears, its associated radio halo is also
+        very powerful and (almost) dominate other intermediate/faint halos,
+        causing the simulation results unstable and have large variation.
+
+        Drop out the specified number of most powerful radio halos from
+        the catalog, in order to obtain a more stable simulation.
+        """
+        if self.halo_dropout <= 0:
+            logger.info("No need to drop out halos.")
+            return
+
+        power = np.array([hdict["power"][0] for hdict in self.halos])
+        argsort = power.argsort()[::-1]  # max -> min
+        idx_drop = argsort[:self.halo_dropout]
+        halos_new = [hdict for i, hdict in enumerate(self.halos)
+                     if i not in idx_drop]
+        self.halos = halos_new
+        logger.info("Dropped out %d most powerful halos" % self.halo_dropout)
+        logger.info("Remaining number of halos: %d" % len(halos_new))
+
     def _draw_halos(self):
         """
         Draw the template images for each halo, and cache them for
@@ -444,6 +469,7 @@ class GalaxyClusters:
             self._simulate_halos()
 
         self._calc_halos_emission()
+        self._dropout_halos()
         self._draw_halos()
 
         self._preprocessed = True

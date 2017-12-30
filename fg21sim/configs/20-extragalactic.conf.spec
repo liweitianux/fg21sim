@@ -103,6 +103,9 @@
   # (NOTE: mainly for testing purpose.)
   boost = float(default=1.0, min=0.1, max=1e4)
 
+  # Number of most powerful halos to be dropped out.
+  halo_dropout = integer(default=0, min=0)
+
   # Minimum mass change of the main cluster to be regarded as a merger
   # event instead of an accretion event.
   # Unit: [Msun]
