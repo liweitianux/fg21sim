@@ -90,7 +90,7 @@ class RadioHalo:
        considering only losses and constant injection, in order to derive
        an approximately steady electron spectrum for following use;
     5. Calculate the magnetic field from the cluster total mass (which
-       is assumed to be growth linearly from M_main+M_sub to M_obs);
+       is assumed to be growth linearly from M_main to M_obs);
     6. Calculate the energy losses for the coefficients of Fokker-Planck
        equation;
     7. Solve the Fokker-Planck equation to derive the relativistic
@@ -789,8 +789,12 @@ class RadioHalo:
 
         NOTE
         ----
-        We assume that the main cluster grows (i.e., gains mass) linearly
-        in time from (M_main, z_merge) to (M_obs, z_obs).
+        Since we currently only consider the last major merger event,
+        there may be a long time between ``z_merger`` and ``z_obs``.
+        So we assume that the main cluster grows linearly in time from
+        (M_main, z_merger) to (M_obs, z_obs).
+
+        TODO: consider the full merging history.
 
         Parameters
         ----------

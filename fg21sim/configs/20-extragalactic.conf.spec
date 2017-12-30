@@ -10,12 +10,13 @@
 
 
 [extragalactic]
-
+  #
   # Press-Schechter formalism to determine the dark matter halos
   # distribution with respect to masses and redshifts, from which
   # to further determine the total number of halos within a sky
   # patch and to sample the masses and redshifts for each halo.
   # NOTE: only consider the *dark matter* mass within the halo!
+  #
   [[psformalism]]
   # The model of the fitting function for halo mass distribution
   # For all models and more details:
@@ -52,9 +53,12 @@
   #   Unit: [Msun] (the little "h" is folded into the values)
   dndlnm_outfile = string(default=None)
 
+
+  #
   # Extended emissions from the clusters of galaxies
   # The configurations in this ``[[clusters]]`` section may also be
   # used by the following ``[[halos]]`` section.
+  #
   [[clusters]]
   # Output CSV file of the clusters catalog containing the simulated
   # mass, redshift, position, shape, and the recent major merger info.
@@ -148,19 +152,20 @@
   output_dir = string(default=None)
 
 
-  # Giant radio halos for clusters with recent major mergers
+  #
+  # Giant radio halos
+  #
   [[halos]]
+  # A custom parameter to tune the turbulent acceleration timescale.
+  # NOTE: The smaller this parameter, the shorter the acceleration
+  #       timescale, therefore more efficient acceleration.
+  f_acc = float(default=1.0, min=0.1, max=10)
+
   # The turbulence is generally injected at the cluster center during
   # a merger.  This option parameterize the turbulence injection scale
-  # to be a fraction of the virial radius of the (main) cluster, which
-  # is also used to determine the radio halo radius.
+  # to be a fraction of the virial radius of the cluster, which is also
+  # used to determine the radio halo size.
   f_lturb = float(default=0.33, min=0.1, max=1.0)
-
-  # The custom option to tune the turbulent acceleration timescale, which
-  # controls the relativistic particle acceleration efficiencies.
-  # NOTE: The smaller this parameter, the shorter the acceleration
-  #       timescale, therefore the more efficient the turbulent acceleration.
-  f_acc = float(default=1.5, min=0.1, max=10)
 
   # The fraction of cluster thermal energy originating from turbulent
   # dissipation, which describes the turbulence intensity in the ICM,
@@ -207,7 +212,9 @@
   time_init = float(default=0.6, min=0)
 
 
+  #
   # Extragalactic point sources
+  #
   [[pointsources]]
   # Output directory to save the simulated catalog
   output_dir = string(default="PS_tables")
