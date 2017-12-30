@@ -30,6 +30,10 @@ References
    Murgia et al. 2009, A&A, 499, 679
    http://adsabs.harvard.edu/abs/2009A%26A...499..679M
 
+.. [vazza2011]
+   Vazza et al. 2011, A&A, 529, A17
+   http://adsabs.harvard.edu/abs/2011A%26A...529A..17V
+
 .. [zandanel2014]
    Zandanel, Pfrommer & Prada 2014, MNRAS, 438, 124
    http://adsabs.harvard.edu/abs/2014MNRAS.438..124Z
@@ -81,16 +85,18 @@ def radius_virial(mass, z=0.0):
     return R_vir
 
 
-def radius_halo(M_main, M_sub, z=0.0):
+def radius_halo(M_main, M_sub, z=0.0, configs=CONFIGS):
     """
-    Calculate the (predicted) radius of (giant) radio halo for a cluster.
+    Calculate the (predicted) radius of (giant) radio halo.
 
     NOTE
     ----
-    It can be intuitively assumed that a merger will generate turbulences
-    within a region of size of the falling sub-cluster.  And this
-    estimation can agree with the currently observed radio halos, which
-    generally have a angular diameter size ~2-7 [arcmin].
+    The halo radius is estimated to be the same as the turbulence
+    injection scale, i.e.:
+        R_halo ≅ L ≅ R_vir / 3
+    where R_vir the virial radius of the main cluster.
+
+    Reference: [vazza2011],Sec.(3.6)
 
     Parameters
     ----------
@@ -107,7 +113,10 @@ def radius_halo(M_main, M_sub, z=0.0):
         Radius of the (simulated/predicted) giant radio halo
         Unit: [kpc]
     """
-    R_halo = radius_virial(mass=M_sub, z=z)  # [kpc]
+    # Turbulence injection scale factor
+    key = "extragalactic/halos/f_lturb"
+    f_lturb = configs.getn(key)
+    R_halo = f_lturb * radius_virial(mass=M_main, z=z)  # [kpc]
     return R_halo
 
 

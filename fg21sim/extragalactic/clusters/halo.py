@@ -238,7 +238,7 @@ class RadioHalo:
         Unit: [kpc]
         """
         r_halo = helper.radius_halo(self.M_main, self.M_sub,
-                                    self.z_merger)
+                                    self.z_merger, configs=self.configs)
         return r_halo
 
     @property

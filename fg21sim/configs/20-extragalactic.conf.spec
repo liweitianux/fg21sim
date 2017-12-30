@@ -149,8 +149,9 @@
   [[halos]]
   # The turbulence is generally injected at the cluster center during
   # a merger.  This option parameterize the turbulence injection scale
-  # to be a fraction of the virial radius of the (main) cluster.
-  f_lturb = float(default=0.5, min=0.1, max=1.0)
+  # to be a fraction of the virial radius of the (main) cluster, which
+  # is also used to determine the radio halo radius.
+  f_lturb = float(default=0.33, min=0.1, max=1.0)
 
   # The custom option to tune the turbulent acceleration timescale, which
   # controls the relativistic particle acceleration efficiencies.
