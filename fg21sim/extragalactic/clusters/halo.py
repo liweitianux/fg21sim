@@ -813,6 +813,44 @@ class RadioHalo:
         mass = rate * (t - t_merger) + self.M_main
         return mass
 
+    def _velocity_turb(self, t):
+        """
+        Calculate the turbulence velocity dispersion (i.e., turbulence
+        Mach number).
+
+        NOTE
+        ----
+        During the merger, a fraction of the merger kinetic energy is
+        transferred into the turbulence within the assumed regions
+        (radius <= L, the injection scale).  Then estimate the turbulence
+        velocity dispersion from its energy.
+
+        Merger energy:
+            E_m ≅ 0.5 * f_gas * M_sub * v^2
+                ≅ 0.5 * f_gas * M_sub * (G*M_main / R_vir)
+        Turbulence energy:
+            E_turb ≅ η_turb * E_m
+                   ≅ 0.5 * M_turb * <v_turb^2>
+                   = 0.5 * f_gas * M_main(<L) * <v_turb^2>
+                   = 0.5 * f_gas * f_mass(L/R_vir) * M_main * <v_turb^2>
+        => Velocity dispersion:
+            <v_turb^2> ≅ (η_turb/f_mass) * (G*M_sub/R_vir)
+
+        Returns
+        -------
+        v_turb : float
+            The turbulence velocity dispersion
+            Unit: [km/s]
+        """
+        mass = self.M_main + self.M_sub
+        z = COSMO.redshift(t)
+        R_vir = helper.radius_virial(mass=mass, z=z) * AUC.kpc2cm  # [cm]
+        v2 = np.sqrt(AC.G * self.M_sub*AUC.Msun2g / R_vir)  # [cm/s]
+        v2 *= AUC.cm2km  # [km/s]
+        fmass = helper.fmass_nfw(self.f_lturb)
+        v_turb = v2 * np.sqrt(self.eta_turb / fmass)
+        return v_turb
+
     def _magnetic_field(self, t):
         """
         Calculate the mean magnetic field strength of the main cluster mass
