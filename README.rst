@@ -1,13 +1,13 @@
-=============================================================
-Realistic Foreground Simulation for EoR 21cm Signal Detection
-=============================================================
+Realistic Foreground Simulation for 21 cm Reionization Signal Detection
+=======================================================================
 
-This |fg21sim|_ package provides the tools to simulate the
-*realistic* low-frequency radio foregrounds, which can be further
-used to test various foreground removal or separation methods, for the
-purpose of successfully detecting the 21cm cosmological signal arising
-from the neutral hydrogen (HI) at epoch of reionization (EoR).
-
+The |fg21sim|_ is a low-frequency radio foregrounds simulator
+aiming to provide the realistic simulation of the common foregrounds
+impeding the EoR 21cm signal detection.
+The simulated foregrounds can be used to evaluate the impacts of
+different foreground components on the EoR signal, and can be also
+used to help develop and test various foreground removal/separation
+methods.
 
 Features
 --------
@@ -20,27 +20,26 @@ Features
     Galactic free-free emission
   + ``galactic/snr``:
     Emission from Galactic supernovae remnants (SNRs)
-    (*Note:* need update to simulate within sky patches)
   + ``extragalactic/clusters``:
     Emission from extragalactic galaxy clusters
-    (*Note:* only radio *halos* considered at the moment)
+    (*Note:* only giant radio halos)
   + ``extragalactic/pointsources``:
     Emission from multiple types of extragalactic discrete point sources
-    (*WARNING:* need significant updates and integration!)
+    (*WARNING:* need updates and integration!)
 
     Current supported point sources types:
 
     - Star-forming galaxies
-    - Star-bursting galaxies
+    - Starburst galaxies
     - Radio-quiet AGNs
     - Fanaroff-Riley type I (FR-I) AGNs
     - Fanaroff-Riley type II (FR-II) AGNs
 
 * All-sky simulation by utilizing HEALPix
-  (*Note:* only support some of the components)
+  (*Note:* not all components are currently supported)
 * High-resolution simulation within sky patches
-  (*Note:* assume a flat sky for the moment)
 * Configuration file allowing fine-grained control
+* Well organized and detail comments
 * Modular and extensible
 * Handy command line tools, utilities, and modules
 * Simple Web UI
