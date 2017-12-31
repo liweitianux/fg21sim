@@ -26,6 +26,10 @@ References
    Fujita et al. 2003, ApJ, 584, 190;
    http://adsabs.harvard.edu/abs/2003ApJ...584..190F
 
+.. [lokas2001]
+   Lokas & Mamon 2001, MNRAS, 321, 155
+   http://adsabs.harvard.edu/abs/2001MNRAS.321..155L
+
 .. [murgia2009]
    Murgia et al. 2009, A&A, 499, 679
    http://adsabs.harvard.edu/abs/2009A%26A...499..679M
@@ -446,3 +450,29 @@ def draw_halo(radius, nr=2.0, felong=None, rotation=None):
     # Normalized to have *mean* value of 1
     image /= image.mean()
     return image
+
+
+def fmass_nfw(x, c=5.0):
+    """
+    The normalized total mass profile by integrating from the NFW
+    density profile.
+
+    Parameters
+    ----------
+    x : float
+        x = R/R_vir, fractional virial radius
+    c : float
+        Concentration parameter
+        Default: 5.0 (for clusters)
+
+    Returns
+    -------
+    fmass : float
+        The normalized total mass w.r.t. the virial mass, i.e.,
+        fmass = M(<x*R_vir) / M_vir
+
+    Reference: [lokas2001],Eq.(2,4,5,8)
+    """
+    gc = 1.0 / (np.log(1+c) - c/(1+c))
+    fmass = gc * (np.log(1+c*x) - c*x / (1+c*x))
+    return fmass
