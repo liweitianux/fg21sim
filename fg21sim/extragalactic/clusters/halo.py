@@ -210,6 +210,15 @@ class RadioHalo:
                                       z=self.z_merger, configs=self.configs)
 
     @property
+    def mach_turbulence(self):
+        """
+        The turbulence Mach number determined from its velocity dispersion.
+        """
+        cs = helper.speed_sound(self.kT_main)  # [km/s]
+        v_turb = self._velocity_turb()  # [km/s]
+        return v_turb / cs
+
+    @property
     def radius_virial_obs(self):
         """
         The virial radius of the "current" cluster (``M_obs``) at
@@ -342,7 +351,7 @@ class RadioHalo:
         R_vir = helper.radius_virial(mass=self.M_main, z=self.z_merger)
         L = self.f_lturb * R_vir  # [kpc]
         cs = helper.speed_sound(self.kT_main)  # [km/s]
-        v_turb = self._velocity_turb(t=self.age_merger)  # [km/s]
+        v_turb = self._velocity_turb()  # [km/s]
         tau = (self.x_cr * cs**3 * L /
                (16*np.pi * self.zeta_ins * v_turb**4))  # [s kpc/km]
         tau *= AUC.s2Gyr * AUC.kpc2km  # [Gyr]
@@ -805,7 +814,7 @@ class RadioHalo:
         mass = rate * (t - t_merger) + self.M_main
         return mass
 
-    def _velocity_turb(self, t):
+    def _velocity_turb(self, t=None):
         """
         Calculate the turbulence velocity dispersion (i.e., turbulence
         Mach number).
@@ -834,8 +843,10 @@ class RadioHalo:
             The turbulence velocity dispersion
             Unit: [km/s]
         """
-        mass = self.M_main + self.M_sub
+        if t is None:
+            t = self.age_merger
         z = COSMO.redshift(t)
+        mass = self.M_main + self.M_sub
         R_vir = helper.radius_virial(mass=mass, z=z) * AUC.kpc2cm  # [cm]
         v2 = np.sqrt(AC.G * self.M_sub*AUC.Msun2g / R_vir)  # [cm/s]
         v2 *= AUC.cm2km  # [km/s]
