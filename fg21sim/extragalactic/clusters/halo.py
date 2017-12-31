@@ -42,8 +42,12 @@ References
    http://adsabs.harvard.edu/abs/1999astro.ph..5116H
 
 .. [miniati2015]
-   Miniati & Beresnyak 2015, Nature, 523, 59
-   http://adsabs.harvard.edu/abs/2015Natur.523...59M
+   Miniati 2015, ApJ, 800, 60
+   http://adsabs.harvard.edu/abs/2015ApJ...800...60M
+
+.. [pinzke2017]
+   Pinzke, Oh & Pfrommer 2017, MNRAS, 465, 4800
+   http://adsabs.harvard.edu/abs/2017MNRAS.465.4800P
 
 .. [sarazin1999]
    Sarazin 1999, ApJ, 520, 529
@@ -141,10 +145,12 @@ class RadioHalo:
 
     def _set_configs(self):
         comp = "extragalactic/halos"
-        self.f_lturb = self.configs.getn(comp+"/f_lturb")
         self.f_acc = self.configs.getn(comp+"/f_acc")
+        self.f_lturb = self.configs.getn(comp+"/f_lturb")
+        self.zeta_ins = self.configs.getn(comp+"/zeta_ins")
         self.eta_turb = self.configs.getn(comp+"/eta_turb")
         self.eta_e = self.configs.getn(comp+"/eta_e")
+        self.x_cr = self.configs.getn(comp+"/x_cr")
         self.gamma_min = self.configs.getn(comp+"/gamma_min")
         self.gamma_max = self.configs.getn(comp+"/gamma_max")
         self.gamma_np = self.configs.getn(comp+"/gamma_np")
@@ -303,58 +309,44 @@ class RadioHalo:
 
     @property
     @lru_cache()
-    def Mach_turbulence(self):
-        """
-        The Mach number of the merger-induced turbulence.
-
-        The turbulence  Mach number:
-            Mach_turb = sqrt(<δv>^2) / c_s
-                      ≅ sqrt(sqrt(3)/α) * sqrt(η_turb/0.37)
-        where:
-        c_s is the sound speed,
-        α is a parameter ranges about 1.5-3, and we take it as:
-            α = 3^(3/2) / 2 ≅ 2.6
-        η_turb describes the fraction of thermal energy originating from
-        turbulent dissipation, ~0.2-0.4.
-
-        Reference: Ref.[miniati2015],Eq.(1)
-        """
-        alpha = 3**1.5 / 2
-        mach = np.sqrt(3**0.5 * self.eta_turb / alpha / 0.37)
-        return mach
-
-    @property
-    @lru_cache()
     def tau_acceleration(self):
         """
         Calculate the electron acceleration timescale due to turbulent
-        waves at the given (cosmic) time, which describes the turbulent
-        acceleration efficiency.
+        waves, which describes the turbulent acceleration efficiency.
+        The turbulent acceleration timescale has order of ~0.1 Gyr.
+
+        Here we consider the turbulence cascade mode through scattering
+        in the high-β ICM mediated by plasma instabilities (firehose,
+        mirror) rather than Coulomb scattering.  Therefore, the fast modes
+        damp by TTD (transit time damping) on relativistic rather than
+        thermal particles, and the diffusion coefficient is given by:
+            D_pp = (2*p^2 * ζ / η_e) * k_L * <v_turb^2>^2 / c_s^3
+        where:
+            ζ: efficiency factor for the effectiveness of plasma instabilities
+            η_e: relative energy density of cosmic rays (injected relativistic
+                 electrons??)
+            k_L = 2π/L: turbulence injection scale
+            v_turb: turbulence velocity dispersion
+            c_s: sound speed
+        Thus the acceleration timescale is:
+            τ_acc = p^2 / (4*D_pp)
+                  = (η_e * c_s^3 * L) / (16π * ζ * <v_turb^2>^2)
 
         Unit: [Gyr]
 
-        NOTE
-        ----
-        Generally, the turbulent acceleration timescale is about 0.1 Gyr.
-        It is shown that this acceleration timescale depends weakly on
-        cluster mass and redshift, therefore, its value is derived at the
-        beginning of the merger and assumed to be constant during the
-        merging period.
-
-        Reference: Ref.[brunetti2016],Eq.(8,9)
+        Reference
+        ---------
+        * Ref.[pinzke2017],Eq.(37)
+        * Ref.[miniati2015],Eq.(29)
         """
-        # Turbulence injection scale: assumed to be correlated with the
-        # radius of the in-falling sub cluster.
-        Rvir_sub = helper.radius_virial(mass=self.M_sub, z=self.z_merger)
-        L0 = self.f_lturb * Rvir_sub  # [kpc]
-
+        R_vir = helper.radius_virial(mass=self.M_main, z=self.z_merger)
+        L = self.f_lturb * R_vir  # [kpc]
         cs = helper.speed_sound(self.kT_main)  # [km/s]
-        x = cs*AUC.km2cm / AC.c
-        fx = x * (x**4/4 + x*x - (1+2*x*x) * np.log(x) - 5/4)
-
-        term1 = self.f_acc * 2.5 / fx / (self.Mach_turbulence/0.5)**4
-        term2 = (L0/300) / (cs/1500)
-        tau = term1 * term2 / 1000  # [Gyr]
+        v_turb = self._velocity_turb(t=self.age_merger)  # [km/s]
+        tau = (self.x_cr * cs**3 * L /
+               (16*np.pi * self.zeta_ins * v_turb**4))  # [s kpc/km]
+        tau *= AUC.s2Gyr * AUC.kpc2km  # [Gyr]
+        tau *= self.f_acc  # custom tune parameter
         return tau
 
     @property

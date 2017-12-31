@@ -167,12 +167,24 @@
   # used to determine the radio halo size.
   f_lturb = float(default=0.33, min=0.1, max=1.0)
 
-  # Ratio of the total energy injected into cosmic-ray electrons during
-  # the cluster life to its total thermal energy.
+  # An efficiency factor describing the effectiveness of plasma
+  # instabilities (e.g., due to spatial or temporal intermittency).
+  zeta_ins = float(default=0.1, min=0.1, max=1.0)
+
   # The fraction of merger energy transferred into the turbulence.
   eta_turb = float(default=0.1, min=0.1, max=0.5)
 
+  # The fraction of the thermal energy injected into the cosmic-ray
+  # electrons during the cluster life time.
   eta_e = float(default=0.001, min=0.001, max=0.1)
+
+  # The ratio of cosmic ray (including protons and electrons) energy
+  # density (i.e., pressure) to the thermal energy density.
+  # NOTE: Fermi-LAT has placed an upper limit of ~1.25%-1.4%
+  #       (Ackermann et al. 2014, ApJ, 787, 18)
+  # NOTE: The energy ratio of cosmic-ray electrons to protons K_ep ~0.01
+  #       for our Galaxy (Pinzke et al. 2017, MNRAS, 465, 4800)
+  x_cr = float(default=0.01, min=0.001, max=0.1)
 
   # Electron injection, which is assumed to have a constant injection
   # rate and a power-law spectrum.
