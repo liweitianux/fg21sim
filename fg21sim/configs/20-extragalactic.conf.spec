@@ -100,7 +100,7 @@
   # The minimum mass for clusters when to determine the galaxy clusters
   # total counts and their distributions.
   # Unit: [Msun]
-  mass_min = float(default=1e14, min=1e12)
+  mass_min = float(default=1e14, min=1e13)
 
   # Boost the number of expected cluster number within the sky coverage
   # by the specified times.

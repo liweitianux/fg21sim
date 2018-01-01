@@ -3,7 +3,7 @@ Realistic Foreground Simulation for 21 cm Reionization Signal Detection
 
 The |fg21sim|_ is a low-frequency radio foregrounds simulator
 aiming to provide the realistic simulation of the common foregrounds
-impeding the EoR 21cm signal detection.
+impeding the 21 cm reionization signal detection.
 The simulated foregrounds can be used to evaluate the impacts of
 different foreground components on the EoR signal, and can be also
 used to help develop and test various foreground removal/separation

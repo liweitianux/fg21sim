@@ -231,6 +231,28 @@ def density_energy_thermal(mass, z=0.0, configs=CONFIGS):
     return e_th
 
 
+def density_energy_electron(spectrum, gamma):
+    """
+    Calculate the energy density of relativistic electrons.
+
+    Parameters
+    ----------
+    spectrum : 1D float `~numpy.ndarray`
+        The number density of the electrons w.r.t. Lorentz factors
+        Unit: [cm^-3]
+    gamma : 1D float `~numpy.ndarray`
+        The Lorentz factors of electrons
+
+    Returns
+    -------
+    e_re : float
+        The energy density of the relativistic electrons.
+        Unit: [erg cm^-3]
+    """
+    e_re = integrate.trapz(spectrum*gamma*AU.mec2, gamma)
+    return e_re
+
+
 def magnetic_field(mass, z=0.0, configs=CONFIGS):
     """
     Calculate the mean magnetic field strength within the ICM, which is
@@ -253,28 +275,6 @@ def magnetic_field(mass, z=0.0, configs=CONFIGS):
     e_th = density_energy_thermal(mass=mass, z=z, configs=configs)
     B = np.sqrt(8*np.pi * eta_b * e_th) * 1e6  # [G] -> [uG]
     return B
-
-
-def density_energy_electron(spectrum, gamma):
-    """
-    Calculate the energy density of relativistic electrons.
-
-    Parameters
-    ----------
-    spectrum : 1D float `~numpy.ndarray`
-        The number density of the electrons w.r.t. Lorentz factors
-        Unit: [cm^-3]
-    gamma : 1D float `~numpy.ndarray`
-        The Lorentz factors of electrons
-
-    Returns
-    -------
-    e_re : float
-        The energy density of the relativistic electrons.
-        Unit: [erg cm^-3]
-    """
-    e_re = integrate.trapz(spectrum*gamma*AU.mec2, gamma)
-    return e_re
 
 
 def speed_sound(kT):
