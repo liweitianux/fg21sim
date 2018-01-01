@@ -206,39 +206,24 @@ class ClusterFormation:
 
         Returns
         -------
-        event :
-            An dictionary containing the properties of the found major
-            event:
+        event : dict
+            A dictionary with the properties of the found major event:
             ``{"M_main": M_main, "M_sub": M_sub, "R_mass": R_mass,
                "z": z, "age": age}``;
             ``None`` if no major event found.
         """
         if mtree is None:
             mtree = self.mtree
-        event = None
-        while mtree and mtree.main:
-            if mtree.sub is None:
-                # Accretion
-                mtree = mtree.main
-                continue
 
-            M_main = mtree.main.data["mass"]
-            M_sub = mtree.sub.data["mass"]
-            z = mtree.main.data["z"]
-            age = mtree.main.data["age"]
-            if M_main / M_sub <= self.ratio_major:
-                # Found a major merger event
-                event = {"M_main": M_main,
-                         "M_sub": M_sub,
-                         "R_mass": M_main / M_sub,
-                         "z": z,
-                         "age": age}
-                break
-
-            # A minor merger event, continue
-            mtree = mtree.main
-
-        return event
+        for main, sub in mtree.itermain():
+            if main["mass"] <= sub.get("mass", 0) * ratio_major:
+                event = {"M_main": main["mass"],
+                         "M_sub": sub["mass"],
+                         "R_mass": main["mass"] / sub["mass"],
+                         "z": main["z"],
+                         "age": main["age"]}
+                return event
+        return None
 
     def maximum_merger(self, mtree=None):
         """
@@ -252,33 +237,24 @@ class ClusterFormation:
 
         Returns
         -------
-        event :
-            A dictionary representing this merger event, same format as
-            the above ``self.recent_major_event``.
+        event : dict
+            Same as the above ``self.recent_major_event``.
             ``None`` if no mergers occurred during the traced period.
         """
         if mtree is None:
             mtree = self.mtree
-        event_max = {"M_main": -1, "M_sub": -1, "R_mass": -1,
-                     "z": -1, "age": -1}
-        while mtree and mtree.main:
-            if mtree.sub is None:
-                mtree = mtree.main
-                continue
 
-            M_main = mtree.main.data["mass"]
-            M_sub = mtree.sub.data["mass"]
-            z = mtree.main.data["z"]
-            age = mtree.main.data["age"]
-            if (M_sub > event_max["M_sub"]):
-                event_max = {"M_main": M_main, "M_sub": M_sub,
-                             "R_mass": M_main / M_sub,
-                             "z": z, "age": age}
-            # Continue
-            mtree = mtree.main
+        event_max = {"M_main": 0, "M_sub": 0, "R_mass": 0, "z": -1, "age": -1}
+        for main, sub in mtree.itermain():
+            if sub.get("mass", -1) > event_max["M_sub"]:
+                event_max = {"M_main": main["mass"],
+                             "M_sub": sub["mass"],
+                             "R_mass": main["mass"] / sub["mass"],
+                             "z": main["z"],
+                             "age": main["age"]}
 
         if event_max["z"] <= 0:
-            logger.warning("no mergers occurred at all!!")
+            logger.warning("No mergers occurred at all!!")
             return None
         else:
             return event_max
