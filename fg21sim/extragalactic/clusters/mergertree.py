@@ -10,10 +10,6 @@ import os
 import pickle
 import logging
 
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -147,9 +143,14 @@ def plot_mtree(mtree, outfile, figsize=(12, 8)):
         _plot(tree.main, ax)
         _plot(tree.sub, ax)
 
+    # Import matplotlib when needed
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
     fig = Figure(figsize=figsize)
     canvas = FigureCanvas(fig)
     ax = fig.add_subplot(1, 1, 1)
+    print("Plotting merger tree, may take a while ...")
     _plot(mtree, ax=ax)
     ax.set_xlabel("Cosmic time [Gyr]")
     ax.set_ylabel("Mass [Msun]")
@@ -157,3 +158,4 @@ def plot_mtree(mtree, outfile, figsize=(12, 8)):
     ax.set_ylim((0, mtree.data["mass"]))
     fig.tight_layout()
     canvas.print_figure(outfile)
+    print("Saved plot to file: %s" % outfile)
