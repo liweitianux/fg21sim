@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -746,12 +746,18 @@ class RadioHalo:
         ----------
         Ref.[donnert2013],Eq.(15)
         """
+        # Maximum acceleration timescale when no turbulence acceleration
+        # NOTE: see the above WARNING!
+        tau_max = 10.0  # [Gyr]
         if (t < self.age_merger) or (t > self.age_merger+self.time_turbulence):
-            # NO acceleration (see also the above NOTE and WARNING!)
-            tau_acc = 10  # [Gyr]
+            # NO active turbulence acceleration
+            tau_acc = tau_max
         else:
             # Turbulence acceleration
             tau_acc = self.tau_acceleration  # [Gyr]
+        # Impose the maximum acceleration timescale
+        if tau_acc > tau_max:
+            tau_acc = tau_max
 
         gamma = np.asarray(gamma)
         diffusion = gamma**2 / 4 / tau_acc
