@@ -827,15 +827,16 @@ class RadioHalo:
         velocity dispersion from its energy.
 
         Merger energy:
-            E_m ≅ 0.5 * f_gas * M_sub * v^2
-                ≅ 0.5 * f_gas * M_sub * (G*M_main / R_vir)
+            E_m ≅ 0.5 * f_gas * M_sub * v_vir^2
+            v_vir = sqrt(G*M_main / R_vir)
         Turbulence energy:
             E_turb ≅ η_turb * E_m
                    ≅ 0.5 * M_turb * <v_turb^2>
-                   = 0.5 * f_gas * M_main(<L) * <v_turb^2>
-                   = 0.5 * f_gas * f_mass(L/R_vir) * M_main * <v_turb^2>
+                   = 0.5 * f_gas * M_total(<L) * <v_turb^2>
+                   = 0.5 * f_gas * f_mass(L/R_vir) * M_total * <v_turb^2>
+            M_total = M_main + M_sub
         => Velocity dispersion:
-            <v_turb^2> ≅ (η_turb/f_mass) * (G*M_sub/R_vir)
+            <v_turb^2> ≅ (η_turb/f_mass) * (M_sub/M_total) * v_vir^2
 
         Returns
         -------
@@ -848,11 +849,10 @@ class RadioHalo:
         z = COSMO.redshift(t)
         mass = self.M_main + self.M_sub
         R_vir = helper.radius_virial(mass=mass, z=z) * AUC.kpc2cm  # [cm]
-        v2 = np.sqrt(AC.G * self.M_sub*AUC.Msun2g / R_vir)  # [cm/s]
-        v2 *= AUC.cm2km  # [km/s]
+        v2_vir = (AC.G * self.M_main*AUC.Msun2g / R_vir) * AUC.cm2km**2
         fmass = helper.fmass_nfw(self.f_lturb)
-        v_turb = v2 * np.sqrt(self.eta_turb / fmass)
-        return v_turb
+        v2_turb = v2_vir * (self.eta_turb / fmass) * (self.M_sub / mass)
+        return np.sqrt(v2_turb)
 
     def _magnetic_field(self, t):
         """
