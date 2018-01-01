@@ -192,7 +192,7 @@ class ClusterFormation:
         logger.debug("Simulated cluster formation with merger tree.")
         return self.mtree
 
-    def recent_major_merger(self, ratio_major=3.0):
+    def recent_major_merger(self, mtree=None, ratio_major=3.0):
         """
         Identify and return the most recent major merger event.
 
@@ -213,7 +213,8 @@ class ClusterFormation:
                "z": z, "age": age}``;
             ``None`` if no major event found.
         """
-        mtree = self.mtree
+        if mtree is None:
+            mtree = self.mtree
         event = None
         while mtree and mtree.main:
             if mtree.sub is None:
@@ -239,8 +240,7 @@ class ClusterFormation:
 
         return event
 
-    @property
-    def maximum_merger(self):
+    def maximum_merger(self, mtree=None):
         """
         The merger event corresponding to the biggest sub cluster, i.e.,
         the main cluster gains the most mass.
@@ -257,7 +257,8 @@ class ClusterFormation:
             the above ``self.recent_major_event``.
             ``None`` if no mergers occurred during the traced period.
         """
-        mtree = self.mtree
+        if mtree is None:
+            mtree = self.mtree
         event_max = {"M_main": -1, "M_sub": -1, "R_mass": -1,
                      "z": -1, "age": -1}
         while mtree and mtree.main:

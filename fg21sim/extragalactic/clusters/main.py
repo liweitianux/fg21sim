@@ -217,9 +217,9 @@ class GalaxyClusters:
             clform.simulate_mtree(main_only=True)
             if self.use_max_merger:
                 # NOTE: may be ``None`` due to no mergers occurred at all!
-                mmev = clform.maximum_merger
+                mmev = clform.maximum_merger()
             else:
-                mmev = clform.recent_major_merger(self.ratio_major)
+                mmev = clform.recent_major_merger(ratio_major=self.ratio_major)
             if mmev:
                 mdata[i, :] = [mmev["M_main"], mmev["M_sub"],
                                mmev["z"], mmev["age"]]
