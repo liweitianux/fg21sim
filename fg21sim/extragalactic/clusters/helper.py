@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -98,7 +98,7 @@ def radius_halo(M_main, M_sub, z=0.0, configs=CONFIGS):
     The halo radius is estimated to be the same as the turbulence
     injection scale, i.e.:
         R_halo ≅ L ≅ R_vir / 3
-    where R_vir the virial radius of the main cluster.
+    where R_vir the virial radius of the merged cluster.
 
     Reference: [vazza2011],Sec.(3.6)
 
@@ -120,7 +120,7 @@ def radius_halo(M_main, M_sub, z=0.0, configs=CONFIGS):
     # Turbulence injection scale factor
     key = "extragalactic/halos/f_lturb"
     f_lturb = configs.getn(key)
-    R_halo = f_lturb * radius_virial(mass=M_main, z=z)  # [kpc]
+    R_halo = f_lturb * radius_virial(mass=M_main+M_sub, z=z)  # [kpc]
     return R_halo
 
 
