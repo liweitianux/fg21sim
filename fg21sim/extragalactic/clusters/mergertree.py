@@ -6,9 +6,9 @@ Merger tree that represents the merging history of a cluster using
 the binary tree data structure.
 """
 
-import os
-import pickle
 import logging
+
+from ...utils.io import pickle_dump, pickle_load
 
 logger = logging.getLogger(__name__)
 
@@ -49,18 +49,12 @@ def save_mtree(mtree, outfile, clobber=False):
     """
     Pickle the merger tree data and save to file.
     """
-    if os.path.exists(outfile):
-        if clobber:
-            os.remove(outfile)
-            logger.warning("Removed existing file: {0}".format(outfile))
-        else:
-            raise OSError("Output file already exists: {0}".format(outfile))
-    pickle.dump(mtree, open(outfile, "wb"))
+    pickle_dump(mtree, outfile=outfile, clobber=clobber)
     logger.info("Saved merger tree to file: {0}".format(outfile))
 
 
 def read_mtree(infile):
-    mtree = pickle.load(open(infile, "wb"))
+    mtree = pickle_load(infile)
     logger.info("Loaded merger tree from file: {0}".format(infile))
     return mtree
 
