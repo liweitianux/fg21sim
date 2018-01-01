@@ -2,14 +2,14 @@
 # MIT license
 
 """
-Simulate the extended radio emissions from galaxy clusters due to
-merger-induced turbulence and/or shock accelerations,
-e.g., (giant) radio halos, (elongated double) radio relics.
+Simulate the diffuse radio emissions from galaxy clusters due to
+merger-induced turbulence and/or shock accelerations, e.g.,
+(giant) radio halos, (elongated double) radio relics.
 
 NOTE
 ----
-There are other types of extended radio emissions not considered
-yet, e.g., mini-halos, roundish radio relics, etc.
+There are other types of diffuse radio emissions not considered
+yet, e.g., mini-halos, roundish radio relics.
 """
 
 import os
@@ -36,13 +36,13 @@ logger = logging.getLogger(__name__)
 
 class GalaxyClusters:
     """
-    Simulate the extended radio emissions from the galaxy clusters.
+    Simulate the diffuse radio emissions from the galaxy clusters.
 
     NOTE
     ----
-    Currently, only the *giant radio halos* are considered, while
-    other types of extended emissions are missing, e.g., mini-halos,
-    elongated relics, roundish relics.
+    Currently only implement the *giant radio halos*, while other types
+    of diffuse emissions are missing, e.g., mini-halos, elongated relics,
+    roundish relics.
 
     Attributes
     ----------

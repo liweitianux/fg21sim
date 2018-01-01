@@ -172,16 +172,15 @@ class ClusterFormation:
         Parameters
         ----------
         main_only : bool, optional
-            Whether to only trace the forming history of the main
-            halo/cluster.
-            (default: True)
+            Whether to only trace the forming history of the main cluster.
+            Default: True
 
         References: Ref.[randall2002],Sec.(3.1)
         """
         logger.debug("Simulating cluster formation: " +
                      "M0=%.3e[Msun] " % self.M0 +
-                     "from z={:.3f} back to z={zmax} ...".format(
-                         self.z0, zmax=self.zmax))
+                     "from z={z0:.3f} back to z={zmax} ...".format(
+                         z0=self.z0, zmax=self.zmax))
         self.main_only = main_only
         if main_only:
             logger.debug("Only trace the formation of the *main* cluster ...")

@@ -656,7 +656,7 @@ class RadioHalo:
         omega = np.pi * self.angular_radius**2  # [arcsec^2]
         if pixelsize and (omega < pixelsize**2):
             omega = pixelsize ** 2  # [arcsec^2]
-            logger.warning("Object size < 1 pixel; force to be 1 pixel!")
+            logger.warning("Halo size < 1 pixel; force to be 1 pixel!")
 
         Tb = Fnu_to_Tb(flux, omega, frequencies)  # [K]
         return Tb
@@ -800,8 +800,6 @@ class RadioHalo:
         there may be a long time between ``z_merger`` and ``z_obs``.
         So we assume that the main cluster grows linearly in time from
         (M_main, z_merger) to (M_obs, z_obs).
-
-        TODO: consider the full merging history.
 
         Parameters
         ----------
