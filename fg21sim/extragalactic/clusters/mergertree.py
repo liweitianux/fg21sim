@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2017-2018 Weitian LI <liweitianux@live.com>
 # MIT license
 
 """
@@ -77,18 +77,21 @@ def show_mtree(mtree):
         z = main.data["z"]
         age = main.data["age"]
         mass = main.data["mass"]
-        info = "[z=%.3f/t=%.2f]" % (z, age)
+        info = "[z=%.3f/t=%05.2f]" % (z, age)
         if sub is None:
             # Accretion
             info += " %.3e" % mass
             if parent is not None:
                 dM = parent.data["mass"] - mass
-                info += "    (dM=%.2e)" % dM
+                info += "    (dM=%.2e)      " % dM
         else:
             # Merger
             Msub = sub.data["mass"]
             Rmass = mass / Msub
-            info += " %.3e <> %.3e (Rm=%.1f)" % (mass, Msub, Rmass)
+            info += " %.3e <> %.3e (Rm=%04.1f)" % (mass, Msub, Rmass)
+        if parent is not None:
+            info += " <dz=%.3f/dt=%.2f>" % (z-parent.data["z"],
+                                            parent.data["age"]-age)
         return info
 
     i = 0
