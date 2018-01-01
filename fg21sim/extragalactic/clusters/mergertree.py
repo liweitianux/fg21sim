@@ -108,35 +108,29 @@ def show_mtree(mtree):
     """
     Trace the main cluster and show its formation history.
     """
-    def _show_event(main, sub=None, parent=None):
-        z = main.data["z"]
-        age = main.data["age"]
-        mass = main.data["mass"]
-        info = "[z=%.3f/t=%05.2f]" % (z, age)
-        if sub is None:
-            # Accretion
-            info += " %.3e" % mass
-            if parent is not None:
-                dM = parent.data["mass"] - mass
-                info += "    (dM=%.2e)      " % dM
-        else:
-            # Merger
-            Msub = sub.data["mass"]
+    parent = None
+    for i, (main, sub) in enumerate(mtree.itermain()):
+        info = "%2d: " % i
+        z = main["z"]
+        age = main["age"]
+        info += "<z=%.3f/t=%05.2f> " % (z, age)
+        mass = main["mass"]
+        if sub:
+            # merger event
+            Msub = sub["mass"]
             Rmass = mass / Msub
-            info += " %.3e <> %.3e (Rm=%04.1f)" % (mass, Msub, Rmass)
-        if parent is not None:
-            info += " <dz=%.3f/dt=%.2f>" % (z-parent.data["z"],
-                                            parent.data["age"]-age)
-        return info
-
-    i = 0
-    info = _show_event(main=mtree)
-    print("%2d %s" % (i, info))
-    while mtree and mtree.main:
-        i += 1
-        info = _show_event(main=mtree.main, sub=mtree.sub, parent=mtree)
-        print("%2d %s" % (i, info))
-        mtree = mtree.main
+            info += "[%.3e @@@ %.3e] (Rm=%04.1f)" % (mass, Msub, Rmass)
+        elif parent:
+            # accretion event
+            dM = parent["mass"] - mass
+            info += " %.3e  +  %.3e           " % (mass, dM)
+        else:
+            # root cluster
+            info += " %.3e" % mass
+        if parent:
+            info += " <dz=%.3f/dt=%.2f>" % (z-parent["z"], parent["age"]-age)
+        parent = main
+        print(info)
 
 
 def plot_mtree(mtree, outfile, figsize=(12, 8)):
