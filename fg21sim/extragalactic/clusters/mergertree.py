@@ -44,6 +44,51 @@ class MergerTree:
         self.main = main
         self.sub = sub
 
+    def itermain(self):
+        """
+        Iterate by tracing the main cluster.
+        """
+        maintree = self
+        subtree = None
+        while maintree:
+            main = maintree.data
+            if subtree is not None:
+                sub = subtree.data
+            else:
+                sub = {}
+            yield (main, sub)
+            subtree = maintree.sub
+            maintree = maintree.main
+
+    @property
+    def lmain(self):
+        """
+        Return the length (i.e., number of events) along the main cluster.
+        """
+        return len(list(self.itermain()))
+
+    def imain(self, idx):
+        """
+        Trace the main cluster to locate the idx-th (0-based) event, and
+        return its data (both the main and sub clusters).
+
+        Parameters
+        ----------
+        idx : int
+            The event index (0-based) along the main cluster to be retrieved.
+
+        Returns
+        -------
+        (main, sub) : dict
+            The data dictionaries of the main and sub clusters.  The ``sub``
+            dictionary may be ``None`` if it is an accretion event.
+        """
+        for main, sub in self.itermain():
+            if idx == 0:
+                return (main, sub)
+            idx -= 1
+        raise IndexError("index out of range: %d" % idx)
+
 
 def save_mtree(mtree, outfile, clobber=False):
     """
