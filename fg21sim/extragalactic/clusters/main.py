@@ -213,14 +213,13 @@ class GalaxyClusters:
             age0 = COSMO.age(z0)
             zmax = COSMO.redshift(age0 - self.time_traceback)
             clform = ClusterFormation(M0=M0, z0=z0, zmax=zmax,
-                                      ratio_major=self.ratio_major,
                                       merger_mass_min=self.merger_mass_min)
-            clform.simulate_mergertree(main_only=True)
+            clform.simulate_mtree(main_only=True)
             if self.use_max_merger:
                 # NOTE: may be ``None`` due to no mergers occurred at all!
-                mmev = clform.max_merger
+                mmev = clform.maximum_merger
             else:
-                mmev = clform.recent_major_merger
+                mmev = clform.recent_major_merger(self.ratio_major)
             if mmev:
                 mdata[i, :] = [mmev["M_main"], mmev["M_sub"],
                                mmev["z"], mmev["age"]]

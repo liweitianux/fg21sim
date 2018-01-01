@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -45,11 +45,6 @@ class ClusterFormation:
     zmax : float, optional
         The maximum redshift/age when to stop the formation trace.
         Default: 3.0 (i.e., looking back time ~11.5 Gyr)
-    ratio_major : float, optional
-        The mass ratio of the main and sub clusters to define whether
-        the merger is a major event or a  minor one.
-        If ``M_main/M_sub < ratio_major``, then it is a major merger event.
-        Default: 3.0
     merger_mass_min : float, optional
         Minimum mass change to be regarded as a merger event instead of
         accretion.
@@ -63,12 +58,10 @@ class ClusterFormation:
         An dictionary containing the properties of the found most recent
         major merger event, or ``None`` if not found.
     """
-    def __init__(self, M0, z0, zmax=3.0, ratio_major=3.0,
-                 merger_mass_min=1e12):
+    def __init__(self, M0, z0, zmax=3.0, merger_mass_min=1e12):
         self.M0 = M0  # [Msun]
         self.z0 = z0
         self.zmax = zmax
-        self.ratio_major = ratio_major
         self.merger_mass_min = merger_mass_min
 
     @property
@@ -171,7 +164,7 @@ class ClusterFormation:
         dS = self.cdf_K_inv(r, dw)
         return dS
 
-    def simulate_mergertree(self, main_only=True):
+    def simulate_mtree(self, main_only=True):
         """
         Simulate the merger tree of this cluster by tracing its formation
         using the PS formalism.
@@ -199,10 +192,17 @@ class ClusterFormation:
         logger.debug("Simulated cluster formation with merger tree.")
         return self.mtree
 
-    @property
-    def recent_major_merger(self):
+    def recent_major_merger(self, ratio_major=3.0):
         """
         Identify and return the most recent major merger event.
+
+        Parameters
+        ----------
+        ratio_major : float, optional
+            The mass ratio of the main and sub clusters to define whether
+            the merger is a major event or a  minor one.
+            If ``M_main/M_sub < ratio_major``, then it is a major merger.
+            Default: 3.0
 
         Returns
         -------
@@ -240,16 +240,15 @@ class ClusterFormation:
         return event
 
     @property
-    def max_merger(self):
+    def maximum_merger(self):
         """
         The merger event corresponding to the biggest sub cluster, i.e.,
-        the main cluster gains most mass.
+        the main cluster gains the most mass.
 
         NOTE
         ----
-        Generally, the above most recent major merger event, if identified,
-        should also be maximum merger found here.  Otherwise, a warning
-        message is logged.
+        Sometimes, the maximum merger event found here is not an major
+        merger event.
 
         Returns
         -------
@@ -261,7 +260,6 @@ class ClusterFormation:
         mtree = self.mtree
         event_max = {"M_main": -1, "M_sub": -1, "R_mass": -1,
                      "z": -1, "age": -1}
-        event_major = None  # Record the most recent major merger event
         while mtree and mtree.main:
             if mtree.sub is None:
                 mtree = mtree.main
@@ -272,21 +270,11 @@ class ClusterFormation:
             z = mtree.main.data["z"]
             age = mtree.main.data["age"]
             if (M_sub > event_max["M_sub"]):
-                # Track the found maximum merger
                 event_max = {"M_main": M_main, "M_sub": M_sub,
                              "R_mass": M_main / M_sub,
                              "z": z, "age": age}
-            if (event_major is None) and (M_main/M_sub <= self.ratio_major):
-                # Most recent major merger event
-                event_major = {"M_main": M_main, "M_sub": M_sub,
-                               "R_mass": M_main / M_sub,
-                               "z": z, "age": age}
-
             # Continue
             mtree = mtree.main
-
-        if event_major and abs(event_major["z"]-event_max["z"]) > 1e-4:
-            logger.warning("recent major merger != maximum merger")
 
         if event_max["z"] <= 0:
             logger.warning("no mergers occurred at all!!")
