@@ -197,6 +197,10 @@ class ClusterFormation:
 
         Parameters
         ----------
+        mtree : `~MergerTree`, optional
+            Specify the merger tree from which to identify the most
+            recent merger event.
+            Default: self.mtree
         ratio_major : float, optional
             The mass ratio of the main and sub clusters to define whether
             the merger is a major event or a  minor one.
@@ -257,6 +261,38 @@ class ClusterFormation:
             return None
         else:
             return event_max
+
+    def mergers(self, mtree=None):
+        """
+        Extract and return all the merger events.
+
+        Parameters
+        ----------
+        mtree : `~MergerTree`, optional
+            Specify the merger tree from which to identify the most
+            recent merger event.
+            Default: self.mtree
+
+        Returns
+        -------
+        evlist : list[event]
+            List of merger events with each element being a dictionary
+            same as the return of ``self.recent_major_merger``.
+        """
+        if mtree is None:
+            mtree = self.mtree
+
+        evlist = []
+        for main, sub in mtree.itermain():
+            if sub:
+                evlist.append({
+                    "M_main": main["mass"],
+                    "M_sub": sub["mass"],
+                    "R_mass": main["mass"] / sub["mass"],
+                    "z": main["z"],
+                    "age": main["age"]
+                })
+        return evlist
 
     def _trace_main(self):
         """
