@@ -115,12 +115,12 @@
   # Unit: [Msun]
   merger_mass_min = float(default=1e12, min=1e10, max=1e14)
 
-  # The merger timescale, which roughly describes the duration of the
-  # merger-induced disturbance (~2-3 Gyr).  This timescale is much longer
-  # the merger crossing time (~1 Gyr), and is also longer than the lifetime
-  # of radio halos.
+  # The trace back time when to stop tracing the merging history of
+  # clusters.  ~2-3 Gyr should be enough since the turbulence acceleration
+  # effective time ~<1 Gyr and the halo lifetime is also short compared
+  # to mergers.
   # Unit: [Gyr]
-  tau_merger = float(default=2.0, min=1.0, max=5.0)
+  time_traceback = float(default=3.0, min=1.0, max=5.0)
 
   # Mass ratio of the main and sub clusters, below which is regarded as
   # a major merger event.

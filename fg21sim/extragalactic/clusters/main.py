@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -90,7 +90,7 @@ class GalaxyClusters:
         self.merger_mass_min = self.configs.getn(comp+"/merger_mass_min")
         self.ratio_major = self.configs.getn(comp+"/ratio_major")
         self.use_max_merger = self.configs.getn(comp+"/use_max_merger")
-        self.tau_merger = self.configs.getn(comp+"/tau_merger")
+        self.time_traceback = self.configs.getn(comp+"/time_traceback")
         self.frequencies = self.configs.frequencies
         self.filename_pattern = self.configs.getn("output/filename_pattern")
         self.clobber = self.configs.getn("output/clobber")
@@ -184,7 +184,7 @@ class GalaxyClusters:
         NOTE
         ----
         There may be no such recent *major* merger event satisfying the
-        criteria, since we only tracing ``tau_merger`` (~2-3 Gyr) back.
+        criteria, since we only trace ``time_traceback`` (~2-3 Gyr) back.
         On the other hand, the cluster may only experience minor merger
         or accretion events.
 
@@ -211,7 +211,7 @@ class GalaxyClusters:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
             z0, M0 = row.z, row.mass
             age0 = COSMO.age(z0)
-            zmax = COSMO.redshift(age0 - self.tau_merger)
+            zmax = COSMO.redshift(age0 - self.time_traceback)
             clform = ClusterFormation(M0=M0, z0=z0, zmax=zmax,
                                       ratio_major=self.ratio_major,
                                       merger_mass_min=self.merger_mass_min)
