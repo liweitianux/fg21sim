@@ -1,9 +1,9 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
-Calculate the synchrotron emission and inverse Compton emission
-for simulated radio halos.
+Calculate the synchrotron emission for a given relativistic electron
+spectrum, e.g., derived for the simulated radio halos.
 
 References
 ----------
@@ -151,12 +151,7 @@ class SynchrotronEmission:
     @classmethod
     def F(cls, x):
         """
-        Synchrotron kernel function.
-
-        NOTE
-        ----
-        * Use interpolation to optimize the speed, as well as to
-          help vectorize this function for easier calling.
+        Synchrotron kernel function using interpolation to improve speed.
 
         Parameters
         ----------
@@ -196,11 +191,8 @@ class SynchrotronEmission:
             I = int_gmin^gmax f(g) d(g)
               = int_ln(gmin)^ln(gmax) f(g) g d(ln(g))
 
-        XXX
-        ---
-        Assume that the electrons have a pitch angle of ``pi/2`` with
-        respect to the magnetic field. (I think it is a good simplification
-        considering that the magnetic field is also assumed to be uniform.)
+        The pitch angles of electrons w.r.t. the magnetic field are assumed
+        to be ``pi/2``, which maybe a good simplification.
 
         Parameters
         ----------
