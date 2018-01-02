@@ -17,14 +17,12 @@ import logging
 from collections import OrderedDict
 
 import numpy as np
-import pandas as pd
 
 from .psformalism import PSFormalism
 from .formation import ClusterFormation
 from .halo import RadioHalo
 from ...share import CONFIGS, COSMO
-from ...utils.io import (dataframe_to_csv, csv_to_dataframe,
-                         pickle_dump, pickle_load)
+from ...utils.io import dataframe_to_csv, pickle_dump, pickle_load
 from ...utils.ds import dictlist_to_dataframe
 from ...utils.convert import JyPerPix_to_K
 from ...sky import get_sky
@@ -76,11 +74,11 @@ class GalaxyClusters:
         """
         comp = self.compID
         self.catalog_outfile = self.configs.get_path(comp+"/catalog_outfile")
-        self.use_output_catalog = self.configs.getn(comp+"/use_output_catalog")
+        self.dump_catalog_data = self.configs.getn(comp+"/dump_catalog_data")
+        self.use_dump_catalog_data = self.configs.getn(
+            comp+"/use_dump_catalog_data")
         self.halos_catalog_outfile = self.configs.get_path(
             comp+"/halos_catalog_outfile")
-        self.halos_data_dumpfile = os.path.splitext(
-            self.halos_catalog_outfile)[0] + ".pkl"
         self.dump_halos_data = self.configs.getn(comp+"/dump_halos_data")
         self.use_dump_halos_data = self.configs.getn(
             comp+"/use_dump_halos_data")
@@ -96,8 +94,8 @@ class GalaxyClusters:
         self.clobber = self.configs.getn("output/clobber")
         logger.info("Loaded and set up configurations")
 
-        if self.use_dump_halos_data and (not self.use_output_catalog):
-            self.use_output_catalog = True
+        if self.use_dump_halos_data and (not self.use_dump_catalog_data):
+            self.use_dump_catalog_data = True
             logger.warning("Forced to use existing cluster catalog, "
                            "due to 'use_dump_halos_data=True'")
 
@@ -392,7 +390,39 @@ class GalaxyClusters:
             hdict["template"] = template
         logger.info("Done drawn halo template images.")
 
+    def _save_catalog_data(self, outfile=None, dump=None, clobber=None):
         """
+        Save the simulated cluster catalog (``self.catalog``) by converting
+        it into a Pandas DataFrame and writing into a CSV file.
+
+        If ``dump=True``, then the raw data (``self.catalog``) is dumped
+        into a Python pickle file, making it easier to be loaded back
+        for reuse.
+        """
+        if outfile is None:
+            outfile = self.catalog_outfile
+        if dump is None:
+            dump = self.dump_catalog_data
+        if clobber is None:
+            clobber = self.clobber
+
+        if self.use_dump_catalog_data and os.path.exists(outfile):
+            os.rename(outfile, outfile+".old")
+
+        logger.info("Converting cluster catalog into a Pandas DataFrame ...")
+        keys = list(self.catalog[0].keys())
+        catalog_df = dictlist_to_dataframe(self.catalog, keys=keys)
+        dataframe_to_csv(catalog_df, outfile=outfile,
+                         comment=self.comments, clobber=clobber)
+        logger.info("Saved cluster catalog to CSV file: %s" % outfile)
+
+        if dump:
+            outfile = os.path.splitext(outfile)[0] + ".pkl"
+            if self.use_dump_catalog_data and os.path.exists(outfile):
+                os.rename(outfile, outfile+".old")
+            pickle_dump(self.catalog, outfile=outfile, clobber=clobber)
+            logger.info("Dumped catalog raw data to file: %s" % outfile)
+
     def _save_halos_data(self, outfile=None, dump=None, clobber=None):
         """
         Save the simulated halo data (``self.halos``) by converting it
@@ -463,25 +493,22 @@ class GalaxyClusters:
             return
 
         logger.info("{name}: preprocessing ...".format(name=self.name))
-        if self.use_output_catalog:
-            logger.info("Use existing cluster & halo catalog: %s" %
-                        self.catalog_outfile)
-            self.catalog, self.comments = csv_to_dataframe(
-                self.catalog_outfile)
-            ncluster = len(self.catalog)
-            idx_rmm = ~self.catalog["rmm_z"].isnull()
-            nhalo = idx_rmm.sum()
-            logger.info("Loaded cluster catalog: %d clusters with %d halos" %
-                        (ncluster, nhalo))
+        if self.use_dump_catalog_data:
+            infile = os.path.splitext(self.catalog_outfile)[0] + ".pkl"
+            logger.info("Use existing cluster catalog: %s" % infile)
+            self.catalog = pickle_load(infile)
+            self.comments = []
+            logger.info("Loaded cluster catalog of %d clusters" %
+                        len(self.catalog))
         else:
             self._simulate_catalog()
             self._process_catalog()
             self._simulate_mergers()
 
         if self.use_dump_halos_data:
-            logger.info("Use existing dumped halos raw data: %s" %
-                        self.halos_data_dumpfile)
-            self.halos = pickle_load(self.halos_data_dumpfile)
+            infile = os.path.splitext(self.halos_catalog_outfile)[0] + ".pkl"
+            logger.info("Use existing dumped halos raw data: %s" % infile)
+            self.halos = pickle_load(infile)
             logger.info("Loaded data of %d halos" % len(self.halos))
         else:
             self._simulate_halos()
@@ -552,13 +579,7 @@ class GalaxyClusters:
         """
         logger.info("{name}: postprocessing ...".format(name=self.name))
         # Save the final resulting clusters catalog
-        logger.info("Save the resulting catalog ...")
-        if self.use_output_catalog:
-            logger.info("No need to save the cluster catalog.")
-        else:
-            dataframe_to_csv(self.catalog, outfile=self.catalog_outfile,
-                             comment=self.comments, clobber=self.clobber)
-
-        # Save the simulated halos catalog and raw data
+        logger.info("Save the cluster catalog ...")
+        self._save_catalog_data()
         logger.info("Saving the simulated halos catalog and raw data ...")
         self._save_halos_data()

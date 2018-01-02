@@ -197,8 +197,9 @@ def check_extragalactic_clusters(configs):
         key = "extragalactic/psformalism/dndlnm_outfile"
         results.update(_check_missing(configs, key))
         # catalog required when enabled to use it
-        if configs.get(comp+"/use_output_catalog"):
-            results.update(_check_existence(configs, comp+"/catalog_outfile"))
+        if configs.get(comp+"/use_dump_catalog_data"):
+            results.update(_check_file_existence(
+                configs, comp+"/catalog_outfile", ext=".pkl"))
         else:
             results.update(_check_missing(configs, comp+"/catalog_outfile"))
         # dumped halos data required when enabled to use it

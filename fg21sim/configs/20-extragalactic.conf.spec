@@ -60,12 +60,19 @@
   # used by the following ``[[halos]]`` section.
   #
   [[clusters]]
-  # Output CSV file of the clusters catalog containing the simulated
-  # mass, redshift, position, shape, and the recent major merger info.
+  # Output CSV file of the cluster catalog containing the simulated
+  # mass, redshift, position, shape, recent merger info, etc.
   catalog_outfile = string(default=None)
 
-  # Whether to directly use the (previously simulated) catalog file
-  # specified as the above "catalog_outfile" option?
+  # Whether to dump the raw data of the simulated cluster catalog in
+  # Python native pickle format (i.e., ".pkl") to a file with the same
+  # basename as the above ``catalog_outfile``?
+  # The dumped data can be easily loaded back for reuse.
+  dump_catalog_data = boolean(default=True)
+
+  # Whether to directly use the (previously simulated) catalog data as
+  # specified by the above "catalog_outfile" and ``dump_catalog_data``
+  # options?
   # NOTE:
   # By using an existing catalog, the steps to derive these data are
   # simply skipped.
@@ -76,7 +83,7 @@
   # tests and only create images at some frequencies necessary for
   # testing, then select the satisfying one to continue the simulation
   # to generate images at all frequencies.
-  use_output_catalog = boolean(default=False)
+  use_dump_catalog_data = boolean(default=False)
 
   # Output CSV file of the halos catalog containing the calculated
   # properties of the simulated halos.
