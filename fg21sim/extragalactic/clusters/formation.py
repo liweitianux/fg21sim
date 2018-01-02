@@ -213,7 +213,7 @@ class ClusterFormation:
             A dictionary with the properties of the found major event:
             ``{"M_main": M_main, "M_sub": M_sub, "R_mass": R_mass,
                "z": z, "age": age}``;
-            ``None`` if no major event found.
+            ``{}`` if no major event found.
         """
         if mtree is None:
             mtree = self.mtree
@@ -226,7 +226,7 @@ class ClusterFormation:
                          "z": main["z"],
                          "age": main["age"]}
                 return event
-        return None
+        return {}
 
     def maximum_merger(self, mtree=None):
         """
@@ -242,7 +242,7 @@ class ClusterFormation:
         -------
         event : dict
             Same as the above ``self.recent_major_event``.
-            ``None`` if no mergers occurred during the traced period.
+            ``{}`` if no mergers occurred during the traced period.
         """
         if mtree is None:
             mtree = self.mtree
@@ -258,7 +258,7 @@ class ClusterFormation:
 
         if event_max["z"] <= 0:
             logger.warning("No mergers occurred.")
-            return None
+            return {}
         else:
             return event_max
 
