@@ -116,8 +116,10 @@ class GalaxyClusters:
         psform.calc_dndlnm()
         psform.write()
         counts = psform.calc_cluster_counts(coverage=self.sky.area)
-        self.catalog, self.catalog_comment = psform.sample_z_m(counts)
         logger.info("Simulated cluster catalog of counts %d." % counts)
+        z, mass, self.comments = psform.sample_z_m(counts)
+        self.catalog = pd.DataFrame(np.column_stack([z, mass]),
+                                    columns=["z", "mass"])
 
     def _process_catalog(self):
         """

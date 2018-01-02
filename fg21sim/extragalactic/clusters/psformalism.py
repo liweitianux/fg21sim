@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -15,7 +15,6 @@ import random
 from functools import lru_cache
 
 import numpy as np
-import pandas as pd
 import hmf
 
 from ...share import CONFIGS, COSMO
@@ -209,10 +208,6 @@ class PSFormalism:
         -------
         counts : int
             The total number of clusters within the sky patch.
-
-        Attributes
-        ----------
-        counts
         """
         logger.info("Calculating the total number of clusters within "
                     "sky patch of coverage %.1f [deg^2]" % coverage)
@@ -221,13 +216,12 @@ class PSFormalism:
         coverage *= AUC.deg2rad**2  # [deg^2] -> [rad^2] = [sr]
         midx = (self.mass >= self.Mmin_halo)
         numgrid = self.number_grid
-        counts = np.sum(numgrid[:, midx]) * coverage
-        counts *= self.boost  # number boost factor
-        self.counts = int(np.round(counts))
-        logger.info("Total number of clusters: %d" % self.counts)
-        return self.counts
+        counts = np.sum(numgrid[:, midx]) * coverage * self.boost
+        counts = int(np.round(counts))
+        logger.info("Total number of clusters: %d" % counts)
+        return counts
 
-    def sample_z_m(self, counts=None):
+    def sample_z_m(self, counts):
         """
         Randomly generate the requested number of pairs of (z, M) following
         the halo number distribution.
@@ -249,7 +243,6 @@ class PSFormalism:
         ----------
         counts : int, optional
             The number of (z, mass) pairs to be sampled.
-            If not specified, then default to ``self.counts``
 
         Returns
         -------
@@ -257,14 +250,7 @@ class PSFormalism:
             A Pandas data frame with 2 columns, i.e., ``z`` and ``mass``.
         comment : list[str]
             Comments to the above data frame.
-
-        Attributes
-        ----------
-        clusters : df
-        clusters_comment : comment
         """
-        if counts is None:
-            counts = self.counts
         logger.info("Sampling (z, mass) pairs for %d clusters ..." % counts)
 
         z = self.z
@@ -310,18 +296,16 @@ class PSFormalism:
                 i += 1
 
         logger.info("Sampled %d pairs of (z, mass) for each cluster" % counts)
-        df = pd.DataFrame(np.column_stack([z_list, mass_list]),
-                          columns=["z", "mass"])
-        df["mass"] /= COSMO.darkmatter_fraction
+        z = np.array(z_list)
+        mass = np.array(mass_list) / COSMO.darkmatter_fraction
         comment = [
             "halo mass function model: %s" % self.hmf_model,
             "cluster minimum mass: %.2e [Msun]" % self.Mmin_cluster,
             "dark matter fraction: %.2f" % COSMO.darkmatter_fraction,
             "cluster counts: %d" % counts,
             "boost factor for cluster counts: %s" % self.boost,
+            "",
             "z - redshift",
             "mass - cluster total mass [Msun]",
         ]
-        self.clusters = df
-        self.clusters_comment = comment
-        return (df, comment)
+        return (z, mass, comment)
