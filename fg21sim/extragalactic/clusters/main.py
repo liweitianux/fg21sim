@@ -352,7 +352,7 @@ class GalaxyClusters:
         Drop out the specified number of most powerful radio halos from
         the catalog, in order to obtain a more stable simulation.
         """
-        if self.halo_dropout <= 0:
+        if (self.halo_dropout <= 0) or self.use_dump_halos_data:
             logger.info("No need to drop out halos.")
             return
 
