@@ -59,37 +59,36 @@ class GalaxyClusters:
     name = "galaxy clusters (halos)"
 
     def __init__(self, configs=CONFIGS):
-        self.configs = configs
-        self._set_configs()
-
+        self._set_configs(configs)
         self.sky = get_sky(configs)
         self.sky.add_header("CompID", self.compID, "Emission component ID")
         self.sky.add_header("CompName", self.name, "Emission component")
         self.sky.add_header("BUNIT", "K", "[Kelvin] Data unit")
         self.sky.creator = __name__
 
-    def _set_configs(self):
+    def _set_configs(self, configs):
         """
         Load the configs and set the corresponding class attributes.
         """
         comp = self.compID
-        self.catalog_outfile = self.configs.get_path(comp+"/catalog_outfile")
-        self.dump_catalog_data = self.configs.getn(comp+"/dump_catalog_data")
-        self.use_dump_catalog_data = self.configs.getn(
+        self.configs = configs
+        self.catalog_outfile = configs.get_path(comp+"/catalog_outfile")
+        self.dump_catalog_data = configs.getn(comp+"/dump_catalog_data")
+        self.use_dump_catalog_data = configs.getn(
             comp+"/use_dump_catalog_data")
-        self.halos_catalog_outfile = self.configs.get_path(
+        self.halos_catalog_outfile = configs.get_path(
             comp+"/halos_catalog_outfile")
-        self.dump_halos_data = self.configs.getn(comp+"/dump_halos_data")
-        self.use_dump_halos_data = self.configs.getn(
+        self.dump_halos_data = configs.getn(comp+"/dump_halos_data")
+        self.use_dump_halos_data = configs.getn(
             comp+"/use_dump_halos_data")
-        self.halo_dropout = self.configs.getn(comp+"/halo_dropout")
-        self.prefix = self.configs.getn(comp+"/prefix")
-        self.output_dir = self.configs.get_path(comp+"/output_dir")
-        self.merger_mass_min = self.configs.getn(comp+"/merger_mass_min")
-        self.time_traceback = self.configs.getn(comp+"/time_traceback")
-        self.frequencies = self.configs.frequencies
-        self.filename_pattern = self.configs.getn("output/filename_pattern")
-        self.clobber = self.configs.getn("output/clobber")
+        self.halo_dropout = configs.getn(comp+"/halo_dropout")
+        self.prefix = configs.getn(comp+"/prefix")
+        self.output_dir = configs.get_path(comp+"/output_dir")
+        self.merger_mass_min = configs.getn(comp+"/merger_mass_min")
+        self.time_traceback = configs.getn(comp+"/time_traceback")
+        self.frequencies = configs.frequencies
+        self.filename_pattern = configs.getn("output/filename_pattern")
+        self.clobber = configs.getn("output/clobber")
         logger.info("Loaded and set up configurations")
 
         if self.use_dump_halos_data and (not self.use_dump_catalog_data):

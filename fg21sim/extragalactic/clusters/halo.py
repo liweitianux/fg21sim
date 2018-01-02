@@ -132,6 +132,10 @@ class RadioHalo:
         ``self.calc_electron_spectrum()`` or ``self.set_electron_spectrum()``.
         Unit: [cm^-3]
     """
+    # Component name
+    compID = "extragalactic/halos"
+    name = "giant radio halos"
+
     def __init__(self, M_obs, z_obs, M_main, M_sub, z_merger,
                  configs=CONFIGS):
         self.M_obs = M_obs
@@ -140,27 +144,27 @@ class RadioHalo:
         self.M_sub = M_sub
         self.z_merger = z_merger
 
-        self.configs = configs
-        self._set_configs()
+        self._set_configs(configs)
         self._set_solver()
 
-    def _set_configs(self):
-        comp = "extragalactic/halos"
-        self.f_acc = self.configs.getn(comp+"/f_acc")
-        self.f_lturb = self.configs.getn(comp+"/f_lturb")
-        self.zeta_ins = self.configs.getn(comp+"/zeta_ins")
-        self.eta_turb = self.configs.getn(comp+"/eta_turb")
-        self.eta_e = self.configs.getn(comp+"/eta_e")
-        self.x_cr = self.configs.getn(comp+"/x_cr")
-        self.gamma_min = self.configs.getn(comp+"/gamma_min")
-        self.gamma_max = self.configs.getn(comp+"/gamma_max")
-        self.gamma_np = self.configs.getn(comp+"/gamma_np")
-        self.buffer_np = self.configs.getn(comp+"/buffer_np")
+    def _set_configs(self, configs):
+        comp = self.compID
+        self.configs = configs
+        self.f_acc = configs.getn(comp+"/f_acc")
+        self.f_lturb = configs.getn(comp+"/f_lturb")
+        self.zeta_ins = configs.getn(comp+"/zeta_ins")
+        self.eta_turb = configs.getn(comp+"/eta_turb")
+        self.eta_e = configs.getn(comp+"/eta_e")
+        self.x_cr = configs.getn(comp+"/x_cr")
+        self.gamma_min = configs.getn(comp+"/gamma_min")
+        self.gamma_max = configs.getn(comp+"/gamma_max")
+        self.gamma_np = configs.getn(comp+"/gamma_np")
+        self.buffer_np = configs.getn(comp+"/buffer_np")
         if self.buffer_np == 0:
             self.buffer_np = None
-        self.time_step = self.configs.getn(comp+"/time_step")
-        self.time_init = self.configs.getn(comp+"/time_init")
-        self.injection_index = self.configs.getn(comp+"/injection_index")
+        self.time_step = configs.getn(comp+"/time_step")
+        self.time_init = configs.getn(comp+"/time_init")
+        self.injection_index = configs.getn(comp+"/injection_index")
 
     def _set_solver(self):
         self.fpsolver = FokkerPlanckSolver(
