@@ -86,8 +86,6 @@ class GalaxyClusters:
         self.prefix = self.configs.getn(comp+"/prefix")
         self.output_dir = self.configs.get_path(comp+"/output_dir")
         self.merger_mass_min = self.configs.getn(comp+"/merger_mass_min")
-        self.ratio_major = self.configs.getn(comp+"/ratio_major")
-        self.use_max_merger = self.configs.getn(comp+"/use_max_merger")
         self.time_traceback = self.configs.getn(comp+"/time_traceback")
         self.frequencies = self.configs.frequencies
         self.filename_pattern = self.configs.getn("output/filename_pattern")
@@ -176,40 +174,20 @@ class GalaxyClusters:
 
     def _simulate_mergers(self):
         """
-        Simulate the *recent major/maximum merger* event for each cluster.
-
-        First simulate the cluster formation history by tracing the
-        merger and accretion events of the main cluster, then identify
-        the most recent major merger event according to the mass ratio
-        of two merging clusters.  If ``self.use_max_merger=True`` then
-        the recent maximum merger (associated with biggest sub cluster)
-        is selected.  The merger event properties are then appended to
-        the catalog for subsequent radio halo simulation.
-
-        NOTE
-        ----
-        There may be no such recent *major* merger event satisfying the
-        criteria, since we only trace ``time_traceback`` (~2-3 Gyr) back.
-        On the other hand, the cluster may only experience minor merger
-        or accretion events.
+        Simulate the formation history of each cluster to build their
+        merger histories.
 
         Catalog Items
         -------------
-        rmm_mass1, rmm_mass2 :
-            [Msun] masses of the main and sub clusters upon the recent
-            major/maximum merger event
-        rmm_z, rmm_age : redshift and cosmic age [Gyr]
-          of the recent major/maximum merger event.
+        merger_num : number of merger events within the traced period
+        merger_mass1, merger_mass2 :
+            [Msun] masses of the main and sub clusters of each merger.
+        merger_z, merger_age : redshifts and cosmic ages [Gyr]
+            of each merger event.
         """
-        logger.info("Simulating the galaxy formation to identify " +
-                    "the most recent major/maximum merger event ...")
-        if self.use_max_merger:
-            logger.info("Use the recent *maximum* merger event!")
-        else:
-            logger.info("Use the recent *major* merger event!")
-
+        logger.info("Simulating merger histories for each cluster ...")
         num = len(self.catalog)
-        num_rmm = 0
+        num_hasmerger = 0
         for i, cdict in enumerate(self.catalog):
             ii = i + 1
             if ii % 100 == 0:
@@ -220,28 +198,34 @@ class GalaxyClusters:
             clform = ClusterFormation(M0=M0, z0=z0, zmax=zmax,
                                       merger_mass_min=self.merger_mass_min)
             clform.simulate_mtree(main_only=True)
-            if self.use_max_merger:
-                # NOTE: may be ``{}`` due to no mergers occurred.
-                mmev = clform.maximum_merger()
+            mergers = clform.mergers()
+            if mergers:
+                num_hasmerger += 1
+                cdict.update([
+                    ("merger_num",   len(mergers)),
+                    ("merger_mass1", [ev["M_main"] for ev in mergers]),
+                    ("merger_mass2", [ev["M_sub"] for ev in mergers]),
+                    ("merger_z",     [ev["z"] for ev in mergers]),
+                    ("merger_age",   [ev["age"] for ev in mergers]),
+                ])
             else:
-                mmev = clform.recent_major_merger(ratio_major=self.ratio_major)
-            if mmev:
-                num_rmm += 1
-            cdict.update([
-                ("rmm_mass1", mmev.get("M_main")),
-                ("rmm_mass2", mmev.get("M_sub")),
-                ("rmm_z", mmev.get("z")),
-                ("rmm_age", mmev.get("age")),
-            ])
+                cdict.update([
+                    ("merger_num",   0),
+                    ("merger_mass1", []),
+                    ("merger_mass2", []),
+                    ("merger_z",     []),
+                    ("merger_age",   []),
+                ])
 
         self.comments += [
-            "rmm_mass1 - [Msun] main cluster mass of recent major/max merger",
-            "rmm_mass2 - [Msun] sub cluster mass of recent major/max merger",
-            "rmm_z - redshift of the recent major/maximum merger",
-            "rmm_age - [Gyr] cosmic age at the recent major/maximum merger",
+            "merger_num - number of merger events",
+            "merger_mass1 - [Msun] main cluster mass of each merger",
+            "merger_mass2 - [Msun] sub cluster mass of each merger",
+            "merger_z - redshift of each merger",
+            "merger_age - [Gyr] cosmic age at each merger",
         ]
-        logger.info("%d (%.1f%%) clusters have recent major/maximum mergers." %
-                    (num_rmm, 100*num_rmm/num))
+        logger.info("%d (%.1f%%) clusters experience recent mergers." %
+                    (num_hasmerger, 100*num_hasmerger/num))
 
     def _simulate_halos(self):
         """

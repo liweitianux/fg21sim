@@ -129,16 +129,6 @@
   # Unit: [Gyr]
   time_traceback = float(default=3.0, min=1.0, max=5.0)
 
-  # Mass ratio of the main and sub clusters, below which is regarded as
-  # a major merger event.
-  ratio_major = float(default=5.0, min=1.0, max=10.0)
-
-  # Whether to use the maximum merger event (i.e., biggest mass of the
-  # sub cluster) within the above ``tau_merger`` timescale to simulate the
-  # subsequent radio halo simulation?  Otherwise only the most recent major
-  # merger event will be used.
-  use_max_merger = boolean(default=False)
-
   # The fraction of the magnetic field energy density w.r.t. the ICM
   # thermal energy density, which is used to determine the mean magnetic
   # field strength within the ICM and is also assumed to be uniform.
