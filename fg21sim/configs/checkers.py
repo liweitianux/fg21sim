@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2016-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -18,7 +18,9 @@ from ..errors import ConfigError
 
 
 def _check_missing(configs, keys):
-    """Check whether the required config is provided by the user."""
+    """
+    Check whether the required config is provided by the user.
+    """
     results = {}
     if isinstance(keys, str):
         keys = [keys, ]
@@ -29,7 +31,9 @@ def _check_missing(configs, keys):
 
 
 def _check_existence(configs, keys):
-    """Check whether the file/directory corresponding to the config exists."""
+    """
+    Check whether the file/directory corresponding to the config exists.
+    """
     if isinstance(keys, str):
         keys = [keys, ]
     results = {}
@@ -44,14 +48,37 @@ def _check_existence(configs, keys):
     return results
 
 
+def _check_file_existence(configs, key, ext=None):
+    """
+    Check the existence of the file corresponding to the given config key.
+
+    If the ``ext`` is specified, then the original file extension is
+    first replaced with the given one, then to check its existence.
+    """
+    res = _check_missing(configs, key)
+    if res == {}:
+        filepath = configs.get_path(key)
+        if ext:
+            filepath = os.path.splitext(filepath)[0] + ext
+            key += "#%s" % ext
+        if not os.path.exists(filepath):
+            res[key] = 'File not exist: "%s"' % filepath
+    return res
+
+
 def _is_power2(n):
-    """Check a number whether a power of 2"""
-    # Credit: https://stackoverflow.com/a/29489026/4856091
+    """
+    Check a number whether a power of 2
+
+    Credit: https://stackoverflow.com/a/29489026/4856091
+    """
     return (n and not (n & (n-1)))
 
 
 def check_foregrounds(configs):
-    """Check the "[foregrounds]" section of the configurations."""
+    """
+    Check the "[foregrounds]" section of the configurations.
+    """
     results = {}
     # Check enabled foreground components
     fg = configs.foregrounds
@@ -61,7 +88,9 @@ def check_foregrounds(configs):
 
 
 def check_sky(configs):
-    """Check the "[sky]" section of the configurations."""
+    """
+    Check the "[sky]" section of the configurations.
+    """
     results = {}
     skytype = configs.getn("sky/type")
     if skytype == "patch":
@@ -80,7 +109,9 @@ def check_sky(configs):
 
 
 def check_frequency(configs):
-    """Check the "[frequency]" section of the configurations."""
+    """
+    Check the "[frequency]" section of the configurations.
+    """
     results = {}
     if configs.getn("frequency/type") == "custom":
         results.update(_check_missing(configs, "frequency/frequencies"))
@@ -94,7 +125,9 @@ def check_frequency(configs):
 
 
 def check_galactic_synchrotron(configs):
-    """Check the "[galactic][synchrotron]" section of the configurations."""
+    """
+    Check the "[galactic][synchrotron]" section of the configurations.
+    """
     comp = "galactic/synchrotron"
     comp_enabled = configs.foregrounds[0]
     if comp not in comp_enabled:
@@ -136,7 +169,9 @@ def check_galactic_freefree(configs):
 
 
 def check_galactic_snr(configs):
-    """Check the "[galactic][snr]" section of the configurations."""
+    """
+    Check the "[galactic][snr]" section of the configurations.
+    """
     comp = "galactic/snr"
     comp_enabled = configs.foregrounds[0]
     results = {}
@@ -168,11 +203,11 @@ def check_extragalactic_clusters(configs):
             results.update(_check_missing(configs, comp+"/catalog_outfile"))
         # dumped halos data required when enabled to use it
         if configs.get(comp+"/use_dump_halos_data"):
-            results.update(_check_existence(configs,
-                                            comp+"/halos_catalog_outfile"))
+            results.update(_check_file_existence(
+                configs, comp+"/halos_catalog_outfile", ext=".pkl"))
         else:
-            results.update(_check_missing(configs,
-                                          comp+"/halos_catalog_outfile"))
+            results.update(_check_missing(
+                configs, comp+"/halos_catalog_outfile"))
         results.update(_check_missing(configs, comp+"/output_dir"))
     return results
 
