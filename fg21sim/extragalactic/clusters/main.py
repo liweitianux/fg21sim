@@ -311,7 +311,7 @@ class GalaxyClusters:
         """
         Calculate the radio emissions at configured frequencies.
         """
-        logger.info("Calculating the radio emissions for halos ...")
+        logger.info("Calculating the radio halo emissions ...")
         num = len(self.halos)
         i = 0
         for hdict in self.halos:
@@ -420,7 +420,8 @@ class GalaxyClusters:
             outfile = os.path.splitext(outfile)[0] + ".pkl"
             if self.use_dump_catalog_data and os.path.exists(outfile):
                 os.rename(outfile, outfile+".old")
-            pickle_dump(self.catalog, outfile=outfile, clobber=clobber)
+            pickle_dump([self.catalog, self.comments],
+                        outfile=outfile, clobber=clobber)
             logger.info("Dumped catalog raw data to file: %s" % outfile)
 
     def _save_halos_data(self, outfile=None, dump=None, clobber=None):
@@ -496,8 +497,7 @@ class GalaxyClusters:
         if self.use_dump_catalog_data:
             infile = os.path.splitext(self.catalog_outfile)[0] + ".pkl"
             logger.info("Use existing cluster catalog: %s" % infile)
-            self.catalog = pickle_load(infile)
-            self.comments = []
+            self.catalog, self.comments = pickle_load(infile)
             logger.info("Loaded cluster catalog of %d clusters" %
                         len(self.catalog))
         else:
@@ -507,7 +507,7 @@ class GalaxyClusters:
 
         if self.use_dump_halos_data:
             infile = os.path.splitext(self.halos_catalog_outfile)[0] + ".pkl"
-            logger.info("Use existing dumped halos raw data: %s" % infile)
+            logger.info("Use existing halos data: %s" % infile)
             self.halos = pickle_load(infile)
             logger.info("Loaded data of %d halos" % len(self.halos))
         else:
