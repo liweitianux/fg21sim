@@ -2,20 +2,21 @@
 # MIT license
 
 """
-Simulate (giant) radio halo originating from the last/recent
-cluster-cluster major merger event, following the "statistical
-magneto-turbulent model" proposed by [cassano2005]_, but with many
-modifications and simplifications.
+Simulate (giant) radio halos originating from the recent merger
+events, which generate cluster-wide turbulence and accelerate the
+primary (i.e., fossil) relativistic electrons to high energies to
+be synchrotron-bright.  This *turbulence re-acceleration* model
+is currently most widely accepted to explain the (giant) radio halos.
+
+The simulation method is somewhat based on the statistical (Monte
+Carlo) method proposed by [cassano2005]_, but with extensive
+modifications and improvements.
 
 References
 ----------
 .. [brunetti2011]
    Brunetti & Lazarian 2011, MNRAS, 410, 127
    http://adsabs.harvard.edu/abs/2011MNRAS.410..127B
-
-.. [brunetti2016]
-   Brunetti 2016, PPCF, 58, 014011
-   http://adsabs.harvard.edu/abs/2016PPCF...58a4011B
 
 .. [cassano2005]
    Cassano & Brunetti 2005, MNRAS, 357, 1313
@@ -74,8 +75,8 @@ logger = logging.getLogger(__name__)
 
 class RadioHalo:
     """
-    Simulate the extended radio halo emission from the galaxy cluster
-    experiencing on-going/recent merger.
+    Simulate the diffuse (giant) radio halo emission for a galaxy
+    cluster experiencing on-going/recent merger.
 
     Description
     -----------
