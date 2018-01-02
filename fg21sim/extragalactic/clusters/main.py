@@ -224,8 +224,10 @@ class GalaxyClusters:
             "merger_z - redshift of each merger",
             "merger_age - [Gyr] cosmic age at each merger",
         ]
-        logger.info("%d (%.1f%%) clusters experience recent mergers." %
+        logger.info("%d (%.1f%%) clusters experienced recent mergers." %
                     (num_hasmerger, 100*num_hasmerger/num))
+        nmax = max([cdict["merger_num"] for cdict in self.catalog])
+        logger.info("Maximum number of merger events: %d" % nmax)
 
     def _simulate_halos(self):
         """
@@ -394,6 +396,17 @@ class GalaxyClusters:
             os.rename(outfile, outfile+".old")
 
         logger.info("Converting cluster catalog into a Pandas DataFrame ...")
+        # Pad the merger events to be same length
+        nmax = max([cdict["merger_num"] for cdict in self.catalog])
+        for cdict in self.catalog:
+            num = cdict["merger_num"]
+            cdict.update([
+                ("merger_mass1", cdict["merger_mass1"] + [None]*(nmax-num)),
+                ("merger_mass2", cdict["merger_mass2"] + [None]*(nmax-num)),
+                ("merger_z",     cdict["merger_z"] + [None]*(nmax-num)),
+                ("merger_age",   cdict["merger_age"] + [None]*(nmax-num)),
+            ])
+
         keys = list(self.catalog[0].keys())
         catalog_df = dictlist_to_dataframe(self.catalog, keys=keys)
         dataframe_to_csv(catalog_df, outfile=outfile,
