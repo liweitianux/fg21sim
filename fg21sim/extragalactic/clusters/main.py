@@ -392,32 +392,41 @@ class GalaxyClusters:
             hdict["template"] = template
         logger.info("Done drawn halo template images.")
 
-    def _save_halos_catalog(self, outfile=None):
         """
-        Convert the halos data (``self.halos``) into a Pandas DataFrame
-        and write into a CSV file.
+    def _save_halos_data(self, outfile=None, dump=None, clobber=None):
+        """
+        Save the simulated halo data (``self.halos``) by converting it
+        into a Pandas DataFrame and writing into a CSV file.
+
+        If ``dump=True``, then the raw data (``self.halos``) is dumped
+        into a Python pickle file, making it possible to be loaded back
+        to quickly calculate the emissions at additional frequencies.
         """
         if outfile is None:
             outfile = self.halos_catalog_outfile
+        if dump is None:
+            dump = self.dump_halos_data
+        if clobber is None:
+            clobber = self.clobber
 
-        logger.info("Converting halos data to be a Pandas DataFrame ...")
+        if self.use_dump_halos_data and os.path.exists(outfile):
+            os.rename(outfile, outfile+".old")
+
+        logger.info("Converting halos data into a Pandas DataFrame ...")
         keys = list(self.halos[0].keys())
-        # Ignore the ``gamma`` and ``n_e`` items
+        # Ignore these items: gamma, n_e, template
         for k in ["gamma", "n_e", "template"]:
             keys.remove(k)
         halos_df = dictlist_to_dataframe(self.halos, keys=keys)
-        dataframe_to_csv(halos_df, outfile, clobber=self.clobber)
-        logger.info("Saved DataFrame of halos data to file: %s" % outfile)
+        dataframe_to_csv(halos_df, outfile, clobber=clobber)
+        logger.info("Saved halos data to CSV file: %s" % outfile)
 
-    def _dump_halos_data(self, outfile=None):
-        """
-        Dump the simulated halos data into Python native pickle format,
-        making it possible to load the data back to quickly calculate
-        the emissions at additional frequencies.
-        """
-        if outfile is None:
-            outfile = self.halos_data_dumpfile
-        pickle_dump(self.halos, outfile=outfile, clobber=self.clobber)
+        if dump:
+            outfile = os.path.splitext(outfile)[0] + ".pkl"
+            if self.use_dump_halos_data and os.path.exists(outfile):
+                os.rename(outfile, outfile+".old")
+            pickle_dump(self.halos, outfile=outfile, clobber=clobber)
+            logger.info("Dumped halos raw data to file: %s" % outfile)
 
     def _outfilepath(self, frequency, **kwargs):
         """
@@ -552,15 +561,4 @@ class GalaxyClusters:
 
         # Save the simulated halos catalog and raw data
         logger.info("Saving the simulated halos catalog and raw data ...")
-        if self.use_dump_halos_data:
-            filepath = self.halos_catalog_outfile
-            os.rename(filepath, filepath+".old")
-            logger.warning("Backed up halos catalog: %s -> %s" %
-                           (filepath, filepath+".old"))
-            filepath = self.halos_data_dumpfile
-            os.rename(filepath, filepath+".old")
-            logger.warning("Backed up halos data dump file: %s -> %s" %
-                           (filepath, filepath+".old"))
-        self._save_halos_catalog()
-        if self.dump_halos_data:
-            self._dump_halos_data()
+        self._save_halos_data()
