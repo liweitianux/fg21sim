@@ -106,10 +106,15 @@ class GalaxyClusters:
         Simulate the (z, mass) catalog of the cluster distribution
         according to the Press-Schechter formalism.
 
-        Catalog columns
-        ---------------
-        * ``z`` : redshifts
-        * ``mass`` : cluster total mass; unit: [Msun]
+        Catalog Items
+        -------------
+        z : redshifts
+        mass : [Msun] cluster total mass
+
+        Attributes
+        ----------
+        catalog : list[dict]
+        comments : list[str]
         """
         logger.info("Simulating the clusters (z, mass) catalog ...")
         psform = PSFormalism(configs=self.configs)
@@ -117,8 +122,9 @@ class GalaxyClusters:
         psform.write()
         counts = psform.calc_cluster_counts(coverage=self.sky.area)
         z, mass, self.comments = psform.sample_z_m(counts)
-        self.catalog = pd.DataFrame(np.column_stack([z, mass]),
-                                    columns=["z", "mass"])
+        self.catalog = []
+        for z_, m_ in zip(z, mass):
+            self.catalog.append(OrderedDict([("z", z_), ("mass", m_)]))
         logger.info("Simulated a catalog of %d clusters" % counts)
 
     def _process_catalog(self):
@@ -129,14 +135,14 @@ class GalaxyClusters:
         * Generate random elongated fraction;
         * Generate random rotation angle.
 
-        Catalog columns
-        ---------------
-        * ``lon`` : longitudes; unit: [deg]
-        * ``lat`` : latitudes; unit: [deg]
-        * ``felong`` : elongated fraction, defined as the ratio of
-                       elliptical semi-major axis to semi-minor axis
-        * ``rotation`` : rotation angle; uniformly distributed within
-                         [0, 360.0); unit: [deg]
+        Catalog Items
+        -------------
+        lon : [deg] longitudes
+        lat : [deg] latitudes
+        felong : elongated fraction, defined as the ratio of
+                 elliptical semi-major axis to semi-minor axis
+        rotation : [deg] rotation angle; uniformly distributed within
+                   [0, 360.0)
 
         NOTE
         ----
@@ -150,26 +156,25 @@ class GalaxyClusters:
         logger.info("Preliminary processes to the catalog ...")
         num = len(self.catalog)
         lon, lat = self.sky.random_points(n=num)
-        self.catalog["lon"] = lon
-        self.catalog["lat"] = lat
-        self.comments.append(
-            "lon, lat - [deg] longitudes and latitudes")
-        logger.info("Added catalog columns: lon, lat.")
-
         felong_min = 0.6
         sigma = (1.0 - felong_min) / 3.0
         felong = 1.0 - np.abs(np.random.normal(scale=sigma, size=num))
         felong[felong < felong_min] = felong_min
-        self.catalog["felong"] = felong
-        self.comments.append(
-            "felong - elongated fraction (= b/a)")
-        logger.info("Added catalog column: felong.")
-
         rotation = np.random.uniform(low=0.0, high=360.0, size=num)
-        self.catalog["rotation"] = rotation
-        self.comments.append(
-            "rotation -  [deg] ellipse rotation angle")
-        logger.info("Added catalog column: rotation.")
+
+        for i, cdict in enumerate(self.catalog):
+            cdict.update([
+                ("lon", lon[i]),
+                ("lat", lat[i]),
+                ("felong", felong[i]),
+                ("rotation", rotation[i]),
+            ])
+        self.comments += [
+            "lon, lat - [deg] longitudes and latitudes",
+            "felong - elongated fraction (= b/a)",
+            "rotation -  [deg] ellipse rotation angle",
+        ]
+        logger.info("Added catalog items: lon, lat, felong, rotation.")
 
     def _simulate_mergers(self):
         """
@@ -190,11 +195,12 @@ class GalaxyClusters:
         On the other hand, the cluster may only experience minor merger
         or accretion events.
 
-        Catalog columns
-        ---------------
-        * ``rmm_mass1``, ``rmm_mass2`` : [Msun] masses of the main and sub
-          clusters upon the recent major/maximum merger event;
-        * ``rmm_z``, ``rmm_age`` : redshift and cosmic age [Gyr]
+        Catalog Items
+        -------------
+        rmm_mass1, rmm_mass2 :
+            [Msun] masses of the main and sub clusters upon the recent
+            major/maximum merger event
+        rmm_z, rmm_age : redshift and cosmic age [Gyr]
           of the recent major/maximum merger event.
         """
         logger.info("Simulating the galaxy formation to identify " +
@@ -203,72 +209,74 @@ class GalaxyClusters:
             logger.info("Use the recent *maximum* merger event!")
         else:
             logger.info("Use the recent *major* merger event!")
-        num = len(self.catalog)
-        mdata = np.zeros(shape=(num, 4))
-        mdata.fill(np.nan)
 
-        for i, row in zip(range(num), self.catalog.itertuples()):
+        num = len(self.catalog)
+        num_rmm = 0
+        for i, cdict in enumerate(self.catalog):
             ii = i + 1
             if ii % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
-            z0, M0 = row.z, row.mass
+            z0, M0 = cdict["z"], cdict["mass"]
             age0 = COSMO.age(z0)
             zmax = COSMO.redshift(age0 - self.time_traceback)
             clform = ClusterFormation(M0=M0, z0=z0, zmax=zmax,
                                       merger_mass_min=self.merger_mass_min)
             clform.simulate_mtree(main_only=True)
             if self.use_max_merger:
-                # NOTE: may be ``None`` due to no mergers occurred at all!
+                # NOTE: may be ``{}`` due to no mergers occurred.
                 mmev = clform.maximum_merger()
             else:
                 mmev = clform.recent_major_merger(ratio_major=self.ratio_major)
             if mmev:
-                mdata[i, :] = [mmev["M_main"], mmev["M_sub"],
-                               mmev["z"], mmev["age"]]
+                num_rmm += 1
+            cdict.update([
+                ("rmm_mass1", mmev.get("M_main")),
+                ("rmm_mass2", mmev.get("M_sub")),
+                ("rmm_z", mmev.get("z")),
+                ("rmm_age", mmev.get("age")),
+            ])
 
-        mdf = pd.DataFrame(data=mdata,
-                           columns=["rmm_mass1", "rmm_mass2",
-                                    "rmm_z", "rmm_age"])
-        self.catalog = self.catalog.join(mdf, how="outer")
         self.comments += [
             "rmm_mass1 - [Msun] main cluster mass of recent major/max merger",
             "rmm_mass2 - [Msun] sub cluster mass of recent major/max merger",
             "rmm_z - redshift of the recent major/maximum merger",
             "rmm_age - [Gyr] cosmic age at the recent major/maximum merger",
         ]
-        num_merger = np.sum(~mdf["rmm_z"].isnull())
         logger.info("%d (%.1f%%) clusters have recent major/maximum mergers." %
-                    (num_merger, 100*num_merger/num))
+                    (num_rmm, 100*num_rmm/num))
 
     def _simulate_halos(self):
         """
-        Simulate the radio halo properties for each cluster with
-        recent major merger event.
+        Simulate the radio halo properties for each cluster with recent
+        merger event.
 
         Attributes
         ----------
         halos : list[dict]
-            Simulated data for each cluster with recent major merger.
-        halos_df : `~pandas.DataFrame`
-            The Pandas DataFrame converted from the above ``halos`` data.
+            Simulated data for each cluster with recent merger.
         """
-        # Select out the clusters with recent major mergers
-        idx_rmm = ~self.catalog["rmm_z"].isnull()
-        num = idx_rmm.sum()
+        # Select out the clusters with recent mergers
+        idx_rmm = [idx for idx, cdict in enumerate(self.catalog)
+                   if cdict["rmm_z"] is not None]
+        num = len(idx_rmm)
         logger.info("Simulating halos for %d merging clusters ..." % num)
         self.halos = []
-        i = 0
-        for row in self.catalog[idx_rmm].itertuples():
-            i += 1
-            if i % 50 == 0:
-                logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
-            logger.info("[%d/%d] " % (i, num) +
+        for i, idx in enumerate(idx_rmm):
+            ii = i + 1
+            if ii % 50 == 0:
+                logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
+            cdict = self.catalog[idx]
+            z_obs = cdict["z"]
+            M_obs = cdict["mass"]
+            z_merger = cdict["rmm_z"]
+            M_main = cdict["rmm_mass1"]
+            M_sub = cdict["rmm_mass2"]
+            logger.info("[%d/%d] " % (ii, num) +
                         "M1[%.2e] & M2[%.2e] @ z[%.3f] -> M[%.2e] @ z[%.3f]" %
-                        (row.rmm_mass1, row.rmm_mass2, row.rmm_z,
-                         row.mass, row.z))
-            halo = RadioHalo(M_obs=row.mass, z_obs=row.z,
-                             M_main=row.rmm_mass1, M_sub=row.rmm_mass2,
-                             z_merger=row.rmm_z, configs=self.configs)
+                        (M_main, M_sub, z_merger, M_obs, z_obs))
+            halo = RadioHalo(M_obs=M_obs, z_obs=z_obs,
+                             M_main=M_main, M_sub=M_sub,
+                             z_merger=z_merger, configs=self.configs)
             n_e = halo.calc_electron_spectrum()
             data = OrderedDict([
                 ("z0", halo.z_obs),
@@ -276,10 +284,10 @@ class GalaxyClusters:
                 ("Rvir0", halo.radius_virial_obs),  # [kpc]
                 ("kT0", halo.kT_obs),  # [keV]
                 ("B0", halo.B_obs),  # [uG] magnetic field at z_obs
-                ("lon", row.lon),  # [deg] longitude
-                ("lat", row.lat),  # [deg] longitude
-                ("felong", row.felong),  # Fraction of elongation
-                ("rotation", row.rotation),  # [deg] ellipse rotation angle
+                ("lon", cdict["lon"]),  # [deg] longitude
+                ("lat", cdict["lat"]),  # [deg] longitude
+                ("felong", cdict["felong"]),  # Fraction of elongation
+                ("rotation", cdict["rotation"]),  # [deg] rotation angle
                 ("M_main", halo.M_main),  # [Msun]
                 ("M_sub", halo.M_sub),  # [Msun]
                 ("z_merger", halo.z_merger),
