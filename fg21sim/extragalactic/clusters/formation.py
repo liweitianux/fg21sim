@@ -257,7 +257,7 @@ class ClusterFormation:
                              "age": main["age"]}
 
         if event_max["z"] <= 0:
-            logger.warning("No mergers occurred at all!!")
+            logger.warning("No mergers occurred.")
             return None
         else:
             return event_max

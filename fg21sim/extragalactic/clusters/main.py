@@ -116,10 +116,10 @@ class GalaxyClusters:
         psform.calc_dndlnm()
         psform.write()
         counts = psform.calc_cluster_counts(coverage=self.sky.area)
-        logger.info("Simulated cluster catalog of counts %d." % counts)
         z, mass, self.comments = psform.sample_z_m(counts)
         self.catalog = pd.DataFrame(np.column_stack([z, mass]),
                                     columns=["z", "mass"])
+        logger.info("Simulated a catalog of %d clusters" % counts)
 
     def _process_catalog(self):
         """
@@ -152,8 +152,8 @@ class GalaxyClusters:
         lon, lat = self.sky.random_points(n=num)
         self.catalog["lon"] = lon
         self.catalog["lat"] = lat
-        self.catalog_comment.append(
-            "lon, lat : longitudes and latitudes [deg]")
+        self.comments.append(
+            "lon, lat - [deg] longitudes and latitudes")
         logger.info("Added catalog columns: lon, lat.")
 
         felong_min = 0.6
@@ -161,14 +161,14 @@ class GalaxyClusters:
         felong = 1.0 - np.abs(np.random.normal(scale=sigma, size=num))
         felong[felong < felong_min] = felong_min
         self.catalog["felong"] = felong
-        self.catalog_comment.append(
-            "felong : elongated fraction (= b/a)")
+        self.comments.append(
+            "felong - elongated fraction (= b/a)")
         logger.info("Added catalog column: felong.")
 
         rotation = np.random.uniform(low=0.0, high=360.0, size=num)
         self.catalog["rotation"] = rotation
-        self.catalog_comment.append(
-            "rotation : ellipse rotation angle [deg]")
+        self.comments.append(
+            "rotation -  [deg] ellipse rotation angle")
         logger.info("Added catalog column: rotation.")
 
     def _simulate_mergers(self):
@@ -230,17 +230,15 @@ class GalaxyClusters:
                            columns=["rmm_mass1", "rmm_mass2",
                                     "rmm_z", "rmm_age"])
         self.catalog = self.catalog.join(mdf, how="outer")
-        self.catalog_comment += [
-            "rmm_mass1: [Msun] main cluster mass of recent major/max merger",
-            "rmm_mass2: [Msun] sub cluster mass of recent major/max merger",
-            "rmm_z: redshift of the recent major/maximum merger",
-            "rmm_age: [Gyr] cosmic age at the recent major/maximum merger",
+        self.comments += [
+            "rmm_mass1 - [Msun] main cluster mass of recent major/max merger",
+            "rmm_mass2 - [Msun] sub cluster mass of recent major/max merger",
+            "rmm_z - redshift of the recent major/maximum merger",
+            "rmm_age - [Gyr] cosmic age at the recent major/maximum merger",
         ]
-        logger.info("Simulated and identified recent major/maximum mergers.")
-        if not self.use_max_merger:
-            num_major = np.sum(~mdf["rmm_z"].isnull())
-            logger.info("%d (%.1f%%) clusters have recent major mergers." %
-                        (num_major, 100*num_major/num))
+        num_merger = np.sum(~mdf["rmm_z"].isnull())
+        logger.info("%d (%.1f%%) clusters have recent major/maximum mergers." %
+                    (num_merger, 100*num_merger/num))
 
     def _simulate_halos(self):
         """
@@ -328,11 +326,13 @@ class GalaxyClusters:
             Tb_mean = halo.calc_brightness_mean(self.frequencies, flux=flux,
                                                 pixelsize=self.sky.pixelsize)
             # Update or add new items
-            hdict["frequency"] = self.frequencies  # [MHz]
-            hdict["emissivity"] = emissivity  # [erg/s/cm^3/Hz]
-            hdict["power"] = power  # [W/Hz]
-            hdict["flux"] = flux  # [Jy]
-            hdict["Tb_mean"] = Tb_mean  # [K]
+            hdict.update([
+                ("frequency", self.frequencies),  # [MHz]
+                ("emissivity", emissivity),  # [erg/s/cm^3/Hz]
+                ("power", power),  # [W/Hz]
+                ("flux", flux),  # [Jy]
+                ("Tb_mean", Tb_mean),  # [K]
+            ])
         logger.info("Done calculate the radio emissions.")
 
     def _dropout_halos(self):
@@ -449,7 +449,7 @@ class GalaxyClusters:
         if self.use_output_catalog:
             logger.info("Use existing cluster & halo catalog: %s" %
                         self.catalog_outfile)
-            self.catalog, self.catalog_comment = csv_to_dataframe(
+            self.catalog, self.comments = csv_to_dataframe(
                 self.catalog_outfile)
             ncluster = len(self.catalog)
             idx_rmm = ~self.catalog["rmm_z"].isnull()
@@ -540,8 +540,7 @@ class GalaxyClusters:
             logger.info("No need to save the cluster catalog.")
         else:
             dataframe_to_csv(self.catalog, outfile=self.catalog_outfile,
-                             comment=self.catalog_comment,
-                             clobber=self.clobber)
+                             comment=self.comments, clobber=self.clobber)
 
         # Save the simulated halos catalog and raw data
         logger.info("Saving the simulated halos catalog and raw data ...")

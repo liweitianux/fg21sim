@@ -306,6 +306,6 @@ class PSFormalism:
             "boost factor for cluster counts: %s" % self.boost,
             "",
             "z - redshift",
-            "mass - cluster total mass [Msun]",
+            "mass - [Msun] cluster total mass",
         ]
         return (z, mass, comment)
