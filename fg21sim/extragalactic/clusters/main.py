@@ -394,7 +394,9 @@ class GalaxyClusters:
         # Pad the merger events to be same length
         nmax = max([cdict["merger_num"] for cdict in self.catalog])
         for cdict in self.catalog:
-            num = cdict["merger_num"]
+            num = len(cdict["merger_z"])
+            if num == nmax:
+                continue
             cdict.update([
                 ("merger_mass1", cdict["merger_mass1"] + [None]*(nmax-num)),
                 ("merger_mass2", cdict["merger_mass2"] + [None]*(nmax-num)),
