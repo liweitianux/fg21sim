@@ -188,16 +188,20 @@ class RadioHalo:
         return COSMO.age(self.z_obs)
 
     @property
-    def age_merger(self):
+    def age_begin(self):
+        """
+        The cosmic time when the merger begins.
+        Unit: [Gyr]
+        """
         return COSMO.age(self.z_merger)
 
     @property
     def tback_merger(self):
         """
-        The time from the observation (``z_obs``) back to the merger
-        (``z_merger``).
+        The time from the observation (``z_obs``) back to the beginning
+        of the merger (``z_merger``).
         """
-        return (self.age_obs - self.age_merger)  # [Gyr]
+        return (self.age_obs - self.age_begin)  # [Gyr]
 
     @property
     @lru_cache()
@@ -372,12 +376,11 @@ class RadioHalo:
     @property
     def electron_spec_init(self):
         """
-        The (default) initial electron spectrum at ``age_merger`` from
-        which to solve the final electron spectrum at the observation
-        time by solving the Fokker-Planck equation.
+        The electron spectrum at ``age_begin`` to be used as the initial
+        condition for the Fokker-Planck equation.
 
         This initial electron spectrum is derived from the accumulated
-        electron spectrum injected throughout the ``age_merger`` period,
+        electron spectrum injected throughout the ``age_begin`` period,
         by solving the same Fokker-Planck equation, but only considering
         energy losses and constant injection, evolving for a period of
         ``time_init`` in order to obtain an approximately steady electron
@@ -385,15 +388,15 @@ class RadioHalo:
 
         Units: [cm^-3]
         """
-        # Accumulated electrons constantly injected until ``age_merger``
+        # Accumulated electrons constantly injected until ``age_begin``
         n_inj = self.fp_injection(self.gamma)
-        n0_e = n_inj * (self.age_merger - self.time_init)
+        n0_e = n_inj * (self.age_begin - self.time_init)
 
         logger.debug("Derive the initial electron spectrum ...")
         # NOTE: subtract ``time_step`` to avoid the acceleration at the
-        #       last step at ``age_merger``.
-        tstart = self.age_merger - self.time_init - self.time_step
-        tstop = self.age_merger - self.time_step
+        #       last step at ``age_begin``.
+        tstart = self.age_begin - self.time_init - self.time_step
+        tstop = self.age_begin - self.time_step
         # Use a bigger time step to save time
         self.fpsolver.tstep = 3 * self.time_step
         n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
@@ -411,7 +414,7 @@ class RadioHalo:
         tstart : float, optional
             The (cosmic) time from when to solve the Fokker-Planck equation
             for relativistic electrons evolution.
-            Default: ``self.age_merger``.
+            Default: ``self.age_begin``.
             Unit: [Gyr]
         tstop : float, optional
             The (cosmic) time when to derive final relativistic electrons
@@ -430,7 +433,7 @@ class RadioHalo:
             Unit: [cm^-3]
         """
         if tstart is None:
-            tstart = self.age_merger
+            tstart = self.age_begin
         if tstop is None:
             tstop = self.age_obs
         if n0_e is None:
@@ -555,7 +558,7 @@ class RadioHalo:
         # Maximum acceleration timescale when no turbulence acceleration
         # NOTE: see the above WARNING!
         tau_max = 10.0  # [Gyr]
-        if (t < self.age_merger) or (t > self.age_merger+self.time_turbulence):
+        if (t < self.age_begin) or (t > self.age_begin+self.time_turbulence):
             # NO active turbulence acceleration
             tau_acc = tau_max
         else:
@@ -585,10 +588,10 @@ class RadioHalo:
             Advection coefficients, describing the energy loss/gain rates.
             Unit: [Gyr^-1]
         """
-        if t < self.age_merger:
+        if t < self.age_begin:
             # To derive the initial electron spectrum
-            advection = (abs(self._loss_ion(gamma, self.age_merger)) +
-                         abs(self._loss_rad(gamma, self.age_merger)))
+            advection = (abs(self._loss_ion(gamma, self.age_begin)) +
+                         abs(self._loss_rad(gamma, self.age_begin)))
         else:
             # Turbulence acceleration and beyond
             advection = (abs(self._loss_ion(gamma, t)) +
@@ -619,9 +622,9 @@ class RadioHalo:
             The mass of the main cluster.
             Unit: [Msun]
         """
-        t_merger = self.age_merger
-        rate = (self.M_obs - self.M_main) / (self.age_obs - t_merger)
-        mass = rate * (t - t_merger) + self.M_main
+        t0 = self.age_begin
+        rate = (self.M_obs - self.M_main) / (self.age_obs - t0)
+        mass = rate * (t - t0) + self.M_main
         return mass
 
     def _velocity_turb(self, t=None):
@@ -655,7 +658,7 @@ class RadioHalo:
             Unit: [km/s]
         """
         if t is None:
-            t = self.age_merger
+            t = self.age_begin
         z = COSMO.redshift(t)
         mass = self.M_main + self.M_sub
         R_vir = helper.radius_virial(mass=mass, z=z) * AUC.kpc2cm  # [cm]
