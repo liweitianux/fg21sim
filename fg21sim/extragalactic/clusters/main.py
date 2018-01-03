@@ -21,6 +21,7 @@ import numpy as np
 from .psformalism import PSFormalism
 from .formation import ClusterFormation
 from .halo import RadioHalo
+from .emission import HaloEmission
 from ...share import CONFIGS, COSMO
 from ...utils.io import dataframe_to_csv, pickle_dump, pickle_load
 from ...utils.ds import dictlist_to_dataframe
@@ -303,19 +304,14 @@ class GalaxyClusters:
             i += 1
             if i % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
-
-            halo = RadioHalo(M_obs=hdict["M0"], z_obs=hdict["z0"],
-                             M_main=hdict["M_main"], M_sub=hdict["M_sub"],
-                             z_merger=hdict["z_merger"],
-                             configs=self.configs)
-            halo.set_electron_spectrum(hdict["n_e"])
-
-            emissivity = halo.calc_emissivity(frequencies=self.frequencies)
-            power = halo.calc_power(self.frequencies, emissivity=emissivity)
-            # k-correction considered
-            flux = halo.calc_flux(self.frequencies)
-            Tb_mean = halo.calc_brightness_mean(self.frequencies, flux=flux,
-                                                pixelsize=self.sky.pixelsize)
+            haloem = HaloEmission(gamma=hdict["gamma"], n_e=hdict["n_e"],
+                                  B=hdict["B0"], radius=hdict["Rhalo"],
+                                  redshift=hdict["z0"])
+            emissivity = haloem.calc_emissivity(frequencies=self.frequencies)
+            power = haloem.calc_power(self.frequencies, emissivity=emissivity)
+            flux = haloem.calc_flux(self.frequencies)
+            Tb_mean = haloem.calc_brightness_mean(self.frequencies, flux=flux,
+                                                  pixelsize=self.sky.pixelsize)
             # Update or add new items
             hdict.update([
                 ("frequency", self.frequencies),  # [MHz]
