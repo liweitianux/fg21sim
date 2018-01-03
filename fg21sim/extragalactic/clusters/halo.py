@@ -279,6 +279,16 @@ class RadioHalo:
 
     @property
     @lru_cache()
+    def kT_obs(self):
+        """
+        The ICM mean temperature of the cluster at ``z_obs``.
+        Unit: [keV]
+        """
+        return helper.kT_cluster(self.M_obs, z=self.z_obs,
+                                 configs=self.configs)
+
+    @property
+    @lru_cache()
     def kT_main(self):
         """
         The mean temperature of the main cluster ICM at ``z_merger``
@@ -288,15 +298,6 @@ class RadioHalo:
         """
         return helper.kT_cluster(mass=self.M_main, z=self.z_merger,
                                  configs=self.configs)
-
-    @property
-    @lru_cache()
-    def kT_obs(self):
-        """
-        The "current" cluster ICM mean temperature at ``z_obs``.
-        """
-        return helper.kT_cluster(self.M_obs, z=self.z_obs,
-                                 configs=self.configs)  # [keV]
 
     @property
     @lru_cache()
@@ -356,18 +357,18 @@ class RadioHalo:
         ICM/volume, i.e., do not restricted inside the halo volume.
 
         Qe(γ) = Ke * γ^(-s),
-        int[ Qe(γ) γ me c^2 ]dγ * t_cluster = eta_e * e_th
+        int[ Qe(γ) γ me c^2 ]dγ * t_cluster = η_e * e_th
         =>
-        Ke = [(s-2) * eta_e * e_th * γ_min^(s-2) / (me * c^2 * t_cluster)]
+        Ke = [(s-2) * η_e * e_th * γ_min^(s-2) / (me * c^2 * t_cluster)]
 
         References
         ----------
         Ref.[cassano2005],Eqs.(31,32,33)
         """
         s = self.injection_index
-        e_thermal = helper.density_energy_thermal(self.M_obs, self.z_obs,
-                                                  configs=self.configs)
-        term1 = (s-2) * self.eta_e * e_thermal  # [erg cm^-3]
+        e_th = helper.density_energy_thermal(self.M_obs, self.z_obs,
+                                             configs=self.configs)
+        term1 = (s-2) * self.eta_e * e_th  # [erg cm^-3]
         term2 = self.gamma_min**(s-2)
         term3 = AU.mec2 * self.age_obs  # [erg Gyr]
         Ke = term1 * term2 / term3  # [cm^-3 Gyr^-1]
