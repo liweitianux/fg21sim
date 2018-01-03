@@ -89,23 +89,23 @@ def radius_virial(mass, z=0.0):
     return R_vir
 
 
-def radius_halo(M_main, M_sub, z=0.0, configs=CONFIGS):
+def radius_halo(mass, z=0.0, configs=CONFIGS):
     """
-    Calculate the (predicted) radius of (giant) radio halo.
+    Estimate the radius of (giant) radio halo.
 
     NOTE
     ----
     The halo radius is estimated to be the same as the turbulence
     injection scale, i.e.:
         R_halo ≅ L ≅ R_vir / 3
-    where R_vir the virial radius of the merged cluster.
+    where R_vir the virial radius of the merged (observed) cluster.
 
     Reference: [vazza2011],Sec.(3.6)
 
     Parameters
     ----------
-    M_main, M_sub : float, `~numpy.ndarray`
-        Total (virial) masses of the main and sub clusters
+    mass : float, `~numpy.ndarray`
+        Cluster virial mass.
         Unit: [Msun]
     z : float, `~numpy.ndarray`, optional
         Redshift
@@ -120,7 +120,7 @@ def radius_halo(M_main, M_sub, z=0.0, configs=CONFIGS):
     # Turbulence injection scale factor
     key = "extragalactic/halos/f_lturb"
     f_lturb = configs.getn(key)
-    R_halo = f_lturb * radius_virial(mass=M_main+M_sub, z=z)  # [kpc]
+    R_halo = f_lturb * radius_virial(mass=mass, z=z)  # [kpc]
     return R_halo
 
 

@@ -236,17 +236,9 @@ class RadioHalo:
     def radius(self):
         """
         The estimated radius for the simulated radio halo.
-
-        NOTE
-        ----
-        The halo radius is assumed to be the virial radius of the falling
-        sub-cluster.  See ``helper.radius_halo()`` for more details.
-
         Unit: [kpc]
         """
-        r_halo = helper.radius_halo(self.M_main, self.M_sub,
-                                    self.z_merger, configs=self.configs)
-        return r_halo
+        return helper.radius_halo(self.M_obs, self.z_obs, configs=self.configs)
 
     @property
     def angular_radius(self):
