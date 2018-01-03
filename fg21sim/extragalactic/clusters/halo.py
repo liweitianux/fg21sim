@@ -232,17 +232,6 @@ class RadioHalo:
         return helper.radius_virial(mass=self.M_obs, z=self.z_obs)
 
     @property
-    def radius_virial_main(self):
-        """
-        The virial radius of the main cluster at ``z_merger``.
-        """
-        return helper.radius_virial(mass=self.M_main, z=self.z_merger)
-
-    @property
-    def radius_virial_sub(self):
-        return helper.radius_virial(mass=self.M_sub, z=self.z_merger)
-
-    @property
     @lru_cache()
     def radius(self):
         """
@@ -302,12 +291,6 @@ class RadioHalo:
         Unit: [keV]
         """
         return helper.kT_cluster(mass=self.M_main, z=self.z_merger,
-                                 configs=self.configs)
-
-    @property
-    @lru_cache()
-    def kT_sub(self):
-        return helper.kT_cluster(mass=self.M_sub, z=self.z_merger,
                                  configs=self.configs)
 
     @property

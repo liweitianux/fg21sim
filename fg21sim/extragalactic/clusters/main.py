@@ -276,9 +276,6 @@ class GalaxyClusters:
                 ("M_sub", halo.M_sub),  # [Msun]
                 ("z_merger", halo.z_merger),
                 ("kT_main", halo.kT_main),  # [keV] main cluster kT at z_merger
-                ("kT_sub", halo.kT_sub),  # [keV] sub-cluster kT at z_merger
-                ("Rvir_main", halo.radius_virial_main),  # [kpc] at z_merger
-                ("Rvir_sub", halo.radius_virial_sub),  # [kpc] at z_merger
                 ("tback_merger", halo.tback_merger),  # [Gyr]
                 ("time_turbulence", halo.time_turbulence),  # [Gyr]
                 ("Rhalo", halo.radius),  # [kpc]
