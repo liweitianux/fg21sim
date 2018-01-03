@@ -31,7 +31,11 @@ import numpy as np
 import scipy.special
 from scipy import integrate, interpolate
 
-from ...utils.units import (Units as AU, Constants as AC)
+from ...share import COSMO
+from ...utils.convert import Fnu_to_Tb
+from ...utils.units import (Units as AU,
+                            UnitConversions as AUC,
+                            Constants as AC)
 
 
 logger = logging.getLogger(__name__)
@@ -223,3 +227,198 @@ class SynchrotronEmission:
             return syncem[0]
         else:
             return syncem
+
+
+class HaloEmission:
+    """
+    Calculate the synchrotron emission of a (giant) radio halo.
+
+    Parameters
+    ----------
+    gamma : 1D `~numpy.ndarray`
+        The Lorentz factors γ of the electron spectrum.
+    n_e : 1D `~numpy.ndarray`
+        The electron spectrum (w.r.t. Lorentz factors γ).
+        Unit: [cm^-3]
+    B : float
+        The magnetic field strength.
+        Unit: [uG]
+    radius : float, optional
+        The radio halo radius.
+        Required to calculate the power.
+        Unit: [kpc]
+    redshift : float, optional
+        The redshift to the radio halo.
+        Required to calculate the flux, which also requires ``radius``.
+    """
+    def __init__(self, gamma, n_e, B, radius=None, redshift=None):
+        self.gamma = np.asarray(gamma)
+        self.n_e = np.asarray(n_e)
+        self.B = B
+        self.radius = radius
+        self.redshift = redshift
+
+    @property
+    def angular_radius(self):
+        """
+        The angular radius of the radio halo.
+        Unit: [arcsec]
+        """
+        if self.redshift is None:
+            raise RuntimeError("parameter 'redshift' is required")
+        if self.radius is None:
+            raise RuntimeError("parameter 'radius' is required")
+
+        DA = COSMO.DA(self.redshift) * 1e3  # [Mpc] -> [kpc]
+        theta = self.radius / DA  # [rad]
+        return theta * AUC.rad2arcsec
+
+    @property
+    def volume(self):
+        """
+        The halo volume.
+        Unit: [kpc^3]
+        """
+        if self.radius is None:
+            raise RuntimeError("parameter 'radius' is required")
+
+        return (4*np.pi/3) * self.radius**3
+
+    def calc_emissivity(self, frequencies):
+        """
+        Calculate the synchrotron emissivity for the derived electron
+        spectrum.
+
+        Parameters
+        ----------
+        frequencies : float, or 1D `~numpy.ndarray`
+            The frequencies where to calculate the synchrotron emissivity.
+            Unit: [MHz]
+
+        Returns
+        -------
+        emissivity : float, or 1D `~numpy.ndarray`
+            The calculated synchrotron emissivity at each specified
+            frequency.
+            Unit: [erg/s/cm^3/Hz]
+        """
+        syncem = SynchrotronEmission(gamma=self.gamma, n_e=self.n_e, B=self.B)
+        emissivity = syncem.emissivity(frequencies)
+        return emissivity
+
+    def calc_power(self, frequencies, emissivity=None):
+        """
+        Calculate the halo synchrotron power (i.e., power *emitted* per
+        unit frequency) by assuming the emissivity is uniform throughout
+        the halo volume.
+
+        NOTE
+        ----
+        The calculated power (a.k.a. spectral luminosity) is in units of
+        [W/Hz] which is common in radio astronomy, instead of [erg/s/Hz].
+            1 [W] = 1e7 [erg/s]
+
+        Parameters
+        ----------
+        frequencies : float, or 1D `~numpy.ndarray`
+            The frequencies where to calculate the synchrotron power.
+            Unit: [MHz]
+        emissivity : float, or 1D `~numpy.ndarray`, optional
+            The synchrotron emissivity at the input frequencies.
+            If not provided, then invoke above ``calc_emissivity()``
+            method to calculate them.
+            Unit: [erg/s/cm^3/Hz]
+
+        Returns
+        -------
+        power : float, or 1D `~numpy.ndarray`
+            The calculated synchrotron power at each input frequency.
+            Unit: [W/Hz]
+        """
+        frequencies = np.asarray(frequencies)
+        if emissivity is None:
+            emissivity = self.calc_emissivity(frequencies=frequencies)
+        else:
+            emissivity = np.asarray(emissivity)
+        power = emissivity * (self.volume * AUC.kpc2cm**3)  # [erg/s/Hz]
+        power *= 1e-7  # [erg/s/Hz] -> [W/Hz]
+        return power
+
+    def calc_flux(self, frequencies):
+        """
+        Calculate the synchrotron flux density (i.e., power *observed*
+        per unit frequency) of the halo, with k-correction considered.
+
+        NOTE
+        ----
+        The *k-correction* must be applied to the flux density (Sν) or
+        specific luminosity (Lν) because the redshifted object is emitting
+        flux in a different band than that in which you are observing.
+        And the k-correction depends on the spectrum of the object in
+        question.  For any other spectrum (i.e., vLv != const.), the flux
+        density Sv is related to the specific luminosity Lv by:
+            Sv = (1+z) L_v(1+z) / (4π DL^2),
+        where
+        * L_v(1+z) is the specific luminosity emitting at frequency v(1+z),
+        * DL is the luminosity distance to the object at redshift z.
+
+        Reference: Ref.[hogg1999],Eq.(22)
+
+        Returns
+        -------
+        flux : float, or 1D `~numpy.ndarray`
+            The calculated flux density w.r.t. each input frequency.
+            Unit: [Jy] = 1e-23 [erg/s/cm^2/Hz] = 1e-26 [W/m^2/Hz]
+        """
+        if self.redshift is None:
+            raise RuntimeError("parameter 'redshift' is required")
+
+        freqz = np.asarray(frequencies) * (1+self.redshift)
+        power = self.calc_power(freqz)  # [W/Hz]
+        DL = COSMO.DL(self.redshift) * AUC.Mpc2m  # [m]
+        flux = 1e26 * (1+self.redshift) * power / (4*np.pi * DL*DL)  # [Jy]
+        return flux
+
+    def calc_brightness_mean(self, frequencies, flux=None, pixelsize=None):
+        """
+        Calculate the mean surface brightness (power observed per unit
+        frequency and per unit solid angle) expressed in *brightness
+        temperature* at the specified frequencies.
+
+        NOTE
+        ----
+        If the solid angle that the object extends is smaller than the
+        specified pixel area, then is is assumed to have size of 1 pixel.
+
+        Parameters
+        ----------
+        frequencies : float, or 1D `~numpy.ndarray`
+            The frequencies where to calculate the mean brightness temperature
+            Unit: [MHz]
+        flux : float, or 1D `~numpy.ndarray`, optional
+            The flux density w.r.t. each input frequency.
+            Unit: [Jy]
+        pixelsize : float, optional
+            The pixel size of the output simulated sky image.
+            If not provided, then invoke above ``calc_flux()`` method to
+            calculate them.
+            Unit: [arcsec]
+
+        Returns
+        -------
+        Tb : float, or 1D `~numpy.ndarray`
+            The mean brightness temperature at each frequency.
+            Unit: [K] <-> [Jy/pixel]
+        """
+        frequencies = np.asarray(frequencies)
+        if flux is None:
+            flux = self.calc_flux(frequencies=frequencies)  # [Jy]
+        else:
+            flux = np.asarray(flux)
+        omega = np.pi * self.angular_radius**2  # [arcsec^2]
+        if pixelsize and (omega < pixelsize**2):
+            omega = pixelsize ** 2  # [arcsec^2]
+            logger.warning("Halo size < 1 pixel; force to be 1 pixel!")
+
+        Tb = Fnu_to_Tb(flux, omega, frequencies)  # [K]
+        return Tb
