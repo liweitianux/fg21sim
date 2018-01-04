@@ -20,7 +20,7 @@ import numpy as np
 
 from .psformalism import PSFormalism
 from .formation import ClusterFormation
-from .halo import RadioHalo
+from .halo import RadioHaloAM
 from .emission import HaloEmission
 from ...share import CONFIGS, COSMO
 from ...utils.io import dataframe_to_csv, pickle_dump, pickle_load
@@ -241,9 +241,9 @@ class GalaxyClusters:
         """
         # Select out the clusters with recent mergers
         idx_rmm = [idx for idx, cdict in enumerate(self.catalog)
-                   if cdict["rmm_z"] is not None]
+                   if cdict["merger_num"] > 0]
         num = len(idx_rmm)
-        logger.info("Simulating halos for %d merging clusters ..." % num)
+        logger.info("Simulating halos for %d clusters with mergers ..." % num)
         self.halos = []
         for i, idx in enumerate(idx_rmm):
             ii = i + 1
@@ -252,15 +252,15 @@ class GalaxyClusters:
             cdict = self.catalog[idx]
             z_obs = cdict["z"]
             M_obs = cdict["mass"]
-            z_merger = cdict["rmm_z"]
-            M_main = cdict["rmm_mass1"]
-            M_sub = cdict["rmm_mass2"]
-            logger.info("[%d/%d] " % (ii, num) +
-                        "M1[%.2e] & M2[%.2e] @ z[%.3f] -> M[%.2e] @ z[%.3f]" %
-                        (M_main, M_sub, z_merger, M_obs, z_obs))
-            halo = RadioHalo(M_obs=M_obs, z_obs=z_obs,
-                             M_main=M_main, M_sub=M_sub,
-                             z_merger=z_merger, configs=self.configs)
+            merger_num = cdict["merger_num"]
+            logger.info("[%d/%d] M[%.2e] @ z[%.3f] with %d mergers" %
+                        (ii, num, M_obs, z_obs, merger_num))
+            halo = RadioHaloAM(M_obs=M_obs, z_obs=z_obs,
+                               M_main=cdict["merger_mass1"],
+                               M_sub=cdict["merger_mass2"],
+                               z_merger=cdict["merger_z"],
+                               merger_num=merger_num,
+                               configs=self.configs)
             n_e = halo.calc_electron_spectrum()
             data = OrderedDict([
                 ("z0", halo.z_obs),

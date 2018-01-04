@@ -720,3 +720,106 @@ class RadioHalo:
         z = COSMO.redshift(t)
         loss = -4.32e-4 * gamma**2 * ((B/3.25)**2 + (1+z)**4)
         return loss
+
+
+class RadioHaloAM(RadioHalo):
+    """
+    Simulate the diffuse (giant) radio halo for a galaxy cluster
+    with all its on-going/recent merger events taken into account,
+    while the above ``RadioHalo`` class only considers the most
+    recent major/maximum merger event that is specified.
+
+    Parameters
+    ----------
+    M_obs : float
+        Cluster virial mass at the observation (simulation end) time.
+        Unit: [Msun]
+    z_obs : float
+        Redshift of the observation (simulation end) time.
+    M_main, M_sub : list[float]
+        List of main and sub cluster masses at each merger event,
+        from current to earlier time.
+        Unit: [Msun]
+    z_merger : list[float]
+        The redshifts at each merger event, from small to large.
+    merger_num : int
+        Number of merger events traced for the cluster.
+    """
+    def __init__(self, M_obs, z_obs, M_main, M_sub, z_merger,
+                 merger_num, configs=CONFIGS):
+        self.merger_num = merger_num
+        M_main = np.asarray(M_main[:merger_num])
+        M_sub = np.asarray(M_sub[:merger_num])
+        z_merger = np.asarray(z_merger[:merger_num])
+        super().__init__(M_obs=M_obs, z_obs=z_obs,
+                         M_main=M_main, M_sub=M_sub,
+                         z_merger=z_merger, configs=configs)
+
+    @property
+    def age_begin(self):
+        """
+        The cosmic time when the merger begins, i.e., the earliest merger.
+        Unit: [Gyr]
+        """
+        return self.age_merger[-1]
+
+    def _merger_idx(self, t):
+        """
+        Determine the index of the merger event within which the given
+        time is located, i.e.:
+            age_merger[idx-1] >= t > age_merger[idx]
+        """
+        return (self.age_merger > t).sum()
+
+    def _merger(self, idx):
+        """
+        Return the properties of the idx-th merger event.
+        """
+        return {
+            "M_main": self.M_main[idx],
+            "M_sub": self.M_sub[idx],
+            "z": self.z_merger[idx],
+            "age": self.age_merger[idx],
+        }
+
+    def mass_merged(self, t):
+        """
+        The mass of merged cluster at the given (cosmic) time.
+        Unit: [Msun]
+        """
+        if t >= self.age_obs:
+            return self.M_obs
+        else:
+            idx = self._merger_idx(t)
+            merger = self._merger(idx)
+            return (merger["M_main"] + merger["M_sub"])
+
+    def mass_main(self, t):
+        """
+        Calculate the main cluster mass at the given (cosmic) time.
+
+        Parameters
+        ----------
+        t : float
+            The (cosmic) time/age.
+            Unit: [Gyr]
+
+        Returns
+        -------
+        mass : float
+            The mass of the main cluster.
+            Unit: [Msun]
+        """
+        idx = self._merger_idx(t)
+        merger1 = self._merger(idx)
+        mass1 = merger1["M_main"]
+        t1 = merger1["age"]
+        if idx == 0:
+            mass0 = self.M_obs
+            t0 = self.age_obs
+        else:
+            merger0 = self._merger(idx-1)
+            mass0 = merger0["M_main"]
+            t0 = merger0["age"]
+        rate = (mass0 - mass1) / (t0 - t1)
+        return (mass1 + rate * (t - t1))
