@@ -138,9 +138,11 @@ class RadioHalo:
                  configs=CONFIGS):
         self.M_obs = M_obs
         self.z_obs = z_obs
+        self.age_obs = COSMO.age(z_obs)
         self.M_main = M_main
         self.M_sub = M_sub
         self.z_merger = z_merger
+        self.age_merger = COSMO.age(z_merger)
 
         self._set_configs(configs)
         self._set_solver()
@@ -184,24 +186,12 @@ class RadioHalo:
         return self.fpsolver.x
 
     @property
-    def age_obs(self):
-        return COSMO.age(self.z_obs)
-
-    @property
     def age_begin(self):
         """
         The cosmic time when the merger begins.
         Unit: [Gyr]
         """
-        return COSMO.age(self.z_merger)
-
-    @property
-    def tback_merger(self):
-        """
-        The time from the observation (``z_obs``) back to the beginning
-        of the merger (``z_merger``).
-        """
-        return (self.age_obs - self.age_begin)  # [Gyr]
+        return self.age_merger
 
     @property
     @lru_cache()
@@ -221,7 +211,7 @@ class RadioHalo:
         """
         The turbulence Mach number determined from its velocity dispersion.
         """
-        cs = helper.speed_sound(self.kT_main)  # [km/s]
+        cs = helper.speed_sound(self.kT_main())  # [km/s]
         v_turb = self._velocity_turb()  # [km/s]
         return v_turb / cs
 
@@ -236,7 +226,6 @@ class RadioHalo:
         return helper.radius_virial(mass=self.M_obs, z=self.z_obs)
 
     @property
-    @lru_cache()
     def radius(self):
         """
         The estimated radius for the simulated radio halo.
@@ -248,7 +237,6 @@ class RadioHalo:
     def angular_radius(self):
         """
         The angular radius of the radio halo.
-
         Unit: [arcsec]
         """
         DA = COSMO.DA(self.z_obs) * 1e3  # [Mpc] -> [kpc]
@@ -259,13 +247,11 @@ class RadioHalo:
     def volume(self):
         """
         The halo volume, calculated from the above radius.
-
         Unit: [kpc^3]
         """
         return (4*np.pi/3) * self.radius**3
 
     @property
-    @lru_cache()
     def B_obs(self):
         """
         The magnetic field strength at the simulated observation
@@ -278,7 +264,6 @@ class RadioHalo:
                                      configs=self.configs)
 
     @property
-    @lru_cache()
     def kT_obs(self):
         """
         The ICM mean temperature of the cluster at ``z_obs``.
@@ -287,17 +272,18 @@ class RadioHalo:
         return helper.kT_cluster(self.M_obs, z=self.z_obs,
                                  configs=self.configs)
 
-    @property
-    @lru_cache()
-    def kT_main(self):
+    def kT_main(self, t=None):
         """
-        The mean temperature of the main cluster ICM at ``z_merger``
-        when the merger begins.
+        The ICM mean temperature of the main cluster at cosmic time
+        ``t`` (default: ``self.age_begin``).
 
         Unit: [keV]
         """
-        return helper.kT_cluster(mass=self.M_main, z=self.z_merger,
-                                 configs=self.configs)
+        if t is None:
+            t = self.age_begin
+        mass = self.mass_main(t=t)
+        z = COSMO.redshift(t)
+        return helper.kT_cluster(mass=mass, z=z, configs=self.configs)
 
     @property
     @lru_cache()
@@ -333,7 +319,7 @@ class RadioHalo:
         """
         R_vir = helper.radius_virial(mass=self.M_main, z=self.z_merger)
         L = self.f_lturb * R_vir  # [kpc]
-        cs = helper.speed_sound(self.kT_main)  # [km/s]
+        cs = helper.speed_sound(self.kT_main())  # [km/s]
         v_turb = self._velocity_turb()  # [km/s]
         tau = (self.x_cr * cs**3 * L /
                (16*np.pi * self.zeta_ins * v_turb**4))  # [s kpc/km]
@@ -600,7 +586,14 @@ class RadioHalo:
                          (self.fp_diffusion(gamma, t) * 2 / gamma))
         return advection
 
-    def _mass(self, t):
+    def mass_merged(self, t=None):
+        """
+        The mass of the merged cluster.
+        Unit: [Msun]
+        """
+        return self.M_main + self.M_sub
+
+    def mass_main(self, t):
         """
         Calculate the main cluster mass at the given (cosmic) time.
 
@@ -627,6 +620,22 @@ class RadioHalo:
         rate = (self.M_obs - self.M_main) / (self.age_obs - t0)
         mass = rate * (t - t0) + self.M_main
         return mass
+
+    def magnetic_field(self, t):
+        """
+        Calculate the mean magnetic field strength of the main cluster mass
+        at the given (cosmic) time.
+
+        Returns
+        -------
+        B : float
+            The mean magnetic field strength of the main cluster.
+            Unit: [uG]
+        """
+        z = COSMO.redshift(t)
+        mass = self.mass_main(t)  # [Msun]
+        B = helper.magnetic_field(mass=mass, z=z, configs=self.configs)
+        return B
 
     def _velocity_turb(self, t=None):
         """
@@ -661,34 +670,12 @@ class RadioHalo:
         if t is None:
             t = self.age_begin
         z = COSMO.redshift(t)
-        mass = self.M_main + self.M_sub
+        mass = self.mass_merged(t)
         R_vir = helper.radius_virial(mass=mass, z=z) * AUC.kpc2cm  # [cm]
         v2_vir = (AC.G * self.M_main*AUC.Msun2g / R_vir) * AUC.cm2km**2
         fmass = helper.fmass_nfw(self.f_lturb)
         v2_turb = v2_vir * (self.eta_turb / fmass) * (self.M_sub / mass)
         return np.sqrt(v2_turb)
-
-    def _magnetic_field(self, t):
-        """
-        Calculate the mean magnetic field strength of the main cluster mass
-        at the given (cosmic) time.
-
-        Parameters
-        ----------
-        t : float
-            The (cosmic) time/age.
-            Unit: [Gyr]
-
-        Returns
-        -------
-        B : float
-            The mean magnetic field strength of the main cluster.
-            Unit: [uG]
-        """
-        z = COSMO.redshift(t)
-        mass = self._mass(t)  # [Msun]
-        B = helper.magnetic_field(mass=mass, z=z, configs=self.configs)
-        return B
 
     def _loss_ion(self, gamma, t):
         """
@@ -714,7 +701,7 @@ class RadioHalo:
         """
         gamma = np.asarray(gamma)
         z = COSMO.redshift(t)
-        mass = self._mass(t)
+        mass = self.mass_main(t)
         n_th = helper.density_number_thermal(mass, z)  # [cm^-3]
         loss = -3.79e4 * n_th * (1 + np.log(gamma/n_th) / 75)
         return loss
@@ -729,7 +716,7 @@ class RadioHalo:
         Ref.[sarazin1999],Eq.(6,7)
         """
         gamma = np.asarray(gamma)
-        B = self._magnetic_field(t)  # [uG]
+        B = self.magnetic_field(t)  # [uG]
         z = COSMO.redshift(t)
         loss = -4.32e-4 * gamma**2 * ((B/3.25)**2 + (1+z)**4)
         return loss

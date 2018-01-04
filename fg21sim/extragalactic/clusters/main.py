@@ -183,7 +183,7 @@ class GalaxyClusters:
         merger_mass1, merger_mass2 :
             [Msun] masses of the main and sub clusters of each merger.
         merger_z, merger_age : redshifts and cosmic ages [Gyr]
-            of each merger event.
+            of each merger event, in backward time ordering.
         """
         logger.info("Simulating merger histories for each cluster ...")
         num = len(self.catalog)
@@ -267,16 +267,14 @@ class GalaxyClusters:
                 ("M0", halo.M_obs),  # [Msun]
                 ("Rvir0", halo.radius_virial_obs),  # [kpc]
                 ("kT0", halo.kT_obs),  # [keV]
-                ("B0", halo.B_obs),  # [uG] magnetic field at z_obs
+                ("B0", halo.B_obs),  # [uG] magnetic field @ z_obs
                 ("lon", cdict["lon"]),  # [deg] longitude
                 ("lat", cdict["lat"]),  # [deg] longitude
-                ("felong", cdict["felong"]),  # Fraction of elongation
+                ("felong", cdict["felong"]),  # fraction of elongation
                 ("rotation", cdict["rotation"]),  # [deg] rotation angle
                 ("M_main", halo.M_main),  # [Msun]
                 ("M_sub", halo.M_sub),  # [Msun]
-                ("z_merger", halo.z_merger),
-                ("kT_main", halo.kT_main),  # [keV] main cluster kT at z_merger
-                ("tback_merger", halo.tback_merger),  # [Gyr]
+                ("kT_main", halo.kT_main),  # [keV] main cluster kT @ z_merger
                 ("time_turbulence", halo.time_turbulence),  # [Gyr]
                 ("Rhalo", halo.radius),  # [kpc]
                 ("Rhalo_angular", halo.angular_radius),  # [arcsec]
@@ -288,7 +286,7 @@ class GalaxyClusters:
                 ("n_e", n_e),  # [cm^-3]
             ])
             self.halos.append(data)
-        logger.info("Simulated radio halos for merging cluster.")
+        logger.info("Simulated radio halos for clusters with recent mergers.")
 
     def _calc_halos_emission(self):
         """
