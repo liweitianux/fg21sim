@@ -285,9 +285,7 @@ class RadioHalo:
         z = COSMO.redshift(t)
         return helper.kT_cluster(mass=mass, z=z, configs=self.configs)
 
-    @property
-    @lru_cache()
-    def tau_acceleration(self):
+    def tau_acceleration(self, t=None):
         """
         Calculate the electron acceleration timescale due to turbulent
         waves, which describes the turbulent acceleration efficiency.
@@ -310,13 +308,37 @@ class RadioHalo:
             τ_acc = p^2 / (4*D_pp)
                   = (η_e * c_s^3 * L) / (16π * ζ * <v_turb^2>^2)
 
-        Unit: [Gyr]
+        NOTE
+        ----
+        Considering that the turbulence acceleration is a 2nd-order Fermi
+        process, it has only an effective acceleration time ~<1 Gyr.
+        Therefore, only during the period that strong turbulence persists
+        in the ICM that the turbulence could effectively accelerate the
+        relativistic electrons.
 
-        Reference
-        ---------
+        Parameters
+        ----------
+        t : float, optional
+            The cosmic time when to determine the acceleration timescale.
+            Default: ``self.age_obs``
+
+        Returns
+        -------
+        tau : float
+            The acceleration timescale at the requested time.
+            Return ``np.inf`` if no active turbulence at that time.
+            Unit: [Gyr]
+
+        References
+        ----------
         * Ref.[pinzke2017],Eq.(37)
         * Ref.[miniati2015],Eq.(29)
         """
+        if t is None:
+            t = self.age_begin
+        if t > self.age_begin + self.time_turbulence:
+            return np.inf
+
         R_vir = helper.radius_virial(mass=self.M_main, z=self.z_merger)
         L = self.f_lturb * R_vir  # [kpc]
         cs = helper.speed_sound(self.kT_main())  # [km/s]
@@ -500,14 +522,6 @@ class RadioHalo:
         which is described by the ``tau_acc`` acceleration timescale
         parameter.
 
-        NOTE
-        ----
-        Considering that the turbulence acceleration is a 2nd-order Fermi
-        process, it has only an effective acceleration time ~<1 Gyr.
-        Therefore, only during the period that strong turbulence persists
-        in the ICM that the turbulence could effectively accelerate the
-        relativistic electrons.
-
         WARNING
         -------
         A zero diffusion coefficient may lead to unstable/wrong results,
@@ -545,12 +559,12 @@ class RadioHalo:
         # Maximum acceleration timescale when no turbulence acceleration
         # NOTE: see the above WARNING!
         tau_max = 10.0  # [Gyr]
-        if (t < self.age_begin) or (t > self.age_begin+self.time_turbulence):
-            # NO active turbulence acceleration
+        if t < self.age_begin:
+            # To derive the initial electron spectrum
             tau_acc = tau_max
         else:
-            # Turbulence acceleration
-            tau_acc = self.tau_acceleration  # [Gyr]
+            # Turbulence acceleration and beyond
+            tau_acc = self.tau_acceleration(t=t)
         # Impose the maximum acceleration timescale
         if tau_acc > tau_max:
             tau_acc = tau_max
@@ -577,12 +591,12 @@ class RadioHalo:
         """
         if t < self.age_begin:
             # To derive the initial electron spectrum
-            advection = (abs(self._loss_ion(gamma, self.age_begin)) +
-                         abs(self._loss_rad(gamma, self.age_begin)))
+            advection = (abs(self._loss_ionization(gamma, self.age_begin)) +
+                         abs(self._loss_radiation(gamma, self.age_begin)))
         else:
             # Turbulence acceleration and beyond
-            advection = (abs(self._loss_ion(gamma, t)) +
-                         abs(self._loss_rad(gamma, t)) -
+            advection = (abs(self._loss_ionization(gamma, t)) +
+                         abs(self._loss_radiation(gamma, t)) -
                          (self.fp_diffusion(gamma, t) * 2 / gamma))
         return advection
 
@@ -677,7 +691,7 @@ class RadioHalo:
         v2_turb = v2_vir * (self.eta_turb / fmass) * (self.M_sub / mass)
         return np.sqrt(v2_turb)
 
-    def _loss_ion(self, gamma, t):
+    def _loss_ionization(self, gamma, t):
         """
         Energy loss through ionization and Coulomb collisions.
 
@@ -706,7 +720,7 @@ class RadioHalo:
         loss = -3.79e4 * n_th * (1 + np.log(gamma/n_th) / 75)
         return loss
 
-    def _loss_rad(self, gamma, t):
+    def _loss_radiation(self, gamma, t):
         """
         Energy loss via synchrotron emission and inverse Compton
         scattering off the CMB photons.
