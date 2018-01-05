@@ -600,12 +600,26 @@ class RadioHalo:
                          (self.fp_diffusion(gamma, t) * 2 / gamma))
         return advection
 
+    def _merger_time(self, t=None):
+        """
+        The (cosmic) time when the merger begins.
+        Unit: [Gyr]
+        """
+        return self.age_begin
+
     def mass_merged(self, t=None):
         """
         The mass of the merged cluster.
         Unit: [Msun]
         """
         return self.M_main + self.M_sub
+
+    def mass_sub(self, t=None):
+        """
+        The mass of the sub cluster.
+        Unit: [Msun]
+        """
+        return self.M_sub
 
     def mass_main(self, t):
         """
@@ -785,6 +799,14 @@ class RadioHaloAM(RadioHalo):
         """
         return (self.age_merger > t).sum()
 
+    def _merger_time(self, t):
+        """
+        Determine the beginning time of the merger event within which
+        the given time is located.
+        """
+        idx = self._merger_idx(t)
+        return self.age_merger[idx]
+
     def _merger(self, idx):
         """
         Return the properties of the idx-th merger event.
@@ -807,6 +829,15 @@ class RadioHaloAM(RadioHalo):
             idx = self._merger_idx(t)
             merger = self._merger(idx)
             return (merger["M_main"] + merger["M_sub"])
+
+    def mass_sub(self, t):
+        """
+        The mass of the sub cluster at the given (cosmic) time.
+        Unit: [Msun]
+        """
+        idx = self._merger_idx(t)
+        merger = self._merger(idx)
+        return merger["M_sub"]
 
     def mass_main(self, t):
         """
