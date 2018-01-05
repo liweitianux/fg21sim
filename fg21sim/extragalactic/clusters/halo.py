@@ -283,7 +283,7 @@ class RadioHalo:
         """
         if t is None:
             t = self.age_begin
-        mass = self.mass_main(t=t)
+        mass = self.mass_main(t)
         z = COSMO.redshift(t)
         return helper.kT_cluster(mass=mass, z=z, configs=self.configs)
 
@@ -417,13 +417,14 @@ class RadioHalo:
         logger.debug("Derive the initial electron spectrum ...")
         # NOTE: subtract ``time_step`` to avoid the acceleration at the
         #       last step at ``age_begin``.
-        tstart = self.age_begin - self.time_init - self.time_step
-        tstop = self.age_begin - self.time_step
+        dt = self.time_step
+        tstart = self.age_begin - self.time_init - dt
+        tstop = self.age_begin - dt
         # Use a bigger time step to save time
-        self.fpsolver.tstep = 3 * self.time_step
+        self.fpsolver.tstep = 3 * dt
         n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
         # Restore the original time step
-        self.fpsolver.tstep = self.time_step
+        self.fpsolver.tstep = dt
         return n_e
 
     def calc_electron_spectrum(self, tstart=None, tstop=None, n0_e=None):
@@ -558,7 +559,7 @@ class RadioHalo:
         ----------
         Ref.[donnert2013],Eq.(15)
         """
-        tau_acc = self.tau_acceleration(t=t)
+        tau_acc = self.tau_acceleration(t)
         gamma = np.asarray(gamma)
         diffusion = gamma**2 / 4 / tau_acc
         return diffusion
@@ -566,7 +567,7 @@ class RadioHalo:
     def fp_advection(self, gamma, t):
         """
         Advection term/coefficient for the Fokker-Planck equation,
-        which describes a systematic tendency for upward or downard
+        which describes a systematic tendency for upward or downward
         drift of particles.
 
         This term is also called the "generalized cooling function"
@@ -595,7 +596,7 @@ class RadioHalo:
         The (cosmic) time when the merger begins.
         Unit: [Gyr]
         """
-        return self.age_begin
+        return self.age_merger
 
     def mass_merged(self, t=None):
         """

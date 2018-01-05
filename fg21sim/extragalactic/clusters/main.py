@@ -250,11 +250,15 @@ class GalaxyClusters:
             if ii % 50 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
             cdict = self.catalog[idx]
-            z_obs = cdict["z"]
-            M_obs = cdict["mass"]
             merger_num = cdict["merger_num"]
-            logger.info("[%d/%d] M[%.2e] @ z[%.3f] with %d mergers" %
-                        (ii, num, M_obs, z_obs, merger_num))
+            M_obs = cdict["mass"]
+            z_obs = cdict["z"]
+            M1 = cdict["merger_mass1"][merger_num-1]
+            z1 = cdict["merger_z"][merger_num-1]
+            info = ("[%d/%d] " % (ii, num) +
+                    "M(%.2e)@z(%.3f) -> M(%.2e)@z(%.3f) with %d merger(s)" %
+                    (ii, num, M1, z1, M_obs, z_obs, merger_num))
+            logger.info(info)
             halo = RadioHaloAM(M_obs=M_obs, z_obs=z_obs,
                                M_main=cdict["merger_mass1"],
                                M_sub=cdict["merger_mass2"],
@@ -265,6 +269,7 @@ class GalaxyClusters:
             data = OrderedDict([
                 ("z0", z_obs),
                 ("M0", M_obs),  # [Msun]
+                ("merger_num", merger_num),
                 ("lon", cdict["lon"]),  # [deg] longitude
                 ("lat", cdict["lat"]),  # [deg] longitude
                 ("felong", cdict["felong"]),  # fraction of elongation
