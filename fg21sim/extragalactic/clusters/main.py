@@ -263,25 +263,23 @@ class GalaxyClusters:
                                configs=self.configs)
             n_e = halo.calc_electron_spectrum()
             data = OrderedDict([
-                ("z0", halo.z_obs),
-                ("M0", halo.M_obs),  # [Msun]
-                ("Rvir0", halo.radius_virial_obs),  # [kpc]
-                ("kT0", halo.kT_obs),  # [keV]
-                ("B0", halo.B_obs),  # [uG] magnetic field @ z_obs
+                ("z0", z_obs),
+                ("M0", M_obs),  # [Msun]
                 ("lon", cdict["lon"]),  # [deg] longitude
                 ("lat", cdict["lat"]),  # [deg] longitude
                 ("felong", cdict["felong"]),  # fraction of elongation
                 ("rotation", cdict["rotation"]),  # [deg] rotation angle
-                ("M_main", halo.M_main),  # [Msun]
-                ("M_sub", halo.M_sub),  # [Msun]
-                ("kT_main", halo.kT_main),  # [keV] main cluster kT @ z_merger
-                ("time_turbulence", halo.time_turbulence),  # [Gyr]
+                ("Rvir0", halo.radius_virial_obs),  # [kpc]
+                ("kT0", halo.kT_obs),  # [keV]
+                ("B0", halo.B_obs),  # [uG] magnetic field @ z_obs
                 ("Rhalo", halo.radius),  # [kpc]
                 ("Rhalo_angular", halo.angular_radius),  # [arcsec]
                 ("volume", halo.volume),  # [kpc^3]
-                ("Mach_turb", halo.mach_turbulence),  # turbulence Mach number
-                ("tau_acc", halo.tau_acceleration()),  # [Gyr]
                 ("Ke", halo.injection_rate),  # [cm^-3 Gyr^-1]
+                ("time_turbulence", halo.time_turbulence_avg),  # [Gyr]
+                ("Mach_turb", halo.mach_turbulence_avg),  # Mach number
+                ("tau_acc", halo.tau_acceleration_avg),  # [Gyr]
+                ("tfrac_acc", halo.time_acceleration_fraction),
                 ("gamma", halo.gamma),  # Lorentz factors
                 ("n_e", n_e),  # [cm^-3]
             ])
