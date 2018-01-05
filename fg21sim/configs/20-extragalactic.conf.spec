@@ -120,7 +120,7 @@
   # Minimum mass change of the main cluster to be regarded as a merger
   # event instead of an accretion event.
   # Unit: [Msun]
-  merger_mass_min = float(default=1e12, min=1e10, max=1e14)
+  merger_mass_min = float(default=1e13, min=1e11, max=1e14)
 
   # The trace back time when to stop tracing the merging history of
   # clusters.  ~2-3 Gyr should be enough since the turbulence acceleration
@@ -141,7 +141,7 @@
   #     kT_icm ~ kT_vir + 1.5 * kT_out
   # Reference: Fujita et al. 2003, ApJ, 584, 190; Eq.(49)
   # Unit: [keV]
-  kT_out = float(default=0.5, min=0, max=1)
+  kT_out = float(default=0.0, min=0.0)
 
   # Filename prefix for this component
   prefix = string(default="cluster")
