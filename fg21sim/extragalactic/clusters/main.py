@@ -257,7 +257,7 @@ class GalaxyClusters:
             z1 = cdict["merger_z"][merger_num-1]
             info = ("[%d/%d] " % (ii, num) +
                     "M(%.2e)@z(%.3f) -> M(%.2e)@z(%.3f) with %d merger(s)" %
-                    (ii, num, M1, z1, M_obs, z_obs, merger_num))
+                    (M1, z1, M_obs, z_obs, merger_num))
             logger.info(info)
             halo = RadioHaloAM(M_obs=M_obs, z_obs=z_obs,
                                M_main=cdict["merger_mass1"],
