@@ -877,3 +877,57 @@ class RadioHaloAM(RadioHalo):
             t0 = merger0["age"]
         rate = (mass0 - mass1) / (t0 - t1)
         return (mass1 + rate * (t - t1))
+
+    @property
+    def time_turbulence_avg(self):
+        """
+        Calculate the time-averaged turbulence acceleration active time
+        within the period from ``age_begin`` to ``age_obs``.
+
+        Unit: [Gyr]
+        """
+        dt = self.tstep
+        xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
+        t_turb = np.array([self.time_turbulence(t) for t in xt])
+        avg = np.sum(t_turb * dt) / (len(xt) * dt)
+        return avg
+
+    @property
+    def mach_turbulence_avg(self):
+        """
+        Calculate the time-averaged turbulence Mach number within the
+        period from ``age_begin`` to ``age_obs``.
+        """
+        dt = self.tstep
+        xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
+        mach = np.array([self.mach_turbulence(t) for t in xt])
+        avg = np.sum(mach * dt) / (len(xt) * dt)
+        return avg
+
+    @property
+    def tau_acceleration_avg(self):
+        """
+        Calculate the time-averaged turbulence acceleration timescale
+        (i.e., efficiency) within the period from ``age_begin`` to
+        ``age_obs``.
+
+        Unit: [Gyr]
+        """
+        dt = self.tstep
+        xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
+        tau = np.array([self.tau_acceleration(t) for t in xt])
+        avg = np.sum(tau * dt) / (len(xt) * dt)
+        return avg
+
+    @property
+    def time_acceleration_fraction(self):
+        """
+        Calculate the fraction of time within the period from
+        ``age_begin`` to ``age_obs`` that the turbulence acceleration
+        is active.
+        """
+        dt = self.tstep
+        xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
+        active = np.array([self._is_turb_active(t) for t in xt], dtype=int)
+        fraction = active.mean()
+        return fraction
