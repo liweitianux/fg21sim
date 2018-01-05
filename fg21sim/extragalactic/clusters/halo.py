@@ -707,6 +707,8 @@ class RadioHalo:
         in the ICM that the turbulence could effectively accelerate the
         relativistic electrons.
         """
+        if t < self.age_begin:
+            return False
         t_merger = self._merger_time(t)
         t_turb = self.time_turbulence(t=t_merger)
         if (t >= t_merger) or (t <= t_merger + t_turb):
@@ -813,8 +815,11 @@ class RadioHaloAM(RadioHalo):
         Determine the beginning time of the merger event within which
         the given time is located.
         """
-        idx = self._merger_idx(t)
-        return self.age_merger[idx]
+        try:
+            idx = self._merger_idx(t)
+            return self.age_merger[idx]
+        except IndexError:
+            return None
 
     def _merger(self, idx):
         """
