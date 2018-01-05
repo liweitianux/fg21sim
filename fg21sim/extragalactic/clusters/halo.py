@@ -551,12 +551,10 @@ class RadioHalo:
         # Maximum acceleration timescale when no turbulence acceleration
         # NOTE: see the above WARNING!
         tau_max = 10.0  # [Gyr]
-        if t < self.age_begin:
-            # To derive the initial electron spectrum
-            tau_acc = tau_max
-        else:
-            # Turbulence acceleration and beyond
+        if self._is_turb_active(t):
             tau_acc = self.tau_acceleration(t=t)
+        else:
+            tau_acc = tau_max
         # Impose the maximum acceleration timescale
         if tau_acc > tau_max:
             tau_acc = tau_max
@@ -657,7 +655,7 @@ class RadioHalo:
         B = helper.magnetic_field(mass=mass, z=z, configs=self.configs)
         return B
 
-    def _velocity_turb(self, t=None):
+    def _velocity_turb(self, t):
         """
         Calculate the turbulence velocity dispersion (i.e., turbulence
         Mach number).
@@ -687,15 +685,34 @@ class RadioHalo:
             The turbulence velocity dispersion
             Unit: [km/s]
         """
-        if t is None:
-            t = self.age_begin
         z = COSMO.redshift(t)
-        mass = self.mass_merged(t)
-        R_vir = helper.radius_virial(mass=mass, z=z) * AUC.kpc2cm  # [cm]
-        v2_vir = (AC.G * self.M_main*AUC.Msun2g / R_vir) * AUC.cm2km**2
+        mass_merged = self.mass_merged(t)
+        mass_main = self.mass_main(t)
+        mass_sub = self.mass_sub(t)
+        R_vir = helper.radius_virial(mass_merged, z) * AUC.kpc2cm  # [cm]
+        v2_vir = (AC.G * mass_main*AUC.Msun2g / R_vir) * AUC.cm2km**2
         fmass = helper.fmass_nfw(self.f_lturb)
-        v2_turb = v2_vir * (self.eta_turb / fmass) * (self.M_sub / mass)
+        v2_turb = v2_vir * (self.eta_turb / fmass) * (mass_sub / mass_merged)
         return np.sqrt(v2_turb)
+
+    def _is_turb_active(self, t):
+        """
+        Is the turbulence acceleration is active at the given (cosmic) time?
+
+        NOTE
+        ----
+        Considering that the turbulence acceleration is a 2nd-order Fermi
+        process, it has only an effective acceleration time ~<1 Gyr.
+        Therefore, only during the period that strong turbulence persists
+        in the ICM that the turbulence could effectively accelerate the
+        relativistic electrons.
+        """
+        t_merger = self._merger_time(t)
+        t_turb = self.time_turbulence(t=t_merger)
+        if (t >= t_merger) or (t <= t_merger + t_turb):
+            return True
+        else:
+            return False
 
     def _loss_ionization(self, gamma, t):
         """
