@@ -298,17 +298,28 @@ class RadioHalo:
         mirror) rather than Coulomb scattering.  Therefore, the fast modes
         damp by TTD (transit time damping) on relativistic rather than
         thermal particles, and the diffusion coefficient is given by:
-            D_pp = (2*p^2 * ζ / η_e) * k_L * <v_turb^2>^2 / c_s^3
+            D_pp = (2*p^2 * ζ / x_cr) * k_L * <v_turb^2>^2 / c_s^3
         where:
             ζ: efficiency factor for the effectiveness of plasma instabilities
-            η_e: relative energy density of cosmic rays (injected relativistic
-                 electrons??)
+            x_cr: relative energy density of cosmic rays
             k_L = 2π/L: turbulence injection scale
             v_turb: turbulence velocity dispersion
             c_s: sound speed
         Thus the acceleration timescale is:
             τ_acc = p^2 / (4*D_pp)
-                  = (η_e * c_s^3 * L) / (16π * ζ * <v_turb^2>^2)
+                  = (x_cr * c_s^3 * L) / (16π * ζ * <v_turb^2>^2)
+
+        WARNING
+        -------
+        Current test shows that a very large acceleration timescale (e.g.,
+        1000 or even larger) will cause problems (maybe due to some
+        limitations within the current calculation scheme), for example,
+        the energy losses don't seem to have effect in such cases, so the
+        derived initial electron spectrum is almost the same as the raw
+        input one, and the emissivity at medium/high frequencies even
+        decreases when the turbulence acceleration begins!
+        By carrying out some tests, the value of 10 [Gyr] is adopted for
+        the maximum acceleration timescale.
 
         Parameters
         ----------
@@ -328,6 +339,12 @@ class RadioHalo:
         * Ref.[pinzke2017],Eq.(37)
         * Ref.[miniati2015],Eq.(29)
         """
+        # Maximum acceleration timescale when no turbulence acceleration
+        # NOTE: see the above WARNING!
+        tau_max = 10.0  # [Gyr]
+        if not self._is_turb_active(t):
+            return tau_max
+
         t_merger = self._merger_time(t)
         z_merger = COSMO.redshift(t_merger)
         mass_main = self.mass_main(t_merger)
@@ -339,6 +356,10 @@ class RadioHalo:
                (16*np.pi * self.zeta_ins * v_turb**4))  # [s kpc/km]
         tau *= AUC.s2Gyr * AUC.kpc2km  # [Gyr]
         tau *= self.f_acc  # custom tune parameter
+
+        # Impose the maximum acceleration timescale
+        if tau > tau_max:
+            tau = tau_max
         return tau
 
     @property
@@ -517,18 +538,7 @@ class RadioHalo:
         WARNING
         -------
         A zero diffusion coefficient may lead to unstable/wrong results,
-        since it is not properly taken care of by the solver.  Therefore
-        give the acceleration timescale a large enough but finite value
-        after turbulent acceleration.
-        Also note that a very large acceleration timescale (e.g., 1000 or
-        even 10000) will also cause problems (maybe due to some limitations
-        within the current calculation scheme), for example, the energy
-        losses don't seem to have effect in such cases, so the derived
-        initial electron spectrum is almost the same as the raw input one,
-        and the emissivity at medium/high frequencies even decreases when
-        the turbulence acceleration begins!
-        By carrying out some tests, the value of 10 [Gyr] is adopted for
-        the maximum acceleration timescale.
+        since it is not properly taken care of by the solver.
 
         Parameters
         ----------
@@ -548,17 +558,7 @@ class RadioHalo:
         ----------
         Ref.[donnert2013],Eq.(15)
         """
-        # Maximum acceleration timescale when no turbulence acceleration
-        # NOTE: see the above WARNING!
-        tau_max = 10.0  # [Gyr]
-        if self._is_turb_active(t):
-            tau_acc = self.tau_acceleration(t=t)
-        else:
-            tau_acc = tau_max
-        # Impose the maximum acceleration timescale
-        if tau_acc > tau_max:
-            tau_acc = tau_max
-
+        tau_acc = self.tau_acceleration(t=t)
         gamma = np.asarray(gamma)
         diffusion = gamma**2 / 4 / tau_acc
         return diffusion
