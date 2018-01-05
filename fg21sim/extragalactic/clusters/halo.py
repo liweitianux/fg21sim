@@ -891,7 +891,7 @@ class RadioHaloAM(RadioHalo):
 
         Unit: [Gyr]
         """
-        dt = self.tstep
+        dt = self.time_step
         xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
         t_turb = np.array([self.time_turbulence(t) for t in xt])
         avg = np.sum(t_turb * dt) / (len(xt) * dt)
@@ -903,7 +903,7 @@ class RadioHaloAM(RadioHalo):
         Calculate the time-averaged turbulence Mach number within the
         period from ``age_begin`` to ``age_obs``.
         """
-        dt = self.tstep
+        dt = self.time_step
         xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
         mach = np.array([self.mach_turbulence(t) for t in xt])
         avg = np.sum(mach * dt) / (len(xt) * dt)
@@ -918,7 +918,7 @@ class RadioHaloAM(RadioHalo):
 
         Unit: [Gyr]
         """
-        dt = self.tstep
+        dt = self.time_step
         xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
         tau = np.array([self.tau_acceleration(t) for t in xt])
         avg = np.sum(tau * dt) / (len(xt) * dt)
@@ -931,7 +931,7 @@ class RadioHaloAM(RadioHalo):
         ``age_begin`` to ``age_obs`` that the turbulence acceleration
         is active.
         """
-        dt = self.tstep
+        dt = self.time_step
         xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
         active = np.array([self._is_turb_active(t) for t in xt], dtype=int)
         fraction = active.mean()
