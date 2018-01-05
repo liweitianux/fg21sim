@@ -193,9 +193,7 @@ class RadioHalo:
         """
         return self.age_merger
 
-    @property
-    @lru_cache()
-    def time_turbulence(self):
+    def time_turbulence(self, t=None):
         """
         The time duration the merger-induced turbulence persists, which
         is used to approximate the effective turbulence acceleration
@@ -203,16 +201,20 @@ class RadioHalo:
 
         Unit: [Gyr]
         """
-        return helper.time_turbulence(self.M_main, self.M_sub,
-                                      z=self.z_merger, configs=self.configs)
+        t_merger = self._merger_time(t)
+        mass_main = self.mass_main(t=t_merger)
+        mass_sub = self.mass_sub(t=t_merger)
+        z_merger = COSMO.redshift(t_merger)
+        return helper.time_turbulence(mass_main, mass_sub, z=z_merger,
+                                      configs=self.configs)
 
-    @property
-    def mach_turbulence(self):
+    def mach_turbulence(self, t=None):
         """
         The turbulence Mach number determined from its velocity dispersion.
         """
-        cs = helper.speed_sound(self.kT_main())  # [km/s]
-        v_turb = self._velocity_turb()  # [km/s]
+        t_merger = self._merger_time(t)
+        cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
+        v_turb = self._velocity_turb(t_merger)  # [km/s]
         return v_turb / cs
 
     @property
@@ -272,7 +274,7 @@ class RadioHalo:
         return helper.kT_cluster(self.M_obs, z=self.z_obs,
                                  configs=self.configs)
 
-    def kT_main(self, t=None):
+    def kT(self, t=None):
         """
         The ICM mean temperature of the main cluster at cosmic time
         ``t`` (default: ``self.age_begin``).
@@ -285,7 +287,7 @@ class RadioHalo:
         z = COSMO.redshift(t)
         return helper.kT_cluster(mass=mass, z=z, configs=self.configs)
 
-    def tau_acceleration(self, t=None):
+    def tau_acceleration(self, t):
         """
         Calculate the electron acceleration timescale due to turbulent
         waves, which describes the turbulent acceleration efficiency.
@@ -308,19 +310,11 @@ class RadioHalo:
             τ_acc = p^2 / (4*D_pp)
                   = (η_e * c_s^3 * L) / (16π * ζ * <v_turb^2>^2)
 
-        NOTE
-        ----
-        Considering that the turbulence acceleration is a 2nd-order Fermi
-        process, it has only an effective acceleration time ~<1 Gyr.
-        Therefore, only during the period that strong turbulence persists
-        in the ICM that the turbulence could effectively accelerate the
-        relativistic electrons.
-
         Parameters
         ----------
         t : float, optional
             The cosmic time when to determine the acceleration timescale.
-            Default: ``self.age_obs``
+            Unit: [Gyr]
 
         Returns
         -------
@@ -334,15 +328,13 @@ class RadioHalo:
         * Ref.[pinzke2017],Eq.(37)
         * Ref.[miniati2015],Eq.(29)
         """
-        if t is None:
-            t = self.age_begin
-        if t > self.age_begin + self.time_turbulence:
-            return np.inf
-
-        R_vir = helper.radius_virial(mass=self.M_main, z=self.z_merger)
+        t_merger = self._merger_time(t)
+        z_merger = COSMO.redshift(t_merger)
+        mass_main = self.mass_main(t_merger)
+        R_vir = helper.radius_virial(mass=mass_main, z=z_merger)
         L = self.f_lturb * R_vir  # [kpc]
-        cs = helper.speed_sound(self.kT_main())  # [km/s]
-        v_turb = self._velocity_turb()  # [km/s]
+        cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
+        v_turb = self._velocity_turb(t_merger)  # [km/s]
         tau = (self.x_cr * cs**3 * L /
                (16*np.pi * self.zeta_ins * v_turb**4))  # [s kpc/km]
         tau *= AUC.s2Gyr * AUC.kpc2km  # [Gyr]
