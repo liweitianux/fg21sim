@@ -711,8 +711,8 @@ class RadioHalo:
         if t < self.age_begin:
             return False
         t_merger = self._merger_time(t)
-        t_turb = self.time_turbulence(t=t_merger)
-        if (t >= t_merger) or (t <= t_merger + t_turb):
+        t_turb = self.time_turbulence(t_merger)
+        if (t >= t_merger) and (t <= t_merger + t_turb):
             return True
         else:
             return False
