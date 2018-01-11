@@ -297,11 +297,10 @@ class GalaxyClusters:
         """
         logger.info("Calculating the radio halo emissions ...")
         num = len(self.halos)
-        i = 0
-        for hdict in self.halos:
-            i += 1
-            if i % 100 == 0:
-                logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
+        for i, hdict in enumerate(self.halos):
+            ii = i + 1
+            if ii % 100 == 0:
+                logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
             haloem = HaloEmission(gamma=hdict["gamma"], n_e=hdict["n_e"],
                                   B=hdict["B0"], radius=hdict["Rhalo"],
                                   redshift=hdict["z0"])
@@ -357,11 +356,10 @@ class GalaxyClusters:
         """
         num = len(self.halos)
         logger.info("Draw template images for %d halos ..." % num)
-        i = 0
-        for hdict in self.halos:
-            i += 1
-            if i % 100 == 0:
-                logger.info("[%d/%d] %.1f%% ..." % (i, num, 100*i/num))
+        for i, hdict in enumerate(self.halos):
+            ii = i + 1
+            if ii % 100 == 0:
+                logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
             theta_e = hdict["Rhalo_angular"] / self.sky.pixelsize
             template = helper.draw_halo(radius=theta_e,
                                         felong=hdict["felong"],
