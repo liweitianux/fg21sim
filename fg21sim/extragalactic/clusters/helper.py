@@ -2,7 +2,7 @@
 # MIT license
 
 """
-Helper functions
+Functions to help simulate galaxy cluster diffuse emissions.
 
 References
 ----------
@@ -295,8 +295,7 @@ def speed_sound(kT):
 
     Reference: Ref.[zhuravleva2014],Appendix(Methods)
     """
-    # The gas adiabatic index
-    gamma = AC.gamma
+    gamma = AC.gamma  # gas adiabatic index
     cs = np.sqrt(gamma * kT*AUC.keV2erg / (AC.mu * AC.u))  # [cm/s]
     return cs * AUC.cm2km  # [km/s]
 
@@ -377,12 +376,12 @@ def time_crossing(M_main, M_sub, z=0.0):
 
 def time_turbulence(M_main, M_sub, z=0.0, configs=CONFIGS):
     """
-    The timescale that the compressive turbulence persists, which is
+    The duration that the compressive turbulence persists, which is
     estimated as:
         τ_turb ≅ 2*d / v_impact,
     where d ≅ L ≅ R_vir / 3,
     and L is also the turbulence injection scale.
-    During this timescale, the merger-induced turbulence is regarded
+    During this period, the merger-induced turbulence is regarded
     to accelerate the relativistic electrons effectively.
 
     Unit: [Gyr]

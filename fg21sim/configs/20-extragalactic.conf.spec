@@ -132,6 +132,8 @@
   # The fraction of the magnetic field energy density w.r.t. the ICM
   # thermal energy density, which is used to determine the mean magnetic
   # field strength within the ICM and is also assumed to be uniform.
+  # * ~< 0.4% (Ref: Pfrommer & Ensslin 2004, MNRAS)
+  # * ~0.3%-1% (Ref: Bohringer et al. 2016, A&A)
   eta_b = float(default=0.001, min=1e-5, max=0.1)
 
   # The temperature of the outer gas surrounding the cluster.  Accretion
