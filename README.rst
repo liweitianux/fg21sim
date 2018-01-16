@@ -29,7 +29,7 @@ Features
 
     Current supported point sources types:
 
-    - Star-forming galaxies
+    - Star-forming galaxies (i.e., normal galaxies)
     - Starburst galaxies
     - Radio-quiet AGNs
     - Fanaroff-Riley type I (FR-I) AGNs
@@ -40,9 +40,9 @@ Features
 * High-resolution simulation within sky patches
 * Configuration file allowing fine-grained control
 * Well organized and detail comments
-* Modular and extensible
-* Handy command line tools, utilities, and modules
-* Simple Web UI
+* Modular and highly extensible
+* Command line tools, utilities, and modules
+* Simple web-based UI
   (*WARNING:* need significant updates!)
 
 
@@ -76,11 +76,11 @@ Installation
    Check to make sure that this virtual environment is activated so that the
    default ``python3`` and ``pip3`` is pointed to the virtual environment.
 
-4. Install this ``fg21sim`` package to the virtual environment::
+4. Install this software into the virtual environment::
 
    $ python3 setup.py install
 
-5. You are ready to use this package. Just have a look, e.g.::
+5. You are ready to use this software.  Just have a look, e.g.::
 
    $ fg21sim --help
 
@@ -95,7 +95,7 @@ in the **editable state**::
     $ pip3 install --editable .
 
 In addition, setting the environment variable ``DEBUG_FG21SIM`` forces
-this package running with ``DEBUG`` logging level.
+this software running at the ``DEBUG`` logging level.
 
 
 Documentations
