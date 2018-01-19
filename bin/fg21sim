@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- mode: python -*-
 #
-# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2016-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -14,6 +14,7 @@ import argparse
 import logging
 import time
 
+import fg21sim
 from fg21sim.share import CONFIGS, COSMO
 from fg21sim.utils import setup_logging
 
@@ -23,6 +24,8 @@ def main():
         description="Simulate the radio foregrounds for 21cm EoR signal",
         epilog="Set environment variable 'DEBUG_FG21SIM=1' to force debug!")
     parser.add_argument("config", help="user configuration file")
+    parser.add_argument("-v", "--version", action="version",
+                        version="%(prog)s: version "+fg21sim.__version__)
     parser.add_argument("-l", "--log", dest="loglevel", default=None,
                         choices=["debug", "info", "warning",
                                  "error", "critical"],
@@ -49,6 +52,7 @@ def main():
                   logfile=args.logfile)
     tool = os.path.basename(sys.argv[0])
     logger = logging.getLogger(tool)
+    logger.info("FG21sim: version %s" % fg21sim.__version__)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
     # Save/backup current configurations
