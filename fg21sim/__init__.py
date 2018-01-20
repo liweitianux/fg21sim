@@ -6,8 +6,9 @@ Realistic Foreground Simulation for 21 cm Reionization Signal Detection
 :license: MIT
 """
 
-__pkgname__ = "fg21sim"
+__pkgname__ = "FG21sim"
 __version__ = "0.7.0"
+__date__ = "2018-01-16"
 __author__ = "Weitian LI"
 __author_email__ = "weitian@aaronly.me"
 __license__ = "MIT"
