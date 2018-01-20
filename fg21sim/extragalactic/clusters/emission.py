@@ -355,12 +355,12 @@ class HaloEmission:
         specific luminosity (Lν) because the redshifted object is emitting
         flux in a different band than that in which you are observing.
         And the k-correction depends on the spectrum of the object in
-        question.  For any other spectrum (i.e., vLv != const.), the flux
+        question.  For any other spectrum (i.e., νLν != const.), the flux
         density Sv is related to the specific luminosity Lv by:
-            Sv = (1+z) L_v(1+z) / (4π DL^2),
+            Sν = (1+z) Lν(1+z) / (4π DL^2),
         where
-        * L_v(1+z) is the specific luminosity emitting at frequency v(1+z),
-        * DL is the luminosity distance to the object at redshift z.
+        * Lν(1+z): specific luminosity emitting at frequency ν(1+z),
+        * DL: luminosity distance to the object at redshift z.
 
         Reference: Ref.[hogg1999],Eq.(22)
 
