@@ -582,12 +582,10 @@ class RadioHalo:
         """
         if t < self.age_begin:
             # To derive the initial electron spectrum
-            advection = (abs(self._loss_ionization(gamma, self.age_begin)) +
-                         abs(self._loss_radiation(gamma, self.age_begin)))
+            advection = abs(self._energy_loss(gamma, self.age_begin))
         else:
             # Turbulence acceleration and beyond
-            advection = (abs(self._loss_ionization(gamma, t)) +
-                         abs(self._loss_radiation(gamma, t)) -
+            advection = (abs(self._energy_loss(gamma, t)) -
                          (self.fp_diffusion(gamma, t) * 2 / gamma))
         return advection
 
@@ -717,9 +715,14 @@ class RadioHalo:
         else:
             return False
 
-    def _loss_ionization(self, gamma, t):
+    def _energy_loss(self, gamma, t):
         """
-        Energy loss through ionization and Coulomb collisions.
+        Energy loss mechanisms:
+        * inverse Compton scattering off the CMB photons
+        * synchrotron radiation
+        * Coulomb collisions
+
+        Reference: Ref.[sarazin1999],Eq.(6,7,9)
 
         Parameters
         ----------
@@ -734,32 +737,16 @@ class RadioHalo:
         loss : float, or float 1D `~numpy.ndarray`
             The energy loss rates
             Unit: [Gyr^-1]
-
-        References
-        ----------
-        Ref.[sarazin1999],Eq.(9)
         """
         gamma = np.asarray(gamma)
         z = COSMO.redshift(t)
+        B = self.magnetic_field(t)  # [uG]
         mass = self.mass_main(t)
         n_th = helper.density_number_thermal(mass, z)  # [cm^-3]
-        loss = -3.79e4 * n_th * (1 + np.log(gamma/n_th) / 75)
-        return loss
-
-    def _loss_radiation(self, gamma, t):
-        """
-        Energy loss via synchrotron emission and inverse Compton
-        scattering off the CMB photons.
-
-        References
-        ----------
-        Ref.[sarazin1999],Eq.(6,7)
-        """
-        gamma = np.asarray(gamma)
-        B = self.magnetic_field(t)  # [uG]
-        z = COSMO.redshift(t)
-        loss = -4.32e-4 * gamma**2 * ((B/3.25)**2 + (1+z)**4)
-        return loss
+        loss_ic = -4.32e-4 * gamma**2 * (1+z)**4
+        loss_syn = -4.10e-5 * gamma**2 * B**2
+        loss_coul = -3.79e4 * n_th * (1 + np.log(gamma/n_th) / 75)
+        return loss_ic + loss_syn + loss_coul
 
 
 class RadioHaloAM(RadioHalo):
