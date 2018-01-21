@@ -389,7 +389,7 @@ def time_turbulence(M_main, M_sub, z=0.0, configs=CONFIGS):
     # Turbulence injection scale factor
     key = "extragalactic/halos/f_lturb"
     f_lturb = configs.getn(key)
-    R_vir = radius_virial(M_main, z)  # [kpc]
+    R_vir = radius_virial(M_main+M_sub, z)  # [kpc]
     distance = 2*R_vir * f_lturb
     vi = velocity_impact(M_main, M_sub, z)  # [km/s]
     uconv = AUC.kpc2km * AUC.s2Gyr  # [s kpc/km] => [Gyr]

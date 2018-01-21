@@ -347,8 +347,8 @@ class RadioHalo:
 
         t_merger = self._merger_time(t)
         z_merger = COSMO.redshift(t_merger)
-        mass_main = self.mass_main(t_merger)
-        R_vir = helper.radius_virial(mass=mass_main, z=z_merger)
+        mass_merged = self.mass_merged(t_merger)
+        R_vir = helper.radius_virial(mass=mass_merged, z=z_merger)
         L = self.f_lturb * R_vir  # [kpc]
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
         v_turb = self._velocity_turb(t_merger)  # [km/s]
