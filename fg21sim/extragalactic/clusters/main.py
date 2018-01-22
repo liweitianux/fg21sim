@@ -394,10 +394,14 @@ class GalaxyClusters:
             if num == nmax:
                 continue
             cdict.update([
-                ("merger_mass1", cdict["merger_mass1"] + [None]*(nmax-num)),
-                ("merger_mass2", cdict["merger_mass2"] + [None]*(nmax-num)),
-                ("merger_z",     cdict["merger_z"] + [None]*(nmax-num)),
-                ("merger_age",   cdict["merger_age"] + [None]*(nmax-num)),
+                ("merger_mass1",
+                 list(cdict["merger_mass1"]) + [None]*(nmax-num)),
+                ("merger_mass2",
+                 list(cdict["merger_mass2"]) + [None]*(nmax-num)),
+                ("merger_z",
+                 list(cdict["merger_z"]) + [None]*(nmax-num)),
+                ("merger_age",
+                 list(cdict["merger_age"]) + [None]*(nmax-num)),
             ])
 
         keys = list(self.catalog[0].keys())
