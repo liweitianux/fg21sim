@@ -127,12 +127,14 @@ class GalaxyClusters:
         """
         Do some basic processes to the catalog:
 
+        * Calculate the cosmic age at cluster's redshift
         * Generate random positions within the sky for each cluster;
         * Generate random elongated fraction;
         * Generate random rotation angle.
 
         Catalog Items
         -------------
+        age : [Gyr] cosmic age at cluster's redshift, ~ cluster age
         lon : [deg] longitudes
         lat : [deg] latitudes
         felong : elongated fraction, defined as the ratio of
@@ -160,17 +162,19 @@ class GalaxyClusters:
 
         for i, cdict in enumerate(self.catalog):
             cdict.update([
+                ("age", COSMO.age(cdict["z"])),
                 ("lon", lon[i]),
                 ("lat", lat[i]),
                 ("felong", felong[i]),
                 ("rotation", rotation[i]),
             ])
         self.comments += [
+            "age - [Gyr] cosmic age at z; ~ cluster age",
             "lon, lat - [deg] longitudes and latitudes",
             "felong - elongated fraction (= b/a)",
             "rotation -  [deg] ellipse rotation angle",
         ]
-        logger.info("Added catalog items: lon, lat, felong, rotation.")
+        logger.info("Added catalog items: age, lon, lat, felong, rotation.")
 
     def _simulate_mergers(self):
         """
@@ -269,6 +273,7 @@ class GalaxyClusters:
             data = OrderedDict([
                 ("z0", z_obs),
                 ("M0", M_obs),  # [Msun]
+                ("age0", halo.age_obs),  # [Gyr]
                 ("merger_num", merger_num),
                 ("lon", cdict["lon"]),  # [deg] longitude
                 ("lat", cdict["lat"]),  # [deg] longitude
