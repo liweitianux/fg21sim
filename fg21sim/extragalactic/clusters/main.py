@@ -332,21 +332,34 @@ class GalaxyClusters:
         very powerful and (almost) dominate other intermediate/faint halos,
         causing the simulation results unstable and have large variation.
 
-        Drop out the specified number of most powerful radio halos from
-        the catalog, in order to obtain a more stable simulation.
+        If ``halo_dropout`` is given, then select the specified number of
+        most powerful radio halos from the catalog, and mark them with
+        a property ``drop=True``, which will then be excluded from the
+        following halo drawing step, in order to obtain more stable
+        simulation results.
+
+        NOTE
+        ----
+        If the halo data is reloaded from a previously dumped catalog,
+        the original dropout markers is just ignored.
         """
-        if (self.halo_dropout <= 0) or self.use_dump_halos_data:
+        if self.halo_dropout <= 0:
             logger.info("No need to drop out halos.")
             return
 
         power = np.array([hdict["power"][0] for hdict in self.halos])
         argsort = power.argsort()[::-1]  # max -> min
         idx_drop = argsort[:self.halo_dropout]
-        halos_new = [hdict for i, hdict in enumerate(self.halos)
-                     if i not in idx_drop]
-        self.halos = halos_new
-        logger.info("Dropped out %d most powerful halos" % self.halo_dropout)
-        logger.info("Remaining number of halos: %d" % len(halos_new))
+        num = 0
+        for i, hdict in enumerate(self.halos):
+            if i in idx_drop:
+                hdict["drop"] = True
+            else:
+                hdict["drop"] = False
+                num += 1
+        logger.info("Marked %d most powerful halos for dropping" %
+                    self.halo_dropout)
+        logger.info("Remaining number of halos: %d" % num)
 
     def _draw_halos(self):
         """
@@ -359,9 +372,12 @@ class GalaxyClusters:
         the corresponding halo within the ``self.halos``.
         The templates are normalized to have *mean* value of 1.
         """
-        num = len(self.halos)
+        idx_kept = [idx for idx, cdict in enumerate(self.halos)
+                    if not cdict.get("drop", False)]
+        num = len(idx_kept)
         logger.info("Draw template images for %d halos ..." % num)
-        for i, hdict in enumerate(self.halos):
+        for i, idx in enumerate(idx_kept):
+            hdict = self.halos[idx]
             ii = i + 1
             if ii % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
