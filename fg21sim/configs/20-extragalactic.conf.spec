@@ -208,13 +208,13 @@
 
   # Time step for solving the Fokker-Planck equation
   # Unit: [Gyr]
-  time_step = float(default=0.01, min=1e-4, max=0.1)
+  time_step = float(default=0.02, min=1e-4, max=0.1)
 
   # How long the period before the merger begins, which is used to derive
   # an approximately steady initial electron spectrum.  During this period,
   # the acceleration is turned off and only leaves energy loss mechanisms.
   # Unit: [Gyr]
-  time_init = float(default=0.6, min=0)
+  time_init = float(default=1.0, min=0)
 
 
   #
