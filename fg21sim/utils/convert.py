@@ -1,11 +1,14 @@
-# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2016-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
 Utilities for conversion among common astronomical quantities.
 """
 
+import numpy as np
+
 from .units import (UnitConversions as AUC, Constants as AC)
+from ..share import COSMO
 
 
 def Sb_to_Tb(Sb, freq):
@@ -108,3 +111,33 @@ def JyPerPix_to_K(freq, pixelsize):
     """
     factor = Fnu_to_Tb(Fnu=1.0, omega=pixelsize**2, freq=freq)
     return factor
+
+
+def flux_to_power(flux, z, index=1.0):
+    """
+    Calculate the (spectral) power from the measured flux density at
+    the same frequency with K-correction taking into account, if the
+    spectral index is given.
+
+    Parameters
+    ----------
+    flux : float
+        The measured flux density at a frequency.
+        Unit: [mJy]
+    z : float
+        The redshift to the source.
+    index : float, optional
+        The spectral index (α) of the source flux: S(ν) ∝ ν^(-α)
+        If given, the K-correction is taken into account.
+
+    Returns
+    -------
+    power : float
+        The calculated (spectral) power at the same frequency as
+        the flux density measured.
+        Unit: [W/Hz]
+    """
+    flux *= 1e-29  # [mJy] -> [W/Hz/m^2]
+    DL = COSMO.DL(z) * AUC.Mpc2m  # [m]
+    power = 4*np.pi * DL**2 * (1+z)**(index-1) * flux  # [W/Hz]
+    return power
