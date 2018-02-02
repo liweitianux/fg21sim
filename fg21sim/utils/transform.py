@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2016-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -17,15 +17,15 @@ References
 
 
 import numpy as np
-import numba as nb
+# import numba as nb
 from scipy import ndimage
 
 
-@nb.jit([nb.float64[:, :](nb.int64[:, :], nb.float64, nb.boolean,
-                          nb.boolean, nb.float64),
-         nb.float64[:, :](nb.float64[:, :], nb.float64, nb.boolean,
-                          nb.boolean, nb.float64)],
-        nopython=True)
+# @nb.jit([nb.float64[:, :](nb.int64[:, :], nb.float64, nb.boolean,
+#                           nb.boolean, nb.float64),
+#          nb.float64[:, :](nb.float64[:, :], nb.float64, nb.boolean,
+#                           nb.boolean, nb.float64)],
+#         nopython=True)
 def rotate_center(imgin, angle, interp=True, reshape=True, fill_value=0.0):
     """
     Rotate the input image (only gray-scale image currently supported)

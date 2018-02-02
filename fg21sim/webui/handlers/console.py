@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016,2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -174,7 +174,7 @@ class ConsoleAJAXHandler(BaseRequestHandler):
         logger.info("Checking the configurations ...")
         self.configs.check_all()
         #
-        logger.info("Importing modules + Numba JIT, waiting ...")
+        logger.info("Importing modules, waiting ...")
         from ...foregrounds import Foregrounds
         #
         fg = Foregrounds(self.configs)

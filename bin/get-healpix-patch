@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 #
 
@@ -50,7 +50,7 @@ def main():
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
-    logger.info("Importing necessary modules + Numba JIT, waiting ...")
+    logger.info("Importing necessary modules, waiting ...")
     import scipy.ndimage
     import healpy as hp
     from reproject import reproject_from_healpix

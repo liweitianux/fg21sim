@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2016-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -7,14 +7,15 @@ Grid utilities.
 
 
 import numpy as np
-import numba as nb
+# import numba as nb
+from scipy import ndimage
 
 from .draw import ellipse
-from .transform import rotate_center
+# from .transform import rotate_center
 from .healpix import ang2pix_ring
 
 
-@nb.jit(nopython=True)
+# @nb.jit(nopython=True)
 def _wrap_longitudes(lon):
     """Wrap the longitudes for values that beyond the valid range [0, 360)"""
     lon[lon < 0] += 360
@@ -22,7 +23,7 @@ def _wrap_longitudes(lon):
     return lon
 
 
-@nb.jit(nopython=True)
+# @nb.jit(nopython=True)
 def _wrap_latitudes(lat):
     """Wrap the latitudes for values that beyond the valid range [-90, 90]"""
     lat[lat < -90] = -lat[lat < -90] - 180
@@ -30,11 +31,11 @@ def _wrap_latitudes(lat):
     return lat
 
 
-@nb.jit(nb.types.UniTuple(nb.float64[:, :], 2)(
-    nb.types.UniTuple(nb.float64, 2),
-    nb.types.UniTuple(nb.float64, 2),
-    nb.float64),
-        nopython=True)
+# @nb.jit(nb.types.UniTuple(nb.float64[:, :], 2)(
+#     nb.types.UniTuple(nb.float64, 2),
+#     nb.types.UniTuple(nb.float64, 2),
+#     nb.float64),
+#         nopython=True)
 def make_coordinate_grid(center, size, resolution):
     """
     Make a rectangular, Cartesian coordinate grid.
@@ -116,8 +117,9 @@ def make_ellipse(center, radii, rotation):
     for ri, ci in zip(rr, cc):
         gridmap[ri, ci] = 1.0
     # Rotate the ellipse about the grid center
-    gridmap = rotate_center(gridmap, angle=rotation, interp=True,
-                            reshape=False, fill_value=0.0)
+    # gridmap = rotate_center(gridmap, angle=rotation, interp=True,
+    #                         reshape=False, fill_value=0.0)
+    gridmap = ndimage.rotate(gridmap, angle=rotation, reshape=False, order=1)
     return gridmap
 
 
@@ -172,14 +174,15 @@ def make_grid_ellipse(center, size, resolution, rotation=0.0):
     for ri, ci in zip(rr, cc):
         gridmap[ri, ci] = 1.0
     # Rotate the ellipse about the grid center
-    gridmap = rotate_center(gridmap, angle=rotation, interp=True,
-                            reshape=False, fill_value=0.0)
+    # gridmap = rotate_center(gridmap, angle=rotation, interp=True,
+    #                         reshape=False, fill_value=0.0)
+    gridmap = ndimage.rotate(gridmap, angle=rotation, reshape=False, order=1)
     return (lon, lat, gridmap)
 
 
-@nb.jit(nb.types.Tuple((nb.int64[:], nb.float64[:]))(
-    nb.types.UniTuple(nb.float64[:, :], 3), nb.int64),
-        nopython=True)
+# @nb.jit(nb.types.Tuple((nb.int64[:], nb.float64[:]))(
+#     nb.types.UniTuple(nb.float64[:, :], 3), nb.int64),
+#         nopython=True)
 def map_grid_to_healpix(grid, nside):
     """
     Map the filled coordinate grid to the HEALPix map (RING ordering).

@@ -69,7 +69,7 @@ def main():
     logger.info("Setup cosmology model with parameters from configs ...")
     COSMO.setup(**CONFIGS.cosmology)
 
-    logger.info("Importing modules + Numba JIT, waiting ...")
+    logger.info("Importing modules, waiting ...")
     from fg21sim.foregrounds import Foregrounds
     fg = Foregrounds(CONFIGS)
     fg.preprocess()
