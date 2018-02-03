@@ -42,15 +42,15 @@
   # distributions at every redshift.
   #
   # This file packs the following 3 NumPy arrays:
-  # * ``dndlnm``:
-  #   Shape: (len(z), len(mass))
-  #   Differential mass function in terms of natural log of M.
-  #   Unit: [Mpc^-3] (the little "h" is folded into the values)
   # * ``z``:
   #   Redshifts where the halo mass distribution is calculated.
   # * ``mass``:
   #   (Logarithmic-distributed) masses points.
   #   Unit: [Msun] (the little "h" is folded into the values)
+  # * ``dndlnm``:
+  #   Shape: (len(z), len(mass))
+  #   Differential mass function in terms of natural log of M.
+  #   Unit: [Mpc^-3] (the little "h" is folded into the values)
   dndlnm_outfile = string(default=None)
 
 
@@ -111,7 +111,7 @@
 
   # Boost the number of expected cluster number within the sky coverage
   # by the specified times.
-  # (NOTE: mainly for testing purpose.)
+  # WARNING: for testing usage.
   boost = float(default=1.0, min=0.1, max=1e4)
 
   # Number of most powerful halos to be dropped out.
@@ -140,7 +140,8 @@
   # shocks form near the cluster virial radius during the cluster formation,
   # which can heat the cluster ICM to have a higher temperature than the
   # virial temperature:
-  #     kT_icm ~ kT_vir + 1.5 * kT_out
+  #     kT_icm ~ kT_vir + 1.5 * kT_out,
+  # with: kT_out ~ 0.5 [keV]
   # Reference: Fujita et al. 2003, ApJ, 584, 190; Eq.(49)
   # Unit: [keV]
   kT_out = float(default=0.0, min=0.0)
@@ -155,7 +156,7 @@
   # Giant radio halos
   #
   [[halos]]
-  # A custom parameter to tune the turbulent acceleration timescale.
+  # A custom parameter to tune the turbulent acceleration efficiency.
   # NOTE: The smaller this parameter, the shorter the acceleration
   #       timescale, therefore more efficient acceleration.
   f_acc = float(default=1.0, min=0.1, max=10)
@@ -183,7 +184,7 @@
   #       (Ackermann et al. 2014, ApJ, 787, 18)
   # NOTE: The energy ratio of cosmic-ray electrons to protons K_ep ~0.01
   #       for our Galaxy (Pinzke et al. 2017, MNRAS, 465, 4800)
-  x_cr = float(default=0.01, min=0.001, max=0.1)
+  x_cr = float(default=0.015, min=0.001, max=0.1)
 
   # Electron injection, which is assumed to have a constant injection
   # rate and a power-law spectrum.
