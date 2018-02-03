@@ -8,11 +8,12 @@ Grid utilities.
 
 import numpy as np
 # import numba as nb
+import healpy as hp
 from scipy import ndimage
 
 from .draw import ellipse
 # from .transform import rotate_center
-from .healpix import ang2pix_ring
+# from .healpix import ang2pix_ring
 
 
 # @nb.jit(nopython=True)
@@ -223,7 +224,8 @@ def map_grid_to_healpix(grid, nside):
     gridmap = grid[2].flatten()
     phi = np.radians(lon)
     theta = np.radians(90.0 - lat)
-    ipix = ang2pix_ring(nside, theta, phi)
+    # ipix = ang2pix_ring(nside, theta, phi)
+    ipix = hp.ang2pix(nside, theta, phi, nest=False)
     # Get the corresponding input grid pixels for each HEALPix pixel
     # XXX: ``numba`` currently does not support ``numpy.unique()``
     ipix_perm = ipix.argsort()
