@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2016-2018 Weitian LI <weitian@aaronly.me>
 # MIT license
 
 """
@@ -114,11 +114,15 @@ class Foregrounds:
             self.products.add_component(compID, skyfiles)
         comp_obj.postprocess()
 
-        t1_stop = time.perf_counter()
-        t2_stop = time.process_time()
+        t1_cost = time.perf_counter() - t1_start
+        t2_cost = time.process_time() - t2_start
         logger.info("--------------------------------------------------")
-        logger.info("Elapsed time: %.1f [min]" % ((t1_stop-t1_start)/60))
-        logger.info("CPU process time: %.1f [min]" % ((t2_stop-t2_start)/60))
+        if t1_cost <= 3*60:
+            logger.info("Elapsed time: %.1f [sec]" % t1_cost)
+            logger.info("CPU process time: %.1f [sec]" % t2_cost)
+        else:
+            logger.info("Elapsed time: %.1f [min]" % (t1_cost/60))
+            logger.info("CPU process time: %.1f [min]" % (t2_cost/60))
         logger.info("--------------------------------------------------")
 
     def simulate(self):
@@ -136,7 +140,11 @@ class Foregrounds:
         logger.info(">>> Time usage <<<")
         logger.info("==================================================")
         for compID, t1, t2 in timers:
-            logger.info("%s : %.1f [min]" % (compID, (t2-t1)/60))
+            t_cost = t2 - t1
+            if t_cost <= 3*60:
+                logger.info("%s : %.1f [sec]" % (compID, t_cost))
+            else:
+                logger.info("%s : %.1f [min]" % (compID, t_cost/60))
         logger.info("--------------------------------------------------")
 
     def postprocess(self):

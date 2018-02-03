@@ -183,10 +183,14 @@ class ConsoleAJAXHandler(BaseRequestHandler):
         fg.postprocess()
         logger.info("Foregrounds simulations DONE!")
         logger.info("Console DEFAULT task: DONE!")
-        t1_stop = time.perf_counter()
-        t2_stop = time.process_time()
-        logger.info("Elapsed time: {0:.3f} (s)".format(t1_stop - t1_start))
-        logger.info("CPU process time: {0:.3f} (s)".format(t2_stop - t2_start))
+        t1_cost = time.perf_counter() - t1_start
+        t2_cost = time.process_time() - t2_start
+        if t1_cost <= 3*60:
+            logger.info("Elapsed time: %.1f [sec]" % t1_cost)
+            logger.info("CPU process time: %.1f [sec]" % t2_cost)
+        else:
+            logger.info("Elapsed time: %.1f [min]" % (t1_cost/60))
+            logger.info("CPU process time: %.1f [min]" % (t2_cost/60))
         # NOTE: always return a tuple of (success, error)
         return (True, None)
 
