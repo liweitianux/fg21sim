@@ -350,16 +350,10 @@ class GalaxyClusters:
         power = np.array([hdict["power"][0] for hdict in self.halos])
         argsort = power.argsort()[::-1]  # max -> min
         idx_drop = argsort[:self.halo_dropout]
-        num = 0
-        for i, hdict in enumerate(self.halos):
-            if i in idx_drop:
-                hdict["drop"] = True
-            else:
-                hdict["drop"] = False
-                num += 1
+        for idx in idx_drop:
+            self.halos[idx]["drop"] = True
         logger.info("Marked %d most powerful halos for dropping" %
                     self.halo_dropout)
-        logger.info("Remaining number of halos: %d" % num)
 
     def _draw_halos(self):
         """
@@ -525,6 +519,9 @@ class GalaxyClusters:
             logger.info("Use existing halos data: %s" % infile)
             self.halos = pickle_load(infile)
             logger.info("Loaded data of %d halos" % len(self.halos))
+            for hdict in self.halos:
+                hdict["drop"] = False
+            logger.info("Reset dropout status")
         else:
             self._simulate_halos()
 
@@ -558,6 +555,8 @@ class GalaxyClusters:
         JyPP2K = JyPerPix_to_K(freq, sky.pixelsize)
 
         for hdict in self.halos:
+            if hdict.get("drop", False):
+                continue
             center = (hdict["lon"], hdict["lat"])
             template = hdict["template"]  # normalized to have mean of 1
             Npix = template.size
