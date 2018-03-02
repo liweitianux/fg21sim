@@ -32,13 +32,13 @@ logger = logging.getLogger(__name__)
 
 class ClusterFormation:
     """
-    Simulate the cluster formation (i.e., merging history) using the extended
-    Press-Schechter formalism by Monte Carlo methods.
+    Simulate the cluster formation (i.e., merging history) by employing
+    the extended Press-Schechter formalism.
 
     Parameters
     ----------
     M0 : float
-        Cluster mass at redshift z0
+        Cluster total mass at redshift ``z0``
         Unit: [Msun]
     z0 : float
         Redshift from where to simulate former merging history.
@@ -49,14 +49,6 @@ class ClusterFormation:
         Minimum mass change to be regarded as a merger event instead of
         accretion.
         Unit: [Msun]
-
-    Attributes
-    ----------
-    mtree : `~MergerTree`
-        Merging history of this cluster.
-    recent_major_merger : dict, or None
-        An dictionary containing the properties of the found most recent
-        major merger event, or ``None`` if not found.
     """
     def __init__(self, M0, z0, zmax=3.0, merger_mass_min=1e12):
         self.M0 = M0  # [Msun]
@@ -78,8 +70,8 @@ class ClusterFormation:
 
     def f_sigma(self, mass):
         """
-        Current rms density fluctuations within a sphere of specified
-        mass (unit: Msun).
+        Current r.m.s. density fluctuations within a sphere of the given
+        mean /dark matter/ mass (unit: [Msun]).
 
         It is generally sufficient to consider a power-law spectrum of
         density perturbations, which is consistent with the CDM models.
@@ -127,9 +119,8 @@ class ClusterFormation:
 
     def calc_mass(self, S):
         """
-        Calculate the mass corresponding to the given S.
-
-        S = sigma(M)^2
+        Calculate the /dark matter/ mass corresponding to the given S,
+        which is defined as: S = sigma(M)^2
 
         References: Ref.[randall2002],Sec.(3)
         """
@@ -296,16 +287,17 @@ class ClusterFormation:
 
     def _trace_main(self):
         """
-        Iteratively trace the merger and accretion events of the
-        main cluster/halo.
+        Iteratively trace the merger and accretion events of the main
+        cluster/halo only.
         """
         # Initial properties
         zc = self.z0
-        Mc = self.M0
-        mtree_root = MergerTree(data={"mass": Mc,
+        Mc_cl = self.M0  # cluster total mass
+        Mc = Mc_cl * COSMO.baryon_fraction  # dark matter mass
+        mtree_root = MergerTree(data={"mass": Mc_cl,
                                       "z": zc,
                                       "age": COSMO.age(zc)})
-        logger.debug("[main] z=%.4f : mass=%g [Msun]" % (zc, Mc))
+        logger.debug("[main] z=%.4f : mass=%g [Msun]" % (zc, Mc_cl))
 
         mtree = mtree_root
         while True:
@@ -333,37 +325,38 @@ class ClusterFormation:
             M_min = min(M1, dM)
             if M_min <= self.merger_mass_min:
                 # Accretion
-                M_main = Mc - M_min
+                M_main_cl = (Mc - M_min) / COSMO.baryon_fraction
                 # NOTE: no sub node
             else:
-                # Merger event
-                M_main = max(M1, dM)
-                M_sub = M_min
-                mtree.sub = MergerTree(data={"mass": M_sub,
+                # Merger
+                M_main_cl = max(M1, dM) / COSMO.baryon_fraction
+                M_sub_cl = M_min / COSMO.baryon_fraction
+                mtree.sub = MergerTree(data={"mass": M_sub_cl,
                                              "z": z1,
                                              "age": age1})
-                logger.debug("[sub] z=%.4f : mass=%g [Msun]" % (z1, M_sub))
+                logger.debug("[sub] z=%.4f : mass=%g [Msun]" % (z1, M_sub_cl))
 
             # Update main cluster
-            mtree.main = MergerTree(data={"mass": M_main,
+            mtree.main = MergerTree(data={"mass": M_main_cl,
                                           "z": z1,
                                           "age": age1})
-            logger.debug("[main] z=%.4f : mass=%g [Msun]" % (z1, M_main))
+            logger.debug("[main] z=%.4f : mass=%g [Msun]" % (z1, M_main_cl))
 
             # Update for next iteration
-            Mc = M_main
+            Mc_cl = M_main_cl
             zc = z1
             mtree = mtree.main
 
         return mtree_root
 
-    def _trace_formation(self, M, _z=None, zmax=None):
+    def _trace_formation(self, M_cl, _z=None, zmax=None):
         """
-        Recursively trace the cluster formation and thus simulate its
-        merger tree.
+        Recursively trace the cluster/halo formation and thus simulate
+        its merger tree.
         """
         z = 0.0 if _z is None else _z
-        node_data = {"mass": M, "z": z, "age": COSMO.age(z)}
+        M = M_cl * COSMO.baryon_fraction  # dark matter mass
+        node_data = {"mass": M_cl, "z": z, "age": COSMO.age(z)}
 
         # Whether to stop the trace
         if self.zmax is not None and z > self.zmax:
@@ -388,18 +381,18 @@ class ClusterFormation:
         M_min = min(M1, dM)
         if M_min <= self.merger_mass_min:
             # Accretion
-            M_new = M - M_min
+            M_new_cl = (M - M_min) / COSMO.baryon_fraction
             return MergerTree(
                 data=node_data,
-                main=self._trace_formation(M_new, _z=z1),
+                main=self._trace_formation(M_new_cl, _z=z1),
                 sub=None
             )
         else:
-            # Merger event
-            M_main = max(M1, dM)
-            M_sub = M_min
+            # Merger
+            M_main_cl = max(M1, dM) / COSMO.baryon_fraction
+            M_sub_cl = M_min / COSMO.baryon_fraction
             return MergerTree(
                 data=node_data,
-                main=self._trace_formation(M_main, _z=z1),
-                sub=self._trace_formation(M_sub, _z=z1)
+                main=self._trace_formation(M_main_cl, _z=z1),
+                sub=self._trace_formation(M_sub_cl, _z=z1)
             )
