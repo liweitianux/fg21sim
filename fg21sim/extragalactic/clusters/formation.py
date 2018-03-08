@@ -44,13 +44,13 @@ class ClusterFormation:
         Redshift from where to simulate former merging history.
     zmax : float, optional
         The maximum redshift/age when to stop the formation trace.
-        Default: 3.0 (i.e., looking back time ~11.5 Gyr)
+        Default: 4.0 (i.e., looking back time ~12.1 Gyr)
     merger_mass_min : float, optional
         Minimum mass change to be regarded as a merger event instead of
         accretion.
         Unit: [Msun]
     """
-    def __init__(self, M0, z0, zmax=3.0, merger_mass_min=1e12):
+    def __init__(self, M0, z0, zmax=4.0, merger_mass_min=1e12):
         self.M0 = M0  # [Msun]
         self.z0 = z0
         self.zmax = zmax
