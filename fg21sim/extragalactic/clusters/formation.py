@@ -71,7 +71,7 @@ class ClusterFormation:
     def f_sigma(self, mass):
         """
         Current r.m.s. density fluctuations within a sphere of the given
-        mean /dark matter/ mass (unit: [Msun]).
+        mean mass (unit: [Msun]).
 
         It is generally sufficient to consider a power-law spectrum of
         density perturbations, which is consistent with the CDM models.
@@ -119,8 +119,8 @@ class ClusterFormation:
 
     def calc_mass(self, S):
         """
-        Calculate the /dark matter/ mass corresponding to the given S,
-        which is defined as: S = sigma(M)^2
+        Calculate the mass corresponding to the given S, which is
+        defined as: S = sigma(M)^2
 
         References: Ref.[randall2002],Sec.(3)
         """
@@ -292,12 +292,11 @@ class ClusterFormation:
         """
         # Initial properties
         zc = self.z0
-        Mc_cl = self.M0  # cluster total mass
-        Mc = Mc_cl * COSMO.baryon_fraction  # dark matter mass
-        mtree_root = MergerTree(data={"mass": Mc_cl,
+        Mc = self.M0
+        mtree_root = MergerTree(data={"mass": Mc,
                                       "z": zc,
                                       "age": COSMO.age(zc)})
-        logger.debug("[main] z=%.4f : mass=%g [Msun]" % (zc, Mc_cl))
+        logger.debug("[main] z=%.4f : mass=%g [Msun]" % (zc, Mc))
 
         mtree = mtree_root
         while True:
@@ -325,38 +324,37 @@ class ClusterFormation:
             M_min = min(M1, dM)
             if M_min <= self.merger_mass_min:
                 # Accretion
-                M_main_cl = (Mc - M_min) / COSMO.baryon_fraction
+                M_main = Mc - M_min
                 # NOTE: no sub node
             else:
                 # Merger
-                M_main_cl = max(M1, dM) / COSMO.baryon_fraction
-                M_sub_cl = M_min / COSMO.baryon_fraction
-                mtree.sub = MergerTree(data={"mass": M_sub_cl,
+                M_main = max(M1, dM)
+                M_sub = M_min
+                mtree.sub = MergerTree(data={"mass": M_sub,
                                              "z": z1,
                                              "age": age1})
-                logger.debug("[sub] z=%.4f : mass=%g [Msun]" % (z1, M_sub_cl))
+                logger.debug("[sub] z=%.4f : mass=%g [Msun]" % (z1, M_sub))
 
             # Update main cluster
-            mtree.main = MergerTree(data={"mass": M_main_cl,
+            mtree.main = MergerTree(data={"mass": M_main,
                                           "z": z1,
                                           "age": age1})
-            logger.debug("[main] z=%.4f : mass=%g [Msun]" % (z1, M_main_cl))
+            logger.debug("[main] z=%.4f : mass=%g [Msun]" % (z1, M_main))
 
             # Update for next iteration
-            Mc_cl = M_main_cl
+            Mc = M_main
             zc = z1
             mtree = mtree.main
 
         return mtree_root
 
-    def _trace_formation(self, M_cl, _z=None, zmax=None):
+    def _trace_formation(self, M, _z=None, zmax=None):
         """
         Recursively trace the cluster/halo formation and thus simulate
         its merger tree.
         """
         z = 0.0 if _z is None else _z
-        M = M_cl * COSMO.baryon_fraction  # dark matter mass
-        node_data = {"mass": M_cl, "z": z, "age": COSMO.age(z)}
+        node_data = {"mass": M, "z": z, "age": COSMO.age(z)}
 
         # Whether to stop the trace
         if self.zmax is not None and z > self.zmax:
@@ -381,18 +379,18 @@ class ClusterFormation:
         M_min = min(M1, dM)
         if M_min <= self.merger_mass_min:
             # Accretion
-            M_new_cl = (M - M_min) / COSMO.baryon_fraction
+            M_new = M - M_min
             return MergerTree(
                 data=node_data,
-                main=self._trace_formation(M_new_cl, _z=z1),
+                main=self._trace_formation(M_new, _z=z1),
                 sub=None
             )
         else:
             # Merger
-            M_main_cl = max(M1, dM) / COSMO.baryon_fraction
-            M_sub_cl = M_min / COSMO.baryon_fraction
+            M_main = max(M1, dM)
+            M_sub = M_min
             return MergerTree(
                 data=node_data,
-                main=self._trace_formation(M_main_cl, _z=z1),
-                sub=self._trace_formation(M_sub_cl, _z=z1)
+                main=self._trace_formation(M_main, _z=z1),
+                sub=self._trace_formation(M_sub, _z=z1)
             )
