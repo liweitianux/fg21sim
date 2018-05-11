@@ -6,7 +6,7 @@ Press-Schechter (PS) formalism
 
 First determine the number of clusters within a sky patch (i.e., sky
 coverage) according to the cluster distribution predicted by the PS
-formalism; then sampling from the halo mass function to derive the mass
+formalism; then sampling from the mass function to derive the mass
 and redshift for each cluster.
 """
 
@@ -29,7 +29,7 @@ class PSFormalism:
     """
     Press-Schechter (PS) formalism
 
-    Calculate the halo mass distribution with respect to mass and redshift,
+    Calculate the mass distribution with respect to mass and redshift,
     determine the clusters number counts and generate their distribution
     (mass and z) within a sky patch of certain coverage.
     """
@@ -52,7 +52,7 @@ class PSFormalism:
         self.dndlnm_outfile = self.configs.get_path(comp+"/dndlnm_outfile")
 
         comp = "extragalactic/clusters"
-        self.Mmin_cluster = self.configs.getn(comp+"/mass_min")  # [Msun]
+        self.Mmin = self.configs.getn(comp+"/mass_min")  # [Msun]
         self.boost = self.configs.getn(comp+"/boost")
 
         self.clobber = self.configs.getn("output/clobber")
@@ -150,10 +150,6 @@ class PSFormalism:
                      clobber=self.clobber)
         logger.info("Wrote dndlnm data into file: %s" % outfile)
 
-    @property
-    def Mmin_halo(self):
-        return self.Mmin_cluster * COSMO.darkmatter_fraction
-
     @staticmethod
     def delta(x, logeven=False):
         """
@@ -211,10 +207,9 @@ class PSFormalism:
         """
         logger.info("Calculating the total number of clusters within "
                     "sky patch of coverage %.1f [deg^2]" % coverage)
-        logger.info("Minimum cluster mass: %.2e [Msun]" % self.Mmin_cluster)
-        logger.info("Minimum halo mass: %.2e [Msun]" % self.Mmin_halo)
+        logger.info("Minimum cluster mass: %.2e [Msun]" % self.Mmin)
         coverage *= AUC.deg2rad**2  # [deg^2] -> [rad^2] = [sr]
-        midx = (self.mass >= self.Mmin_halo)
+        midx = (self.mass >= self.Mmin)
         numgrid = self.number_grid
         counts = np.sum(numgrid[:, midx]) * coverage * self.boost
         counts = int(np.round(counts))
@@ -257,7 +252,7 @@ class PSFormalism:
         zmin = z.min()
         zmax = z.max()
         log10mass = np.log10(self.mass)
-        log10Mmin = np.log10(self.Mmin_halo)
+        log10Mmin = np.log10(self.Mmin)
         log10Mmax = log10mass.max()
         midx = (log10mass >= log10Mmin)
         log10mass = log10mass[midx]
@@ -297,11 +292,10 @@ class PSFormalism:
 
         logger.info("Sampled %d pairs of (z, mass) for each cluster" % counts)
         z = np.array(z_list)
-        mass = np.array(mass_list) / COSMO.darkmatter_fraction
+        mass = np.array(mass_list)
         comment = [
             "halo mass function model: %s" % self.hmf_model,
-            "cluster minimum mass: %.2e [Msun]" % self.Mmin_cluster,
-            "dark matter fraction: %.2f" % COSMO.darkmatter_fraction,
+            "cluster minimum mass: %.2e [Msun]" % self.Mmin,
             "cluster counts: %d" % counts,
             "boost factor for cluster counts: %s" % self.boost,
             "",

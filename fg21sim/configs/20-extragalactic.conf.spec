@@ -11,20 +11,19 @@
 
 [extragalactic]
   #
-  # Press-Schechter formalism to determine the dark matter halos
-  # distribution with respect to masses and redshifts, from which
-  # to further determine the total number of halos within a sky
-  # patch and to sample the masses and redshifts for each halo.
-  # NOTE: only consider the *dark matter* mass within the halo!
+  # Press-Schechter formalism to determine the cluster distributions
+  # with respect to mass and redshift, from which to further determine
+  # the total number of clusters within a sky patch and to sample the
+  # masses and redshifts for each cluster.
   #
   [[psformalism]]
-  # The model of the fitting function for halo mass distribution
+  # The model of the fitting function for halo/cluster mass distribution
   # For all models and more details:
   # https://hmf.readthedocs.io/en/latest/_autosummary/hmf.fitting_functions.html
   model = option("smt", "jenkins", "ps", default="ps")
 
-  # The minimum (inclusive) and maximum (exclusive!) halo mass (dark
-  # matter only) within which to calculate the halo mass distribution.
+  # The minimum (inclusive) and maximum (exclusive!) cluster mass
+  # within which to calculate the halo mass distribution.
   # Unit: [Msun]
   M_min = float(default=1e12, min=1e10, max=1e14)
   M_max = float(default=1e16, min=1e14, max=1e18)

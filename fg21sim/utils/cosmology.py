@@ -306,10 +306,9 @@ class Cosmology:
     @property
     def darkmatter_fraction(self):
         """
-        The cosmological mean dark matter fraction (w.r.t. matter),
-        assumed to be *constant* regardless of redshifts!
+        The cosmological mean dark matter fraction (w.r.t. matter).
 
-        See also: ``self.baryon_fraction``
+        XXX: assumed to be *constant* regardless of redshifts!
         """
         return 1 - self.baryon_fraction
 
