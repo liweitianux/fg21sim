@@ -82,6 +82,7 @@ class GalaxyClusters:
         self.dump_halos_data = configs.getn(comp+"/dump_halos_data")
         self.use_dump_halos_data = configs.getn(
             comp+"/use_dump_halos_data")
+        self.felong_min = configs.getn(comp+"/felong_min")
         self.halo_dropout = configs.getn(comp+"/halo_dropout")
         self.prefix = configs.getn(comp+"/prefix")
         self.output_dir = configs.get_path(comp+"/output_dir")
@@ -154,10 +155,9 @@ class GalaxyClusters:
         logger.info("Preliminary processes to the catalog ...")
         num = len(self.catalog)
         lon, lat = self.sky.random_points(n=num)
-        felong_min = 0.6
-        sigma = (1.0 - felong_min) / 3.0
+        sigma = (1.0 - self.felong_min) / 3.0
         felong = 1.0 - np.abs(np.random.normal(scale=sigma, size=num))
-        felong[felong < felong_min] = felong_min
+        felong[felong < self.felong_min] = self.felong_min
         rotation = np.random.uniform(low=0.0, high=360.0, size=num)
 
         for i, cdict in enumerate(self.catalog):

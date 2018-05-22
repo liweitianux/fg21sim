@@ -113,6 +113,13 @@
   # WARNING: for testing usage.
   boost = float(default=1.0, min=0.1, max=1e4)
 
+  # Minimal elongated fraction for creating the images of radio halos
+  # The ``felong`` is defined as ``felong = b/a``, similar to the Hubble
+  # classification for the elliptical galaxies.  ``felong_min = 1.0``
+  # means no elongation, and ``felong_min = 0.6`` is a good choice as
+  # the observed radio halos are generally regular.
+  felong_min = float(default=1.0, min=0.1, max=1.0)
+
   # Number of most powerful halos to be dropped out.
   halo_dropout = integer(default=0, min=0)
 
