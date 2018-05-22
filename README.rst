@@ -1,13 +1,12 @@
-Realistic Foreground Simulation for 21 cm Reionization Signal Detection
-=======================================================================
+Foreground Simulation for 21 cm Reionization Signal Detection
+=============================================================
 
 The |FG21sim|_ is a low-frequency radio foregrounds simulator
-aiming to provide the realistic simulation of the common foregrounds
+aiming to provide the simulation of the common foregrounds
 impeding the 21 cm reionization signal detection.
 The simulated foregrounds can be used to evaluate the impacts of
 different foreground components on the EoR signal, and can be also
-used to help develop and test various foreground removal/separation
-methods.
+used to help develop and test various foreground removal methods.
 
 Features
 --------
@@ -39,17 +38,15 @@ Features
   (*Note:* not all components are currently supported)
 * High-resolution simulation within sky patches
 * Configuration file allowing fine-grained control
-* Well organized and detail comments
+* Well organized, commented, and documented
 * Modular and highly extensible
-* Command line tools, utilities, and modules
-* Simple web-based UI
-  (*WARNING:* need significant updates!)
+* Command line tools, utilities, and resuable modules
 
 
 Requirements
 ------------
 * Linux operating system (other UNIX-like systems not tested)
-* `Python <https://www.python.org/>`_: >= 3.4
+* `Python <https://www.python.org/>`_
 * `CFITSIO <https://heasarc.gsfc.nasa.gov/fitsio/fitsio.html>`_
 * `HEALPix <http://healpix.sourceforge.net/>`_:
   only the C++ library required by `healpy <https://github.com/healpy/healpy>`_.
