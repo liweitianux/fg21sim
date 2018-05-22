@@ -182,7 +182,7 @@
 
   # The fraction of the thermal energy injected into the cosmic-ray
   # electrons during the cluster life time.
-  eta_e = float(default=0.001, min=0.001, max=0.1)
+  eta_e = float(default=0.003, min=0.001, max=0.1)
 
   # The ratio of cosmic ray (including protons and electrons) energy
   # density (i.e., pressure) to the thermal energy density.
