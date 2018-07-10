@@ -30,26 +30,16 @@ There are two types of configuration options:
 *required* (which require the user to explicitly provide the values)
 and *optional* (which already have sensible defaults, however, the user
 can also override them).
-
-There is an `example configuration file <fg21sim.conf.example>`_ with
-detailed explanations on each configuration option.
+Please refer to the `configuration specification file <fg21sim.conf.spec>`_
+for more information on the available options.
 Also there is a brief `test configuration file <fg21sim-test.conf>`_
 which may be useful to test whether this package is correctly installed
 and runs smoothly.
 
-Finally, the foregrounds simulation can be kicked off using the CLI tool::
+Finally, the foregrounds simulation can be kicked off by executing::
 
     $ fg21sim --logfile fg21sim.log fg21sim.conf
 
-This way, the simulation program will take configurations from
-file ``fg21sim.conf``, and log messages to both the screen and file
-``fg21sim.log``.
+The program will read configurations from file ``fg21sim.conf``, and log
+messages to both the screen and file ``fg21sim.log``.
 
-
-On the other hand, the Web UI can also be used, which provides a more
-intuitive and friendly way to tune the configurations, to view the
-logging messages, as well as to navigate the simulation products::
-
-    $ fg21sim-webui --debug &
-
-Then the Web UI can be accessed at ``http://localhost:21127``.
