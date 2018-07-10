@@ -17,12 +17,9 @@ observational/simulation catalog(s) as the input:
   requires the Hα map and the dust map.
 * ``galactic/snr``:
   requires the catalog of the Galactic SNRs.
-* ``extragalactic/clusters``:
-  requires the catalog of the clusters of galaxies.
 
-All the required input templates and catalogs can be retrieved using
-the ``fg21sim-download-data`` CLI tool, by providing it with this
-`data manifest <data-manifest.json>`_.
+See the `template data <data.rst>`_ page for more details on the input
+data and how to obtain them.
 
 Then, a configuration file is required to run the foregrounds simulation,
 which controls all aspects of the simulation behaviors.
