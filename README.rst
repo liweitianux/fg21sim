@@ -99,10 +99,6 @@ Documentations
 --------------
 To get started, read the `User Guide`_.
 
-**WARNING:**
-The documentation is *out-of-date* with the current code, and needs
-significant updates!
-
 
 Contributions
 -------------
@@ -111,7 +107,7 @@ Great!  Be sure to consult the guidelines in |CONTRIBUTING.md|_.
 
 Authors
 -------
-* Weitian LI <``weitian@aaronly.me``>
+* Weitian LI <``wt@liwt.net``>
 * Zhixian MA <``zxma_sjtu@qq.com``>
 
 

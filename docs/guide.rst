@@ -3,12 +3,11 @@ User Guide
 ==========
 
 This is a simple guide on how to use the **fg21sim** package to carry
-out the foregrounds simulation, which produces the all-sky maps of the
-enabled foreground components.
+out the foregrounds simulation, which produces the all-sky maps or sky
+patches of the enabled foreground components.
 
-The simulation of several foreground components uses the semi-empirical
-method, thus it requires specific template map(s) and/or
-observational/simulation catalog(s) as the input:
+The simulation of the following foreground components requires specific
+template map(s) and/or observational/simulation catalog(s) as the input:
 
 * ``galactic/synchrotron``:
   requires the Haslam 408 MHz survey as the template map, and the
