@@ -121,13 +121,31 @@ The simulated *visibility data* are then imaged by utilizing the
 The above used tools that help carry out the observation
 simulations can be found at `atoolbox/astro/oskar`_.
 
+**NOTE**:
+A sky image cube including multiple frequency channels must be
+simulated one frequency at a time.
+
 
 -------------
 Data Analysis
 -------------
 
+Images of a set of frequency channels can be combined to create
+an image cube by using::
 
-All the above mentioned tools can be found at `atoolbox/astro`_.
+    $ fitscube.py create -z <start-freq> -s <channel-width> -u Hz \
+          -o example-cube.fits -i *-imageK.fits
+
+The power spectrum of the image cube can then be calculated::
+
+    $ ps2d.py -i example-cube.fits -o example-ps2d.fits
+    $ ps1d_eorwindow.py [options] -i example-ps2d.fits -o example-ps1d.txt
+
+There are other scripts that can help analyze the results, such as
+``fitsimage.py``, ``eor_window.py``, ``calc_psd.py``.
+
+All the above mentioned tools can be found at `atoolbox/astro`_
+and the sub-directories there.
 
 
 .. _pointsource tools:
