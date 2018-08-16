@@ -63,7 +63,7 @@ Point Sources
 
 The sky maps of extragalactic point sources can be simulated using
 these `pointsource tools`_ that were developed for use in
-`Wang et al. 2010`_.
+`Wang et al. 2010`_ .
 
 
 ----------------------
@@ -76,23 +76,71 @@ sky maps, the latest `SKA1-Low layout configuration`_ (released on
 
 The `OSKAR`_ simulator is used to perform the interferometric
 observations.  The ``make-ska1low-model`` tool was writen to generate
-the *sky model* of the SKA1-Low for use by ``OSKAR``.
+the *telescope model* of the SKA1-Low for use by ``OSKAR``.
 The simulated *visibility data* are then imaged by utilizing the
 `WSClean`_ to generate the "observed" images.
 
-The scripts that help carry out the observation simulations can be
-found at `atoolbox/astro/oskar`_.
+1. Generate the *telescope model* for the OSKAR simulator::
+
+    $ mkdir telescopes
+    $ make-ska1low-model -o telescopes/ska1low.tm
+
+2. Convert the simulated sky map (``example.fits``) into *sky model*
+   for OSKAR::
+
+    $ fits2skymodel.py example.fits
+
+   The ``fits2skymodel.py`` tool will obtain the pixel size and
+   frequency from the input FITS image header.
+   This produces the OSKAR sky model file named as ``example.osm``.
+
+3. Perform the observation simulation::
+
+    $ run_oskar.py -c sim_interferometer.base.ini -l <freq>:example.osm
+
+   The ``<freq>`` is the frequency (in units of MHz) of the input
+   sky image.
+   The simulated visibility data will be located at
+   ``visibility/example.ms``.
+
+4. Create image from the visibility data::
+
+    $ wsclean.py --niter 1000000 --weight briggs \
+          --size <npix> --pixelsize <pixelsize/arcsec> \
+          --taper-gaus <2*pixelsize> --circular-beam \
+          --threshold-nsigma 2.5 \
+          --name example \
+          --ms visibility/example.ms
+
+   The created clean image is thus ``example-image.fits``.
+   The created images have unit of ``Jy/beam`` and can be converted
+   to have unit of ``K`` by using::
+
+    $ jybeam2k.py example-image.fits example-imageK.fits
+
+The above used tools that help carry out the observation
+simulations can be found at `atoolbox/astro/oskar`_.
 
 
-.. _`pointsource tools`:
+-------------
+Data Analysis
+-------------
+
+
+All the above mentioned tools can be found at `atoolbox/astro`_.
+
+
+.. _pointsource tools:
    https://github.com/liweitianux/radio-fg-simu-tools/tree/master/pointsource
-.. _`Wang et al. 2010`_:
+.. _Wang et al. 2010:
    http://adsabs.harvard.edu/abs/2010ApJ...723..620W
-.. _`SKA1-Low layout configuration`:
+.. _SKA1-Low layout configuration:
    https://astronomers.skatelescope.org/wp-content/uploads/2016/09/SKA-TEL-SKO-0000422_02_SKA1_LowConfigurationCoordinates-1.pdf
-.. _`OSKAR`_:
+.. _OSKAR:
    https://github.com/OxfordSKA/OSKAR
-.. _`WSClean`_:
+.. _WSClean:
    https://sourceforge.net/projects/wsclean/
-.. _`atoolbox/astro/oskar`:
+.. _atoolbox/astro/oskar:
    https://github.com/liweitianux/atoolbox/tree/master/astro/oskar
+.. _atoolbox/astro:
+   https://github.com/liweitianux/atoolbox/tree/master/astro
