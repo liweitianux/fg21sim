@@ -100,6 +100,9 @@ The simulated *visibility data* are then imaged by utilizing the
 
    The ``<freq>`` is the frequency (in units of MHz) of the input
    sky image.
+   The ``sim_interferometer.base.ini`` is the basic configuration
+   file for ``oskar_sim_interferometer`` tool in OSKAR.
+   Here is an `example config file <https://github.com/liweitianux/atoolbox/blob/master/astro/oskar/sim_interferometer.base.ini>`_.
    The simulated visibility data will be located at
    ``visibility/example.ms``.
 
