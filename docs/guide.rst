@@ -2,6 +2,10 @@
 User Guide
 ==========
 
+-----------
+Get Started
+-----------
+
 This is a simple guide on how to use the **fg21sim** package to carry
 out the foregrounds simulation, which produces the all-sky maps or sky
 patches of the enabled foreground components.
@@ -39,3 +43,30 @@ Finally, the foregrounds simulation can be kicked off by executing::
 The program will read configurations from file ``fg21sim.conf``, and log
 messages to both the screen and file ``fg21sim.log``.
 
+
+---------
+Sky Patch
+---------
+
+When doing high-resolution simulations, it is more appropriate to specify
+a sky patch (e.g., 10x10 deg^2) instead of using the whole sky.
+
+For simulating Galactic diffuse emission maps, the template sky patches
+are required as the input.  To generate such sky patches, use the
+``get-healpix-patch`` tool to extract the needed patch from the all-sky
+HEALPix template maps.
+
+
+-------------
+Point Sources
+-------------
+
+The sky maps of extragalactic point sources can be simulated using
+these `pointsource tools`_ that were developed for use in
+`Wang et al. 2010`_.
+
+
+.. _`pointsource tools`:
+   https://github.com/liweitianux/radio-fg-simu-tools/tree/master/pointsource
+.. _`Wang et al. 2010`_:
+   http://adsabs.harvard.edu/abs/2010ApJ...723..620W
