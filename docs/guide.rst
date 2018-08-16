@@ -66,7 +66,33 @@ these `pointsource tools`_ that were developed for use in
 `Wang et al. 2010`_.
 
 
+----------------------
+Observation Simulation
+----------------------
+
+In order to incorporate the instrumental effects into the simulated
+sky maps, the latest `SKA1-Low layout configuration`_ (released on
+2016 May 21) is employed to carry out the observation simulation.
+
+The `OSKAR`_ simulator is used to perform the interferometric
+observations.  The ``make-ska1low-model`` tool was writen to generate
+the *sky model* of the SKA1-Low for use by ``OSKAR``.
+The simulated *visibility data* are then imaged by utilizing the
+`WSClean`_ to generate the "observed" images.
+
+The scripts that help carry out the observation simulations can be
+found at `atoolbox/astro/oskar`_.
+
+
 .. _`pointsource tools`:
    https://github.com/liweitianux/radio-fg-simu-tools/tree/master/pointsource
 .. _`Wang et al. 2010`_:
    http://adsabs.harvard.edu/abs/2010ApJ...723..620W
+.. _`SKA1-Low layout configuration`:
+   https://astronomers.skatelescope.org/wp-content/uploads/2016/09/SKA-TEL-SKO-0000422_02_SKA1_LowConfigurationCoordinates-1.pdf
+.. _`OSKAR`_:
+   https://github.com/OxfordSKA/OSKAR
+.. _`WSClean`_:
+   https://sourceforge.net/projects/wsclean/
+.. _`atoolbox/astro/oskar`:
+   https://github.com/liweitianux/atoolbox/tree/master/astro/oskar
