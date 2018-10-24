@@ -235,21 +235,19 @@ class GalaxyClusters:
 
     def _simulate_halos(self):
         """
-        Simulate the radio halo properties for each cluster with recent
-        merger event.
+        Simulate the radio halo properties for each cluster that has mergers.
 
         Attributes
         ----------
         halos : list[dict]
-            Simulated data for each cluster with recent merger.
+            Simulated data for each cluster with mergers.
         """
-        # Select out the clusters with recent mergers
-        idx_rmm = [idx for idx, cdict in enumerate(self.catalog)
-                   if cdict["merger_num"] > 0]
-        num = len(idx_rmm)
+        idx_hasmerger = [idx for idx, cdict in enumerate(self.catalog)
+                         if cdict["merger_num"] > 0]
+        num = len(idx_hasmerger)
         logger.info("Simulating halos for %d clusters with mergers ..." % num)
         self.halos = []
-        for i, idx in enumerate(idx_rmm):
+        for i, idx in enumerate(idx_hasmerger):
             ii = i + 1
             if ii % 50 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
@@ -294,7 +292,7 @@ class GalaxyClusters:
                 ("n_e", n_e),  # [cm^-3]
             ])
             self.halos.append(data)
-        logger.info("Simulated radio halos for clusters with recent mergers.")
+        logger.info("Simulated radio halos.")
 
     def _calc_halos_emission(self):
         """
@@ -322,18 +320,18 @@ class GalaxyClusters:
                 ("flux", flux),  # [Jy]
                 ("Tb_mean", Tb_mean),  # [K]
             ])
-        logger.info("Done calculate the radio emissions.")
+        logger.info("Calculated the radio emissions.")
 
     def _dropout_halos(self):
         """
         Considering that the (very) massive galaxy clusters are very rare,
         while the simulation sky area is rather small, therefore, once a
         very massive cluster appears, its associated radio halo is also
-        very powerful and (almost) dominate other intermediate/faint halos,
+        very bright and (almost) dominate other intermediate/faint halos,
         causing the simulation results unstable and have large variation.
 
         If ``halo_dropout`` is given, then select the specified number of
-        most powerful radio halos from the catalog, and mark them with
+        most luminous radio halos from the catalog, and mark them with
         a property ``drop=True``, which will then be excluded from the
         following halo drawing step, in order to obtain more stable
         simulation results.
@@ -380,7 +378,7 @@ class GalaxyClusters:
                                         felong=hdict["felong"],
                                         rotation=hdict["rotation"])
             hdict["template"] = template
-        logger.info("Done drawn halo template images.")
+        logger.info("Drew halo template images.")
 
     def _save_catalog_data(self, outfile=None, dump=None, clobber=None):
         """
