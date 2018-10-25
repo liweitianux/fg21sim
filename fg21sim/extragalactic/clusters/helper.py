@@ -97,7 +97,7 @@ def radius_halo(mass, z=0.0, configs=CONFIGS):
     ----
     The halo radius is estimated to be the same as the turbulence
     injection scale, i.e.:
-        R_halo ≅ L ≅ R_vir / 3
+        R_halo ≅ L_turb ≅ R_vir / 3
     where R_vir the virial radius of the merged (observed) cluster.
 
     Reference: [vazza2011],Sec.(3.6)

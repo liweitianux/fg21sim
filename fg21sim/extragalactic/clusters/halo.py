@@ -73,8 +73,8 @@ logger = logging.getLogger(__name__)
 
 class RadioHalo:
     """
-    Simulate the diffuse (giant) radio halo emission for a galaxy
-    cluster experiencing on-going/recent merger.
+    Simulate the radio halo properties for a galaxy cluster that is
+    experiencing an on-going merger or had a merger recently.
 
     Description
     -----------
@@ -168,7 +168,8 @@ class RadioHalo:
 
     def _set_solver(self):
         self.fpsolver = FokkerPlanckSolver(
-            xmin=self.gamma_min, xmax=self.gamma_max,
+            xmin=self.gamma_min,
+            xmax=self.gamma_max,
             x_np=self.gamma_np,
             tstep=self.time_step,
             f_advection=self.fp_advection,
@@ -195,9 +196,9 @@ class RadioHalo:
 
     def time_turbulence(self, t=None):
         """
-        The time duration the merger-induced turbulence persists, which
-        is used to approximate the effective turbulence acceleration
-        timescale.
+        The duration that the merger-induced turbulence persists, which
+        is used to approximate the lasting time of the effective turbulence
+        acceleration.
 
         Unit: [Gyr]
         """
@@ -298,16 +299,16 @@ class RadioHalo:
         mirror) rather than Coulomb scattering.  Therefore, the fast modes
         damp by TTD (transit time damping) on relativistic rather than
         thermal particles, and the diffusion coefficient is given by:
-            D_pp = (2*p^2 * ζ / x_cr) * k_L * <v_turb^2>^2 / c_s^3
+            D_pp = (4π * p^2 * ζ / X_cr / L_turb) * <v_turb^2>^2 / c_s^3
         where:
             ζ: efficiency factor for the effectiveness of plasma instabilities
-            x_cr: relative energy density of cosmic rays
-            k_L = 2π/L: turbulence injection scale
+            X_cr: relative energy density of cosmic rays
+            L_turb: turbulence injection scale
             v_turb: turbulence velocity dispersion
             c_s: sound speed
         Thus the acceleration timescale is:
             τ_acc = p^2 / (4*D_pp)
-                  = (x_cr * c_s^3 * L) / (16π * ζ * <v_turb^2>^2)
+                  = (X_cr * c_s^3 * L_turb) / (16π * ζ * <v_turb^2>^2)
 
         WARNING
         -------
@@ -331,7 +332,6 @@ class RadioHalo:
         -------
         tau : float
             The acceleration timescale at the requested time.
-            Return ``np.inf`` if no active turbulence at that time.
             Unit: [Gyr]
 
         References
@@ -415,11 +415,9 @@ class RadioHalo:
         n0_e = n_inj * (self.age_begin - self.time_init)
 
         logger.debug("Derive the initial electron spectrum ...")
-        # NOTE: subtract ``time_step`` to avoid the acceleration at the
-        #       last step at ``age_begin``.
         dt = self.time_step
         tstart = self.age_begin - self.time_init - dt
-        tstop = self.age_begin - dt
+        tstop = self.age_begin - dt  # avoid acceleration at the ``age_begin``
         # Use a bigger time step to save time
         self.fpsolver.tstep = 3 * dt
         n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
@@ -717,7 +715,7 @@ class RadioHalo:
         * synchrotron radiation
         * Coulomb collisions
 
-        Reference: Ref.[sarazin1999],Eq.(6,7,9)
+        Reference: Ref.[sarazin1999],Eqs.(6,7,9)
 
         Parameters
         ----------
@@ -746,10 +744,8 @@ class RadioHalo:
 
 class RadioHaloAM(RadioHalo):
     """
-    Simulate the diffuse (giant) radio halo for a galaxy cluster
-    with all its on-going/recent merger events taken into account,
-    while the above ``RadioHalo`` class only considers the most
-    recent major/maximum merger event that is specified.
+    Simulate the radio halo properties for a galaxy cluster with all its
+    on-going merger and past merger events taken into account.
 
     Parameters
     ----------
