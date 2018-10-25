@@ -801,11 +801,13 @@ class RadioHaloAM(RadioHalo):
         idx = self._merger_idx(t)
         return self.age_merger[idx]
 
-    def _merger(self, idx):
+    def _merger(self, t):
         """
-        Return the properties of the idx-th merger event.
+        Return the merger event at cosmic time ``t``.
         """
+        idx = self._merger_idx(t)
         return {
+            "idx": idx,
             "M_main": self.M_main[idx],
             "M_sub": self.M_sub[idx],
             "z": self.z_merger[idx],
@@ -820,8 +822,7 @@ class RadioHaloAM(RadioHalo):
         if t >= self.age_obs:
             return self.M_obs
         else:
-            idx = self._merger_idx(t)
-            merger = self._merger(idx)
+            merger = self._merger(t)
             return (merger["M_main"] + merger["M_sub"])
 
     def mass_sub(self, t):
@@ -829,8 +830,7 @@ class RadioHaloAM(RadioHalo):
         The mass of the sub cluster at the given (cosmic) time.
         Unit: [Msun]
         """
-        idx = self._merger_idx(t)
-        merger = self._merger(idx)
+        merger = self._merger(t)
         return merger["M_sub"]
 
     def mass_main(self, t):
@@ -849,17 +849,17 @@ class RadioHaloAM(RadioHalo):
             The mass of the main cluster.
             Unit: [Msun]
         """
-        idx = self._merger_idx(t)
-        merger1 = self._merger(idx)
+        merger1 = self._merger(t)
+        idx1 = merger1["idx"]
         mass1 = merger1["M_main"]
         t1 = merger1["age"]
-        if idx == 0:
+        if idx1 == 0:
             mass0 = self.M_obs
             t0 = self.age_obs
         else:
-            merger0 = self._merger(idx-1)
-            mass0 = merger0["M_main"]
-            t0 = merger0["age"]
+            idx0 = idx1 - 1
+            mass0 = self.M_main[idx0]
+            t0 = self.age_merger[idx0]
         rate = (mass0 - mass1) / (t0 - t1)
         return (mass1 + rate * (t - t1))
 
