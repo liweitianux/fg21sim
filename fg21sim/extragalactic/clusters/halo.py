@@ -462,15 +462,13 @@ class RadioHalo:
         if n0_e is None:
             n0_e = self.electron_spec_init
 
-        # When the evolution time is too short, decrease the time step
-        # to improve the results.
-        # XXX: is this necessary???
+        # Decrease the time step when the evolution time is short.
+        # (necessary?)
         nstep_min = 20
-        if (tstop - tstart) / self.time_step < nstep_min:
-            tstep = (tstop - tstart) / nstep_min
+        if tstop - tstart < self.time_step * nstep_min:
+            self.fpsolver.tstep = (tstop - tstart) / nstep_min
             logger.debug("Decreased time step: %g -> %g [Gyr]" %
                          (self.time_step, self.fpsolver.tstep))
-            self.fpsolver.tstep = tstep
 
         self.electron_spec = self.fpsolver.solve(u0=n0_e, tstart=tstart,
                                                  tstop=tstop)
