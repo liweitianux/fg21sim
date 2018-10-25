@@ -708,10 +708,7 @@ class RadioHalo:
             return False
         t_merger = self._merger_time(t)
         t_turb = self.time_turbulence(t_merger)
-        if (t >= t_merger) and (t <= t_merger + t_turb):
-            return True
-        else:
-            return False
+        return (t >= t_merger) and (t <= t_merger + t_turb)
 
     def _energy_loss(self, gamma, t):
         """
@@ -801,11 +798,8 @@ class RadioHaloAM(RadioHalo):
         Determine the beginning time of the merger event within which
         the given time is located.
         """
-        try:
-            idx = self._merger_idx(t)
-            return self.age_merger[idx]
-        except IndexError:
-            return None
+        idx = self._merger_idx(t)
+        return self.age_merger[idx]
 
     def _merger(self, idx):
         """
@@ -880,8 +874,7 @@ class RadioHaloAM(RadioHalo):
         dt = self.time_step
         xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
         t_turb = np.array([self.time_turbulence(t) for t in xt])
-        avg = np.sum(t_turb * dt) / (len(xt) * dt)
-        return avg
+        return np.sum(t_turb * dt) / (len(xt) * dt)
 
     @property
     def mach_turbulence_avg(self):
@@ -892,8 +885,7 @@ class RadioHaloAM(RadioHalo):
         dt = self.time_step
         xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
         mach = np.array([self.mach_turbulence(t) for t in xt])
-        avg = np.sum(mach * dt) / (len(xt) * dt)
-        return avg
+        return np.sum(mach * dt) / (len(xt) * dt)
 
     @property
     def tau_acceleration_avg(self):
@@ -907,8 +899,7 @@ class RadioHaloAM(RadioHalo):
         dt = self.time_step
         xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
         tau = np.array([self.tau_acceleration(t) for t in xt])
-        avg = np.sum(tau * dt) / (len(xt) * dt)
-        return avg
+        return np.sum(tau * dt) / (len(xt) * dt)
 
     @property
     def time_acceleration_fraction(self):
@@ -917,8 +908,7 @@ class RadioHaloAM(RadioHalo):
         ``age_begin`` to ``age_obs`` that the turbulence acceleration
         is active.
         """
-        dt = self.time_step
+        dt = self.fpsolver.tstep
         xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
         active = np.array([self._is_turb_active(t) for t in xt], dtype=int)
-        fraction = active.mean()
-        return fraction
+        return active.mean()
