@@ -58,6 +58,8 @@ class UnitConversions:
     # Energy
     keV2erg = au.keV.to(au.erg)
     erg2keV = 1.0 / keV2erg
+    J2erg = au.J.to(au.erg)
+    erg2J = 1.0 / J2erg
     # Angle
     rad2deg = au.rad.to(au.deg)
     deg2rad = 1.0 / rad2deg
