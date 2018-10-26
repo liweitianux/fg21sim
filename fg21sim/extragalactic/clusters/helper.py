@@ -51,6 +51,7 @@ import logging
 
 import numpy as np
 from scipy import integrate
+from scipy import optimize
 
 from ...share import CONFIGS, COSMO
 from ...utils.units import (Units as AU,
@@ -61,6 +62,46 @@ from ...utils.transform import circle2ellipse
 
 
 logger = logging.getLogger(__name__)
+
+
+def beta_model(rho0, rc, beta):
+    """
+    Return a function that calculates the value (gas density) at a radius
+    according to the β-model with the given parameters.
+    """
+    def func(r):
+        x = r / rc
+        return rho0 * (1 + x**2) ** (-1.5*beta)
+
+    return func
+
+
+def calc_gas_density_profile(mass, z):
+    """
+    Calculate the parameters of the β-model that is used to describe the
+    gas density profile.
+
+    NOTE
+    ----
+    The core radius is assumed to be: ``rc = 0.1 r_vir``, and the beta
+    parameters is assumed to be ``β = 0.8``.
+
+    Reference: [cassano2005],Sec.(4.1)
+
+    Returns
+    -------
+    fbeta : function
+        A function of the β-model.
+        Unit: [Msun/kpc^3]
+    """
+    r_vir = radius_virial(mass, z)  # [kpc]
+    rc = 0.1 * r_vir
+    beta = 0.8
+    fint = beta_model(1, rc, beta)
+    v = integrate.quad(lambda r: fint(r) * r**2,
+                       a=0, b=r_vir)[0]  # [kpc^3]
+    rho0 = mass * COSMO.baryon_fraction / (4*np.pi * v)  # [Msun/kpc^3]
+    return beta_model(rho0, rc, beta)
 
 
 def radius_virial(mass, z=0.0):
@@ -85,8 +126,7 @@ def radius_virial(mass, z=0.0):
     Dc = COSMO.overdensity_virial(z)
     rho = COSMO.rho_crit(z)  # [g/cm^3]
     R_vir = (3*mass*AUC.Msun2g / (4*np.pi * Dc * rho))**(1/3)  # [cm]
-    R_vir *= AUC.cm2kpc  # [kpc]
-    return R_vir
+    return R_vir * AUC.cm2kpc  # [kpc]
 
 
 def radius_halo(mass, z=0.0, configs=CONFIGS):
@@ -122,6 +162,35 @@ def radius_halo(mass, z=0.0, configs=CONFIGS):
     f_lturb = configs.getn(key)
     R_halo = f_lturb * radius_virial(mass=mass, z=z)  # [kpc]
     return R_halo
+
+
+def radius_stripping(M_main, M_sub, z, configs=CONFIGS):
+    """
+    Calculate the stripping radius of the in-falling sub-cluster, which
+    is determined by the equipartition between the static and ram pressure.
+
+    Reference: [cassano2005],Eqs.(11,12,13,14)
+
+    Returns
+    -------
+    rs : float
+        The stripping radius of the sub-cluster.
+        Unit: [kpc]
+    """
+    r_vir = radius_virial(M_sub, z)  # [kpc]
+    rho_main = density_number_thermal(M_main, z) * AC.mu*AC.u  # [g/cm^3]
+    f_rho_sub = calc_gas_density_profile(M_sub, z)  # [Msun/kpc^3]
+    vi = velocity_impact(M_main, M_sub, z)  # [km/s]
+    kT_sub = kT_cluster(M_sub, z)  # [keV]
+    rhs = rho_main * vi**2 * AC.mu*AC.u / kT_sub  # [g/cm^3][g*km^2/s^2/keV]
+    rhs *= 1e3 * AUC.J2erg / AUC.keV2erg  # [g/cm^3]
+    rhs *= AUC.g2Msun / AUC.cm2kpc**3  # [Msun/kpc^3]
+    try:
+        rs = optimize.brentq(lambda r: f_rho_sub(r) - rhs,
+                             a=0.1*r_vir, b=r_vir, xtol=1e-1)
+    except ValueError:
+        rs = 0.1 * r_vir
+    return rs  # [kpc]
 
 
 def kT_virial(mass, z=0.0, radius=None):
@@ -308,8 +377,7 @@ def velocity_virial(mass, z=0.0):
     """
     R_vir = radius_virial(mass, z) * AUC.kpc2cm  # [cm]
     vv = np.sqrt(AC.G * mass*AUC.Msun2g / R_vir)  # [cm/s]
-    vv /= AUC.km2cm  # [km/s]
-    return vv
+    return vv / AUC.km2cm  # [km/s]
 
 
 def velocity_impact(M_main, M_sub, z=0.0):
@@ -339,8 +407,7 @@ def velocity_impact(M_main, M_sub, z=0.0):
     R_vir = radius_virial(M_main, z) * AUC.kpc2cm  # [cm]
     vi = np.sqrt(2*AC.G * (1-1/eta_v) *
                  (M_main+M_sub)*AUC.Msun2g / R_vir)  # [cm/s]
-    vi /= AUC.km2cm  # [km/s]
-    return vi
+    return vi / AUC.km2cm  # [km/s]
 
 
 def time_crossing(M_main, M_sub, z=0.0):
