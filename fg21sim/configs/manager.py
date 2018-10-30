@@ -31,22 +31,6 @@ from ..errors import ConfigError
 logger = logging.getLogger(__name__)
 
 
-def _get_configspec():
-    """Found and read all the configuration specifications"""
-    files = sorted(pkg_resources.resource_listdir(__name__, ""))
-    specfiles = [fn for fn in files if fn.endswith(".conf.spec")]
-    if os.environ.get("DEBUG_FG21SIM"):
-        print("DEBUG: Found config specifications: %s" % ", ".join(specfiles),
-              file=sys.stderr)
-    # NOTE:
-    # `resource_string()` returns the resource in *binary/bytes* string
-    configspec = "\n".join([
-        pkg_resources.resource_string(__name__, fn).decode("utf-8")
-        for fn in specfiles
-    ]).split("\n")
-    return configspec
-
-
 def _flatten_dict(d, sep="/", parent_key=""):
     """
     Recursively flatten a nested dictionary with keys compressed.
@@ -147,7 +131,8 @@ class ConfigManager:
         If the ``userconfig`` provided, the user configurations is also
         loaded, validated, and merged.
         """
-        configspec = _get_configspec()
+        configspec = pkg_resources.resource_string(
+                __name__, "config.spec").decode("utf-8")
         self._configspec = ConfigObj(configspec, interpolation=False,
                                      list_values=False, _inspec=True,
                                      encoding="utf-8")

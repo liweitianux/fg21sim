@@ -1,5 +1,5 @@
 include LICENSE
 include LICENSE-3RDPARTY
-include fg21sim/configs/*.conf.spec
+include fg21sim/configs/*.spec
 include fg21sim/webui/templates/*.html
 recursive-include fg21sim/webui/static *
