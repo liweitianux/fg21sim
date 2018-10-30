@@ -210,7 +210,7 @@ class RadioHalo:
         mass_sub = self.mass_sub(t=t_merger)
         z_merger = COSMO.redshift(t_merger)
         vi = helper.velocity_impact(mass_main, mass_sub, z_merger)  # [km/s]
-        distance = 2 * self.injection_radius
+        distance = 2 * self.radius_turbulence
         uconv = AUC.kpc2km * AUC.s2Gyr  # [s kpc/km] => [Gyr]
         time = uconv * distance / vi  # [Gyr]
         return time
@@ -240,7 +240,19 @@ class RadioHalo:
         The estimated radius for the simulated radio halo.
         Unit: [kpc]
         """
-        return self.injection_radius
+        return self.radius_turbulence
+
+    @property
+    @lru_cache
+    def radius_turbulence(self):
+        """
+        The radius of the turbulence injection regions, and then the
+        injection scale: L_turb ~= 2*R_turb.
+        Unit: [kpc]
+        """
+        rs = helper.radius_stripping(self.M_main, self.M_sub, self.z_merger,
+                                     configs=self.configs)  # [kpc]
+        return self.f_lturb * rs
 
     @property
     def angular_radius(self):
@@ -352,7 +364,7 @@ class RadioHalo:
             return tau_max
 
         t_merger = self._merger_time(t)
-        L = 2 * self.injection_radius  # [kpc]
+        L = 2 * self.radius_turbulence  # [kpc]
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
         v_turb = self._velocity_turb  # [km/s]
         tau = (self.x_cr * cs**3 * L /
@@ -364,18 +376,6 @@ class RadioHalo:
         if tau > tau_max:
             tau = tau_max
         return tau
-
-    @property
-    @lru_cache
-    def injection_radius(self):
-        """
-        The radius of the turbulence injection regions, and then the
-        injection scale: L_turb ~= 2*R_turb.
-        Unit: [kpc]
-        """
-        rs = helper.radius_stripping(self.M_main, self.M_sub, self.z_merger,
-                                     configs=self.configs)  # [kpc]
-        return self.f_lturb * rs
 
     @property
     @lru_cache()
@@ -710,7 +710,7 @@ class RadioHalo:
             Unit: [km/s]
         """
         rho_gas_f = self._gas_density_profile_f
-        R_turb = self.injection_radius  # [kpc]
+        R_turb = self.radius_turbulence  # [kpc]
         M_turb = 4*np.pi * integrate.quad(lambda r: rho_gas_f(r) * r**2,
                                           a=0, b=R_turb)[0]  # [Msun]
         M_merged = self.M_main + self.M_sub
