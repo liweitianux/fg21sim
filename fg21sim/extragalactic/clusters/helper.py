@@ -406,29 +406,6 @@ def time_crossing(M_main, M_sub, z=0.0):
     return time
 
 
-def time_turbulence(M_main, M_sub, z=0.0, configs=CONFIGS):
-    """
-    The duration that the compressive turbulence persists, which is
-    estimated as:
-        τ_turb ≅ 2*d / v_impact,
-    where d ≅ L ≅ R_vir / 3,
-    and L is also the turbulence injection scale.
-    During this period, the merger-induced turbulence is regarded
-    to accelerate the relativistic electrons effectively.
-
-    Unit: [Gyr]
-    """
-    # Turbulence injection scale factor
-    key = "extragalactic/halos/f_lturb"
-    f_lturb = configs.getn(key)
-    R_vir = radius_virial(M_main+M_sub, z)  # [kpc]
-    distance = 2*R_vir * f_lturb
-    vi = velocity_impact(M_main, M_sub, z)  # [km/s]
-    uconv = AUC.kpc2km * AUC.s2Gyr  # [s kpc/km] => [Gyr]
-    time = uconv * distance / vi  # [Gyr]
-    return time
-
-
 def draw_halo(radius, nr=2.0, felong=None, rotation=None):
     """
     Draw the template image of one halo, which is used to simulate
