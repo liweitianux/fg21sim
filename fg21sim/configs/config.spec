@@ -8,19 +8,12 @@
 [foregrounds]
 # Diffuse Galactic synchrotron emission (unpolarized)
 galactic/synchrotron = boolean(default=False)
-
 # Diffuse Galactic free-free emission
 galactic/freefree = boolean(default=False)
-
 # Galactic supernova remnants emission
 galactic/snr = boolean(default=False)
-
 #  Extragalactic clusters of galaxies emission
 extragalactic/clusters = boolean(default=False)
-
-# Emission from multiple types of extragalactic point sources
-# NOTE: This component is not well integrated and tested at the moment
-extragalactic/pointsources = boolean(default=False)
 
 
 # Simulation sky/region configurations
@@ -448,45 +441,3 @@ stream = option("stderr", "stdout", "", default="stderr")
   # the acceleration is turned off and only leaves energy loss mechanisms.
   # Unit: [Gyr]
   time_init = float(default=1.0, min=0)
-
-
-  #
-  # Extragalactic point sources
-  #
-  [[pointsources]]
-  # Output directory to save the simulated catalog
-  output_dir = string(default="PS_tables")
-  # PS components to be simulated
-  pscomponents = string_list(default=list())
-  # Resolution [arcmin]
-  resolution = float(default=0.6, min=0.0)
-
-    [[[starforming]]]
-    # Number of samples
-    numps = integer(default=1000)
-    # Prefix
-    prefix = string(default="SF")
-
-    [[[starbursting]]]
-    # Number of samples
-    numps = integer(default=1000)
-    # Prefix
-    prefix = string(default="SB")
-
-    [[[radioquiet]]]
-    # Number of samples
-    numps = integer(default=1000)
-    # Prefix
-    prefix = string(default="RQ")
-
-    [[[FRI]]]
-    # Number of samples
-    numps = integer(default=1000)
-    # Prefix
-    prefix = string(default="FRI")
-
-    [[[FRII]]]
-    # Number of samples
-    numps = integer(default=1000)
-    # Prefix
-    prefix = string(default="FRII")
