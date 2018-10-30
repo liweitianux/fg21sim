@@ -10,7 +10,6 @@ Currently supported foregrounds:
 - Galactic free-free
 - Galactic supernova remnants
 - Extragalactic clusters of galaxies (radio halos)
-- Extragalactic point sources (multiple types)
 """
 
 import logging
@@ -20,8 +19,7 @@ from collections import OrderedDict
 from .galactic import (Synchrotron as GalacticSynchrotron,
                        FreeFree as GalacticFreeFree,
                        SuperNovaRemnants as GalacticSNR)
-from .extragalactic import (GalaxyClusters as EGGalaxyClusters,
-                            PointSources as EGPointSources)
+from .extragalactic import GalaxyClusters as EGGalaxyClusters
 from .products import Products
 
 
@@ -33,7 +31,6 @@ COMPONENTS_ALL = OrderedDict([
     ("galactic/freefree",          GalacticFreeFree),
     ("galactic/snr",               GalacticSNR),
     ("extragalactic/clusters",     EGGalaxyClusters),
-    ("extragalactic/pointsources", EGPointSources),
 ])
 
 

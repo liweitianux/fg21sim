@@ -22,17 +22,6 @@ Features
   + ``extragalactic/clusters``:
     Emission from extragalactic galaxy clusters
     (*Note:* only giant radio halos)
-  + ``extragalactic/pointsources``:
-    Emission from multiple types of extragalactic discrete point sources
-    (*WARNING:* need updates and integration!)
-
-    Current supported point sources types:
-
-    - Star-forming galaxies (i.e., normal galaxies)
-    - Starburst galaxies
-    - Radio-quiet AGNs
-    - Fanaroff-Riley type I (FR-I) AGNs
-    - Fanaroff-Riley type II (FR-II) AGNs
 
 * All-sky simulation by utilizing HEALPix
   (*Note:* not all components are currently supported)
