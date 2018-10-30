@@ -1,0 +1,32 @@
+[
+  {
+    "filename": "GalacticSNRs_Green2014.csv",
+    "size": 24981,
+    "md5": "9851be15145e77f7f49f301ee54e5a14",
+    "url": "https://github.com/liweitianux/fg21sim/raw/master/data/GalacticSNRs_Green2014.csv"
+  },
+  {
+    "filename": "Halpha_fwhm06_ns1024.fits.xz",
+    "size": 36881116,
+    "md5": "7ab5df0623728d2ad67281ec7b95c5a0",
+    "url": "https://github.com/liweitianux/fg21sim/raw/master/data/Halpha_fwhm06_ns1024.fits.xz"
+  },
+  {
+    "filename": "SFD_i100_ns1024.fits.xz",
+    "size": 36734292,
+    "md5": "da7409e0b9215e0bf4b39a7c0c079e08",
+    "url": "https://github.com/liweitianux/fg21sim/raw/master/data/SFD_i100_ns1024.fits.xz"
+  },
+  {
+    "filename": "haslam408_dsds_Remazeilles2014_ns512.fits.xz",
+    "size": 8079712,
+    "md5": "da895a58a19701545745d0e75d91a098",
+    "url": "https://github.com/liweitianux/fg21sim/raw/master/data/haslam408_dsds_Remazeilles2014_ns512.fits.xz"
+  },
+  {
+    "filename": "synchrotron_specind2_ns512.fits.xz",
+    "size": 7180244,
+    "md5": "1ae30d91facb8537ccc9a7f17c065f0a",
+    "url": "https://github.com/liweitianux/fg21sim/raw/master/data/synchrotron_specind2_ns512.fits.xz"
+  }
+]
