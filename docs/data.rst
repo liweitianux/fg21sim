@@ -16,31 +16,31 @@ template map(s) and/or observational/simulation catalog(s) as the input:
 The following template data are provided:
 
 * Haslam 408 MHz all-sky survey:
-  `haslam408_dsds_Remazeilles2014.fits <https://onedrive.live.com/download?cid=6BC61834227AC6CE&resid=6BC61834227AC6CE%2116032&authkey=AHJyQFnMlp8yOIo>`_,
-  12594240 bytes,
-  (MD5) 53b99b6e61b80f6c6a603c0a50c9ba51
+  `haslam408_dsds_Remazeilles2014_ns512.fits.xz <https://github.com/liweitianux/fg21sim/raw/master/data/haslam408_dsds_Remazeilles2014_ns512.fits.xz>`_,
+  8079712 bytes,
+  (MD5) ``da895a58a19701545745d0e75d91a098``
 
 * Galactic synchrotron spectral index all-sky map:
-  `synchrotron_specind2.fits <https://onedrive.live.com/download?cid=6BC61834227AC6CE&resid=6BC61834227AC6CE%2116033&authkey=ADmJvJ3Shy7M9ig>`_,
-  25176960 bytes,
-  (MD5) 0bc9899915db805ec1709f0c83ca6617
+  `synchrotron_specind2_ns512.fits.xz <https://github.com/liweitianux/fg21sim/raw/master/data/synchrotron_specind2_ns512.fits.xz>`_,
+  7180244 bytes,
+  (MD5) ``1ae30d91facb8537ccc9a7f17c065f0a``
 
 * Galactic Hα all-sky map:
-  `Halpha_fwhm06_1024.fits <https://onedrive.live.com/download?cid=6BC61834227AC6CE&resid=6BC61834227AC6CE%2116034&authkey=AGjsiwZBaZ-ZZLE>`_,
-  50342400 bytes,
-  (MD5) 1a3ec062818bbdd8254e5158cce90652
+  `Halpha_fwhm06_ns1024.fits.xz <https://github.com/liweitianux/fg21sim/raw/master/data/Halpha_fwhm06_ns1024.fits.xz>`_,
+  36881116 bytes,
+  (MD5) ``7ab5df0623728d2ad67281ec7b95c5a0``
 
 * Galactic dust all-sky map:
-  `SFD_i100_ns1024.fits <https://onedrive.live.com/download?cid=6BC61834227AC6CE&resid=6BC61834227AC6CE%2116029&authkey=AAN7DT0JKWpFlyA>`_,
-  50342400 bytes,
-  (MD5) e9d6e683f9f6aaa308275196615db17d
+  `SFD_i100_ns1024.fits.xz <https://github.com/liweitianux/fg21sim/raw/master/data/SFD_i100_ns1024.fits.xz>`_,
+  36734292 bytes,
+  (MD5) ``da7409e0b9215e0bf4b39a7c0c079e08``
 
 * Galactic SNR catalog:
-  `GalacticSNRs_Green2014.csv <https://onedrive.live.com/download?cid=6BC61834227AC6CE&resid=6BC61834227AC6CE%2116026&authkey=AJcYjHaI7O7FEcY>`_,
+  `GalacticSNRs_Green2014.csv <https://github.com/liweitianux/fg21sim/raw/master/data/GalacticSNRs_Green2014.csv>`_,
   24981 bytes,
-  (MD5) 9851be15145e77f7f49f301ee54e5a14
+  (MD5) ``9851be15145e77f7f49f301ee54e5a14``
 
 The above all-sky maps are in HEALPix format.
 Sky patches can be cut out from them using the ``get-healpix-patch`` tool.
 The ``fg21sim-download-data`` tool can also be used to retrieve the above
-template data by providing with the `data manifest <data-manifest.json>`_.
+template data by providing with the `data manifest <../data/manifest.json>`_.
