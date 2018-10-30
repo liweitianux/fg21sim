@@ -68,18 +68,19 @@ Installation
 
    $ cd fg21sim/
    $ make venv
-   $ . ./venv/bin/activate
+   $ . venv/bin/activate
+   (venv) $
 
    Check to make sure that this virtual environment is activated so that the
-   default ``python3`` and ``pip3`` is pointed to the virtual environment.
+   ``python3`` and ``pip3`` are pointed to the virtual environment.
 
 4. Install this software into the virtual environment::
 
-   $ python3 setup.py install
+   (venv) $ python3 setup.py install
 
 5. You are ready to use this software.  Just have a look, e.g.::
 
-   $ fg21sim --help
+   (venv) $ fg21sim --help
 
 
 Development
