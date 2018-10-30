@@ -481,29 +481,3 @@ def draw_halo(radius, nr=2.0, felong=None, rotation=None):
     # Normalized to have *mean* value of 1
     image /= image.mean()
     return image
-
-
-def fmass_nfw(x, c=5.0):
-    """
-    The normalized total mass profile by integrating from the NFW
-    density profile.
-
-    Parameters
-    ----------
-    x : float
-        x = R/R_vir, fractional virial radius
-    c : float
-        Concentration parameter
-        Default: 5.0 (for clusters)
-
-    Returns
-    -------
-    fmass : float
-        The normalized total mass w.r.t. the virial mass, i.e.,
-        fmass = M(<x*R_vir) / M_vir
-
-    Reference: [lokas2001],Eq.(2,4,5,8)
-    """
-    gc = 1.0 / (np.log(1+c) - c/(1+c))
-    fmass = gc * (np.log(1+c*x) - c*x / (1+c*x))
-    return fmass
