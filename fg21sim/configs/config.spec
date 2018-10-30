@@ -386,11 +386,10 @@ stream = option("stderr", "stdout", "", default="stderr")
   #       timescale, therefore more efficient acceleration.
   f_acc = float(default=1.0, min=0.1, max=10)
 
-  # The turbulence is generally injected at the cluster center during
-  # a merger.  This option parameterize the turbulence injection scale
-  # to be a fraction of the virial radius of the cluster, which is also
-  # used to determine the radio halo size.
-  f_lturb = float(default=0.33, min=0.1, max=1.0)
+  # The factor that is multiplied to the stripping radius to approximate
+  # the turbulence injection radius, from which the radio halo size is
+  # estimated.
+  f_lturb = float(default=1.0, min=0.5, max=10)
 
   # An efficiency factor describing the effectiveness of plasma
   # instabilities (e.g., due to spatial or temporal intermittency).

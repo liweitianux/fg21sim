@@ -129,41 +129,6 @@ def radius_virial(mass, z=0.0):
     return R_vir * AUC.cm2kpc  # [kpc]
 
 
-def radius_halo(mass, z=0.0, configs=CONFIGS):
-    """
-    Estimate the radius of (giant) radio halo.
-
-    NOTE
-    ----
-    The halo radius is estimated to be the same as the turbulence
-    injection scale, i.e.:
-        R_halo ≅ L_turb ≅ R_vir / 3
-    where R_vir the virial radius of the merged (observed) cluster.
-
-    Reference: [vazza2011],Sec.(3.6)
-
-    Parameters
-    ----------
-    mass : float, `~numpy.ndarray`
-        Cluster virial mass.
-        Unit: [Msun]
-    z : float, `~numpy.ndarray`, optional
-        Redshift
-        Default: 0.0 (i.e., present day)
-
-    Returns
-    -------
-    R_halo : float, `~numpy.ndarray`
-        Radius of the (simulated/predicted) giant radio halo
-        Unit: [kpc]
-    """
-    # Turbulence injection scale factor
-    key = "extragalactic/halos/f_lturb"
-    f_lturb = configs.getn(key)
-    R_halo = f_lturb * radius_virial(mass=mass, z=z)  # [kpc]
-    return R_halo
-
-
 def radius_stripping(M_main, M_sub, z, configs=CONFIGS):
     """
     Calculate the stripping radius of the in-falling sub-cluster, which

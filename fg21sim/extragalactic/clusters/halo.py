@@ -234,7 +234,7 @@ class RadioHalo:
         The estimated radius for the simulated radio halo.
         Unit: [kpc]
         """
-        return helper.radius_halo(self.M_obs, self.z_obs, configs=self.configs)
+        return self.injection_radius
 
     @property
     def angular_radius(self):
@@ -361,6 +361,18 @@ class RadioHalo:
         if tau > tau_max:
             tau = tau_max
         return tau
+
+    @property
+    @lru_cache
+    def injection_radius(self):
+        """
+        The radius of the turbulence injection regions, and then the
+        injection scale: L_turb ~= 2*R_turb.
+        Unit: [kpc]
+        """
+        rs = helper.radius_stripping(self.M_main, self.M_sub, self.z_merger,
+                                     configs=self.configs)  # [kpc]
+        return self.f_lturb * rs
 
     @property
     @lru_cache()
