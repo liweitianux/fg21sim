@@ -423,19 +423,20 @@ class RadioHalo:
         n_inj = self.fp_injection(self.gamma)
         n0_e = n_inj * (self.age_begin - self.time_init)
 
-        logger.debug("Derive the initial electron spectrum ...")
+        logger.debug("Deriving the initial electron spectrum ...")
         self._acceleration_disabled = True
-        dt = self.fpsolver.tstep
         tstart = self.age_begin
         tstop = self.age_begin + self.time_init
-        self.fpsolver.tstep = 3 * dt  # Bigger step to save time
+        self.fpsolver.tstep = self.time_step * 3  # To save time
+
         n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
-        self.fpsolver.tstep = dt
         self._acceleration_disabled = False
+        self.fpsolver.tstep = self.time_step
 
         return n_e
 
-    def calc_electron_spectrum(self, tstart=None, tstop=None, n0_e=None):
+    def calc_electron_spectrum(self, tstart=None, tstop=None, n0_e=None,
+                               fiducial=False):
         """
         Calculate the relativistic electron spectrum by solving the
         Fokker-Planck equation.
@@ -456,11 +457,15 @@ class RadioHalo:
             The initial electron spectrum (number distribution).
             Default: ``self.electron_spec_init``
             Unit: [cm^-3]
+        fiducial : bool
+            Whether to disable the turbulent acceleration and derive the
+            fiducial electron spectrum?
+            Default: ``False``
 
         Returns
         -------
         n_e : float 1D `~numpy.ndarray`
-            The solved electron spectrum at ``tstop``.
+            The solved electron spectrum.
             Unit: [cm^-3]
         """
         if tstart is None:
@@ -469,7 +474,15 @@ class RadioHalo:
             tstop = self.age_obs
         if n0_e is None:
             n0_e = self.electron_spec_init
-        return self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
+        if fiducial:
+            self._acceleration_disabled = True
+            self.fpsolver.tstep = self.time_step * 2  # To save time
+
+        n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
+        self._acceleration_disabled = False
+        self.fpsolver.tstep = self.time_step
+
+        return n_e
 
     def fp_injection(self, gamma, t=None):
         """
