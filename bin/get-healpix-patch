@@ -23,18 +23,18 @@ def main():
         description="Extract a patch from the all-sky HEALPix map")
     parser.add_argument("-C", "--clobber", action="store_true",
                         help="overwrite the existing output files")
-    parser.add_argument("-c", "--config", dest="config", required=False,
+    parser.add_argument("-c", "--config", required=False,
                         help="fg21sim configuration from which to " +
                         "obtain the sky patch properties")
-    parser.add_argument("--center", dest="center",
+    parser.add_argument("--center",
                         help="center coordinate of the sky patch; " +
                         "format: ra,dec; unit: deg")
-    parser.add_argument("--size", dest="size",
+    parser.add_argument("--size",
                         help="size of the sky patch; " +
                         "format: xsize,ysize; unit: pixel")
-    parser.add_argument("--pixelsize", dest="pixelsize", type=float,
+    parser.add_argument("--pixelsize", type=float,
                         help="pixel size of the sky patch; unit: [arcsec]")
-    parser.add_argument("-S", "--smooth", dest="smooth", action="store_true",
+    parser.add_argument("-S", "--smooth", action="store_true",
                         help="Smooth the output patch with a Gaussian " +
                         "filter of sigma 'sigma-npix' (next argument) " +
                         "pixel size of the input HEALPix map")
@@ -49,6 +49,13 @@ def main():
     tool = os.path.basename(sys.argv[0])
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
+
+    if os.path.exists(args.outfile):
+        if args.clobber:
+            os.remove(args.outfile)
+            logger.warning("Removed existing output file: %s" % args.outfile)
+        else:
+            raise FileExistsError("Output file exists: %s" % args.outfile)
 
     logger.info("Importing necessary modules, waiting ...")
     import scipy.ndimage
@@ -116,7 +123,7 @@ def main():
     sky.merge_header(hpheader.copy(strip=True))
     sky.add_history(" ".join(sys.argv))
     sky.data = image
-    sky.write(args.outfile, clobber=args.clobber)
+    sky.write(args.outfile)
     logger.info("Written extracted sky patch to file: %s" % args.outfile)
 
 
