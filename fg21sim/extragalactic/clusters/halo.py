@@ -130,6 +130,8 @@ class RadioHalo:
         the final time (``zend``), which is set by the methods
         ``self.calc_electron_spectrum()`` or ``self.set_electron_spectrum()``.
         Unit: [cm^-3]
+    _acceleration_disabled : bool
+        Whether the turbulence acceleration is intentionally disabled?
     """
     # Component name
     compID = "extragalactic/halos"
@@ -145,6 +147,7 @@ class RadioHalo:
         self.z_merger = z_merger
         self.age_merger = COSMO.age(z_merger)
 
+        self._acceleration_disabled = False
         self._set_configs(configs)
         self._set_solver()
 
@@ -426,14 +429,15 @@ class RadioHalo:
         n0_e = n_inj * (self.age_begin - self.time_init)
 
         logger.debug("Derive the initial electron spectrum ...")
-        dt = self.time_step
-        tstart = self.age_begin - self.time_init - dt
-        tstop = self.age_begin - dt  # avoid acceleration at the ``age_begin``
-        # Use a bigger time step to save time
-        self.fpsolver.tstep = 3 * dt
+        self._acceleration_disabled = True
+        dt = self.fpsolver.tstep
+        tstart = self.age_begin
+        tstop = self.age_begin + self.time_init
+        self.fpsolver.tstep = 3 * dt  # Bigger step to save time
         n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
-        # Restore the original time step
         self.fpsolver.tstep = dt
+        self._acceleration_disabled = False
+
         return n_e
 
     def calc_electron_spectrum(self, tstart=None, tstop=None, n0_e=None):
@@ -715,18 +719,11 @@ class RadioHalo:
 
     def _is_turb_active(self, t):
         """
-        Is the turbulence acceleration is active at the given (cosmic) time?
-
-        NOTE
-        ----
-        Considering that the turbulence acceleration is a 2nd-order Fermi
-        process, it has only an effective acceleration time ~<1 Gyr.
-        Therefore, only during the period that strong turbulence persists
-        in the ICM that the turbulence could effectively accelerate the
-        relativistic electrons.
+        Is the turbulence acceleration is active at the given time?
         """
-        if t < self.age_begin:
+        if self._acceleration_disabled:
             return False
+
         t_merger = self._merger_time(t)
         t_turb = self.time_turbulence(t_merger)
         return (t >= t_merger) and (t <= t_merger + t_turb)
