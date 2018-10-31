@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2016-2018 Weitian LI <wt@liwt.net>
 # MIT license
 
-from .manager import ConfigManager
+from .manager import ConfigManager  # noqa: F401

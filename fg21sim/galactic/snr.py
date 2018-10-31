@@ -180,8 +180,10 @@ class SuperNovaRemnants:
         logger.info("SNRs catalog: filtered out due to incomplete data: " +
                     "{0:d} objects".format(n_delete))
         # Filter out the SNRs lying outside the sky region (e.g., a patch)
-        skycoords = SkyCoord(l=self.catalog["glon"], b=self.catalog["glat"],
-                             frame="galactic", unit="deg")
+        skycoords = SkyCoord(l=self.catalog["glon"],  # noqa: E741
+                             b=self.catalog["glat"],
+                             frame="galactic",
+                             unit="deg")
         inside = self.sky.contains(skycoords)
         n_remain = inside.sum()
         n_delete = len(inside) - n_remain

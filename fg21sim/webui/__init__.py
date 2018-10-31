@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
+# Copyright (c) 2016,2018 Weitian LI <wt@liwt.net>
 # MIT license
 
-from .app import Application
+from .app import Application  # noqa: F401
