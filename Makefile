@@ -1,7 +1,5 @@
-# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2016-2018 Weitian LI <wt@liwt.net>
 # MIT license
-#
-# Makefile for "fg21sim"
 #
 # Credit: http://blog.bottlepy.org/2012/07/16/virtualenv-and-makefiles.html
 #
@@ -12,17 +10,13 @@ VENV ?= venv
 
 default:
 	@echo "+-------------------------------------------------------------+"
-	@echo "|                 Make Utility for fg21sim                    |"
+	@echo "|                 Make Utility for FG21sim                    |"
 	@echo "+-------------------------------------------------------------+"
 	@echo "Available targets:"
 	@echo "  + venv [VENV=<venv>]"
 	@echo "        create virtualenv '${VENV}' and install the dependencies"
 	@echo "  + devbuild"
 	@echo "        (build and) install the package to the virtualenv"
-	@echo "  + test"
-	@echo "        run the tests"
-	@echo "  + print-<VARIABLE>"
-	@echo "        print the value of variable <VARIABLE>"
 
 # Create virtualenv and install/update the dependencies
 venv: ${VENV}/bin/activate
@@ -34,10 +28,6 @@ ${VENV}/bin/activate: requirements.txt
 # Install this package to the virtualenv
 devbuild: venv
 	${VENV}/bin/python3 setup.py install
-
-# Run the tests
-test: devbuild
-	${VENV}/bin/python3 setup.py test
 
 
 # One liner to get the value of any makefile variable
