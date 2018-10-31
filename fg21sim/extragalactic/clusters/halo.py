@@ -210,7 +210,7 @@ class RadioHalo:
         mass_sub = self.mass_sub(t=t_merger)
         z_merger = COSMO.redshift(t_merger)
         vi = helper.velocity_impact(mass_main, mass_sub, z_merger)  # [km/s]
-        distance = 2 * self.radius_turbulence
+        distance = 2 * self.radius_turbulence(t_merger)
         uconv = AUC.kpc2km * AUC.s2Gyr  # [s kpc/km] => [Gyr]
         time = uconv * distance / vi  # [Gyr]
         return time
@@ -237,17 +237,15 @@ class RadioHalo:
     @property
     def radius(self):
         """
-        The estimated radius for the simulated radio halo.
+        The estimated radius of the simulated radio halo.
         Unit: [kpc]
         """
-        return self.radius_turbulence
+        return self.radius_turbulence()
 
-    @property
     @lru_cache
-    def radius_turbulence(self):
+    def radius_turbulence(self, t=None):
         """
-        The radius of the turbulence injection regions, and then the
-        injection scale: L_turb ~= 2*R_turb.
+        The radius of the turbulence injection region.
         Unit: [kpc]
         """
         rs = helper.radius_stripping(self.M_main, self.M_sub, self.z_merger,
@@ -364,10 +362,10 @@ class RadioHalo:
             return tau_max
 
         t_merger = self._merger_time(t)
-        L = 2 * self.radius_turbulence  # [kpc]
+        L_turb = 2 * self.radius_turbulence(t_merger)  # [kpc]
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
-        tau = (self.x_cr * cs**3 * L /
         v_turb = self._velocity_turb(t_merger)  # [km/s]
+        tau = (self.x_cr * cs**3 * L_turb /
                (16*np.pi * self.zeta_ins * v_turb**4))  # [s kpc/km]
         tau *= AUC.s2Gyr * AUC.kpc2km  # [Gyr]
         tau *= self.f_acc  # custom tune parameter
@@ -710,9 +708,9 @@ class RadioHalo:
             The turbulence velocity dispersion
             Unit: [km/s]
         """
-        R_turb = self.radius_turbulence  # [kpc]
         z = COSMO.redshift(t)
         rho_gas_f = self._gas_density_profile_f(t)
+        R_turb = self.radius_turbulence(t)  # [kpc]
         M_turb = 4*np.pi * integrate.quad(lambda r: rho_gas_f(r) * r**2,
                                           a=0, b=R_turb)[0]  # [Msun]
         M_main = self.mass_main(t)
