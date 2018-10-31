@@ -238,7 +238,7 @@ class RadioHalo:
         """
         return self.radius_turbulence()
 
-    @lru_cache
+    @lru_cache()
     def radius_turbulence(self, t=None):
         """
         The radius of the turbulence injection region.
@@ -645,7 +645,7 @@ class RadioHalo:
         z_merger = COSMO.redshift(t_merger)
         return helper.calc_gas_density_profile(mass=M_main+M_sub, z=z_merger)
 
-    @lru_cache
+    @lru_cache()
     def _velocity_turb(self, t=None):
         """
         Calculate the turbulence velocity dispersion (i.e., turbulence Mach
