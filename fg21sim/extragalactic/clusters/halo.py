@@ -125,11 +125,6 @@ class RadioHalo:
     gamma : 1D float `~numpy.ndarray`
         The Lorentz factors of the adopted logarithmic grid to solve the
         equation.
-    electron_spec : 1D float `~numpy.ndarray`
-        The derived electron (number density) distribution/spectrum at
-        the final time (``zend``), which is set by the methods
-        ``self.calc_electron_spectrum()`` or ``self.set_electron_spectrum()``.
-        Unit: [cm^-3]
     _acceleration_disabled : bool
         Whether the turbulence acceleration is intentionally disabled?
     """
@@ -464,7 +459,7 @@ class RadioHalo:
 
         Returns
         -------
-        electron_spec : float 1D `~numpy.ndarray`
+        n_e : float 1D `~numpy.ndarray`
             The solved electron spectrum at ``tstop``.
             Unit: [cm^-3]
         """
@@ -474,35 +469,7 @@ class RadioHalo:
             tstop = self.age_obs
         if n0_e is None:
             n0_e = self.electron_spec_init
-
-        # Decrease the time step when the evolution time is short.
-        # (necessary?)
-        nstep_min = 20
-        if tstop - tstart < self.time_step * nstep_min:
-            self.fpsolver.tstep = (tstop - tstart) / nstep_min
-            logger.debug("Decreased time step: %g -> %g [Gyr]" %
-                         (self.time_step, self.fpsolver.tstep))
-
-        self.electron_spec = self.fpsolver.solve(u0=n0_e, tstart=tstart,
-                                                 tstop=tstop)
-        return self.electron_spec
-
-    def set_electron_spectrum(self, n_e):
-        """
-        Check the given electron spectrum and set it to the
-        ``self.electron_spec``.
-
-        Parameters
-        ----------
-        n_e : float 1D `~numpy.ndarray`
-            The solved electron spectrum at ``zend``.
-            Unit: [cm^-3]
-        """
-        n_e = np.array(n_e)  # make a copy
-        if n_e.shape == self.gamma.shape:
-            self.electron_spec = n_e
-        else:
-            raise ValueError("given electron spectrum has wrong shape!")
+        return self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
 
     def fp_injection(self, gamma, t=None):
         """
@@ -624,6 +591,7 @@ class RadioHalo:
     def mass_main(self, t):
         """
         Calculate the main cluster mass at the given (cosmic) time.
+        Unit: [Msun]
 
         NOTE
         ----
@@ -631,16 +599,10 @@ class RadioHalo:
         there may be a long time between ``z_merger`` and ``z_obs``.
         So we assume that the main cluster grows linearly in time from
         (M_main, z_merger) to (M_obs, z_obs).
-
-        Returns
-        -------
-        mass : float
-            The mass of the main cluster.
-            Unit: [Msun]
         """
         t0 = self.age_begin
         rate = (self.M_obs - self.M_main) / (self.age_obs - t0)
-        mass = rate * (t - t0) + self.M_main
+        mass = rate * (t - t0) + self.M_main  # [Msun]
         return mass
 
     def magnetic_field(self, t):
@@ -648,16 +610,11 @@ class RadioHalo:
         Calculate the mean magnetic field strength of the main cluster mass
         at the given (cosmic) time.
 
-        Returns
-        -------
-        B : float
-            The mean magnetic field strength of the main cluster.
-            Unit: [uG]
+        Unit: [uG]
         """
         z = COSMO.redshift(t)
         mass = self.mass_main(t)  # [Msun]
-        B = helper.magnetic_field(mass=mass, z=z, configs=self.configs)
-        return B
+        return helper.magnetic_field(mass=mass, z=z, configs=self.configs)
 
     @lru_cache()
     def _gas_density_profile_f(self, t=None):
