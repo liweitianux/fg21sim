@@ -221,7 +221,7 @@ class RadioHalo:
         """
         t_merger = self._merger_time(t)
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
-        v_turb = self._velocity_turb  # [km/s]
+        v_turb = self._velocity_turb(t_merger)  # [km/s]
         return v_turb / cs
 
     @property
@@ -366,8 +366,8 @@ class RadioHalo:
         t_merger = self._merger_time(t)
         L = 2 * self.radius_turbulence  # [kpc]
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
-        v_turb = self._velocity_turb  # [km/s]
         tau = (self.x_cr * cs**3 * L /
+        v_turb = self._velocity_turb(t_merger)  # [km/s]
                (16*np.pi * self.zeta_ins * v_turb**4))  # [s kpc/km]
         tau *= AUC.s2Gyr * AUC.kpc2km  # [Gyr]
         tau *= self.f_acc  # custom tune parameter
@@ -681,9 +681,8 @@ class RadioHalo:
         z_merger = COSMO.redshift(t_merger)
         return helper.calc_gas_density_profile(mass=M_main+M_sub, z=z_merger)
 
-    @property
     @lru_cache
-    def _velocity_turb(self):
+    def _velocity_turb(self, t=None):
         """
         Calculate the turbulence velocity dispersion (i.e., turbulence Mach
         number).
@@ -711,16 +710,17 @@ class RadioHalo:
             The turbulence velocity dispersion
             Unit: [km/s]
         """
-        rho_gas_f = self._gas_density_profile_f
         R_turb = self.radius_turbulence  # [kpc]
+        z = COSMO.redshift(t)
+        rho_gas_f = self._gas_density_profile_f(t)
         M_turb = 4*np.pi * integrate.quad(lambda r: rho_gas_f(r) * r**2,
                                           a=0, b=R_turb)[0]  # [Msun]
-        M_merged = self.M_main + self.M_sub
-        R_vir = helper.radius_virial(M_merged, self.z_merger)  # [kpc]
+        M_main = self.mass_main(t)
+        M_sub = self.mass_sub(t)
+        R_vir = helper.radius_virial(M_main+M_sub, z)  # [kpc]
         R_vir *= AUC.kpc2cm  # [cm]
-        v2_vir = (AC.G * self.M_main*AUC.Msun2g / R_vir) * AUC.cm2km**2
-        v2_turb = (v2_vir * self.eta_turb * COSMO.baryon_fraction *
-                   (self.M_sub / M_turb))
+        v2_vir = (AC.G * M_main*AUC.Msun2g / R_vir) * AUC.cm2km**2
+        v2_turb = v2_vir * self.eta_turb*COSMO.baryon_fraction * (M_sub/M_turb)
         return np.sqrt(v2_turb)
 
     def _is_turb_active(self, t):
