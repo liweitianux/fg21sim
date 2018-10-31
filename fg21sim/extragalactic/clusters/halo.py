@@ -227,9 +227,7 @@ class RadioHalo:
     @property
     def radius_virial_obs(self):
         """
-        The virial radius of the "current" cluster (``M_obs``) at
-        ``z_obs``.
-
+        The virial radius of the "current" cluster (``M_obs``) at ``z_obs``.
         Unit: [kpc]
         """
         return helper.radius_virial(mass=self.M_obs, z=self.z_obs)
@@ -586,16 +584,16 @@ class RadioHalo:
         Returns
         -------
         advection : float, or float 1D `~numpy.ndarray`
-            Advection coefficients, describing the energy loss/gain rates.
+            Advection coefficient.
             Unit: [Gyr^-1]
         """
-        if t < self.age_begin:
-            # To derive the initial electron spectrum
-            advection = abs(self._energy_loss(gamma, self.age_begin))
-        else:
+        if self._is_turb_active(t):
             # Turbulence acceleration and beyond
             advection = (abs(self._energy_loss(gamma, t)) -
                          (self.fp_diffusion(gamma, t) * 2 / gamma))
+        else:
+            # To derive the initial electron spectrum
+            advection = abs(self._energy_loss(gamma, self.age_begin))
         return advection
 
     def _merger_time(self, t=None):
@@ -629,12 +627,6 @@ class RadioHalo:
         there may be a long time between ``z_merger`` and ``z_obs``.
         So we assume that the main cluster grows linearly in time from
         (M_main, z_merger) to (M_obs, z_obs).
-
-        Parameters
-        ----------
-        t : float
-            The (cosmic) time/age.
-            Unit: [Gyr]
 
         Returns
         -------
