@@ -131,8 +131,7 @@ class ConfigManager:
         If the ``userconfig`` provided, the user configurations is also
         loaded, validated, and merged.
         """
-        configspec = pkg_resources.resource_string(
-                __name__, "config.spec").decode("utf-8")
+        configspec = pkg_resources.resource_stream(__name__, "config.spec")
         self._configspec = ConfigObj(configspec, interpolation=False,
                                      list_values=False, _inspec=True,
                                      encoding="utf-8")
