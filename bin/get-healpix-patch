@@ -87,16 +87,23 @@ def main():
     logger.info("Read HEALPix map from file: %s" % args.infile)
     hpdata, hpheader = read_fits_healpix(args.infile)
     nside = hpheader["NSIDE"]
-    logger.info("Reprojecting HEALPix map to sky patch ...")
+    try:
+        ordering = hpheader["ORDERING"]
+    except KeyError:
+        logger.warning("No 'ORDERING' keyword for file: %s" % args.infile)
+        logger.warning("Assume the 'NESTED' ordering")
+        ordering = "NESTED"
+    nested = ordering.upper() == "NESTED"
     try:
         coordsys = hpheader["COORDSYS"]
     except KeyError:
         logger.warning("No 'COORDSYS' keyword for file: %s" % args.infile)
         logger.warning("Assume to use the 'Galactic' coordinate")
         coordsys = "Galactic"
+    logger.info("Reprojecting HEALPix map to sky patch ...")
     image, __ = reproject_from_healpix(input_data=(hpdata, coordsys),
                                        output_projection=sky.wcs,
-                                       shape_out=size)
+                                       shape_out=size, nested=nested)
 
     if args.smooth:
         logger.info("Smoothing the sky patch with a Gaussian filter ...")
