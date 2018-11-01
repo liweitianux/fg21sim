@@ -661,7 +661,7 @@ class RadioHalo:
         return helper.magnetic_field(mass=mass, z=z, configs=self.configs)
 
     @lru_cache()
-    def _gas_density_profile_f(self, t=None):
+    def _gas_density_profile_f(self, t):
         """
         The gas density profile of the merged cluster.
 
@@ -670,14 +670,13 @@ class RadioHalo:
         f(r) : function
             A function that calculates the gas density of unit [Msun/kpc^3].
         """
+        z = COSMO.redshift(t)
         M_main = self.mass_main(t)
         M_sub = self.mass_sub(t)
-        t_merger = self._merger_time(t)
-        z_merger = COSMO.redshift(t_merger)
-        return helper.calc_gas_density_profile(mass=M_main+M_sub, z=z_merger)
+        return helper.calc_gas_density_profile(mass=M_main+M_sub, z=z)
 
     @lru_cache()
-    def _velocity_turb(self, t=None):
+    def _velocity_turb(self, t):
         """
         Calculate the turbulence velocity dispersion (i.e., turbulence Mach
         number).
