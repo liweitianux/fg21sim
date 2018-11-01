@@ -63,6 +63,7 @@ from scipy import integrate
 
 from . import helper
 from .solver import FokkerPlanckSolver
+from .emission import HaloEmission
 from ...share import CONFIGS, COSMO
 from ...utils.units import (Units as AU,
                             UnitConversions as AUC,
@@ -164,6 +165,8 @@ class RadioHalo:
         self.time_step = configs.getn(comp+"/time_step")
         self.time_init = configs.getn(comp+"/time_init")
         self.injection_index = configs.getn(comp+"/injection_index")
+        self.fiducial_freq = configs.getn(comp+"/fiducial_freq")
+        self.fiducial_factor = configs.getn(comp+"/fiducial_factor")
 
     def _set_solver(self):
         self.fpsolver = FokkerPlanckSolver(
@@ -478,11 +481,41 @@ class RadioHalo:
             self._acceleration_disabled = True
             self.fpsolver.tstep = self.time_step * 2  # To save time
 
+        logger.debug("Calculating the %s electron spectrum ..." %
+                     ("[fiducial]" if fiducial else ""))
         n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
         self._acceleration_disabled = False
         self.fpsolver.tstep = self.time_step
 
         return n_e
+
+    def is_genuine(self, n_e):
+        """
+        Check whether the radio halo is genuine/observable by comparing the
+        radio flux density to the fiducial value, which is calculated from
+        the fiducial electron spectrum derived with turbulent acceleration
+        turned off.
+
+        Parameters
+        ----------
+        n_e : float 1D `~numpy.ndarray`
+            The finally derived electron spectrum.
+            Unit: [cm^-3]
+
+        Returns
+        -------
+        genuine : bool
+        """
+        haloem = HaloEmission(gamma=self.gamma, n_e=n_e,
+                              B=self.B_obs, radius=self.radius,
+                              redshift=self.z_obs)
+        flux = haloem.calc_flux(self.fiducial_freq)
+
+        ne_fiducial = self.calc_electron_spectrum(fiducial=True)
+        haloem.n_e = ne_fiducial
+        flux_fiducial = haloem.calc_flux(self.fiducial_freq)
+
+        return flux >= flux_fiducial * self.fiducial_factor
 
     def fp_injection(self, gamma, t=None):
         """

@@ -440,3 +440,10 @@ stream = option("stderr", "stdout", "", default="stderr")
   # the acceleration is turned off and only leaves energy loss mechanisms.
   # Unit: [Gyr]
   time_init = float(default=1.0, min=0)
+
+  # The frequency and factor used to determine whether the radio halo is
+  # genuine, i.e., the flux density at ``fiducial_freq`` is at least
+  # ``fiducial_factor`` times the fiducial value.
+  # Unit: [MHz]
+  fiducial_freq = float(default=150.0)
+  fiducial_factor = float(default=3.0, min=1)
