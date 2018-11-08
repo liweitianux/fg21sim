@@ -254,10 +254,20 @@ class RadioHalo:
         """
         z = COSMO.redshift(t)
         M_main = self.mass_main(t)
-        M_sub = self.mass_sub(t)
-        rs = helper.radius_stripping(M_main, M_sub, z, configs=self.configs)
         R_vir = helper.radius_virial(M_main, z)
-        return (R_vir + rs) / 2
+        r_s = self.radius_stripping(t)
+        return (R_vir + r_s) / 2
+
+    @lru_cache()
+    def radius_stripping(self, t):
+        """
+        The stripping radius of the in-falling sub-cluster at time t.
+        Unit: [kpc]
+        """
+        z = COSMO.redshift(t)
+        M_main = self.mass_main(t)
+        M_sub = self.mass_sub(t)
+        return helper.radius_stripping(M_main, M_sub, z, configs=self.configs)
 
     @property
     def angular_radius(self):
