@@ -48,28 +48,28 @@ Installation
 ------------
 1. Clone this repository::
 
-   $ git clone https://github.com/liweitianux/fg21sim
+    $ git clone https://github.com/liweitianux/fg21sim
 
 2. Install the above required software and libraries.
 
 3. Install the required third-party Python packages.
    And it is recommended to use the `virtual environment`_::
 
-   $ cd fg21sim/
-   $ make venv
-   $ . venv/bin/activate
-   (venv) $
+    $ cd fg21sim/
+    $ make venv
+    $ . venv/bin/activate
+    (venv) $
 
    Check to make sure that this virtual environment is activated so that the
    ``python3`` and ``pip3`` are pointed to the virtual environment.
 
 4. Install this software into the virtual environment::
 
-   (venv) $ python3 setup.py install
+    (venv) $ python3 setup.py install
 
 5. You are ready to use this software.  Just have a look, e.g.::
 
-   (venv) $ fg21sim --help
+    (venv) $ fg21sim --help
 
 
 Development
@@ -88,11 +88,6 @@ this software running at the ``DEBUG`` logging level.
 Documentations
 --------------
 To get started, read the `User Guide`_.
-
-
-Contributions
--------------
-Great!  Be sure to consult the guidelines in |CONTRIBUTING.md|_.
 
 
 Authors
@@ -121,9 +116,6 @@ Unless otherwise declared:
 .. _FG21sim: https://github.com/liweitianux/fg21sim
 .. _`User Guide`:
    https://github.com/liweitianux/fg21sim/blob/master/docs/guide.rst
-.. |CONTRIBUTING.md| replace:: ``CONTRIBUTING.md``
-.. _CONTRIBUTING.md:
-   https://github.com/liweitianux/fg21sim/blob/master/CONTRIBUTING.md
 .. |LICENSE-3RDPARTY| replace:: ``LICENSE-3RDPARTY``
 .. _LICENSE-3RDPARTY:
    https://github.com/liweitianux/fg21sim/blob/master/LICENSE-3RDPARTY
