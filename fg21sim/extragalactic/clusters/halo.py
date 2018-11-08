@@ -241,17 +241,23 @@ class RadioHalo:
         The estimated radius of the simulated radio halo.
         Unit: [kpc]
         """
-        return self.radius_turbulence()
+        return self.radius_turbulence(self.age_merger)
 
     @lru_cache()
-    def radius_turbulence(self, t=None):
+    def radius_turbulence(self, t):
         """
-        The radius of the turbulence injection region.
+        The radius of the turbulence injection region, which is calculated
+        as the mean of the stripping radius of the sub-cluster and the core
+        radius of the main cluster.
+
         Unit: [kpc]
         """
-        rs = helper.radius_stripping(self.M_main, self.M_sub, self.z_merger,
-                                     configs=self.configs)  # [kpc]
-        return self.f_lturb * rs
+        z = COSMO.redshift(t)
+        M_main = self.mass_main(t)
+        M_sub = self.mass_sub(t)
+        rs = helper.radius_stripping(M_main, M_sub, z, configs=self.configs)
+        R_vir = helper.radius_virial(M_main, z)
+        return (R_vir + rs) / 2
 
     @property
     def angular_radius(self):
