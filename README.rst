@@ -32,25 +32,21 @@ Features
 * Command line tools, utilities, and resuable modules
 
 
-Requirements
-------------
-* Linux operating system (other UNIX-like systems not tested)
-* `Python <https://www.python.org/>`_
-* `CFITSIO <https://heasarc.gsfc.nasa.gov/fitsio/fitsio.html>`_
-* `HEALPix <http://healpix.sourceforge.net/>`_:
-  only the C++ library required by `healpy <https://github.com/healpy/healpy>`_.
-* `LLVM <http://llvm.org/>`_:
-  (required by `llvmlite <http://llvmlite.pydata.org/>`_ which is a
-  dependency of `Numba <http://numba.pydata.org/>`_)
-
-
 Installation
 ------------
-1. Clone this repository::
+1. Install the required software and libraries:
+
+   * `CFITSIO <https://heasarc.gsfc.nasa.gov/fitsio/fitsio.html>`_
+   * `HEALPix <http://healpix.sourceforge.net/>`_:
+     only the C++ library required by
+     `healpy <https://github.com/healpy/healpy>`_.
+   * `LLVM <http://llvm.org/>`_:
+     (required by `llvmlite <http://llvmlite.pydata.org/>`_ that is
+     further required by `Numba <http://numba.pydata.org/>`_)
+
+2. Clone this repository::
 
     $ git clone https://github.com/liweitianux/fg21sim
-
-2. Install the above required software and libraries.
 
 3. Install the required third-party Python packages.
    And it is recommended to use the `virtual environment`_::
