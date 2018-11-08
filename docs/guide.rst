@@ -33,9 +33,6 @@ can also override them).
 Please refer to the
 `configuration specification file <../fg21sim/configs/config.spec>`_
 for more information on the available options.
-Also there is a brief `test configuration file <fg21sim-test.conf>`_
-which may be useful to test whether this package is correctly installed
-and runs smoothly.
 
 Finally, the foregrounds simulation can be kicked off by executing::
 
