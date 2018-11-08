@@ -151,7 +151,7 @@ class RadioHalo:
         comp = self.compID
         self.configs = configs
         self.f_acc = configs.getn(comp+"/f_acc")
-        self.f_lturb = configs.getn(comp+"/f_lturb")
+        self.f_radius = configs.getn(comp+"/f_radius")
         self.zeta_ins = configs.getn(comp+"/zeta_ins")
         self.eta_turb = configs.getn(comp+"/eta_turb")
         self.eta_e = configs.getn(comp+"/eta_e")
@@ -241,7 +241,7 @@ class RadioHalo:
         The estimated radius of the simulated radio halo.
         Unit: [kpc]
         """
-        return self.radius_turbulence(self.age_merger)
+        return self.radius_turbulence(self.age_merger) * self.f_radius
 
     @lru_cache()
     def radius_turbulence(self, t):
