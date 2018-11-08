@@ -76,7 +76,7 @@ def beta_model(rho0, rc, beta):
     return func
 
 
-def calc_gas_density_profile(mass, z):
+def calc_gas_density_profile(mass, z, f_rc=0.1, beta=0.8):
     """
     Calculate the parameters of the β-model that is used to describe the
     gas density profile.
@@ -88,6 +88,15 @@ def calc_gas_density_profile(mass, z):
 
     Reference: [cassano2005],Sec.(4.1)
 
+    Parameters
+    ----------
+    f_rc : float
+        The fraction of the core radius to the virial radius.
+        Default: 0.1
+    beta : float
+        The slope parameter of the β-model.
+        Default: 0.8
+
     Returns
     -------
     fbeta : function
@@ -95,8 +104,7 @@ def calc_gas_density_profile(mass, z):
         Unit: [Msun/kpc^3]
     """
     r_vir = radius_virial(mass, z)  # [kpc]
-    rc = 0.1 * r_vir
-    beta = 0.8
+    rc = f_rc * r_vir
     fint = beta_model(1, rc, beta)
     v = integrate.quad(lambda r: fint(r) * r**2,
                        a=0, b=r_vir)[0]  # [kpc^3]
