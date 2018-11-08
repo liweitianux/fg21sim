@@ -254,9 +254,9 @@ class RadioHalo:
         """
         z = COSMO.redshift(t)
         M_main = self.mass_main(t)
-        R_vir = helper.radius_virial(M_main, z)
+        r_c = self.f_rc * helper.radius_virial(M_main, z)
         r_s = self.radius_stripping(t)
-        return (R_vir + r_s) / 2
+        return (r_c + r_s) / 2
 
     @lru_cache()
     def radius_stripping(self, t):
