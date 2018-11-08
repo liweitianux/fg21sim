@@ -30,7 +30,8 @@ There are two types of configuration options:
 *required* (which require the user to explicitly provide the values)
 and *optional* (which already have sensible defaults, however, the user
 can also override them).
-Please refer to the `configuration specification file <fg21sim.conf.spec>`_
+Please refer to the
+`configuration specification file <../fg21sim/configs/config.spec>`_
 for more information on the available options.
 Also there is a brief `test configuration file <fg21sim-test.conf>`_
 which may be useful to test whether this package is correctly installed
