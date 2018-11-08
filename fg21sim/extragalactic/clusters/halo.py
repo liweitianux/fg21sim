@@ -311,13 +311,12 @@ class RadioHalo:
     @lru_cache()
     def kT(self, t):
         """
-        The ICM mean temperature of the merged cluster.
+        The ICM mean temperature of the main cluster.
         Unit: [keV]
         """
         M_main = self.mass_main(t)
-        M_sub = self.mass_sub(t)
         z = COSMO.redshift(t)
-        return helper.kT_cluster(mass=M_main+M_sub, z=z, configs=self.configs)
+        return helper.kT_cluster(mass=M_main, z=z, configs=self.configs)
 
     def tau_acceleration(self, t):
         """
