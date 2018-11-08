@@ -447,3 +447,10 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Unit: [MHz]
   fiducial_freq = float(default=150.0)
   fiducial_factor = float(default=3.0, min=1)
+
+  # Parameters of the beta-model that is used to describe the gas density
+  # profile of the cluster.
+  # The fraction of the core radius to cluster's virial radius.
+  f_rc = float(default=0.1)
+  # The slope parameter (i.e., beta).
+  beta = float(default=0.8)

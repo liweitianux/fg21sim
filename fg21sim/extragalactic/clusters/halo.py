@@ -167,6 +167,8 @@ class RadioHalo:
         self.injection_index = configs.getn(comp+"/injection_index")
         self.fiducial_freq = configs.getn(comp+"/fiducial_freq")
         self.fiducial_factor = configs.getn(comp+"/fiducial_factor")
+        self.f_rc = configs.getn(comp+"/f_rc")
+        self.beta = configs.getn(comp+"/beta")
 
     def _set_solver(self):
         self.fpsolver = FokkerPlanckSolver(
@@ -673,7 +675,8 @@ class RadioHalo:
         z = COSMO.redshift(t)
         M_main = self.mass_main(t)
         M_sub = self.mass_sub(t)
-        return helper.calc_gas_density_profile(mass=M_main+M_sub, z=z)
+        return helper.calc_gas_density_profile(mass=M_main+M_sub, z=z,
+                                               f_rc=self.f_rc, beta=self.beta)
 
     @lru_cache()
     def _velocity_turb(self, t):
