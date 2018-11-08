@@ -679,7 +679,7 @@ class RadioHalo:
         return helper.magnetic_field(mass=mass, z=z, configs=self.configs)
 
     @lru_cache()
-    def _gas_density_profile_f(self, t):
+    def _rho_gas_f(self, t):
         """
         The gas density profile of the merged cluster.
 
@@ -697,8 +697,7 @@ class RadioHalo:
     @lru_cache()
     def _velocity_turb(self, t):
         """
-        Calculate the turbulence velocity dispersion (i.e., turbulence Mach
-        number).
+        Calculate the turbulence velocity dispersion.
 
         NOTE
         ----
@@ -707,15 +706,19 @@ class RadioHalo:
         Then estimate the turbulence velocity dispersion from its energy.
 
         Merger energy:
-            E_merger ≅ 0.5 * f_gas * M_sub * v_vir^2
-            v_vir = sqrt(G*M_main / R_vir)
+            E_merger ≅ <ρ_gas> * v_i^2 * V_turb
+            V_turb = ᴨ * r_s^2 * R_vir
         Turbulence energy:
-            E_turb ≅ η_turb * E_merger
-                   ≅ 0.5 * M_turb * <v_turb^2>
+            E_turb ≅ η_turb * E_merger ≅ 0.5 * M_turb * <v_turb^2>
         => Velocity dispersion:
-            <v_turb^2> ≅ v_vir^2 * η_turb*f_gas * (M_sub/M_turb)
+            <v_turb^2> ≅ 2*η_turb * <ρ_gas> * v_i^2 * V_turb / M_turb
+            M_turb = int_0^R_turb[ ρ_gas(r)*4ᴨ*r^2 ]dr
         where:
-            M_turb = int_0^R_turb ρ_gas(r)*4ᴨ*r^2 dr
+            <ρ_gas>: mean gas density of the main cluster
+            R_vir: virial radius of the main cluster
+            R_turb: radius of turbulence region
+            v_i: impact velocity
+            r_s: stripping radius of the in-falling sub-cluster
 
         Returns
         -------
@@ -724,17 +727,23 @@ class RadioHalo:
             Unit: [km/s]
         """
         z = COSMO.redshift(t)
-        rho_gas_f = self._gas_density_profile_f(t)
+        rho_gas_f = self._rho_gas_f(t)
         R_turb = self.radius_turbulence(t)  # [kpc]
         M_turb = 4*np.pi * integrate.quad(lambda r: rho_gas_f(r) * r**2,
                                           a=0, b=R_turb)[0]  # [Msun]
+
         M_main = self.mass_main(t)
         M_sub = self.mass_sub(t)
-        R_vir = helper.radius_virial(M_main+M_sub, z)  # [kpc]
-        R_vir *= AUC.kpc2cm  # [cm]
-        v2_vir = (AC.G * M_main*AUC.Msun2g / R_vir) * AUC.cm2km**2
-        v2_turb = v2_vir * self.eta_turb*COSMO.baryon_fraction * (M_sub/M_turb)
-        return np.sqrt(v2_turb)
+        v_i = helper.velocity_impact(M_main, M_sub, z)  # [km/s]
+        rho_main = helper.density_number_thermal(M_main, z)  # [cm^-3]
+        rho_main *= AC.mu*AC.u * AUC.g2Msun * AUC.kpc2cm**3  # [Msun/kpc^3]
+        R_vir = helper.radius_virial(M_main, z)  # [kpc]
+        r_s = self.radius_stripping(t)  # [kpc]
+
+        V_turb = np.pi * r_s**2 * R_vir  # [kpc^3]
+        E_turb = self.eta_turb * rho_main * v_i**2 * V_turb
+        v2_turb = 2 * E_turb / M_turb  # [km^2/s^2]
+        return np.sqrt(v2_turb)  # [km/s]
 
     def _is_turb_active(self, t):
         """
