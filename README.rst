@@ -22,14 +22,15 @@ Features
   + ``extragalactic/clusters``:
     Emission from extragalactic galaxy clusters
     (*Note:* only giant radio halos)
+    [**WARNING:** undergoing major changes]
 
 * All-sky simulation by utilizing HEALPix
   (*Note:* not all components are currently supported)
 * High-resolution simulation within sky patches
-* Configuration file allowing fine-grained control
-* Well organized, commented, and documented
-* Modular and highly extensible
-* Command line tools, utilities, and resuable modules
+* Fine-grained control via a configuration file
+* Well organized and commented
+* Modular and extensible
+* Command line utilities
 
 
 Installation
@@ -84,6 +85,7 @@ this software running at the ``DEBUG`` logging level.
 Documentations
 --------------
 To get started, read the `User Guide`_.
+See also this `simulation example`_.
 
 
 Authors
@@ -112,6 +114,8 @@ Unless otherwise declared:
 .. _FG21sim: https://github.com/liweitianux/fg21sim
 .. _`User Guide`:
    https://github.com/liweitianux/fg21sim/blob/master/docs/guide.rst
+.. _`simulation example`:
+   https://github.com/liweitianux/cdae-eor/blob/master/doc/data.md
 .. |LICENSE-3RDPARTY| replace:: ``LICENSE-3RDPARTY``
 .. _LICENSE-3RDPARTY:
    https://github.com/liweitianux/fg21sim/blob/master/LICENSE-3RDPARTY
