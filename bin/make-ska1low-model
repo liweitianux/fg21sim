@@ -50,6 +50,9 @@ def main():
     parser.add_argument("-o", "--outdir", dest="outdir",
                         required=True,
                         help="output telescope model directory")
+    parser.add_argument("--position",
+                        help="telescope position on Earth; " +
+                        "longitude,latitude [deg]")
     args = parser.parse_args()
 
     loglevel = "DEBUG" if args.debug else "INFO"
@@ -58,7 +61,11 @@ def main():
     logger = logging.getLogger(tool)
     logger.info("COMMAND: {0}".format(" ".join(sys.argv)))
 
-    ska1low = telescope.SKA1Low(args.layoutfile)
+    position = None
+    if args.position:
+        position = list(map(float, args.position.split(",")))
+        logger.info("Telescope position: (%f, %f) [deg]" % tuple(position))
+    ska1low = telescope.SKA1Low(args.layoutfile, position=position)
     ska1low.generate_stations()
     ska1low.make_oskar_model(args.outdir, clobber=args.clobber)
     if args.plot:
