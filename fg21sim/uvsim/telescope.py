@@ -34,6 +34,8 @@ class SKA1Low:
     ----------
     infile : str
         Path to the SKA1-low layout data file
+    position : (float, float), optional
+        Telescope position on Earth. (longitude, latitude) [deg]
     stn_antennas : int, optional
         Number of antenna elements per station (default: 256)
     stn_diameter : float, optional
@@ -56,9 +58,11 @@ class SKA1Low:
     [3] Trott et al. 2017, MNRAS, 470, 455;
         http://adsabs.harvard.edu/abs/2017MNRAS.470..455T
     """
-    def __init__(self, infile, stn_antennas=256, stn_diameter=35.0,
-                 ant_min_sep=1.5, r_core=500.0, r_central=1700.0):
+    def __init__(self, infile, position=None, stn_antennas=256,
+                 stn_diameter=35.0, ant_min_sep=1.5,
+                 r_core=500.0, r_central=1700.0):
         self.infile = infile
+        self.position = position
         self.stn_antennas = stn_antennas
         self.stn_diameter = stn_diameter  # [m]
         self.ant_min_sep = ant_min_sep  # [m]
@@ -157,7 +161,6 @@ class SKA1Low:
         fig.tight_layout()
         fig.savefig(fpng)
         logger.debug("Made plot for telescope all station: %s" % fpng)
-        # TODO...
 
     def make_oskar_model(self, outdir, clobber=False):
         """
@@ -173,12 +176,13 @@ class SKA1Low:
         os.mkdir(outdir)
         logger.info("Created telescope model at: %s" % outdir)
         # Write position
+        position = self.position or self.position_wgs84
         fposition = os.path.join(outdir, "position.txt")
         open(fposition, "w").writelines([
             "# SKA1-low layout: %s\n" % self.infile,
             "# Telescope center position (WGS84)\n",
             "# longitude[deg]  latitude[deg]\n",
-            "%.8f  %.8f\n" % tuple(self.position_wgs84)
+            "%.8f  %.8f\n" % tuple(position),
         ])
         logger.info("Wrote telescope position: %s" % fposition)
         # Write layout of stations
