@@ -69,12 +69,10 @@ setup(
         "numba",
         "numpy",
         "pandas",
+        "regions",
         "reproject",
         "requests",
         "scipy",
         "tornado",
-    ],
-    dependency_links=[
-        "git+https://github.com/astropy/regions.git",
     ],
 )

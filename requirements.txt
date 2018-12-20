@@ -7,8 +7,8 @@ hmf
 numba
 numpy
 pandas
+regions
 reproject
 requests
 scipy
 tornado
-git+https://github.com/astropy/regions.git
