@@ -77,9 +77,9 @@ class FokkerPlanckSolver:
     """
     Solve the Fokker-Planck equation:
 
-    ∂u(x,t)   ∂  /                ∂u(x) \            u(x,t)
+    ∂u(x,t)   ∂  [                ∂u(x) ]            u(x,t)
     ------- = -- | B(x)u(x) + C(x)----- | + Q(x,t) - ------
-       ∂t     ∂x \                  ∂x  /            T(x,t)
+       ∂t     ∂x [                  ∂x  ]            T(x,t)
 
     u(x,t) : distribution/spectrum w.r.t. x at different times
     B(x,t) : advection coefficient

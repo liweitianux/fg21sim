@@ -88,7 +88,7 @@ class SkyBase:
         elif isinstance(other, (int, float, np.ndarray)):
             return self.data + other
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def __sub__(self, other):
         """Binary arithmetic operation: ``-``."""
@@ -97,7 +97,7 @@ class SkyBase:
         elif isinstance(other, (int, float, np.ndarray)):
             return self.data - other
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def __mul__(self, other):
         """Binary arithmetic operation: ``*``."""
@@ -106,7 +106,7 @@ class SkyBase:
         elif isinstance(other, (int, float, np.ndarray)):
             return self.data * other
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def __truediv__(self, other):
         """Binary arithmetic operation: ``/``."""
@@ -115,7 +115,7 @@ class SkyBase:
         elif isinstance(other, (int, float, np.ndarray)):
             return self.data / other
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def __pow__(self, other):
         """Binary arithmetic operation: ``**``."""
@@ -124,7 +124,7 @@ class SkyBase:
         elif isinstance(other, (int, float, np.ndarray)):
             return self.data ** other
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def __iadd__(self, other):
         """
@@ -143,7 +143,7 @@ class SkyBase:
             self.data += other
             return self
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def __isub__(self, other):
         """Augmented arithmetic assignment: ``-=``."""
@@ -154,7 +154,7 @@ class SkyBase:
             self.data -= other
             return self
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def __imul__(self, other):
         """Augmented arithmetic assignment: ``*=``."""
@@ -165,7 +165,7 @@ class SkyBase:
             self.data *= other
             return self
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def __itruediv__(self, other):
         """Augmented arithmetic assignment: ``/=``."""
@@ -176,7 +176,7 @@ class SkyBase:
             self.data /= other
             return self
         else:
-            raise NotImplemented
+            raise NotImplementedError
 
     def __neg__(self):
         """Unary arithmetic operation: ``-``."""

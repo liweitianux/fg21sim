@@ -19,6 +19,7 @@ from astropy.cosmology import FlatLambdaCDM
 class PixelParams():
     """
     A class to transform cosmology distance to angles or pixels.
+
     Parameters
     ------------
     H0: float
@@ -28,11 +29,12 @@ class PixelParams():
     ang_res: float
         Angular resolution, i.e. degree per pixel. (May be useless)
     ang_total: list
-        Total angles of the simulated sky region,whose unit is degree (\deg)
+        Total angles of the simulated sky region, whose unit is degree
     z : float
         Redshift
     scale: float
         The real object scale.
+
     Example
     ------------
     >>> PixelParams = PixelParams(img_size=(1024,1024),ang_total=(5,5))

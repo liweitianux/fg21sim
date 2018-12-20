@@ -68,7 +68,7 @@ class SKA1Low:
         self.ant_min_sep = ant_min_sep  # [m]
         self.r_core = r_core  # [m]
         self.r_central = r_central  # [m]
-        self.data = pd.read_csv(infile, sep="\s+", comment="#",
+        self.data = pd.read_csv(infile, sep=r"\s+", comment="#",
                                 index_col="Label")
         logger.info("Read telescope layout data from: %s" % infile)
         self.position_wgs84 = np.array(self.data.loc["CENTER", :])
