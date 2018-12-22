@@ -520,6 +520,9 @@ class RadioHalo:
         Returns
         -------
         genuine : bool
+            Whether the radio halo is genuine?
+        factor : float
+            Acceleration factor of the flux.
         """
         haloem = HaloEmission(gamma=self.gamma, n_e=n_e,
                               B=self.B_obs, radius=self.radius,
@@ -530,7 +533,8 @@ class RadioHalo:
         haloem.n_e = ne_fiducial
         flux_fiducial = haloem.calc_flux(self.fiducial_freq)
 
-        return flux >= flux_fiducial * self.fiducial_factor
+        factor = flux / flux_fiducial
+        return (flux >= self.fiducial_factor, factor)
 
     def fp_injection(self, gamma, t=None):
         """
