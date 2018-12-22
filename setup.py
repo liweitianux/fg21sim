@@ -24,8 +24,8 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-if sys.version_info < (3, 4):
-    sys.exit("%s requires Python >= 3.4 ..." % pkg.__pkgname__)
+if sys.version_info < (3, 5):
+    sys.exit("%s requires Python >= 3.5 ..." % pkg.__pkgname__)
 
 
 setup(
@@ -48,9 +48,9 @@ setup(
         "Operating System :: POSIX :: BSD",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Topic :: Scientific/Engineering :: Astronomy",
     ],
     packages=find_packages(exclude=["docs", "tests"]),
