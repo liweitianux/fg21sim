@@ -360,11 +360,10 @@ class ConfigManager:
         If validated to be *valid*, the input key-value pair is then *merged*
         into the configurations, otherwise, a ``ConfigError`` raised.
 
-        NOTE/XXX
-        --------
+        NOTE
+        ----
         Given a ``ConfigObj`` instance with an option that does NOT exist in
-        the specifications, it will simply *pass* the validation against the
-        specifications.
+        the specifications, it will simply *pass* the validation.
         There seems no way to prevent the ``Validator`` from accepting the
         config options that does NOT exist in the specification.
         Therefore, try to get the option value specified by the input key
@@ -413,7 +412,7 @@ class ConfigManager:
         val_new = reduce(operator.getitem, key, config_new)
         d2 = reduce(lambda x, y: {y: x}, reversed(key), val_new)
         self.merge(d2)
-        logger.info("Set config: {key}: {val_new} <- {val_old}".format(
+        logger.info("Set config: {key}: {val_old} -> {val_new}".format(
             key="/".join(key), val_new=val_new, val_old=val_old))
 
     def __getitem__(self, key):
