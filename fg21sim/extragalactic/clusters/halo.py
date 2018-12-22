@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
+# Copyright (c) 2017-2018 Weitian LI <wt@liwt.net>
 # MIT license
 
 """
@@ -124,12 +124,10 @@ class RadioHalo:
         The halo radius
         Unit: [kpc]
     gamma : 1D float `~numpy.ndarray`
-        The Lorentz factors of the adopted logarithmic grid to solve the
-        equation.
+        The Lorentz factors of the adopted logarithmic grid to solve the equation.
     _acceleration_disabled : bool
         Whether the turbulence acceleration is intentionally disabled?
     """
-    # Component name
     compID = "extragalactic/halos"
     name = "giant radio halos"
 
@@ -235,14 +233,6 @@ class RadioHalo:
         """
         return helper.radius_virial(mass=self.M_obs, z=self.z_obs)
 
-    @property
-    def radius(self):
-        """
-        The estimated radius of the simulated radio halo.
-        Unit: [kpc]
-        """
-        return self.radius_turbulence(self.age_merger) * self.f_radius
-
     @lru_cache()
     def radius_turbulence(self, t):
         """
@@ -268,6 +258,14 @@ class RadioHalo:
         M_main = self.mass_main(t)
         M_sub = self.mass_sub(t)
         return helper.radius_stripping(M_main, M_sub, z, configs=self.configs)
+
+    @property
+    def radius(self):
+        """
+        The estimated radius of the simulated radio halo.
+        Unit: [kpc]
+        """
+        return self.radius_turbulence(self.age_merger) * self.f_radius
 
     @property
     def angular_radius(self):
