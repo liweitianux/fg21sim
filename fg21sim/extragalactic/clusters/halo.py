@@ -811,16 +811,28 @@ class RadioHaloAM(RadioHalo):
         The redshifts at each merger event, from small to large.
     merger_num : int
         Number of merger events traced for the cluster.
+    radius : float
+        The radius of the radio halo.
+        Unit: [kpc]
     """
     def __init__(self, M_obs, z_obs, M_main, M_sub, z_merger,
-                 merger_num, configs=CONFIGS):
-        self.merger_num = merger_num
+                 merger_num, radius, configs=CONFIGS):
         M_main = np.asarray(M_main[:merger_num])
         M_sub = np.asarray(M_sub[:merger_num])
         z_merger = np.asarray(z_merger[:merger_num])
         super().__init__(M_obs=M_obs, z_obs=z_obs,
                          M_main=M_main, M_sub=M_sub,
                          z_merger=z_merger, configs=configs)
+        self.merger_num = merger_num
+        self.radius_ = radius  # [kpc]
+
+    @property
+    def radius(self):
+        """
+        The radius of the final radio halo.
+        Unit: [kpc]
+        """
+        return self.radius_
 
     @property
     def age_begin(self):
