@@ -228,9 +228,62 @@ class GalaxyClusters:
         nmax = max([cdict["merger_num"] for cdict in self.catalog])
         logger.info("Maximum number of merger events: %d" % nmax)
 
+    def _simulate_halo1(self, clinfo):
+        """
+        Calculate the radio halo information for the given cluster.
+
+        Parameters
+        ----------
+        clinfo : dict
+            The cluster information from ``self._simulate_mergers()``.
+
+        Returns
+        -------
+        haloinfo : dict
+            The calculated radio halo information.
+        """
+        merger_num = clinfo["merger_num"]
+        M_obs = clinfo["mass"]
+        z_obs = clinfo["z"]
+        M1 = clinfo["merger_mass1"][merger_num-1]
+        z1 = clinfo["merger_z"][merger_num-1]
+        logger.info("M(%.2e)@z(%.3f) -> M(%.2e)@z(%.3f) with %d merger(s)" %
+                    (M1, z1, M_obs, z_obs, merger_num))
+        halo = RadioHaloAM(M_obs=M_obs, z_obs=z_obs,
+                           M_main=clinfo["merger_mass1"],
+                           M_sub=clinfo["merger_mass2"],
+                           z_merger=clinfo["merger_z"],
+                           merger_num=merger_num,
+                           configs=self.configs)
+        n_e = halo.calc_electron_spectrum()
+
+        return OrderedDict([
+            ("z0", z_obs),
+            ("M0", M_obs),  # [Msun]
+            ("age0", halo.age_obs),  # [Gyr]
+            ("merger_num", merger_num),
+            ("lon", clinfo["lon"]),  # [deg] longitude
+            ("lat", clinfo["lat"]),  # [deg] longitude
+            ("felong", clinfo["felong"]),  # fraction of elongation
+            ("rotation", clinfo["rotation"]),  # [deg] rotation angle
+            ("Rvir0", halo.radius_virial_obs),  # [kpc]
+            ("kT0", halo.kT_obs),  # [keV]
+            ("B0", halo.B_obs),  # [uG] magnetic field @ z_obs
+            ("Rhalo", halo.radius),  # [kpc]
+            ("Rhalo_angular", halo.angular_radius),  # [arcsec]
+            ("volume", halo.volume),  # [kpc^3]
+            ("Ke", halo.injection_rate),  # [cm^-3 Gyr^-1]
+            ("time_turbulence", halo.time_turbulence_avg),  # [Gyr]
+            ("Mach_turb", halo.mach_turbulence_avg),  # Mach number
+            ("tau_acc", halo.tau_acceleration_avg),  # [Gyr]
+            ("tfrac_acc", halo.time_acceleration_fraction),
+            ("gamma", halo.gamma),  # Lorentz factors
+            ("n_e", n_e),  # [cm^-3]
+        ])
+
     def _simulate_halos(self):
         """
-        Simulate the radio halo properties for each cluster that has mergers.
+        Calculate the radio halo information for each cluster that has mergers.
 
         Attributes
         ----------
@@ -246,47 +299,8 @@ class GalaxyClusters:
             ii = i + 1
             if ii % 50 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
-            cdict = self.catalog[idx]
-            merger_num = cdict["merger_num"]
-            M_obs = cdict["mass"]
-            z_obs = cdict["z"]
-            M1 = cdict["merger_mass1"][merger_num-1]
-            z1 = cdict["merger_z"][merger_num-1]
-            info = ("[%d/%d] " % (ii, num) +
-                    "M(%.2e)@z(%.3f) -> M(%.2e)@z(%.3f) with %d merger(s)" %
-                    (M1, z1, M_obs, z_obs, merger_num))
-            logger.info(info)
-            halo = RadioHaloAM(M_obs=M_obs, z_obs=z_obs,
-                               M_main=cdict["merger_mass1"],
-                               M_sub=cdict["merger_mass2"],
-                               z_merger=cdict["merger_z"],
-                               merger_num=merger_num,
-                               configs=self.configs)
-            n_e = halo.calc_electron_spectrum()
-            data = OrderedDict([
-                ("z0", z_obs),
-                ("M0", M_obs),  # [Msun]
-                ("age0", halo.age_obs),  # [Gyr]
-                ("merger_num", merger_num),
-                ("lon", cdict["lon"]),  # [deg] longitude
-                ("lat", cdict["lat"]),  # [deg] longitude
-                ("felong", cdict["felong"]),  # fraction of elongation
-                ("rotation", cdict["rotation"]),  # [deg] rotation angle
-                ("Rvir0", halo.radius_virial_obs),  # [kpc]
-                ("kT0", halo.kT_obs),  # [keV]
-                ("B0", halo.B_obs),  # [uG] magnetic field @ z_obs
-                ("Rhalo", halo.radius),  # [kpc]
-                ("Rhalo_angular", halo.angular_radius),  # [arcsec]
-                ("volume", halo.volume),  # [kpc^3]
-                ("Ke", halo.injection_rate),  # [cm^-3 Gyr^-1]
-                ("time_turbulence", halo.time_turbulence_avg),  # [Gyr]
-                ("Mach_turb", halo.mach_turbulence_avg),  # Mach number
-                ("tau_acc", halo.tau_acceleration_avg),  # [Gyr]
-                ("tfrac_acc", halo.time_acceleration_fraction),
-                ("gamma", halo.gamma),  # Lorentz factors
-                ("n_e", n_e),  # [cm^-3]
-            ])
-            self.halos.append(data)
+            haloinfo = self._simulate_halo1(self.catalog[idx])
+            self.halos.append(haloinfo)
         logger.info("Simulated radio halos.")
 
     def _calc_halos_emission(self):
