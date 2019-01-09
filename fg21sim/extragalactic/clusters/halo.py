@@ -251,31 +251,12 @@ class RadioHalo:
         M_sub = self.mass_sub(t)
         return helper.radius_stripping(M_main, M_sub, z, configs=self.configs)
 
-    @property
-    def radius(self):
+    def calc_radius(self):
         """
         The estimated radius of the simulated radio halo.
         Unit: [kpc]
         """
         return self.radius_turbulence(self.age_merger) * self.f_radius
-
-    @property
-    def angular_radius(self):
-        """
-        The angular radius of the radio halo.
-        Unit: [arcsec]
-        """
-        DA = COSMO.DA(self.z_obs) * 1e3  # [Mpc] -> [kpc]
-        theta = self.radius / DA  # [rad]
-        return theta * AUC.rad2arcsec
-
-    @property
-    def volume(self):
-        """
-        The halo volume, calculated from the above radius.
-        Unit: [kpc^3]
-        """
-        return (4*np.pi/3) * self.radius**3
 
     @lru_cache()
     def kT(self, t):
