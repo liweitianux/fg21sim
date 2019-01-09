@@ -163,11 +163,12 @@ class GalaxyClusters:
                 ("felong", felong[i]),
                 ("rotation", rotation[i]),
             ])
+
         self.comments += [
             "age - [Gyr] cosmic age at z; ~ cluster age",
             "lon, lat - [deg] longitudes and latitudes",
             "felong - elongated fraction (= b/a)",
-            "rotation -  [deg] ellipse rotation angle",
+            "rotation - [deg] ellipse rotation angle",
         ]
         logger.info("Added catalog items: age, lon, lat, felong, rotation.")
 
@@ -191,8 +192,7 @@ class GalaxyClusters:
             ii = i + 1
             if ii % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
-            z0, M0 = cdict["z"], cdict["mass"]
-            age0 = COSMO.age(z0)
+            z0, M0, age0 = cdict["z"], cdict["mass"], cdict["age"]
             zmax = COSMO.redshift(age0 - self.time_traceback)
             clform = ClusterFormation(M0=M0, z0=z0, zmax=zmax,
                                       merger_mass_min=self.merger_mass_min)
