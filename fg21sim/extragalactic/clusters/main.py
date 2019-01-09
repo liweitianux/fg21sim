@@ -31,6 +31,7 @@ from ...share import CONFIGS, COSMO
 from ...utils.io import dataframe_to_csv, pickle_dump, pickle_load
 from ...utils.ds import dictlist_to_dataframe
 from ...utils.convert import JyPerPix_to_K
+from ...utils.units import UnitConversions as AUC
 
 
 logger = logging.getLogger(__name__)
@@ -179,17 +180,23 @@ class GalaxyClusters:
         logger.info("Calculating basic information for each cluster ...")
         for cdict in enumerate(self.catalog):
             z, mass = cdict["z"], cdict["mass"]
-            Rvir = helper.radius_virial(mass, z)
-            kT = helper.kT_cluster(mass, z, configs=self.configs)
-            B = helper.magnetic_field(mass, z, configs=self.configs)
+            Rvir = helper.radius_virial(mass, z)  # [kpc]
+            DA = COSMO.DA(z)  # [Mpc]
+            theta = Rvir / (DA*1e3) * AUC.rad2arcsec  # [arcsec]
+            kT = helper.kT_cluster(mass, z, configs=self.configs)  # [keV]
+            B = helper.magnetic_field(mass, z, configs=self.configs)  # [uG]
             cdict.update([
-                ("Rvir", Rvir),
-                ("kT", kT),
-                ("B", B),
+                ("DA", DA),  # [Mpc]
+                ("Rvir", Rvir),  # [kpc]
+                ("theta", theta),  # [arcsec]
+                ("kT", kT),  # [keV]
+                ("B", B),  # [uG]
             ])
 
         self.comments += [
+            "DA - [Mpc] angular diameter distance",
             "Rvir - [kpc] virial radius",
+            "theta - [arcsec] angular virial radius",
             "kT - [keV] ICM mean temperature",
             "B - [uG] magnetic field",
         ]
