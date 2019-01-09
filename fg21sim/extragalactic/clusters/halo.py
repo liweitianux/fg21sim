@@ -225,14 +225,6 @@ class RadioHalo:
         v_turb = self._velocity_turb(t_merger)  # [km/s]
         return v_turb / cs
 
-    @property
-    def radius_virial_obs(self):
-        """
-        The virial radius of the "current" cluster (``M_obs``) at ``z_obs``.
-        Unit: [kpc]
-        """
-        return helper.radius_virial(mass=self.M_obs, z=self.z_obs)
-
     @lru_cache()
     def radius_turbulence(self, t):
         """
@@ -284,27 +276,6 @@ class RadioHalo:
         Unit: [kpc^3]
         """
         return (4*np.pi/3) * self.radius**3
-
-    @property
-    def B_obs(self):
-        """
-        The magnetic field strength at the simulated observation
-        time (i.e., cluster mass of ``self.M_obs``), will be used
-        to calculate the synchrotron emissions.
-
-        Unit: [uG]
-        """
-        return helper.magnetic_field(mass=self.M_obs, z=self.z_obs,
-                                     configs=self.configs)
-
-    @property
-    def kT_obs(self):
-        """
-        The ICM mean temperature of the cluster at ``z_obs``.
-        Unit: [keV]
-        """
-        return helper.kT_cluster(self.M_obs, z=self.z_obs,
-                                 configs=self.configs)
 
     @lru_cache()
     def kT(self, t):

@@ -172,6 +172,28 @@ class GalaxyClusters:
         ]
         logger.info("Added catalog items: age, lon, lat, felong, rotation.")
 
+    def _calc_cluster_info(self):
+        """
+        Calculate some basic information for each cluster.
+        """
+        logger.info("Calculating basic information for each cluster ...")
+        for cdict in enumerate(self.catalog):
+            z, mass = cdict["z"], cdict["mass"]
+            Rvir = helper.radius_virial(mass, z)
+            kT = helper.kT_cluster(mass, z, configs=self.configs)
+            B = helper.magnetic_field(mass, z, configs=self.configs)
+            cdict.update([
+                ("Rvir", Rvir),
+                ("kT", kT),
+                ("B", B),
+            ])
+
+        self.comments += [
+            "Rvir - [kpc] virial radius",
+            "kT - [keV] ICM mean temperature",
+            "B - [uG] magnetic field",
+        ]
+
     def _simulate_mergers(self):
         """
         Simulate the formation history of each cluster to build their
@@ -519,6 +541,7 @@ class GalaxyClusters:
         else:
             self._simulate_catalog()
             self._process_catalog()
+            self._calc_cluster_info()
             self._simulate_mergers()
 
         if self.use_dump_halos_data:
