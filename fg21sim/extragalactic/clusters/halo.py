@@ -920,3 +920,36 @@ class RadioHaloAM(RadioHalo1M):
         xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
         active = np.array([self._is_turb_active(t) for t in xt], dtype=int)
         return active.mean()
+
+
+class RadioHalo:
+    """
+    Simulate the radio halo properties for a galaxy cluster.
+
+    This class is built upon the ``RadioHalo1M`` and ``RadioHaloAM`` and
+    is intended for use in the outside.
+
+    Parameters
+    ----------
+    M_obs : float
+        Cluster virial mass at the observation (simulation end) time.
+        Unit: [Msun]
+    z_obs : float
+        Redshift of the observation (simulation end) time.
+    M_main, M_sub : list[float]
+        List of main and sub cluster masses at each merger event,
+        from current to earlier time.
+        Unit: [Msun]
+    z_merger : list[float]
+        The redshifts at each merger event, from small to large.
+    merger_num : int
+        Number of merger events traced for the cluster.
+    """
+    def __init__(self, M_obs, z_obs, M_main, M_sub, z_merger,
+                 merger_num, configs=CONFIGS):
+        self.M_obs, self.z_obs = M_obs, z_obs
+        self.M_main = np.asarray(M_main[:merger_num])
+        self.M_sub = np.asarray(M_sub[:merger_num])
+        self.z_merger = np.asarray(z_merger[:merger_num])
+        self.merger_num = merger_num
+        self.configs = configs
