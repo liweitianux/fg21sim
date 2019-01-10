@@ -284,31 +284,23 @@ class GalaxyClusters:
                            z_merger=clinfo["merger_z"],
                            merger_num=merger_num,
                            configs=self.configs)
+        radius = halo.calc_radius()  # [kpc]
+        theta = radius / (clinfo["DA"]*1e3) * AUC.rad2arcsec  # [arcsec]
         n_e = halo.calc_electron_spectrum()
 
-        return OrderedDict([
-            ("z0", z_obs),
-            ("M0", M_obs),  # [Msun]
-            ("age0", halo.age_obs),  # [Gyr]
-            ("merger_num", merger_num),
-            ("lon", clinfo["lon"]),  # [deg] longitude
-            ("lat", clinfo["lat"]),  # [deg] longitude
-            ("felong", clinfo["felong"]),  # fraction of elongation
-            ("rotation", clinfo["rotation"]),  # [deg] rotation angle
-            ("Rvir0", halo.radius_virial_obs),  # [kpc]
-            ("kT0", halo.kT_obs),  # [keV]
-            ("B0", halo.B_obs),  # [uG] magnetic field @ z_obs
-            ("Rhalo", halo.radius),  # [kpc]
-            ("Rhalo_angular", halo.angular_radius),  # [arcsec]
-            ("volume", halo.volume),  # [kpc^3]
-            ("Ke", halo.injection_rate),  # [cm^-3 Gyr^-1]
-            ("time_turbulence", halo.time_turbulence_avg),  # [Gyr]
-            ("Mach_turb", halo.mach_turbulence_avg),  # Mach number
-            ("tau_acc", halo.tau_acceleration_avg),  # [Gyr]
-            ("tfrac_acc", halo.time_acceleration_fraction),
-            ("gamma", halo.gamma),  # Lorentz factors
-            ("n_e", n_e),  # [cm^-3]
-        ])
+        haloinfo = OrderedDict(
+            **clinfo,
+            Rhalo=radius,  # [kpc]
+            Rhalo_angular=theta,  # [arcsec]
+            n_e=n_e,  # [cm^-3]
+            gamma=halo.gamma,  # Lorentz factors
+            Ke=halo.injection_rate,  # [cm^-3 Gyr^-1]
+            time_turb=halo.time_turbulence_avg,  # [Gyr]
+            Mach_turb=halo.mach_turbulence_avg,  # Mach number
+            tau_acc=halo.tau_acceleration_avg,  # [Gyr]
+            tfrac_acc=halo.time_acceleration_fraction,
+        )
+        return haloinfo
 
     def _simulate_halos(self):
         """
