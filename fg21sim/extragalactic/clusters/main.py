@@ -335,8 +335,8 @@ class GalaxyClusters:
             if ii % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
             haloem = HaloEmission(gamma=hdict["gamma"], n_e=hdict["n_e"],
-                                  B=hdict["B0"], radius=hdict["Rhalo"],
-                                  redshift=hdict["z0"])
+                                  B=hdict["B"], radius=hdict["Rhalo"],
+                                  redshift=hdict["z"])
             emissivity = haloem.calc_emissivity(frequencies=self.frequencies)
             power = haloem.calc_power(self.frequencies, emissivity=emissivity)
             flux = haloem.calc_flux(self.frequencies)
