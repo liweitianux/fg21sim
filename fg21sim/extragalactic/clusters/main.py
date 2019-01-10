@@ -188,7 +188,7 @@ class GalaxyClusters:
             cdict.update([
                 ("DA", DA),  # [Mpc]
                 ("Rvir", Rvir),  # [kpc]
-                ("theta", theta),  # [arcsec]
+                ("Rvir_angular", theta),  # [arcsec]
                 ("kT", kT),  # [keV]
                 ("B", B),  # [uG]
             ])
@@ -196,7 +196,7 @@ class GalaxyClusters:
         self.comments += [
             "DA - [Mpc] angular diameter distance",
             "Rvir - [kpc] virial radius",
-            "theta - [arcsec] angular virial radius",
+            "Rvir_angular - [arcsec] angular virial radius",
             "kT - [keV] ICM mean temperature",
             "B - [uG] magnetic field",
         ]
