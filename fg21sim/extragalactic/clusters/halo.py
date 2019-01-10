@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018 Weitian LI <wt@liwt.net>
+# Copyright (c) 2017-2019 Weitian LI <wt@liwt.net>
 # MIT license
 
 """
