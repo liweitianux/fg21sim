@@ -945,6 +945,9 @@ class RadioHalo:
     merger_num : int
         Number of merger events traced for the cluster.
     """
+    # Effective radius of the turbulence region [kpc]
+    radius_turb_eff = None
+
     def __init__(self, M_obs, z_obs, M_main, M_sub, z_merger,
                  merger_num, configs=CONFIGS):
         self.M_obs, self.z_obs = M_obs, z_obs
@@ -953,3 +956,36 @@ class RadioHalo:
         self.z_merger = np.asarray(z_merger[:merger_num])
         self.merger_num = merger_num
         self.configs = configs
+
+    def calc_radius_turb(self):
+        """
+        Determine the effective radius of the turbulence region along the
+        whole merging process.  The effective size is determined by the
+        largest turbulence radius of a merger that is generating a genuine
+        radio halo.
+
+        Attributes
+        ----------
+        radius_turb_eff : float
+            Effective radius of the turbulence region
+            Unit: [kpc]
+        """
+        logger.info("Determining the effective turbulence radius ...")
+        halos = [RadioHalo1M(M_obs=self.M_obs, z_obs=self.z_obs,
+                             M_main=self.M_main[i],
+                             M_sub=self.M_sub[i],
+                             z_merger=self.z_merger[i],
+                             configs=self.configs)
+                 for i in range(self.merger_num)]
+        halos.sort(key=lambda h: h.radius_turbulence(h.age_merger),
+                   reverse=True)
+        for halo in halos:
+            logger.info("Checking merger: %.2e & %.2e @ %.3f ..." %
+                        (halo.M_main, halo.M_sub, halo.z_merger))
+            n_e = halo.calc_electron_spectrum()
+            genuine, factor = halo.is_genuine(n_e)
+            if genuine:
+                self.radius_turb_eff = halo.radius_turbulence(halo.age_merger)
+                logger.info("Identified effective merger")
+                break
+        return self.radius_turb_eff
