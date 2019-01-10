@@ -73,7 +73,7 @@ from ...utils.units import (Units as AU,
 logger = logging.getLogger(__name__)
 
 
-class RadioHalo:
+class RadioHalo1M:
     """
     Simulate the radio halo properties for a galaxy cluster that is
     experiencing an on-going merger or had a merger recently.
@@ -124,7 +124,8 @@ class RadioHalo:
         The halo radius
         Unit: [kpc]
     gamma : 1D float `~numpy.ndarray`
-        The Lorentz factors of the adopted logarithmic grid to solve the equation.
+        The Lorentz factors of the adopted logarithmic grid to solve the
+        equation.
     _acceleration_disabled : bool
         Whether the turbulence acceleration is intentionally disabled?
     """
@@ -741,7 +742,7 @@ class RadioHalo:
         return loss_ic + loss_syn + loss_coul
 
 
-class RadioHaloAM(RadioHalo):
+class RadioHaloAM(RadioHalo1M):
     """
     Simulate the radio halo properties for a galaxy cluster with all its
     on-going merger and past merger events taken into account.
