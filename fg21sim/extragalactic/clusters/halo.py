@@ -454,6 +454,36 @@ class RadioHalo:
 
         return n_e
 
+    def is_genuine(self, n_e):
+        """
+        Check whether the radio halo is genuine/observable by comparing the
+        emissivity to the corresponding fiducial value, which is calculated
+        from the fiducial electron spectrum derived with turbulent
+        acceleration turned off.
+
+        Parameters
+        ----------
+        n_e : float 1D `~numpy.ndarray`
+            The finally derived electron spectrum.
+            Unit: [cm^-3]
+
+        Returns
+        -------
+        genuine : bool
+            Whether the radio halo is genuine?
+        factor : float
+            Acceleration factor of the flux.
+        """
+        haloem = HaloEmission(gamma=self.gamma, n_e=n_e, B=1)
+        em = haloem.calc_emissivity(self.fiducial_freq)
+
+        ne_fiducial = self.calc_electron_spectrum(fiducial=True)
+        haloem.n_e = ne_fiducial
+        em_fiducial = haloem.calc_emissivity(self.fiducial_freq)
+
+        factor = em / em_fiducial
+        return (factor >= self.fiducial_factor, factor)
+
     def fp_injection(self, gamma, t=None):
         """
         Electron injection (rate) term for the Fokker-Planck equation.
