@@ -178,7 +178,7 @@ class GalaxyClusters:
         Calculate some basic information for each cluster.
         """
         logger.info("Calculating basic information for each cluster ...")
-        for cdict in enumerate(self.catalog):
+        for cdict in self.catalog:
             z, mass = cdict["z"], cdict["mass"]
             Rvir = helper.radius_virial(mass, z)  # [kpc]
             DA = COSMO.DA(z)  # [Mpc]
