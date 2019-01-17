@@ -229,9 +229,10 @@ class RadioHalo1M:
     @lru_cache()
     def radius_turbulence(self, t):
         """
-        The radius of the turbulence injection region, which is calculated
-        as the mean of the stripping radius of the sub-cluster and the core
-        radius of the main cluster.
+        The radius of the turbulence region, which is estimated as the
+        stripping radius ``r_s`` of the sub-cluster if ``r_s`` is larger
+        than the core radius ``r_c`` of the main cluster, otherwise, as
+        ``r_c``.
 
         Unit: [kpc]
         """
@@ -239,7 +240,10 @@ class RadioHalo1M:
         M_main = self.mass_main(t)
         r_c = self.f_rc * helper.radius_virial(M_main, z)
         r_s = self.radius_stripping(t)
-        return (r_c + r_s) / 2
+        if r_s >= r_c:
+            return r_s
+        else:
+            return r_c
 
     @lru_cache()
     def radius_stripping(self, t):
