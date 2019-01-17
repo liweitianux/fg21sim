@@ -254,7 +254,7 @@ class RadioHalo1M:
         z = COSMO.redshift(t)
         M_main = self.mass_main(t)
         M_sub = self.mass_sub(t)
-        return helper.radius_stripping(M_main, M_sub, z, configs=self.configs)
+        return helper.radius_stripping(M_main, M_sub, z, f_rc=self.f_rc)
 
     def calc_radius(self):
         """
@@ -479,6 +479,7 @@ class RadioHalo1M:
         factor : float
             Acceleration factor of the flux.
         """
+        # NOTE: The emissivity is linearly proportional to 'B'.
         haloem = HaloEmission(gamma=self.gamma, n_e=n_e, B=1)
         em = haloem.calc_emissivity(self.fiducial_freq)
 
@@ -930,7 +931,7 @@ class RadioHalo:
     """
     Simulate the radio halo properties for a galaxy cluster.
 
-    This class is built upon the ``RadioHalo1M`` and ``RadioHaloAM`` and
+    This class is built upon the `~RadioHalo1M` and `~RadioHaloAM` and
     is intended for use in the outside.
 
     Parameters

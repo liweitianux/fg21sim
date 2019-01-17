@@ -12,7 +12,7 @@ galactic/synchrotron = boolean(default=False)
 galactic/freefree = boolean(default=False)
 # Galactic supernova remnants emission
 galactic/snr = boolean(default=False)
-#  Extragalactic clusters of galaxies emission
+# Extragalactic clusters of galaxies emission
 extragalactic/clusters = boolean(default=False)
 
 
@@ -440,8 +440,8 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Unit: [Gyr]
   time_init = float(default=1.0, min=0)
 
-  # The frequency and factor used to determine whether the radio halo is
-  # genuine, i.e., the flux density at ``fiducial_freq`` is at least
+  # The frequency and factor used to determine the existence of the radio
+  # halo, i.e., the emissivity at ``fiducial_freq`` is at least
   # ``fiducial_factor`` times the fiducial value.
   # Unit: [MHz]
   fiducial_freq = float(default=150.0)

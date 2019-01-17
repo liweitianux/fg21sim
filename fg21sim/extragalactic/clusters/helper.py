@@ -137,7 +137,7 @@ def radius_virial(mass, z=0.0):
     return R_vir * AUC.cm2kpc  # [kpc]
 
 
-def radius_stripping(M_main, M_sub, z, configs=CONFIGS):
+def radius_stripping(M_main, M_sub, z, f_rc=0.1):
     """
     Calculate the stripping radius of the in-falling sub-cluster, which
     is determined by the equipartition between the static and ram pressure.
@@ -162,7 +162,7 @@ def radius_stripping(M_main, M_sub, z, configs=CONFIGS):
         rs = optimize.brentq(lambda r: f_rho_sub(r) - rhs,
                              a=0.1*r_vir, b=r_vir, xtol=1e-1)
     except ValueError:
-        rs = 0.1 * r_vir
+        rs = 2*f_rc * r_vir
     return rs  # [kpc]
 
 
