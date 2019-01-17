@@ -298,8 +298,5 @@ class PSFormalism:
             "cluster minimum mass: %.2e [Msun]" % self.Mmin,
             "cluster counts: %d" % counts,
             "boost factor for cluster counts: %s" % self.boost,
-            "",
-            "z - redshift",
-            "mass - [Msun] cluster total mass",
         ]
         return (z, mass, comment)

@@ -115,9 +115,17 @@ class GalaxyClusters:
         psform.write()
         counts = psform.calc_cluster_counts(coverage=self.sky.area)
         z, mass, self.comments = psform.sample_z_m(counts)
-        self.catalog = []
-        for z_, m_ in zip(z, mass):
-            self.catalog.append(OrderedDict([("z", z_), ("mass", m_)]))
+        dm_frac = 1 - COSMO.baryon_fraction
+        self.catalog = [OrderedDict([("z", z_),
+                                     ("mass_dm", m_),
+                                     ("mass", m_ / dm_frac)])
+                        for z_, m_ in zip(z, mass)]
+        self.comments += [
+            "",
+            "z - redshift",
+            "mass_dm - [Msun] dark matter halo mass",
+            "mass - [Msun] cluster total mass",
+        ]
         logger.info("Simulated a catalog of %d clusters" % counts)
 
     def _process_catalog(self):
