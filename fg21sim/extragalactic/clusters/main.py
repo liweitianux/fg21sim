@@ -225,13 +225,14 @@ class GalaxyClusters:
         logger.info("Simulating merger histories for each cluster ...")
         num = len(self.catalog)
         num_hasmerger = 0
+        fdm = 1 - COSMO.baryon_fraction
         for i, cdict in enumerate(self.catalog):
             ii = i + 1
             if ii % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
             z0, M0, age0 = cdict["z"], cdict["mass"], cdict["age"]
             zmax = COSMO.redshift(age0 - self.time_traceback)
-            clform = ClusterFormation(M0=M0, z0=z0, zmax=zmax,
+            clform = ClusterFormation(M0=M0*fdm, z0=z0, zmax=zmax,
                                       merger_mass_min=self.merger_mass_min)
             clform.simulate_mtree(main_only=True)
             mergers = clform.mergers()
@@ -239,8 +240,8 @@ class GalaxyClusters:
                 num_hasmerger += 1
                 cdict.update([
                     ("merger_num",   len(mergers)),
-                    ("merger_mass1", [ev["M_main"] for ev in mergers]),
-                    ("merger_mass2", [ev["M_sub"] for ev in mergers]),
+                    ("merger_mass1", [ev["M_main"]/fdm for ev in mergers]),
+                    ("merger_mass2", [ev["M_sub"]/fdm for ev in mergers]),
                     ("merger_z",     [ev["z"] for ev in mergers]),
                     ("merger_age",   [ev["age"] for ev in mergers]),
                 ])
