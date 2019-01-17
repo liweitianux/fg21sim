@@ -1,15 +1,15 @@
-# Copyright (c) 2016-2017 Weitian LI <liweitianux@live.com>
-# MIT license
+# Copyright (c) 2016-2017,2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
-Flat ΛCDM cosmological model.
+Cosmology calculator in a flat ΛCDM universe.
 
 References
 ----------
 .. [unibonn-wiki]
    https://astro.uni-bonn.de/~pavel/WIKIPEDIA/Lambda-CDM_model.html
 
-.. [wikipedia]
+.. [wikipedia-lcdm]
    https://en.wikipedia.org/wiki/Lambda-CDM_model
 
 .. [randall2002]
@@ -32,6 +32,12 @@ References
 .. [cassano2005]
    Cassano & Brunetti 2005, MNRAS, 357, 1313
    http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
+
+.. [wikipedia-virial]
+   https://en.wikipedia.org/wiki/Virial_mass
+
+.. [bryan1998]
+   http://adsabs.harvard.edu/abs/1998ApJ...495...80B
 """
 
 import logging
@@ -307,8 +313,6 @@ class Cosmology:
     def darkmatter_fraction(self):
         """
         The cosmological mean dark matter fraction (w.r.t. matter).
-
-        XXX: assumed to be *constant* regardless of redshifts!
         """
         return 1 - self.baryon_fraction
 
@@ -317,11 +321,13 @@ class Cosmology:
         Calculate the virial overdensity, which generally used to
         determine the virial radius of a cluster.
 
-        References: Ref.[cassano2005],Eqs.(10,A4)
+        References
+        ----------
+        * Ref.[bryan1998],Eqs.(5,6)
+        * Ref.[wikipedia-virial]
         """
-        omega_z = (1 / self.Om(z)) - 1
-        Delta_c = 18*np.pi**2 * (1 + 0.4093 * omega_z**0.9052)
-        return Delta_c
+        x = self.Om(z) - 1
+        return 18*np.pi**2 + 82*x - 39 * x**2
 
     def overdensity_crit(self, z):
         """
