@@ -199,11 +199,12 @@ class RadioHalo1M:
 
     def time_turbulence(self, t=None):
         """
-        The duration that the compressive turbulence persists, which is
+        The duration that the turbulence persists strong enough to be
+        able to effectively accelerate the electrons, which is
         estimated as:
-            τ_turb ≅ L / v_impact = 2*R_turb / v_impact.
-        During this period, the merger-induced turbulence is regarded
-        to accelerate the relativistic electrons effectively.
+            τ_turb ≅ 2*L / v_impact = 4*R_turb / v_impact.
+
+        Reference: [miniati2015],Sec.5
 
         Unit: [Gyr]
         """
@@ -211,10 +212,10 @@ class RadioHalo1M:
         mass_main = self.mass_main(t=t_merger)
         mass_sub = self.mass_sub(t=t_merger)
         z_merger = COSMO.redshift(t_merger)
-        vi = helper.velocity_impact(mass_main, mass_sub, z_merger)  # [km/s]
-        distance = 2 * self.radius_turbulence(t_merger)
-        uconv = AUC.kpc2km * AUC.s2Gyr  # [s kpc/km] => [Gyr]
-        time = uconv * distance / vi  # [Gyr]
+        vi = helper.velocity_impact(mass_main, mass_sub, z_merger)
+        L_turb = 2 * self.radius_turbulence(t_merger)
+        uconv = AUC.kpc2km * AUC.s2Gyr  # [kpc]/[km/s] => [Gyr]
+        time = uconv * 2*L_turb / vi  # [Gyr]
         return time
 
     def mach_turbulence(self, t=None):
