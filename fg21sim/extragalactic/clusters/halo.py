@@ -640,7 +640,7 @@ class RadioHalo1M:
     @lru_cache()
     def _rho_gas_f(self, t):
         """
-        The gas density profile of the merged cluster.
+        The gas density profile of the main cluster.
 
         Returns
         -------
@@ -648,10 +648,9 @@ class RadioHalo1M:
             A function that calculates the gas density of unit [Msun/kpc^3].
         """
         z = COSMO.redshift(t)
-        M_main = self.mass_main(t)
-        M_sub = self.mass_sub(t)
-        return helper.calc_gas_density_profile(mass=M_main+M_sub, z=z,
-                                               f_rc=self.f_rc, beta=self.beta)
+        mass = self.mass_main(t)
+        return helper.calc_gas_density_profile(mass, z, f_rc=self.f_rc,
+                                               beta=self.beta)
 
     @lru_cache()
     def _velocity_turb(self, t):
@@ -666,7 +665,7 @@ class RadioHalo1M:
 
         Merger energy:
             E_merger ≅ <ρ_gas> * v_i^2 * V_turb
-            V_turb = ᴨ * r_s^2 * R_vir
+            V_turb = ᴨ * r_s^2 * (R_vir+r_s)
         Turbulence energy:
             E_turb ≅ η_turb * E_merger ≅ 0.5 * M_turb * <v_turb^2>
         => Velocity dispersion:
@@ -699,7 +698,7 @@ class RadioHalo1M:
         R_vir = helper.radius_virial(M_main, z)  # [kpc]
         r_s = self.radius_stripping(t)  # [kpc]
 
-        V_turb = np.pi * r_s**2 * R_vir  # [kpc^3]
+        V_turb = np.pi * r_s**2 * (R_vir+r_s)  # [kpc^3]
         E_turb = self.eta_turb * rho_main * v_i**2 * V_turb
         v2_turb = 2 * E_turb / M_turb  # [km^2/s^2]
         return np.sqrt(v2_turb)  # [km/s]
