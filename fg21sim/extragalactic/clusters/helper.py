@@ -1,5 +1,5 @@
-# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2017-2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Functions to help simulate galaxy cluster diffuse emissions.
@@ -137,7 +137,7 @@ def radius_virial(mass, z=0.0):
     return R_vir * AUC.cm2kpc  # [kpc]
 
 
-def radius_stripping(M_main, M_sub, z, f_rc=0.1):
+def radius_stripping(M_main, M_sub, z, f_rc=0.1, beta=0.8):
     """
     Calculate the stripping radius of the in-falling sub-cluster, which
     is determined by the equipartition between the static and ram pressure.
@@ -152,7 +152,7 @@ def radius_stripping(M_main, M_sub, z, f_rc=0.1):
     """
     r_vir = radius_virial(M_sub, z)  # [kpc]
     rho_main = density_number_thermal(M_main, z) * AC.mu*AC.u  # [g/cm^3]
-    f_rho_sub = calc_gas_density_profile(M_sub, z)  # [Msun/kpc^3]
+    f_rho_sub = calc_gas_density_profile(M_sub, z, f_rc, beta)  # [Msun/kpc^3]
     vi = velocity_impact(M_main, M_sub, z)  # [km/s]
     kT_sub = kT_cluster(M_sub, z)  # [keV]
     rhs = rho_main * vi**2 * AC.mu*AC.u / kT_sub  # [g/cm^3][g*km^2/s^2/keV]
@@ -344,7 +344,8 @@ def speed_sound(kT):
 
 def velocity_virial(mass, z=0.0):
     """
-    Calculate the virial velocity, i.e., free-fall velocity.
+    Calculate the virial velocity, i.e., circular velocity at the
+    virial radius.
 
     Unit: [km/s]
     """

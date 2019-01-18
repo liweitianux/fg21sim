@@ -1,5 +1,5 @@
 # Copyright (c) 2017-2019 Weitian LI <wt@liwt.net>
-# MIT license
+# MIT License
 
 """
 Simulate (giant) radio halos originating from the recent merger
@@ -254,7 +254,8 @@ class RadioHalo1M:
         z = COSMO.redshift(t)
         M_main = self.mass_main(t)
         M_sub = self.mass_sub(t)
-        return helper.radius_stripping(M_main, M_sub, z, f_rc=self.f_rc)
+        return helper.radius_stripping(M_main, M_sub, z,
+                                       f_rc=self.f_rc, beta=self.beta)
 
     def calc_radius(self):
         """
