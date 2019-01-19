@@ -88,12 +88,6 @@ To get started, read the `User Guide`_.
 See also this `simulation example`_.
 
 
-Authors
--------
-* Weitian LI <``wt@liwt.net``>
-* Zhixian MA <``zxma_sjtu@qq.com``>
-
-
 License
 -------
 Unless otherwise declared:
