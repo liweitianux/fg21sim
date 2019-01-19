@@ -241,10 +241,7 @@ class RadioHalo1M:
         M_main = self.mass_main(t)
         r_c = self.f_rc * helper.radius_virial(M_main, z)
         r_s = self.radius_stripping(t)
-        if r_s >= r_c:
-            return r_s
-        else:
-            return r_c
+        return max([r_s, r_c])
 
     @lru_cache()
     def radius_stripping(self, t):
