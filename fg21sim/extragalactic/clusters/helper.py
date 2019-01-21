@@ -281,13 +281,13 @@ def density_energy_thermal(mass, z=0.0, configs=CONFIGS):
     return e_th
 
 
-def density_energy_electron(spectrum, gamma):
+def density_energy_electron(n_e, gamma):
     """
     Calculate the energy density of relativistic electrons.
 
     Parameters
     ----------
-    spectrum : 1D float `~numpy.ndarray`
+    n_e : 1D float `~numpy.ndarray`
         The number density of the electrons w.r.t. Lorentz factors
         Unit: [cm^-3]
     gamma : 1D float `~numpy.ndarray`
@@ -299,8 +299,8 @@ def density_energy_electron(spectrum, gamma):
         The energy density of the relativistic electrons.
         Unit: [erg cm^-3]
     """
-    e_re = integrate.trapz(spectrum*gamma*AU.mec2, gamma)
-    return e_re
+    e_spec = n_e * gamma*AU.mec2
+    return integrate.simps(e_spec * gamma, np.log(gamma))  # in log grid
 
 
 def magnetic_field(mass, z=0.0, configs=CONFIGS):
