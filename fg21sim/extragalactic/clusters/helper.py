@@ -112,6 +112,33 @@ def calc_gas_density_profile(mass, z, f_rc=0.1, beta=0.8):
     return beta_model(rho0, rc, beta)
 
 
+def radius_overdensity(mass, overdensity, z=0.0):
+    """
+    Calculate the radius within which the mean density is ``overdensity``
+    times of the cosmological critical density.
+
+    Parameters
+    ----------
+    mass : float, `~numpy.ndarray`
+        Total mass of the cluster
+        Unit: [Msun]
+    overdensity : float
+        The times of density over the cosmological critical density,
+        e.g., 200, 500.
+    z : float, `~numpy.ndarray`, optional
+        Redshift
+        Default: 0.0 (i.e., present day)
+
+    Returns
+    -------
+    radius : float, `~numpy.ndarray`
+        Unit: [kpc]
+    """
+    rho = COSMO.rho_crit(z)  # [g/cm^3]
+    r = (3*mass*AUC.Msun2g / (4*np.pi * overdensity * rho))**(1/3)  # [cm]
+    return r * AUC.cm2kpc  # [kpc]
+
+
 def radius_virial(mass, z=0.0):
     """
     Calculate the virial radius of a cluster at a given redshift.
@@ -132,9 +159,7 @@ def radius_virial(mass, z=0.0):
         Unit: [kpc]
     """
     Dc = COSMO.overdensity_virial(z)
-    rho = COSMO.rho_crit(z)  # [g/cm^3]
-    R_vir = (3*mass*AUC.Msun2g / (4*np.pi * Dc * rho))**(1/3)  # [cm]
-    return R_vir * AUC.cm2kpc  # [kpc]
+    return radius_overdensity(mass, overdensity=Dc, z=z)
 
 
 def radius_stripping(M_main, M_sub, z, f_rc=0.1, beta=0.8):
@@ -385,7 +410,7 @@ def velocity_impact(M_main, M_sub, z=0.0):
     ----------
     Ref.[cassano2005],Eq.(9)
     """
-    eta_v = 4 * (1 + M_main/M_sub) ** 0.333333
+    eta_v = 4 * (1 + M_main/M_sub) ** (1/3)
     R_vir = radius_virial(M_main, z) * AUC.kpc2cm  # [cm]
     vi = np.sqrt(2*AC.G * (1-1/eta_v) *
                  (M_main+M_sub)*AUC.Msun2g / R_vir)  # [cm/s]
