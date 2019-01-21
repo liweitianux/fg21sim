@@ -257,6 +257,14 @@ def density_number_thermal(mass, z=0.0):
     return n_th
 
 
+def density_gas(mass, z=0.0):
+    """
+    Calculate the mean gas density.
+    Unit: [g/cm^3]
+    """
+    return density_number_thermal(M_main, z) * AC.mu*AC.u  # [g/cm^3]
+
+
 def density_energy_thermal(mass, z=0.0, configs=CONFIGS):
     """
     Calculate the thermal energy density of the ICM.
