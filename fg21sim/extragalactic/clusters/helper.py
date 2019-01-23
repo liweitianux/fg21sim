@@ -30,6 +30,10 @@ References
    Lokas & Mamon 2001, MNRAS, 321, 155
    http://adsabs.harvard.edu/abs/2001MNRAS.321..155L
 
+.. [miniati2015]
+   Miniati & Beresnyak 2015, Nature, 523, 59
+   http://adsabs.harvard.edu/abs/2015Natur.523...59M
+
 .. [murgia2009]
    Murgia et al. 2009, A&A, 499, 679
    http://adsabs.harvard.edu/abs/2009A%26A...499..679M
@@ -371,6 +375,28 @@ def magnetic_field(
     e_th = density_energy_thermal(mass=mass, z=z, kT_out=kT_out)
     B = np.sqrt(8*np.pi * eta_b * e_th) * 1e6  # [G] -> [uG]
     return B
+
+
+def plasma_beta(
+        mass,
+        z=0.0,
+        eta_b=CONFIGS.getn("extragalactic/clusters/eta_b"),
+        kT_out=CONFIGS.getn("extragalactic/clusters/kT_out"),
+    ):
+    """
+    Calculate the β value of the ICM, which is defined as:
+        β ≡ P_gas / u_B
+    where "P_gas" is the gas pressue: P_gas = n_th * kT;
+    "u_B" is the magnetic field energy density: u_B = B² / 8π .
+
+    Reference: Ref.[miniati2015],Eq.(2)
+    """
+    n_th = density_number_thermal(mass, z)  # [cm^-3]
+    kT = kT_cluster(mass, z, kT_out=kT_out) * AUC.keV2erg  # [erg]
+    P = n_th * kT
+    B = magnetic_field(mass, z, eta_b=eta_b, kT_out=kT_out) * 1e-6  # [G]
+    beta = 8*np.pi * P / B**2
+    return beta
 
 
 def speed_sound(kT):
