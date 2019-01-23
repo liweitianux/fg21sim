@@ -76,7 +76,12 @@ def beta_model(rho0, rc, beta):
     return func
 
 
-def calc_gas_density_profile(mass, z, f_rc=0.1, beta=0.8):
+def calc_gas_density_profile(
+        mass,
+        z,
+        f_rc=CONFIGS.getn("extragalactic/halos/f_rc"),
+        beta=CONFIGS.getn("extragalactic/halos/beta"),
+    ):
     """
     Calculate the parameters of the β-model that is used to describe the
     gas density profile.
@@ -162,7 +167,13 @@ def radius_virial(mass, z=0.0):
     return radius_overdensity(mass, overdensity=Dc, z=z)
 
 
-def radius_stripping(M_main, M_sub, z, f_rc=0.1, beta=0.8):
+def radius_stripping(
+        M_main,
+        M_sub,
+        z,
+        f_rc=CONFIGS.getn("extragalactic/halos/f_rc"),
+        beta=CONFIGS.getn("extragalactic/halos/beta"),
+    ):
     """
     Calculate the stripping radius of the in-falling sub-cluster, which
     is determined by the equipartition between the static and ram pressure.
@@ -223,7 +234,12 @@ def kT_virial(mass, z=0.0, radius=None):
     return kT
 
 
-def kT_cluster(mass, z=0.0, radius=None, configs=CONFIGS):
+def kT_cluster(
+        mass,
+        z=0.0,
+        radius=None,
+        kT_out=CONFIGS.getn("extragalactic/clusters/kT_out"),
+    ):
     """
     Calculate the temperature of a cluster ICM.
 
@@ -245,8 +261,6 @@ def kT_cluster(mass, z=0.0, radius=None, configs=CONFIGS):
        The temperature of the cluster ICM.
        Unit: [keV]
     """
-    key = "extragalactic/clusters/kT_out"
-    kT_out = configs.getn(key)
     kT_vir = kT_virial(mass=mass, z=z, radius=radius)
     kT_icm = kT_vir + 1.5*kT_out
     return kT_icm
@@ -290,7 +304,11 @@ def density_gas(mass, z=0.0):
     return density_number_thermal(mass, z) * AC.mu*AC.u  # [g/cm^3]
 
 
-def density_energy_thermal(mass, z=0.0, configs=CONFIGS):
+def density_energy_thermal(
+        mass,
+        z=0.0,
+        kT_out=CONFIGS.getn("extragalactic/clusters/kT_out"),
+    ):
     """
     Calculate the thermal energy density of the ICM.
 
@@ -301,7 +319,7 @@ def density_energy_thermal(mass, z=0.0, configs=CONFIGS):
         Unit: [erg/cm^3]
     """
     n_th = density_number_thermal(mass=mass, z=z)  # [cm^-3]
-    kT = kT_cluster(mass, z, configs=configs) * AUC.keV2erg  # [erg]
+    kT = kT_cluster(mass, z, kT_out=kT_out) * AUC.keV2erg  # [erg]
     e_th = (3.0/2) * kT * n_th
     return e_th
 
@@ -328,7 +346,12 @@ def density_energy_electron(n_e, gamma):
     return integrate.simps(e_spec * gamma, np.log(gamma))  # in log grid
 
 
-def magnetic_field(mass, z=0.0, configs=CONFIGS):
+def magnetic_field(
+        mass,
+        z=0.0,
+        eta_b=CONFIGS.getn("extragalactic/clusters/eta_b"),
+        kT_out=CONFIGS.getn("extragalactic/clusters/kT_out"),
+    ):
     """
     Calculate the mean magnetic field strength within the ICM, which is
     also assumed to be uniform, according to the assumed fraction of the
@@ -345,9 +368,7 @@ def magnetic_field(mass, z=0.0, configs=CONFIGS):
         The mean magnetic field strength within the ICM.
         Unit: [uG]
     """
-    key = "extragalactic/clusters/eta_b"
-    eta_b = configs.getn(key)
-    e_th = density_energy_thermal(mass=mass, z=z, configs=configs)
+    e_th = density_energy_thermal(mass=mass, z=z, kT_out=kT_out)
     B = np.sqrt(8*np.pi * eta_b * e_th) * 1e6  # [G] -> [uG]
     return B
 

@@ -268,9 +268,10 @@ class RadioHalo1M:
         The ICM mean temperature of the main cluster.
         Unit: [keV]
         """
+        kT_out = self.configs.getn("extragalactic/clusters/kT_out")
         M_main = self.mass_main(t)
         z = COSMO.redshift(t)
-        return helper.kT_cluster(mass=M_main, z=z, configs=self.configs)
+        return helper.kT_cluster(mass=M_main, z=z, kT_out=kT_out)
 
     def tau_acceleration(self, t):
         """
@@ -367,9 +368,10 @@ class RadioHalo1M:
         ----------
         Ref.[cassano2005],Eqs.(31,32,33)
         """
+        kT_out = self.configs.getn("extragalactic/clusters/kT_out")
         s = self.injection_index
         e_th = helper.density_energy_thermal(self.M_obs, self.z_obs,
-                                             configs=self.configs)
+                                             kT_out=kT_out)
         term1 = (s-2) * self.eta_e * e_th  # [erg cm^-3]
         term2 = self.gamma_min**(s-2)
         term3 = AU.mec2 * self.age_obs  # [erg Gyr]
@@ -630,9 +632,12 @@ class RadioHalo1M:
 
         Unit: [uG]
         """
+        eta_b = self.configs.getn("extragalactic/clusters/eta_b")
+        kT_out = self.configs.getn("extragalactic/clusters/kT_out")
         z = COSMO.redshift(t)
         mass = self.mass_main(t)  # [Msun]
-        return helper.magnetic_field(mass=mass, z=z, configs=self.configs)
+        return helper.magnetic_field(mass=mass, z=z,
+                                     eta_b=eta_b, kT_out=kT_out)
 
     @lru_cache()
     def _rho_gas_f(self, t):
