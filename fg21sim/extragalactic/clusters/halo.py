@@ -656,21 +656,6 @@ class RadioHalo1M:
                                      eta_b=eta_b, kT_out=kT_out)
 
     @lru_cache()
-    def _rho_gas_f(self, t):
-        """
-        The gas density profile of the main cluster.
-
-        Returns
-        -------
-        f(r) : function
-            A function that calculates the gas density of unit [Msun/kpc^3].
-        """
-        z = COSMO.redshift(t)
-        mass = self.mass_main(t)
-        return helper.calc_gas_density_profile(mass, z, f_rc=self.f_rc,
-                                               beta=self.beta)
-
-    @lru_cache()
     def _velocity_turb(self, t):
         """
         Calculate the turbulence velocity dispersion.
@@ -703,13 +688,16 @@ class RadioHalo1M:
             Unit: [km/s]
         """
         z = COSMO.redshift(t)
-        rho_gas_f = self._rho_gas_f(t)
-        R_turb = self.radius_turbulence(t)  # [kpc]
-        M_turb = 4*np.pi * integrate.quad(lambda r: rho_gas_f(r) * r**2,
-                                          a=0, b=R_turb)[0]  # [Msun]
-
         M_main = self.mass_main(t)
         M_sub = self.mass_sub(t)
+        R_turb = self.radius_turbulence(t)  # [kpc]
+
+        rho_gas_f = helper.calc_gas_density_profile(
+                M_main, z, f_rc=self.f_rc, beta=self.beta)
+        M_turb = 4*np.pi * integrate.quad(
+                lambda r: rho_gas_f(r) * r**2,
+                a=0, b=R_turb)[0]  # [Msun]
+
         v_i = helper.velocity_impact(M_main, M_sub, z)  # [km/s]
         rho_main = helper.density_number_thermal(M_main, z)  # [cm^-3]
         rho_main *= AC.mu*AC.u * AUC.g2Msun * AUC.kpc2cm**3  # [Msun/kpc^3]
