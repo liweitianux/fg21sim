@@ -354,13 +354,6 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Unit: [Gyr]
   time_traceback = float(default=3.0, min=1.0, max=5.0)
 
-  # The fraction of the magnetic field energy density w.r.t. the ICM
-  # thermal energy density, which is used to determine the mean magnetic
-  # field strength within the ICM and is also assumed to be uniform.
-  # * ~< 0.4% (Ref: Pfrommer & Ensslin 2004, MNRAS)
-  # * ~0.3%-1% (Ref: Bohringer et al. 2016, A&A)
-  eta_b = float(default=0.001, min=1e-5, max=0.1)
-
   # The temperature of the outer gas surrounding the cluster.  Accretion
   # shocks form near the cluster virial radius during the cluster formation,
   # which can heat the cluster ICM to have a higher temperature than the
@@ -401,12 +394,9 @@ stream = option("stderr", "stdout", "", default="stderr")
   # electrons during the cluster life time.
   eta_e = float(default=0.003, min=0.001, max=0.1)
 
-  # The ratio of cosmic ray (including protons and electrons) energy
-  # density (i.e., pressure) to the thermal energy density.
-  # NOTE: Fermi-LAT has placed an upper limit of ~1.25%-1.4%
-  #       (Ackermann et al. 2014, ApJ, 787, 18)
-  # NOTE: The energy ratio of cosmic-ray electrons to protons K_ep ~0.01
-  #       for our Galaxy (Pinzke et al. 2017, MNRAS, 465, 4800)
+  # The energy density ratio of cosmic ray to the thermal ICM.
+  # NOTE: Equipartition between the magnetic field and cosmic ray is
+  #       assumed, i.e., eta_b == x_cr.
   x_cr = float(default=0.015, min=0.001, max=0.1)
 
   # Electron injection, which is assumed to have a constant injection

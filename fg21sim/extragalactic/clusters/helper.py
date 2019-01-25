@@ -10,6 +10,10 @@ References
    Arnaud, Pointecouteau & Pratt 2005, A&A, 441, 893;
    http://adsabs.harvard.edu/abs/2005A%26A...441..893
 
+.. [beck2005]
+   Beck & Krause 2005, AN, 326, 414
+   http://adsabs.harvard.edu/abs/2005AN....326..414B
+
 .. [cassano2005]
    Cassano & Brunetti 2005, MNRAS, 357, 1313
    http://adsabs.harvard.edu/abs/2005MNRAS.357.1313C
@@ -353,7 +357,7 @@ def density_energy_electron(n_e, gamma):
 def magnetic_field(
         mass,
         z=0.0,
-        eta_b=CONFIGS.getn("extragalactic/clusters/eta_b"),
+        eta_b=CONFIGS.getn("extragalactic/halos/x_cr"),
         kT_out=CONFIGS.getn("extragalactic/clusters/kT_out"),
     ):
     """
@@ -365,6 +369,14 @@ def magnetic_field(
     ----
     Magnetic field energy density: u_B = B^2 / (8π),
     where "B" in units of [G], then "u_B" has unit of [erg/cm^3].
+
+    NOTE
+    ----
+    Magnetic fields and cosmic rays are strongly coupled and exchange
+    energy.  Therefore equipartition between them is assumed, i.e.,
+    X_cr (= ε_cr / ε_th) = η_b (= ε_b / ε_th)
+
+    Reference: [beck2005],App.A
 
     Returns
     -------
@@ -380,7 +392,7 @@ def magnetic_field(
 def plasma_beta(
         mass,
         z=0.0,
-        eta_b=CONFIGS.getn("extragalactic/clusters/eta_b"),
+        eta_b=CONFIGS.getn("extragalactic/halos/x_cr"),
         kT_out=CONFIGS.getn("extragalactic/clusters/kT_out"),
     ):
     """

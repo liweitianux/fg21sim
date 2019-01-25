@@ -632,7 +632,7 @@ class RadioHalo1M:
 
         Unit: [uG]
         """
-        eta_b = self.configs.getn("extragalactic/clusters/eta_b")
+        eta_b = self.x_cr  # Equipartition between magnetic field and CR
         kT_out = self.configs.getn("extragalactic/clusters/kT_out")
         z = COSMO.redshift(t)
         mass = self.mass_main(t)  # [Msun]
