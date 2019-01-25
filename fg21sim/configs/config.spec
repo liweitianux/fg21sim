@@ -34,8 +34,8 @@ type = option("patch", "healpix", default="patch")
   # The (R.A., Dec.) coordinate of the sky patch center
   # Unit: [deg]
   # (MWA EoR0 field center: (0, -27))
-  xcenter = float(default=0.0, min=0.0, max=360.0)
-  ycenter = float(default=-27.0, min=-90.0, max=90.0)
+  xcenter = float(default=0, min=0, max=360)
+  ycenter = float(default=-27, min=-90, max=90)
 
   # The image dimensions (i.e., number of pixels) of the sky patch,
   # along the X (R.A./longitude) and Y (Dec./latitude) axes.
@@ -44,7 +44,7 @@ type = option("patch", "healpix", default="patch")
   ysize = integer(default=1800, min=1)
 
   # Pixel size [arcsec]
-  pixelsize = float(default=20.0, min=0.0)
+  pixelsize = float(default=20, min=0)
 
   # Configurations for input/output HEALPix sky
   [[healpix]]
@@ -68,9 +68,9 @@ frequencies = float_list(default=list())
 # Parameters to calculate the frequencies
 # NOTE: "start" and "stop" frequencies are both inclusive.
 # Unit: [MHz]
-start = float(default=None, min=0.0)
-stop = float(default=None, min=0.0)
-step = float(default=None, min=0.0)
+start = float(default=None)
+stop = float(default=None)
+step = float(default=None)
 
 
 # Configuration for output products
@@ -154,7 +154,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   template = string(default=None)
   # The frequency of the template map.
   # Unit: [MHz]
-  template_freq = float(default=None, min=0.0)
+  template_freq = float(default=None, min=0)
 
   # Spectral index map
   indexmap = string(default=None)
@@ -185,7 +185,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   dustmap = string(default=None)
 
   # Effective dust fraction in the LoS actually absorbing Halpha
-  dust_fraction = float(default=0.33, min=0.1, max=1.0)
+  dust_fraction = float(default=0.33, min=0.1, max=1)
 
   # Halpha absorption threshold:
   # When the dust absorption goes rather large, the true Halpha
@@ -194,12 +194,12 @@ stream = option("stderr", "stdout", "", default="stderr")
   # while the sky regions with higher absorption are masked out due
   # to unreliable absorption correction.
   # Unit: [mag]
-  halpha_abs_th = float(default=1.0)
+  halpha_abs_th = float(default=1)
 
   # The electron temperature assumed for the ionized interstellar medium
-  # that generating H{\alpha} emission.
+  # that generating Hα emission.
   # Unit: [K]
-  electron_temperature = float(default=7000.0, min=1000)
+  electron_temperature = float(default=7000, min=1000)
 
   # Filename prefix for this component
   prefix = string(default="gfree")
@@ -216,7 +216,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Resolution for simulating each SNR template, which are finally
   # mapped to the all-sky HEALPix map if used.
   # Unit: [arcsec]
-  resolution = float(default=30.0, min=5.0)
+  resolution = float(default=30, min=5)
 
   # Filename prefix for this component
   prefix = string(default="gsnr")
@@ -252,9 +252,9 @@ stream = option("stderr", "stdout", "", default="stderr")
 
   # The minimum and maximum redshift within which to calculate the
   # halo mass distribution; as well as the step size.
-  z_min = float(default=0.01, min=0.001, max=1.0)
-  z_max = float(default=4.0, min=1.0, max=100)
-  z_step = float(default=0.01, min=0.001, max=1.0)
+  z_min = float(default=0.01, min=0.001, max=1)
+  z_max = float(default=4, min=1, max=100)
+  z_step = float(default=0.01, min=0.001, max=1)
 
   # Output file (NumPy ".npz" format) to save the calculated halo mass
   # distributions at every redshift.
@@ -291,6 +291,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Whether to directly use the (previously simulated) catalog data as
   # specified by the above "catalog_outfile" and ``dump_catalog_data``
   # options?
+  #
   # NOTE:
   # By using an existing catalog, the steps to derive these data are
   # simply skipped.
@@ -329,15 +330,15 @@ stream = option("stderr", "stdout", "", default="stderr")
 
   # Boost the number of expected cluster number within the sky coverage
   # by the specified times.
-  # WARNING: for testing usage.
-  boost = float(default=1.0, min=0.1, max=1e4)
+  # NOTE: for testing usage.
+  boost = float(default=1)
 
   # Minimal elongated fraction for creating the images of radio halos
   # The ``felong`` is defined as ``felong = b/a``, similar to the Hubble
   # classification for the elliptical galaxies.  ``felong_min = 1.0``
   # means no elongation, and ``felong_min = 0.6`` is a good choice as
   # the observed radio halos are generally regular.
-  felong_min = float(default=1.0, min=0.1, max=1.0)
+  felong_min = float(default=1, min=0.1, max=1)
 
   # Number of most powerful halos to be dropped out.
   halo_dropout = integer(default=0, min=0)
@@ -352,7 +353,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # effective time ~<1 Gyr and the halo lifetime is also short compared
   # to mergers.
   # Unit: [Gyr]
-  time_traceback = float(default=3.0, min=1.0, max=5.0)
+  time_traceback = float(default=3, min=1, max=5)
 
   # The temperature of the outer gas surrounding the cluster.  Accretion
   # shocks form near the cluster virial radius during the cluster formation,
@@ -362,7 +363,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # with: kT_out ~ 0.5 [keV]
   # Reference: Fujita et al. 2003, ApJ, 584, 190; Eq.(49)
   # Unit: [keV]
-  kT_out = float(default=0.0, min=0.0)
+  kT_out = float(default=0, min=0)
 
   # Filename prefix for this component
   prefix = string(default="cluster")
@@ -377,11 +378,11 @@ stream = option("stderr", "stdout", "", default="stderr")
   # A custom factor to tune the turbulent acceleration efficiency.
   # NOTE: This parameter incorporates the efficiency factor describing
   #       the effectiveness of the ICM plasma instabilities.
-  f_acc = float(default=1.0, min=0.1, max=10)
+  f_acc = float(default=1, min=0.1, max=10)
 
   # The factor that is multiplied to the turbulence injection radius
   # to derive the radio halo radius.
-  f_radius = float(default=1.0, min=0.5, max=10)
+  f_radius = float(default=1, min=0.1, max=10)
 
   # The fraction of merger energy transferred into the turbulence.
   eta_turb = float(default=0.1, min=0.1, max=0.5)
@@ -395,13 +396,12 @@ stream = option("stderr", "stdout", "", default="stderr")
   #       assumed, i.e., eta_b == x_cr.
   x_cr = float(default=0.015, min=0.001, max=0.1)
 
-  # Electron injection, which is assumed to have a constant injection
-  # rate and a power-law spectrum.
-  injection_index = float(default=2.3, min=2.1, max=3.0)
   # The scaling index of the diffusion coefficient (D_γγ) w.r.t. the
   # mass of the main cluster.
   mass_index = float(default=0, min=0, max=2)
 
+  # The spectral index of the injected primary electrons.
+  injection_index = float(default=2.3, min=2.1, max=3.0)
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
@@ -415,9 +415,10 @@ stream = option("stderr", "stdout", "", default="stderr")
   # and upper boundaries, within which the values will be replaced by
   # extrapolating from the inner-region data, in order to avoid the
   # unphysical particle pile-ups.
-  # It is suggested to be about 5%-10% of the above ``gamma_np``.
-  # NOTE: * set to 0 to disable boundary fixes;
-  #       * otherwise, set to a number >= 2.
+  #
+  # NOTE: To disable the boundary fix, set this to 0, otherwise, set to
+  #       a number >= 2.  It is suggested to be about 5%-10% of the
+  #       ``gamma_np``.
   buffer_np = integer(default=10, min=0)
 
   # Time step for solving the Fokker-Planck equation
@@ -428,14 +429,14 @@ stream = option("stderr", "stdout", "", default="stderr")
   # an approximately steady initial electron spectrum.  During this period,
   # the acceleration is turned off and only leaves energy loss mechanisms.
   # Unit: [Gyr]
-  time_init = float(default=1.0, min=0)
+  time_init = float(default=1, min=0)
 
   # The frequency and factor used to determine the existence of the radio
   # halo, i.e., the emissivity at ``fiducial_freq`` is at least
   # ``fiducial_factor`` times the fiducial value.
   # Unit: [MHz]
-  fiducial_freq = float(default=150.0)
-  fiducial_factor = float(default=3.0, min=1)
+  fiducial_freq = float(default=150)
+  fiducial_factor = float(default=3, min=1)
 
   # Parameters of the beta-model that is used to describe the gas density
   # profile of the cluster.
