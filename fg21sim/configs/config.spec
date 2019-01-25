@@ -398,6 +398,10 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Electron injection, which is assumed to have a constant injection
   # rate and a power-law spectrum.
   injection_index = float(default=2.3, min=2.1, max=3.0)
+  # The scaling index of the diffusion coefficient (D_γγ) w.r.t. the
+  # mass of the main cluster.
+  mass_index = float(default=0, min=0, max=2)
+
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.

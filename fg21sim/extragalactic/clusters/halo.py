@@ -154,6 +154,7 @@ class RadioHalo1M:
         self.eta_turb = configs.getn(comp+"/eta_turb")
         self.eta_e = configs.getn(comp+"/eta_e")
         self.x_cr = configs.getn(comp+"/x_cr")
+        self.mass_index = configs.getn(comp+"/mass_index")
         self.gamma_min = configs.getn(comp+"/gamma_min")
         self.gamma_max = configs.getn(comp+"/gamma_max")
         self.gamma_np = configs.getn(comp+"/gamma_np")
@@ -293,6 +294,18 @@ class RadioHalo1M:
             τ'_acc = γ^2 / (4 * D'_γγ)
                    = X_cr * c_s^3 / (8 * ζ * k_L * v_t^4)
 
+        Previous studies show that more massive clusters are more efficient
+        to accelerate electrons to be radio bright.  To further account for
+        this scaling relation:
+            D_γγ = D'_γγ * f_m * (M_main / 1e15)^m
+        where:
+            m: scaling index
+            f_m: normalization
+        Therefore, the final acceleration timescale is:
+            τ_acc = τ'_acc * (M_main / 1e15)^(-m) / f_m
+                  = X_cr * c_s^3 * (M_main/1e15)^(-m) / (8*f_acc * k_L * v_t^4)
+        with: f_acc = f_m * ζ
+
         WARNING
         -------
         Tests show that a very large acceleration timescale (e.g.,
@@ -335,6 +348,11 @@ class RadioHalo1M:
         v_t = self._velocity_turb(t_merger)  # [km/s]
         tau = self.x_cr * cs**3 / (8*k_L * v_t**4)
         tau *= AUC.s2Gyr * AUC.kpc2km  # [s kpc/km] -> [Gyr]
+
+        # Mass scaling
+        M_main = self.mass_main(t)
+        f_mass = (M_main / 1e15) ** (-self.mass_index)
+        tau *= f_mass
         tau /= self.f_acc  # tune factor (folded with "zeta_ins")
 
         # Impose the maximum acceleration timescale
