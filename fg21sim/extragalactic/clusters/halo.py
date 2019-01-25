@@ -151,7 +151,6 @@ class RadioHalo1M:
         self.configs = configs
         self.f_acc = configs.getn(comp+"/f_acc")
         self.f_radius = configs.getn(comp+"/f_radius")
-        self.zeta_ins = configs.getn(comp+"/zeta_ins")
         self.eta_turb = configs.getn(comp+"/eta_turb")
         self.eta_e = configs.getn(comp+"/eta_e")
         self.x_cr = configs.getn(comp+"/x_cr")
@@ -334,9 +333,9 @@ class RadioHalo1M:
         k_L = 2 * np.pi / L_turb
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
         v_t = self._velocity_turb(t_merger)  # [km/s]
-        tau = self.x_cr * cs**3 / (8*k_L * self.zeta_ins * v_t**4)
+        tau = self.x_cr * cs**3 / (8*k_L * v_t**4)
         tau *= AUC.s2Gyr * AUC.kpc2km  # [s kpc/km] -> [Gyr]
-        tau *= self.f_acc  # custom tune parameter
+        tau /= self.f_acc  # tune factor (folded with "zeta_ins")
 
         # Impose the maximum acceleration timescale
         if tau > tau_max:

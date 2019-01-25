@@ -374,18 +374,14 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Giant radio halos
   #
   [[halos]]
-  # A custom parameter to tune the turbulent acceleration efficiency.
-  # NOTE: The smaller this parameter, the shorter the acceleration
-  #       timescale, therefore more efficient acceleration.
+  # A custom factor to tune the turbulent acceleration efficiency.
+  # NOTE: This parameter incorporates the efficiency factor describing
+  #       the effectiveness of the ICM plasma instabilities.
   f_acc = float(default=1.0, min=0.1, max=10)
 
   # The factor that is multiplied to the turbulence injection radius
   # to derive the radio halo radius.
   f_radius = float(default=1.0, min=0.5, max=10)
-
-  # An efficiency factor describing the effectiveness of plasma
-  # instabilities (e.g., due to spatial or temporal intermittency).
-  zeta_ins = float(default=0.1, min=0.1, max=1.0)
 
   # The fraction of merger energy transferred into the turbulence.
   eta_turb = float(default=0.1, min=0.1, max=0.5)
