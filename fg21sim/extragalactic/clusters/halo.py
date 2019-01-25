@@ -277,27 +277,26 @@ class RadioHalo1M:
         """
         Calculate the electron acceleration timescale due to turbulent
         waves, which describes the turbulent acceleration efficiency.
-        The turbulent acceleration timescale has order of ~0.1 Gyr.
 
         Here we consider the turbulence cascade mode through scattering
         in the high-β ICM mediated by plasma instabilities (firehose,
         mirror) rather than Coulomb scattering.  Therefore, the fast modes
         damp by TTD (transit time damping) on relativistic rather than
         thermal particles, and the diffusion coefficient is given by:
-            D_pp = (4π * p^2 * ζ / X_cr / L_turb) * <v_turb^2>^2 / c_s^3
+            D'_γγ = 2 * γ^2 * ζ * k_L * v_t^4 / (c_s^3 * X_cr)
         where:
-            ζ: efficiency factor for the effectiveness of plasma instabilities
+            ζ: factor describing the effectiveness of plasma instabilities
             X_cr: relative energy density of cosmic rays
-            L_turb: turbulence injection scale
-            v_turb: turbulence velocity dispersion
+            k_L (= 2π/L): turbulence injection scale
+            v_t: turbulence velocity dispersion
             c_s: sound speed
-        Thus the acceleration timescale is:
-            τ_acc = p^2 / (4*D_pp)
-                  = (X_cr * c_s^3 * L_turb) / (16π * ζ * <v_turb^2>^2)
+        Hence, the acceleration timescale is:
+            τ'_acc = γ^2 / (4 * D'_γγ)
+                   = X_cr * c_s^3 / (8 * ζ * k_L * v_t^4)
 
         WARNING
         -------
-        Current test shows that a very large acceleration timescale (e.g.,
+        Tests show that a very large acceleration timescale (e.g.,
         1000 or even larger) will cause problems (maybe due to some
         limitations within the current calculation scheme), for example,
         the energy losses don't seem to have effect in such cases, so the
@@ -331,12 +330,12 @@ class RadioHalo1M:
             return tau_max
 
         t_merger = self._merger_time(t)
-        L_turb = 2 * self.radius_turbulence(t_merger)  # [kpc]
+        L = 2 * self.radius_turbulence(t_merger)  # [kpc]
+        k_L = 2 * np.pi / L_turb
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
-        v_turb = self._velocity_turb(t_merger)  # [km/s]
-        tau = (self.x_cr * cs**3 * L_turb /
-               (16*np.pi * self.zeta_ins * v_turb**4))  # [s kpc/km]
-        tau *= AUC.s2Gyr * AUC.kpc2km  # [Gyr]
+        v_t = self._velocity_turb(t_merger)  # [km/s]
+        tau = self.x_cr * cs**3 / (8*k_L * self.zeta_ins * v_t**4)
+        tau *= AUC.s2Gyr * AUC.kpc2km  # [s kpc/km] -> [Gyr]
         tau *= self.f_acc  # custom tune parameter
 
         # Impose the maximum acceleration timescale
