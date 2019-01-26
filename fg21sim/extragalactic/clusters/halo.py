@@ -788,14 +788,6 @@ class RadioHaloAM(RadioHalo1M):
             "t": self.t_merger[idx],
         }
 
-    def _merger_time(self, t):
-        """
-        Determine the beginning time of the merger event within which
-        the given time is located.
-        """
-        merger = self._merger_event(t)
-        return merger["t"]
-
     def mass_merged(self, t):
         """
         The mass of merged cluster at the given (cosmic) time.
@@ -844,6 +836,30 @@ class RadioHaloAM(RadioHalo1M):
             t0 = self.t_merger[idx0]
         rate = (mass0 - mass1) / (t0 - t1)
         return (mass1 + rate * (t - t1))
+
+    def _merger_time(self, t):
+        """
+        Determine the beginning time of the merger event that is doing
+        effective acceleration at the given time.
+
+        At a certain time, there may be multiple past merger events with
+        different turbulence durations (``tau_turb``) and acceleration
+        efficiencies (``tau_acc``).  Therefore, multiple mergers can cover
+        the given time.  The one with the largest acceleration efficiency
+        (i.e., smallest ``tau_acc``) is chosen and its beginning time is
+        returned.  Otherwise, the most recent merger event happened before
+        the given time is chosen.
+        """
+        mergers = [(tm, tm+self.duration_turb(tm), self.tau_acceleration(tm))
+                   for tm in self.t_merger]
+        m_active = [(tm, tend, tau) for (tm, tend, tau) in mergers
+                    if t >= tm and t < tend]
+        if m_active:
+            m_eff = min(m_active, key=lambda item: item[2])
+            return m_eff[0]
+        else:
+            m = self._merger_event(t)
+            return m["t"]
 
 
 class RadioHalo:
