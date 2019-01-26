@@ -809,19 +809,10 @@ class RadioHaloAM(RadioHalo1M):
 
     def mass_main(self, t):
         """
-        Calculate the main cluster mass at the given (cosmic) time.
+        Calculate the main cluster mass, which is assumed to grow along
+        the merger/accretion processes, at the given (cosmic) time.
 
-        Parameters
-        ----------
-        t : float
-            The (cosmic) time/age.
-            Unit: [Gyr]
-
-        Returns
-        -------
-        mass : float
-            The mass of the main cluster.
-            Unit: [Msun]
+        Unit: [Msun]
         """
         merger1 = self._merger_event(t)
         idx1 = merger1["idx"]
