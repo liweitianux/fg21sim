@@ -227,7 +227,7 @@ class RadioHalo1M:
         return v_turb / cs
 
     @lru_cache()
-    def radius_turbulence(self, t):
+    def radius_turbulence(self, t_merger):
         """
         The radius of the turbulence region, which is estimated as the
         stripping radius ``r_s`` of the sub-cluster if ``r_s`` is larger
@@ -236,21 +236,23 @@ class RadioHalo1M:
 
         Unit: [kpc]
         """
-        z = COSMO.redshift(t)
-        M_main = self.mass_main(t)
+        self._validate_t_merger(t_merger)
+        z = COSMO.redshift(t_merger)
+        M_main = self.mass_main(t_merger)
+        r_s = self.radius_stripping(t_merger)
         r_c = self.f_rc * helper.radius_virial(M_main, z)
-        r_s = self.radius_stripping(t)
         return max([r_s, r_c])
 
     @lru_cache()
-    def radius_stripping(self, t):
+    def radius_stripping(self, t_merger):
         """
         The stripping radius of the in-falling sub-cluster at time t.
         Unit: [kpc]
         """
-        z = COSMO.redshift(t)
-        M_main = self.mass_main(t)
-        M_sub = self.mass_sub(t)
+        self._validate_t_merger(t_merger)
+        z = COSMO.redshift(t_merger)
+        M_main = self.mass_main(t_merger)
+        M_sub = self.mass_sub(t_merger)
         return helper.radius_stripping(M_main, M_sub, z,
                                        f_rc=self.f_rc, beta=self.beta)
 
@@ -609,6 +611,14 @@ class RadioHalo1M:
         """
         return self.age_merger
 
+    def _validate_t_merger(self, t_merger):
+        """
+        Validate that the given time ``t_merger`` is the time when the
+        merger begins, otherwise raise an error.
+        """
+        if not np.any(np.isclose(t_merger, self.age_merger)):
+            raise ValueError("Not a merger time: %s" % t_merger)
+
     def mass_merged(self, t=None):
         """
         The mass of the merged cluster.
@@ -655,7 +665,7 @@ class RadioHalo1M:
                                      eta_b=eta_b, kT_out=kT_out)
 
     @lru_cache()
-    def _velocity_turb(self, t):
+    def _velocity_turb(self, t_merger):
         """
         Calculate the turbulence velocity dispersion.
 
@@ -686,10 +696,12 @@ class RadioHalo1M:
             The turbulence velocity dispersion
             Unit: [km/s]
         """
-        z = COSMO.redshift(t)
-        M_main = self.mass_main(t)
-        M_sub = self.mass_sub(t)
-        R_turb = self.radius_turbulence(t)  # [kpc]
+        self._validate_t_merger(t_merger)
+        z = COSMO.redshift(t_merger)
+        M_main = self.mass_main(t_merger)
+        M_sub = self.mass_sub(t_merger)
+        r_s = self.radius_stripping(t_merger)  # [kpc]
+        R_turb = self.radius_turbulence(t_merger)  # [kpc]
 
         rho_gas_f = helper.calc_gas_density_profile(
                 M_main, z, f_rc=self.f_rc, beta=self.beta)
