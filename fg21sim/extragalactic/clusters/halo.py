@@ -238,10 +238,9 @@ class RadioHalo1M:
     @lru_cache()
     def duration_turb(self, t_merger):
         """
-        The duration that the turbulence persists strong enough to be
-        able to effectively accelerate the electrons, which is
-        estimated as:
-            τ_turb ≅ 2*L / v_impact = 4*R_turb / v_impact.
+        The duration that the turbulence persists strong enough to be able
+        to effectively accelerate the electrons, which is estimated as:
+            τ_turb ~ d / v_impact ~ 2*R_turb / v_impact.
 
         Reference: [miniati2015],Sec.5
 
@@ -251,10 +250,10 @@ class RadioHalo1M:
         z_merger = COSMO.redshift(t_merger)
         M_main = self.mass_main(t=t_merger)
         M_sub = self.mass_sub(t=t_merger)
-        L_turb = 2 * self.radius_turb(t_merger)
-        vi = helper.velocity_impact(M_main, M_sub, z_merger)
+        d = 2 * self.radius_turb(t_merger)
+        v_i = helper.velocity_impact(M_main, M_sub, z_merger)
         uconv = AUC.kpc2km * AUC.s2Gyr  # [kpc]/[km/s] => [Gyr]
-        return uconv * 2*L_turb / vi  # [Gyr]
+        return uconv * d / v_i  # [Gyr]
 
     @lru_cache()
     def velocity_turb(self, t_merger):
@@ -296,7 +295,7 @@ class RadioHalo1M:
         R_turb = self.radius_turb(t_merger)  # [kpc]
 
         rho_gas_f = helper.calc_gas_density_profile(
-                M_main, z, f_rc=self.f_rc, beta=self.beta)
+                M_main+M_sub, z, f_rc=self.f_rc, beta=self.beta)
         M_turb = 4*np.pi * integrate.quad(
                 lambda r: rho_gas_f(r) * r**2,
                 a=0, b=R_turb)[0]  # [Msun]
