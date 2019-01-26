@@ -136,11 +136,11 @@ class RadioHalo1M:
                  configs=CONFIGS):
         self.M_obs = M_obs
         self.z_obs = z_obs
-        self.age_obs = COSMO.age(z_obs)
+        self.t_obs = COSMO.age(z_obs)
         self.M_main = M_main
         self.M_sub = M_sub
         self.z_merger = z_merger
-        self.age_merger = COSMO.age(z_merger)
+        self.t_merger = COSMO.age(z_merger)
 
         self._acceleration_disabled = False
         self._set_configs(configs)
@@ -190,12 +190,12 @@ class RadioHalo1M:
         return self.fpsolver.x
 
     @property
-    def age_begin(self):
+    def t_begin(self):
         """
         The cosmic time when the merger begins.
         Unit: [Gyr]
         """
-        return self.age_merger
+        return self.t_merger
 
     @lru_cache()
     def duration_turb(self, t_merger):
@@ -378,7 +378,7 @@ class RadioHalo1M:
 
         The injection rate is parametrized by assuming that the total
         energy injected in the relativistic electrons during the cluster
-        life (e.g., ``age_obs`` here) is a fraction (``self.eta_e``)
+        life (e.g., ``t_obs`` here) is a fraction (``self.eta_e``)
         of the total thermal energy of the cluster.
 
         The electrons are assumed to be injected throughout the cluster
@@ -399,18 +399,18 @@ class RadioHalo1M:
                                              kT_out=kT_out)
         term1 = (s-2) * self.eta_e * e_th  # [erg cm^-3]
         term2 = self.gamma_min**(s-2)
-        term3 = AU.mec2 * self.age_obs  # [erg Gyr]
+        term3 = AU.mec2 * self.t_obs  # [erg Gyr]
         Ke = term1 * term2 / term3  # [cm^-3 Gyr^-1]
         return Ke
 
     @property
     def electron_spec_init(self):
         """
-        The electron spectrum at ``age_begin`` to be used as the initial
+        The electron spectrum at ``t_begin`` to be used as the initial
         condition for the Fokker-Planck equation.
 
         This initial electron spectrum is derived from the accumulated
-        electron spectrum injected throughout the ``age_begin`` period,
+        electron spectrum injected throughout the ``t_begin`` period,
         by solving the same Fokker-Planck equation, but only considering
         energy losses and constant injection, evolving for a period of
         ``time_init`` in order to obtain an approximately steady electron
@@ -418,14 +418,14 @@ class RadioHalo1M:
 
         Units: [cm^-3]
         """
-        # Accumulated electrons constantly injected until ``age_begin``
+        # Accumulated electrons constantly injected until ``t_begin``
         n_inj = self.fp_injection(self.gamma)
-        n0_e = n_inj * (self.age_begin - self.time_init)
+        n0_e = n_inj * (self.t_begin - self.time_init)
 
         logger.debug("Deriving the initial electron spectrum ...")
         self._acceleration_disabled = True
-        tstart = self.age_begin
-        tstop = self.age_begin + self.time_init
+        tstart = self.t_begin
+        tstop = self.t_begin + self.time_init
         self.fpsolver.tstep = self.time_step * 3  # To save time
 
         n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
@@ -445,12 +445,12 @@ class RadioHalo1M:
         tstart : float, optional
             The (cosmic) time from when to solve the Fokker-Planck equation
             for relativistic electrons evolution.
-            Default: ``self.age_begin``.
+            Default: ``self.t_begin``.
             Unit: [Gyr]
         tstop : float, optional
             The (cosmic) time when to derive final relativistic electrons
             spectrum for synchrotron emission calculations.
-            Default: ``self.age_obs``.
+            Default: ``self.t_obs``.
             Unit: [Gyr]
         n0_e : 1D `~numpy.ndarray`, optional
             The initial electron spectrum (number distribution).
@@ -468,9 +468,9 @@ class RadioHalo1M:
             Unit: [cm^-3]
         """
         if tstart is None:
-            tstart = self.age_begin
+            tstart = self.t_begin
         if tstop is None:
-            tstop = self.age_obs
+            tstop = self.t_obs
         if n0_e is None:
             n0_e = self.electron_spec_init
         if fiducial:
@@ -609,7 +609,7 @@ class RadioHalo1M:
                          (self.fp_diffusion(gamma, t) * 2 / gamma))
         else:
             # To derive the initial electron spectrum
-            advection = abs(self._energy_loss(gamma, self.age_begin))
+            advection = abs(self._energy_loss(gamma, self.t_begin))
         return advection
 
     def _merger_time(self, t=None):
@@ -617,14 +617,14 @@ class RadioHalo1M:
         The (cosmic) time when the merger begins.
         Unit: [Gyr]
         """
-        return self.age_merger
+        return self.t_merger
 
     def _validate_t_merger(self, t_merger):
         """
         Validate that the given time ``t_merger`` is the time when the
         merger begins, otherwise raise an error.
         """
-        if not np.any(np.isclose(t_merger, self.age_merger)):
+        if not np.any(np.isclose(t_merger, self.t_merger)):
             raise ValueError("Not a merger time: %s" % t_merger)
 
     def mass_merged(self, t=None):
@@ -649,8 +649,8 @@ class RadioHalo1M:
 
         Unit: [Msun]
         """
-        t0 = self.age_begin
-        rate = (self.M_obs - self.M_main) / (self.age_obs - t0)
+        t0 = self.t_begin
+        rate = (self.M_obs - self.M_main) / (self.t_obs - t0)
         mass = rate * (t - t0) + self.M_main  # [Msun]
         return mass
 
@@ -767,25 +767,25 @@ class RadioHaloAM(RadioHalo1M):
         return self.radius_
 
     @property
-    def age_begin(self):
+    def t_begin(self):
         """
         The cosmic time when the merger begins, i.e., the earliest merger.
         Unit: [Gyr]
         """
-        return self.age_merger[-1]
+        return self.t_merger[-1]
 
     def _merger_event(self, t):
         """
         Return the most recent merger event happend before the given time,
         i.e., the merger event that the given time locates in.
         """
-        idx = (self.age_merger > t).sum()
+        idx = (self.t_merger > t).sum()
         return {
             "idx": idx,
             "M_main": self.M_main[idx],
             "M_sub": self.M_sub[idx],
             "z": self.z_merger[idx],
-            "age": self.age_merger[idx],
+            "t": self.t_merger[idx],
         }
 
     def _merger_time(self, t):
@@ -794,14 +794,14 @@ class RadioHaloAM(RadioHalo1M):
         the given time is located.
         """
         merger = self._merger_event(t)
-        return merger["age"]
+        return merger["t"]
 
     def mass_merged(self, t):
         """
         The mass of merged cluster at the given (cosmic) time.
         Unit: [Msun]
         """
-        if t >= self.age_obs:
+        if t >= self.t_obs:
             return self.M_obs
         else:
             merger = self._merger_event(t)
@@ -834,14 +834,14 @@ class RadioHaloAM(RadioHalo1M):
         merger1 = self._merger_event(t)
         idx1 = merger1["idx"]
         mass1 = merger1["M_main"]
-        t1 = merger1["age"]
+        t1 = merger1["t"]
         if idx1 == 0:
             mass0 = self.M_obs
-            t0 = self.age_obs
+            t0 = self.t_obs
         else:
             idx0 = idx1 - 1
             mass0 = self.M_main[idx0]
-            t0 = self.age_merger[idx0]
+            t0 = self.t_merger[idx0]
         rate = (mass0 - mass1) / (t0 - t1)
         return (mass1 + rate * (t - t1))
 
@@ -915,7 +915,7 @@ class RadioHalo:
                                z_merger=hdict["z_merger"],
                                configs=self.configs)
             hdict["halo"] = halo
-            hdict["radius_turb"] = halo.radius_turbulence(halo.age_merger)
+            hdict["radius_turb"] = halo.radius_turbulence(halo.t_merger)
             hdict["genuine"] = False
 
         halos.sort(key=lambda h: h["radius_turb"], reverse=True)
