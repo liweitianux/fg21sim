@@ -1,5 +1,5 @@
 # Copyright (c) 2017-2019 Weitian LI <wt@liwt.net>
-# MIT license
+# MIT License
 
 """
 Simulate the diffuse radio emissions from galaxy clusters.
@@ -293,13 +293,12 @@ class GalaxyClusters:
                            z_merger=clinfo["merger_z"],
                            merger_num=merger_num,
                            configs=self.configs)
-        radius = halo.calc_radius()  # [kpc]
-        theta = radius / (clinfo["DA"]*1e3) * AUC.rad2arcsec  # [arcsec]
+        theta = halo.radius / (clinfo["DA"]*1e3) * AUC.rad2arcsec  # [arcsec]
         n_e = halo.calc_electron_spectrum()
 
         haloinfo = OrderedDict(
             **clinfo,
-            Rhalo=radius,  # [kpc]
+            Rhalo=halo.radius,  # [kpc]
             Rhalo_angular=theta,  # [arcsec]
             n_e=n_e,  # [cm^-3]
             gamma=halo.gamma,  # Lorentz factors
