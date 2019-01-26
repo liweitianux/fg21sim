@@ -198,6 +198,36 @@ class RadioHalo1M:
         return self.t_merger
 
     @lru_cache()
+    def radius_strip(self, t_merger):
+        """
+        The stripping radius of the in-falling sub-cluster at time t.
+        Unit: [kpc]
+        """
+        self._validate_t_merger(t_merger)
+        z = COSMO.redshift(t_merger)
+        M_main = self.mass_main(t_merger)
+        M_sub = self.mass_sub(t_merger)
+        return helper.radius_stripping(M_main, M_sub, z,
+                                       f_rc=self.f_rc, beta=self.beta)
+
+    @lru_cache()
+    def radius_turb(self, t_merger):
+        """
+        The radius of the turbulence region, which is estimated as the
+        stripping radius ``r_s`` of the sub-cluster if ``r_s`` is larger
+        than the core radius ``r_c`` of the main cluster, otherwise, as
+        ``r_c``.
+
+        Unit: [kpc]
+        """
+        self._validate_t_merger(t_merger)
+        z = COSMO.redshift(t_merger)
+        M_main = self.mass_main(t_merger)
+        r_s = self.radius_strip(t_merger)
+        r_c = self.f_rc * helper.radius_virial(M_main, z)
+        return max([r_s, r_c])
+
+    @lru_cache()
     def duration_turb(self, t_merger):
         """
         The duration that the turbulence persists strong enough to be
@@ -213,7 +243,7 @@ class RadioHalo1M:
         z_merger = COSMO.redshift(t_merger)
         M_main = self.mass_main(t=t_merger)
         M_sub = self.mass_sub(t=t_merger)
-        L_turb = 2 * self.radius_turbulence(t_merger)
+        L_turb = 2 * self.radius_turb(t_merger)
         vi = helper.velocity_impact(M_main, M_sub, z_merger)
         uconv = AUC.kpc2km * AUC.s2Gyr  # [kpc]/[km/s] => [Gyr]
         return uconv * 2*L_turb / vi  # [Gyr]
@@ -254,8 +284,8 @@ class RadioHalo1M:
         z = COSMO.redshift(t_merger)
         M_main = self.mass_main(t_merger)
         M_sub = self.mass_sub(t_merger)
-        r_s = self.radius_stripping(t_merger)  # [kpc]
-        R_turb = self.radius_turbulence(t_merger)  # [kpc]
+        r_s = self.radius_strip(t_merger)  # [kpc]
+        R_turb = self.radius_turb(t_merger)  # [kpc]
 
         rho_gas_f = helper.calc_gas_density_profile(
                 M_main, z, f_rc=self.f_rc, beta=self.beta)
@@ -282,36 +312,6 @@ class RadioHalo1M:
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
         v_turb = self.velocity_turb(t_merger)  # [km/s]
         return v_turb / cs
-
-    @lru_cache()
-    def radius_turbulence(self, t_merger):
-        """
-        The radius of the turbulence region, which is estimated as the
-        stripping radius ``r_s`` of the sub-cluster if ``r_s`` is larger
-        than the core radius ``r_c`` of the main cluster, otherwise, as
-        ``r_c``.
-
-        Unit: [kpc]
-        """
-        self._validate_t_merger(t_merger)
-        z = COSMO.redshift(t_merger)
-        M_main = self.mass_main(t_merger)
-        r_s = self.radius_stripping(t_merger)
-        r_c = self.f_rc * helper.radius_virial(M_main, z)
-        return max([r_s, r_c])
-
-    @lru_cache()
-    def radius_stripping(self, t_merger):
-        """
-        The stripping radius of the in-falling sub-cluster at time t.
-        Unit: [kpc]
-        """
-        self._validate_t_merger(t_merger)
-        z = COSMO.redshift(t_merger)
-        M_main = self.mass_main(t_merger)
-        M_sub = self.mass_sub(t_merger)
-        return helper.radius_stripping(M_main, M_sub, z,
-                                       f_rc=self.f_rc, beta=self.beta)
 
     @lru_cache()
     def tau_acceleration(self, t_merger):
@@ -354,7 +354,7 @@ class RadioHalo1M:
         """
         self._validate_t_merger(t_merger)
 
-        L = 2 * self.radius_turbulence(t_merger)  # [kpc]
+        L = 2 * self.radius_turb(t_merger)  # [kpc]
         k_L = 2 * np.pi / L_turb
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
         v_t = self.velocity_turb(t_merger)  # [km/s]
@@ -922,7 +922,7 @@ class RadioHalo:
                                z_merger=hdict["z_merger"],
                                configs=self.configs)
             hdict["halo"] = halo
-            hdict["radius_turb"] = halo.radius_turbulence(halo.t_merger)
+            hdict["radius_turb"] = halo.radius_turb(halo.t_merger)
             hdict["genuine"] = False
 
         halos.sort(key=lambda h: h["radius_turb"], reverse=True)
