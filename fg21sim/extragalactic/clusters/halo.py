@@ -774,27 +774,12 @@ class RadioHaloAM(RadioHalo1M):
         """
         return self.age_merger[-1]
 
-    def _merger_idx(self, t):
-        """
-        Determine the index of the merger event within which the given
-        time is located, i.e.:
-            age_merger[idx-1] >= t > age_merger[idx]
-        """
-        return (self.age_merger > t).sum()
-
-    def _merger_time(self, t):
-        """
-        Determine the beginning time of the merger event within which
-        the given time is located.
-        """
-        idx = self._merger_idx(t)
-        return self.age_merger[idx]
-
     def _merger_event(self, t):
         """
-        Return the merger event at cosmic time ``t``.
+        Return the most recent merger event happend before the given time,
+        i.e., the merger event that the given time locates in.
         """
-        idx = self._merger_idx(t)
+        idx = (self.age_merger > t).sum()
         return {
             "idx": idx,
             "M_main": self.M_main[idx],
@@ -802,6 +787,14 @@ class RadioHaloAM(RadioHalo1M):
             "z": self.z_merger[idx],
             "age": self.age_merger[idx],
         }
+
+    def _merger_time(self, t):
+        """
+        Determine the beginning time of the merger event within which
+        the given time is located.
+        """
+        merger = self._merger_event(t)
+        return merger["age"]
 
     def mass_merged(self, t):
         """
