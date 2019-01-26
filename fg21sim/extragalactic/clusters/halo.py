@@ -256,24 +256,6 @@ class RadioHalo1M:
         return helper.radius_stripping(M_main, M_sub, z,
                                        f_rc=self.f_rc, beta=self.beta)
 
-    def calc_radius(self):
-        """
-        The estimated radius of the simulated radio halo.
-        Unit: [kpc]
-        """
-        return self.radius_turbulence(self.age_merger) * self.f_radius
-
-    @lru_cache()
-    def kT(self, t):
-        """
-        The ICM mean temperature of the main cluster.
-        Unit: [keV]
-        """
-        kT_out = self.configs.getn("extragalactic/clusters/kT_out")
-        M_main = self.mass_main(t)
-        z = COSMO.redshift(t)
-        return helper.kT_cluster(mass=M_main, z=z, kT_out=kT_out)
-
     def tau_acceleration(self, t):
         """
         Calculate the electron acceleration timescale due to turbulent
@@ -636,19 +618,25 @@ class RadioHalo1M:
     def mass_main(self, t):
         """
         Calculate the main cluster mass at the given (cosmic) time.
-        Unit: [Msun]
-
-        NOTE
-        ----
-        Since we currently only consider the last major merger event,
-        there may be a long time between ``z_merger`` and ``z_obs``.
-        So we assume that the main cluster grows linearly in time from
+        The main cluster is assumed to grow linearly in time from
         (M_main, z_merger) to (M_obs, z_obs).
+
+        Unit: [Msun]
         """
         t0 = self.age_begin
         rate = (self.M_obs - self.M_main) / (self.age_obs - t0)
         mass = rate * (t - t0) + self.M_main  # [Msun]
         return mass
+
+    def kT(self, t):
+        """
+        The ICM mean temperature of the main cluster.
+        Unit: [keV]
+        """
+        kT_out = self.configs.getn("extragalactic/clusters/kT_out")
+        M_main = self.mass_main(t)
+        z = COSMO.redshift(t)
+        return helper.kT_cluster(mass=M_main, z=z, kT_out=kT_out)
 
     def magnetic_field(self, t):
         """
@@ -713,7 +701,6 @@ class RadioHalo1M:
         rho_main = helper.density_number_thermal(M_main, z)  # [cm^-3]
         rho_main *= AC.mu*AC.u * AUC.g2Msun * AUC.kpc2cm**3  # [Msun/kpc^3]
         R_vir = helper.radius_virial(M_main, z)  # [kpc]
-        r_s = self.radius_stripping(t)  # [kpc]
 
         V_turb = np.pi * r_s**2 * (R_vir+r_s)  # [kpc^3]
         E_turb = self.eta_turb * rho_main * v_i**2 * V_turb
@@ -1020,8 +1007,8 @@ class RadioHalo:
         halos.sort(key=lambda h: h["radius_turb"], reverse=True)
         for hdict in halos:
             halo = hdict["halo"]
-            logger.info("Checking merger: %.2e & %.2e @ %.3f ..." %
-                        (halo.M_main, halo.M_sub, halo.z_merger))
+            logger.info("Checking merger: %.2e & %.2e @ %.3f -> %.3f ..." %
+                        (halo.M_main, halo.M_sub, halo.z_merger, halo.z_obs))
             n_e = halo.calc_electron_spectrum()
             genuine, em_factor = halo.is_genuine(n_e)
             hdict["n_e"] = n_e
