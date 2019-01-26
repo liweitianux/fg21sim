@@ -197,6 +197,14 @@ class RadioHalo1M:
         """
         return self.t_merger
 
+    @property
+    def radius(self):
+        """
+        The estimated radius of the simulated radio halo.
+        Unit: [kpc]
+        """
+        return self.f_radius * self.radius_turb(self.t_merger)
+
     @lru_cache()
     def radius_strip(self, t_merger):
         """
@@ -743,9 +751,6 @@ class RadioHaloAM(RadioHalo1M):
         The redshifts at each merger event, from small to large.
     merger_num : int
         Number of merger events traced for the cluster.
-    radius : float
-        The radius of the radio halo.
-        Unit: [kpc]
     """
     def __init__(self, M_obs, z_obs, M_main, M_sub, z_merger,
                  merger_num, radius, configs=CONFIGS):
@@ -756,15 +761,15 @@ class RadioHaloAM(RadioHalo1M):
                          M_main=M_main, M_sub=M_sub,
                          z_merger=z_merger, configs=configs)
         self.merger_num = merger_num
-        self.radius_ = radius  # [kpc]
 
     @property
     def radius(self):
         """
-        The radius of the final radio halo.
+        The halo radius estimated by using the maximum turbulence radius.
         Unit: [kpc]
         """
-        return self.radius_
+        r_turb = [self.radius_turb(tm) for tm in self.t_merger]
+        return self.f_radius * max(r_turb)
 
     @property
     def t_begin(self):
