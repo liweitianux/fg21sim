@@ -197,7 +197,7 @@ class RadioHalo1M:
         """
         return self.age_merger
 
-    def time_turbulence(self, t=None):
+    def duration_turb(self, t=None):
         """
         The duration that the turbulence persists strong enough to be
         able to effectively accelerate the electrons, which is
@@ -209,14 +209,13 @@ class RadioHalo1M:
         Unit: [Gyr]
         """
         t_merger = self._merger_time(t)
-        mass_main = self.mass_main(t=t_merger)
-        mass_sub = self.mass_sub(t=t_merger)
         z_merger = COSMO.redshift(t_merger)
-        vi = helper.velocity_impact(mass_main, mass_sub, z_merger)
+        M_main = self.mass_main(t=t_merger)
+        M_sub = self.mass_sub(t=t_merger)
         L_turb = 2 * self.radius_turbulence(t_merger)
+        vi = helper.velocity_impact(M_main, M_sub, z_merger)
         uconv = AUC.kpc2km * AUC.s2Gyr  # [kpc]/[km/s] => [Gyr]
-        time = uconv * 2*L_turb / vi  # [Gyr]
-        return time
+        return uconv * 2*L_turb / vi  # [Gyr]
 
     def mach_turbulence(self, t=None):
         """
@@ -717,8 +716,8 @@ class RadioHalo1M:
             return False
 
         t_merger = self._merger_time(t)
-        t_turb = self.time_turbulence(t_merger)
-        return (t >= t_merger) and (t <= t_merger + t_turb)
+        tau_turb = self.duration_turb(t_merger)
+        return (t >= t_merger) and (t <= t_merger + tau_turb)
 
     def _energy_loss(self, gamma, t):
         """
@@ -884,7 +883,7 @@ class RadioHaloAM(RadioHalo1M):
         return (mass1 + rate * (t - t1))
 
     @property
-    def time_turbulence_avg(self):
+    def duration_turb_avg(self):
         """
         Calculate the time-averaged turbulence acceleration active time
         within the period from ``age_begin`` to ``age_obs``.
@@ -893,7 +892,7 @@ class RadioHaloAM(RadioHalo1M):
         """
         dt = self.time_step
         xt = np.arange(self.age_begin, self.age_obs+dt/2, step=dt)
-        t_turb = np.array([self.time_turbulence(t) for t in xt])
+        t_turb = np.array([self.duration_turb(t) for t in xt])
         return np.sum(t_turb * dt) / (len(xt) * dt)
 
     @property
