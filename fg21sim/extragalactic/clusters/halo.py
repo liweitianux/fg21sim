@@ -219,13 +219,68 @@ class RadioHalo1M:
         return uconv * 2*L_turb / vi  # [Gyr]
 
     @lru_cache()
+    def velocity_turb(self, t_merger):
+        """
+        Calculate the turbulence velocity dispersion.
+
+        NOTE
+        ----
+        During the merger, a fraction of the merger kinetic energy is
+        transferred into the turbulence within the region of radius R_turb.
+        Then estimate the turbulence velocity dispersion from its energy.
+
+        Merger energy:
+            E_merger ≅ <ρ_gas> * v_i^2 * V_turb
+            V_turb = ᴨ * r_s^2 * (R_vir+r_s)
+        Turbulence energy:
+            E_turb ≅ η_turb * E_merger ≅ 0.5 * M_turb * <v_turb^2>
+        => Velocity dispersion:
+            <v_turb^2> ≅ 2*η_turb * <ρ_gas> * v_i^2 * V_turb / M_turb
+            M_turb = int_0^R_turb[ ρ_gas(r)*4ᴨ*r^2 ]dr
+        where:
+            <ρ_gas>: mean gas density of the main cluster
+            R_vir: virial radius of the main cluster
+            R_turb: radius of turbulence region
+            v_i: impact velocity
+            r_s: stripping radius of the in-falling sub-cluster
+
+        Returns
+        -------
+        v_turb : float
+            The turbulence velocity dispersion
+            Unit: [km/s]
+        """
+        self._validate_t_merger(t_merger)
+        z = COSMO.redshift(t_merger)
+        M_main = self.mass_main(t_merger)
+        M_sub = self.mass_sub(t_merger)
+        r_s = self.radius_stripping(t_merger)  # [kpc]
+        R_turb = self.radius_turbulence(t_merger)  # [kpc]
+
+        rho_gas_f = helper.calc_gas_density_profile(
+                M_main, z, f_rc=self.f_rc, beta=self.beta)
+        M_turb = 4*np.pi * integrate.quad(
+                lambda r: rho_gas_f(r) * r**2,
+                a=0, b=R_turb)[0]  # [Msun]
+
+        v_i = helper.velocity_impact(M_main, M_sub, z)  # [km/s]
+        rho_main = helper.density_number_thermal(M_main, z)  # [cm^-3]
+        rho_main *= AC.mu*AC.u * AUC.g2Msun * AUC.kpc2cm**3  # [Msun/kpc^3]
+        R_vir = helper.radius_virial(M_main, z)  # [kpc]
+
+        V_turb = np.pi * r_s**2 * R_vir  # [kpc^3]
+        E_turb = self.eta_turb * rho_main * v_i**2 * V_turb
+        v2_turb = 2 * E_turb / M_turb  # [km^2/s^2]
+        return np.sqrt(v2_turb)  # [km/s]
+
+    @lru_cache()
     def mach_turb(self, t_merger):
         """
         The turbulence Mach number determined from its velocity dispersion.
         """
         self._validate_t_merger(t_merger)
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
-        v_turb = self._velocity_turb(t_merger)  # [km/s]
+        v_turb = self.velocity_turb(t_merger)  # [km/s]
         return v_turb / cs
 
     @lru_cache()
@@ -302,7 +357,7 @@ class RadioHalo1M:
         L = 2 * self.radius_turbulence(t_merger)  # [kpc]
         k_L = 2 * np.pi / L_turb
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
-        v_t = self._velocity_turb(t_merger)  # [km/s]
+        v_t = self.velocity_turb(t_merger)  # [km/s]
         tau = self.x_cr * cs**3 / (8*k_L * v_t**4)
         tau *= AUC.s2Gyr * AUC.kpc2km  # [s kpc/km] -> [Gyr]
 
@@ -622,61 +677,6 @@ class RadioHalo1M:
         mass = self.mass_main(t)  # [Msun]
         return helper.magnetic_field(mass=mass, z=z,
                                      eta_b=eta_b, kT_out=kT_out)
-
-    @lru_cache()
-    def _velocity_turb(self, t_merger):
-        """
-        Calculate the turbulence velocity dispersion.
-
-        NOTE
-        ----
-        During the merger, a fraction of the merger kinetic energy is
-        transferred into the turbulence within the region of radius R_turb.
-        Then estimate the turbulence velocity dispersion from its energy.
-
-        Merger energy:
-            E_merger ≅ <ρ_gas> * v_i^2 * V_turb
-            V_turb = ᴨ * r_s^2 * (R_vir+r_s)
-        Turbulence energy:
-            E_turb ≅ η_turb * E_merger ≅ 0.5 * M_turb * <v_turb^2>
-        => Velocity dispersion:
-            <v_turb^2> ≅ 2*η_turb * <ρ_gas> * v_i^2 * V_turb / M_turb
-            M_turb = int_0^R_turb[ ρ_gas(r)*4ᴨ*r^2 ]dr
-        where:
-            <ρ_gas>: mean gas density of the main cluster
-            R_vir: virial radius of the main cluster
-            R_turb: radius of turbulence region
-            v_i: impact velocity
-            r_s: stripping radius of the in-falling sub-cluster
-
-        Returns
-        -------
-        v_turb : float
-            The turbulence velocity dispersion
-            Unit: [km/s]
-        """
-        self._validate_t_merger(t_merger)
-        z = COSMO.redshift(t_merger)
-        M_main = self.mass_main(t_merger)
-        M_sub = self.mass_sub(t_merger)
-        r_s = self.radius_stripping(t_merger)  # [kpc]
-        R_turb = self.radius_turbulence(t_merger)  # [kpc]
-
-        rho_gas_f = helper.calc_gas_density_profile(
-                M_main, z, f_rc=self.f_rc, beta=self.beta)
-        M_turb = 4*np.pi * integrate.quad(
-                lambda r: rho_gas_f(r) * r**2,
-                a=0, b=R_turb)[0]  # [Msun]
-
-        v_i = helper.velocity_impact(M_main, M_sub, z)  # [km/s]
-        rho_main = helper.density_number_thermal(M_main, z)  # [cm^-3]
-        rho_main *= AC.mu*AC.u * AUC.g2Msun * AUC.kpc2cm**3  # [Msun/kpc^3]
-        R_vir = helper.radius_virial(M_main, z)  # [kpc]
-
-        V_turb = np.pi * r_s**2 * (R_vir+r_s)  # [kpc^3]
-        E_turb = self.eta_turb * rho_main * v_i**2 * V_turb
-        v2_turb = 2 * E_turb / M_turb  # [km^2/s^2]
-        return np.sqrt(v2_turb)  # [km/s]
 
     def _is_turb_active(self, t):
         """
