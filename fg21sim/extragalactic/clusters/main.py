@@ -219,7 +219,7 @@ class GalaxyClusters:
         merger_num : number of merger events within the traced period
         merger_mass1, merger_mass2 :
             [Msun] masses of the main and sub clusters of each merger.
-        merger_z, merger_age : redshifts and cosmic ages [Gyr]
+        merger_z, merger_t : redshifts and cosmic times [Gyr]
             of each merger event, in backward time ordering.
         """
         logger.info("Simulating merger histories for each cluster ...")
@@ -243,7 +243,7 @@ class GalaxyClusters:
                     ("merger_mass1", [ev["M_main"]/fdm for ev in mergers]),
                     ("merger_mass2", [ev["M_sub"]/fdm for ev in mergers]),
                     ("merger_z",     [ev["z"] for ev in mergers]),
-                    ("merger_age",   [ev["age"] for ev in mergers]),
+                    ("merger_t",     [ev["age"] for ev in mergers]),
                 ])
             else:
                 cdict.update([
@@ -251,7 +251,7 @@ class GalaxyClusters:
                     ("merger_mass1", []),
                     ("merger_mass2", []),
                     ("merger_z",     []),
-                    ("merger_age",   []),
+                    ("merger_t",     []),
                 ])
 
         self.comments += [
@@ -259,7 +259,7 @@ class GalaxyClusters:
             "merger_mass1 - [Msun] main cluster mass of each merger",
             "merger_mass2 - [Msun] sub cluster mass of each merger",
             "merger_z - redshift of each merger",
-            "merger_age - [Gyr] cosmic age at each merger",
+            "merger_t - [Gyr] cosmic time at each merger",
         ]
         logger.info("%d (%.1f%%) clusters experienced recent mergers." %
                     (num_hasmerger, 100*num_hasmerger/num))
@@ -448,8 +448,8 @@ class GalaxyClusters:
                  list(cdict["merger_mass2"]) + [None]*(nmax-num)),
                 ("merger_z",
                  list(cdict["merger_z"]) + [None]*(nmax-num)),
-                ("merger_age",
-                 list(cdict["merger_age"]) + [None]*(nmax-num)),
+                ("merger_t",
+                 list(cdict["merger_t"]) + [None]*(nmax-num)),
             ])
 
         keys = list(self.catalog[0].keys())
