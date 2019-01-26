@@ -256,7 +256,8 @@ class RadioHalo1M:
         return helper.radius_stripping(M_main, M_sub, z,
                                        f_rc=self.f_rc, beta=self.beta)
 
-    def tau_acceleration(self, t):
+    @lru_cache()
+    def tau_acceleration(self, t_merger):
         """
         Calculate the electron acceleration timescale due to turbulent
         waves, which describes the turbulent acceleration efficiency.
@@ -289,42 +290,13 @@ class RadioHalo1M:
                   = X_cr * c_s^3 * (M_main/1e15)^(-m) / (8*f_acc * k_L * v_t^4)
         with: f_acc = f_m * ζ
 
-        WARNING
-        -------
-        Tests show that a very large acceleration timescale (e.g.,
-        1000 or even larger) will cause problems (maybe due to some
-        limitations within the current calculation scheme), for example,
-        the energy losses don't seem to have effect in such cases, so the
-        derived initial electron spectrum is almost the same as the raw
-        input one, and the emissivity at medium/high frequencies even
-        decreases when the turbulence acceleration begins!
-        By carrying out some tests, the value of 10 [Gyr] is adopted for
-        the maximum acceleration timescale.
-
-        Parameters
-        ----------
-        t : float, optional
-            The cosmic time when to determine the acceleration timescale.
-            Unit: [Gyr]
-
-        Returns
-        -------
-        tau : float
-            The acceleration timescale at the requested time.
-            Unit: [Gyr]
-
         References
         ----------
         * Ref.[pinzke2017],Eq.(37)
         * Ref.[miniati2015],Eq.(29)
         """
-        # Maximum acceleration timescale when no turbulence acceleration
-        # NOTE: see the above WARNING!
-        tau_max = 10.0  # [Gyr]
-        if not self._is_turb_active(t):
-            return tau_max
+        self._validate_t_merger(t_merger)
 
-        t_merger = self._merger_time(t)
         L = 2 * self.radius_turbulence(t_merger)  # [kpc]
         k_L = 2 * np.pi / L_turb
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
@@ -338,10 +310,7 @@ class RadioHalo1M:
         tau *= f_mass
         tau /= self.f_acc  # tune factor (folded with "zeta_ins")
 
-        # Impose the maximum acceleration timescale
-        if tau > tau_max:
-            tau = tau_max
-        return tau
+        return tau  # [Gyr]
 
     @property
     @lru_cache()
@@ -530,13 +499,14 @@ class RadioHalo1M:
         Diffusion term/coefficient for the Fokker-Planck equation.
 
         The diffusion is directly related to the electron acceleration
-        which is described by the ``tau_acc`` acceleration timescale
-        parameter.
+        and calculated from the acceleration timescale ``tau_acc``.
 
         WARNING
         -------
         A zero diffusion coefficient may lead to unstable/wrong results,
         since it is not properly taken care of by the solver.
+        By carrying out some tests, the maximum acceleration timescale
+        ``tau_acc`` is assumed to be 10 [Gyr].
 
         Parameters
         ----------
@@ -551,15 +521,14 @@ class RadioHalo1M:
         diffusion : float, or float 1D `~numpy.ndarray`
             Diffusion coefficients
             Unit: [Gyr^-1]
-
-        References
-        ----------
-        Ref.[donnert2013],Eq.(15)
         """
-        tau_acc = self.tau_acceleration(t)
-        gamma = np.asarray(gamma)
-        diffusion = gamma**2 / 4 / tau_acc
-        return diffusion
+        tau_acc = tau_max = 10.0  # [Gyr]
+        if self._is_turb_active(t):
+            t_merger = self._merger_time(t)
+            tau_acc = self.tau_acceleration(t_merger)
+        if tau_acc > tau_max:
+            tau_acc = tau_max
+        return np.square(gamma) / (4 * tau_acc)  # [Gyr^-1]
 
     def fp_advection(self, gamma, t):
         """
