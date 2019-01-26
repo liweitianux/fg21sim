@@ -304,10 +304,6 @@ class GalaxyClusters:
             n_e=n_e,  # [cm^-3]
             gamma=halo.gamma,  # Lorentz factors
             Ke=halo.injection_rate,  # [cm^-3 Gyr^-1]
-            Mach_turb=halo.mach_turbulence_avg,  # Mach number
-            tau_turb=halo.duration_turb_avg,  # [Gyr]
-            tau_acc=halo.tau_acceleration_avg,  # [Gyr]
-            tfrac_acc=halo.time_acceleration_fraction,
         )
         return haloinfo
 
