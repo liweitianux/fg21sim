@@ -197,7 +197,8 @@ class RadioHalo1M:
         """
         return self.age_merger
 
-    def duration_turb(self, t=None):
+    @lru_cache()
+    def duration_turb(self, t_merger):
         """
         The duration that the turbulence persists strong enough to be
         able to effectively accelerate the electrons, which is
@@ -208,7 +209,7 @@ class RadioHalo1M:
 
         Unit: [Gyr]
         """
-        t_merger = self._merger_time(t)
+        self._validate_t_merger(t_merger)
         z_merger = COSMO.redshift(t_merger)
         M_main = self.mass_main(t=t_merger)
         M_sub = self.mass_sub(t=t_merger)
@@ -217,11 +218,12 @@ class RadioHalo1M:
         uconv = AUC.kpc2km * AUC.s2Gyr  # [kpc]/[km/s] => [Gyr]
         return uconv * 2*L_turb / vi  # [Gyr]
 
-    def mach_turbulence(self, t=None):
+    @lru_cache()
+    def mach_turb(self, t_merger):
         """
         The turbulence Mach number determined from its velocity dispersion.
         """
-        t_merger = self._merger_time(t)
+        self._validate_t_merger(t_merger)
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
         v_turb = self._velocity_turb(t_merger)  # [km/s]
         return v_turb / cs
