@@ -767,8 +767,16 @@ class RadioHaloAM(RadioHalo1M):
         The halo radius estimated by using the maximum turbulence radius.
         Unit: [kpc]
         """
-        r_turb = [self.radius_turb(tm) for tm in self.t_merger]
-        return self.f_radius * max(r_turb)
+        return self.f_radius * self.radius_turb_max
+
+    @property
+    @lru_cache()
+    def radius_turb_max(self):
+        """
+        The maximum turbulence radius.
+        Unit: [kpc]
+        """
+        return max([self.radius_turb(tm) for tm in self.t_merger])
 
     @property
     def t_begin(self):
