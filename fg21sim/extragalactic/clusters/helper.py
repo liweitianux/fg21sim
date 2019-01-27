@@ -354,6 +354,14 @@ def density_energy_electron(n_e, gamma):
     return integrate.simps(e_spec * gamma, np.log(gamma))  # in log grid
 
 
+def density_number_electron(n_e, gamma):
+    """
+    Calculate the electron number density of the given spectrum.
+    Unit: [cm^-3]
+    """
+    return integrate.simps(n_e * gamma, np.log(gamma))  # in log grid
+
+
 def magnetic_field(
         mass,
         z=0.0,
