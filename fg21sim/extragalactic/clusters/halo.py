@@ -778,6 +778,33 @@ class RadioHaloAM(RadioHalo1M):
         """
         return max([self.radius_turb(tm) for tm in self.t_merger])
 
+    def radius_turb_eff(self, t, use_last=True):
+        """
+        Get the effective turbulence radius, i.e., the largest one if
+        multiple mergers are active at the given time.
+
+        Parameters
+        ----------
+        use_last : bool
+            If ``True``, return the turbulence radius of the last merger
+            event when there is no active turbulence at the given time.
+            Otherwise, return 0.
+
+        Unit: [kpc]
+        """
+        mergers = [(t, t+self.duration_turb(t), self.radius_turb(t))
+                   for t in self.t_merger]  # time decreasing
+        try:
+            r_eff = max([r for t1, t2, r in mergers if t >= t1 and t < t2])
+        except ValueError:
+            # No active turbulence at this time
+            if use_last:
+                r_eff = next(r for __, t2, r in mergers if t >= t2)
+            else:
+                r_eff = 0
+
+        return r_eff
+
     @property
     def t_begin(self):
         """
