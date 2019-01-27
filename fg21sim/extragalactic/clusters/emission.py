@@ -1,5 +1,5 @@
-# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2017-2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Calculate the synchrotron emission for a given relativistic electron
@@ -93,9 +93,8 @@ class SynchrotronEmission:
         The assumed uniform magnetic field within the cluster ICM.
         Unit: [uG]
     """
-    # The interpolated synchrotron kernel function ``F(x)`` within
-    # the specified range.
-    # NOTE: See the *WARNING* above.
+    # The interpolated synchrotron kernel function ``F(x)``.
+    # NOTE: See the 'WARNING' in _interp_sync_kernel().
     F_xmin = 1e-3
     F_xmax = 10.0
     F_xsample = 256
@@ -196,7 +195,7 @@ class SynchrotronEmission:
               = int_ln(gmin)^ln(gmax) f(g) g d(ln(g))
 
         The pitch angles of electrons w.r.t. the magnetic field are assumed
-        to be ``pi/2``, which maybe a good simplification.
+        to be ``pi/2``, which should be a good simplification.
 
         Parameters
         ----------
@@ -305,6 +304,34 @@ class HaloEmission:
         syncem = SynchrotronEmission(gamma=self.gamma, n_e=self.n_e, B=self.B)
         emissivity = syncem.emissivity(frequencies)
         return emissivity
+
+    def calc_emissivity_bolo(self, freq_min=100, freq_max=1e5, freq_num=256):
+        """
+        Calculate the bolometric emissivity, which is approximated as the
+        integration over a finite but broad enough frequency band.
+
+        Parameters
+        ----------
+        freq_min, freq_max : float
+            The minimum and maximum frequency within which the emissivity
+            is integrated to approximate the bolometric emissivity.
+            Unit: [MHz]
+        freq_num : int
+            The number of frequencies used to divide the frequency band
+            in a logarithmic grid.
+
+        Returns
+        -------
+        em_bolo : float
+            The bolometric emissivity.
+            Unit: [erg/s/cm^3]
+        """
+        frequencies = np.logspace(np.log10(freq_min), np.log10(freq_max),
+                                  num=freq_num)
+        em = self.calc_emissivity(frequencies=frequencies)  # [erg/s/cm^3/Hz]
+        f_Hz = frequencies * 1e6  # [Hz]
+        em_bolo = integrate.simps(em * f_Hz, np.log(f_Hz))  # [erg/s/cm^3]
+        return em_bolo
 
     def calc_power(self, frequencies, emissivity=None):
         """
