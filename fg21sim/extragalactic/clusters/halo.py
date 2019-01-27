@@ -220,9 +220,8 @@ class RadioHalo1M:
     def radius_turb(self, t_merger):
         """
         The radius of the turbulence region, which is estimated as the
-        stripping radius ``r_s`` of the sub-cluster if ``r_s`` is larger
-        than the core radius ``r_c`` of the main cluster, otherwise, as
-        ``r_c``.
+        sum of stripping radius ``r_s`` of the sub-cluster and the core
+        radius ``r_c`` of the main cluster.
 
         Unit: [kpc]
         """
@@ -231,7 +230,7 @@ class RadioHalo1M:
         M_main = self.mass_main(t_merger)
         r_s = self.radius_strip(t_merger)
         r_c = self.f_rc * helper.radius_virial(M_main, z)
-        return max([r_s, r_c])
+        return r_s + r_c
 
     @lru_cache()
     def duration_turb(self, t_merger):
