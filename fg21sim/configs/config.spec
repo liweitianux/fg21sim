@@ -263,7 +263,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # * ``z``:
   #   Redshifts where the halo mass distribution is calculated.
   # * ``mass``:
-  #   (Logarithmic-distributed) masses points.
+  #   (Logarithmic-distributed) mass points.
   #   Unit: [Msun] (the little "h" is folded into the values)
   # * ``dndlnm``:
   #   Shape: (len(z), len(mass))
@@ -406,10 +406,10 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
   gamma_min = float(default=1)
-  gamma_max = float(default=1e5)
+  gamma_max = float(default=1e6)
   # Number of cells on the logarithmic momentum grid used to solve the
   # Fokker-Planck equation.
-  gamma_np = integer(default=200)
+  gamma_np = integer(default=256)
 
   # Number of cells used as the buffer regions near both the lower
   # and upper boundaries, within which the values will be replaced by
