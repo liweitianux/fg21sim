@@ -295,6 +295,7 @@ class GalaxyClusters:
                            configs=self.configs)
         theta = halo.radius / (clinfo["DA"]*1e3) * AUC.rad2arcsec  # [arcsec]
         n_e = halo.calc_electron_spectrum()
+        factor_acc = halo.calc_acc_factor(n_e)
 
         haloinfo = OrderedDict(
             **clinfo,
@@ -303,6 +304,7 @@ class GalaxyClusters:
             n_e=n_e,  # [cm^-3]
             gamma=halo.gamma,  # Lorentz factors
             Ke=halo.injection_rate,  # [cm^-3 Gyr^-1]
+            factor_acc=factor_acc,
         )
         return haloinfo
 
