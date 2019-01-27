@@ -431,13 +431,6 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Unit: [Gyr]
   time_init = float(default=1, min=0)
 
-  # The frequency and factor used to determine the existence of the radio
-  # halo, i.e., the emissivity at ``fiducial_freq`` is at least
-  # ``fiducial_factor`` times the fiducial value.
-  # Unit: [MHz]
-  fiducial_freq = float(default=150)
-  fiducial_factor = float(default=3, min=1)
-
   # Parameters of the beta-model that is used to describe the gas density
   # profile of the cluster.
   # The fraction of the core radius to cluster's virial radius.

@@ -164,8 +164,6 @@ class RadioHalo1M:
         self.time_step = configs.getn(comp+"/time_step")
         self.time_init = configs.getn(comp+"/time_init")
         self.injection_index = configs.getn(comp+"/injection_index")
-        self.fiducial_freq = configs.getn(comp+"/fiducial_freq")
-        self.fiducial_factor = configs.getn(comp+"/fiducial_factor")
         self.f_rc = configs.getn(comp+"/f_rc")
         self.beta = configs.getn(comp+"/beta")
 
@@ -492,36 +490,32 @@ class RadioHalo1M:
 
         return n_e
 
-    def is_genuine(self, n_e):
+    def calc_acc_factor(self, n_e):
         """
-        Check whether the radio halo is genuine/observable by comparing the
-        emissivity to the corresponding fiducial value, which is calculated
-        from the fiducial electron spectrum derived with turbulent
-        acceleration turned off.
+        Calculate the turbulence acceleration factor, which is estimated
+        as the ratio of the bolometric emissivity between the accelerated
+        electron spectrum and the fiducial electron spectrum derived with
+        turbulent acceleration turned off.
 
         Parameters
         ----------
         n_e : float 1D `~numpy.ndarray`
-            The finally derived electron spectrum.
+            The derived (accelerated) electron spectrum.
             Unit: [cm^-3]
 
         Returns
         -------
-        genuine : bool
-            Whether the radio halo is genuine?
         factor : float
-            Acceleration factor of the flux.
+            Acceleration factor of the bolometric emissivity.
         """
-        # NOTE: The emissivity is linearly proportional to 'B'.
         haloem = HaloEmission(gamma=self.gamma, n_e=n_e, B=1)
-        em = haloem.calc_emissivity(self.fiducial_freq)
+        em = haloem.calc_emissivity_bolo()
 
         ne_fiducial = self.calc_electron_spectrum(fiducial=True)
         haloem.n_e = ne_fiducial
-        em_fiducial = haloem.calc_emissivity(self.fiducial_freq)
+        em_fiducial = haloem.calc_emissivity_bolo()
 
-        factor = em / em_fiducial
-        return (factor >= self.fiducial_factor, factor)
+        return em / em_fiducial
 
     def fp_injection(self, gamma, t=None):
         """
