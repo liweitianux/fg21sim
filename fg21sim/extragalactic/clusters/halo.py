@@ -891,6 +891,124 @@ class RadioHaloAM(RadioHalo1M):
             m = self._merger_event(t)
             return m["t"]
 
+    def _time_adjust(self):
+        """
+        Determine the time points when spectrum adjustment is needed.
+
+        Different mergers generate turbulence in regions of different radius,
+        therefore, the accelerated spectrum needs appropriate adjustment.
+
+        Returns
+        -------
+        t_adj : list[float]
+            List of (cosmic) times when the adjustment is needed.
+            NOTE: May be empty, e.g., only one merger event.
+            Unit: [Gyr]
+        """
+        mergers = [(t, t+self.duration_turb(t)) for t in self.t_merger]
+        t_begin = [t for t, __ in mergers]
+        t_end = [t for __, t in mergers]
+        tps = sorted(t_begin + t_end)
+        radii = [self.radius_turb_eff(t, use_last=False) for t in tps]
+        tinfo = {t: {"begin": t in t_begin, "end": t in t_end, "radius": r}
+                 for t, r in zip(tps, radii)}
+
+        t_adj = []
+        for r1, r2, t in zip(radii, radii[1:], tps[1:]):
+            if np.isclose(r1, r2):
+                continue
+            ti = tinfo[t]
+            if ti["end"] and np.isclose(ti["radius"], 0):
+                continue
+            t_adj.append(t)
+
+        return t_adj
+
+    def _adjust_spectrum(self, spec_in, t, spec_ref):
+        """
+        Adjust the electron spectrum to take into account the change of
+        turbulence region size.  If the current turbulence radius is
+        smaller than the maximum turbulence radius, then dilute the
+        accelerated part of the spectrum according to the volume ratio.
+
+        Parameters
+        ----------
+        spec_in : 1D `~numpy.ndarray`
+            The spectrum at the ending of the given acceleration period.
+        t : float
+            The corresponding time of the given spectrum ``spec_in``.
+            Unit: [Gyr]
+        spec_ref : 1D `~numpy.ndarray`
+            The spectrum at the beginning of the given acceleration period.
+
+        Returns
+        -------
+        spec : Adjusted spectrum.
+        """
+        r = self.radius_turb_eff(t, use_last=True)
+        r_max = self.radius_turb_max
+        if np.isclose(r, r_max):
+            return spec_in
+
+        logger.debug("Adjusting the accelerated spectrum ...")
+        spec_diff = spec_in - spec_ref
+        idx = spec_diff > 0
+        spec = np.array(spec_ref)
+        spec[idx] += spec_diff[idx] * (r/r_max)**3
+
+        d = helper.density_number_electron(spec, self.gamma)
+        d_in = helper.density_number_electron(spec_in, self.gamma)
+        spec *= d_in / d
+
+        return spec
+
+    def calc_electron_spectrum(self, tstart=None, tstop=None, n0_e=None,
+                               fiducial=False):
+        """
+        Calculate the relativistic electron spectrum by solving the
+        Fokker-Planck equation.
+
+        Given that different mergers have different turbulence radii, the
+        spectrum needs appropriate adjustments to take this into account.
+        At the beginning of each merger, the accelerated part of the
+        spectrum (i.e., where the electron density increases compared to
+        last adjustment) is scaled according to the ratio of the previous
+        turbulence volume to the maximum turbulence volume, i.e., dilute
+        the accelerated spectrum to the maximum turbulence volume.
+        """
+        if tstart is None:
+            tstart = self.t_begin
+        if tstop is None:
+            tstop = self.t_obs
+        if n0_e is None:
+            n0_e = self.electron_spec_init
+
+        if fiducial:
+            self._acceleration_disabled = True
+            self.fpsolver.tstep = self.time_step * 2  # To save time
+            logger.debug("Calculating the [fiducial] electron spectrum ...")
+            n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
+            self._acceleration_disabled = False
+            self.fpsolver.tstep = self.time_step
+            return n_e
+
+        logger.debug("Calculating the electron spectrum ...")
+        tps = [self.t_begin] + self._time_adjust + [self.t_obs]
+        n1_e = n0_e
+        for t1, t2 in zip(tps, tps[1:]):
+            if tstart >= t2 or tstop < t1:
+                continue
+            if tstart > t1:
+                t1 = tstart
+            if tstop < t2:
+                t2 = tstop
+            logger.debug("Time period: [%.2f, %.2f] [Gyr] ..." % (t1, t2))
+            n2_e = self.fpsolver.solve(u0=n1_e, tstart=t1, tstop=t2)
+            n2_e = self._adjust_spectrum(n2_e, t2, spec_ref=n1_e)
+            n1_e = n2_e
+
+        return n2_e
+
 
 class RadioHalo:
     """
