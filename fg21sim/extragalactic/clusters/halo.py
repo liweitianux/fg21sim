@@ -358,15 +358,14 @@ class RadioHalo1M:
         """
         self._validate_t_merger(t_merger)
 
-        L = 2 * self.radius_turb(t_merger)  # [kpc]
-        k_L = 2 * np.pi / L_turb
+        k_L = 2 * np.pi / self.radius_turb(t_merger)  # [kpc^-1]
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
         v_t = self.velocity_turb(t_merger)  # [km/s]
         tau = self.x_cr * cs**3 / (8*k_L * v_t**4)
         tau *= AUC.s2Gyr * AUC.kpc2km  # [s kpc/km] -> [Gyr]
 
         # Mass scaling
-        M_main = self.mass_main(t)
+        M_main = self.mass_main(t_merger)
         f_mass = (M_main / 1e15) ** (-self.mass_index)
         tau *= f_mass
         tau /= self.f_acc  # tune factor (folded with "zeta_ins")
@@ -745,7 +744,7 @@ class RadioHaloAM(RadioHalo1M):
         Number of merger events traced for the cluster.
     """
     def __init__(self, M_obs, z_obs, M_main, M_sub, z_merger,
-                 merger_num, radius, configs=CONFIGS):
+                 merger_num, configs=CONFIGS):
         M_main = np.asarray(M_main[:merger_num])
         M_sub = np.asarray(M_sub[:merger_num])
         z_merger = np.asarray(z_merger[:merger_num])
@@ -986,7 +985,7 @@ class RadioHaloAM(RadioHalo1M):
             return n_e
 
         logger.debug("Calculating the electron spectrum ...")
-        tps = [self.t_begin] + self._time_adjust + [self.t_obs]
+        tps = [self.t_begin] + self._time_adjust() + [self.t_obs]
         n1_e = n0_e
         for t1, t2 in zip(tps, tps[1:]):
             if tstart >= t2 or tstop < t1:
