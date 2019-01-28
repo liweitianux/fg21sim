@@ -293,15 +293,17 @@ class GalaxyClusters:
                            z_merger=clinfo["merger_z"],
                            merger_num=merger_num,
                            configs=self.configs)
+        spectrum = halo.calc_electron_spectrum()
+        spectrum_fiducial = halo.calc_electron_spectrum(fiducial=True)
+        factor_acc = halo.calc_acc_factor(spectrum, spectrum_fiducial)
         theta = halo.radius / (clinfo["DA"]*1e3) * AUC.rad2arcsec  # [arcsec]
-        n_e = halo.calc_electron_spectrum()
-        factor_acc = halo.calc_acc_factor(n_e)
 
         haloinfo = OrderedDict(
             **clinfo,
             Rhalo=halo.radius,  # [kpc]
             Rhalo_angular=theta,  # [arcsec]
-            n_e=n_e,  # [cm^-3]
+            spectrum=spectrum,  # [cm^-3]
+            spectrum_fiducial=spectrum_fiducial,  # [cm^-3]
             gamma=halo.gamma,  # Lorentz factors
             Ke=halo.injection_rate,  # [cm^-3 Gyr^-1]
             factor_acc=factor_acc,
