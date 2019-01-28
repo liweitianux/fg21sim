@@ -1,5 +1,5 @@
-# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2017-2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Simulate cluster formation (i.e., merging history) using the extended
@@ -17,6 +17,7 @@ References
 """
 
 import logging
+import operator as op
 
 import numpy as np
 import scipy.integrate
@@ -253,37 +254,56 @@ class ClusterFormation:
         else:
             return event_max
 
-    def mergers(self, mtree=None):
+    def history(self, mtree=None, merger_only=False):
         """
-        Extract and return all the merger events.
+        Extract and return all the formation events, e.g., merger and
+        accretion.
 
         Parameters
         ----------
         mtree : `~MergerTree`, optional
-            Specify the merger tree from which to identify the most
-            recent merger event.
-            Default: self.mtree
+            The simulated merger tree from which to extract the history.
+            Default: ``self.mtree``
+        merger_only : bool, optional
+            If ``True``, only extract the merger events.
 
         Returns
         -------
         evlist : list[event]
-            List of merger events with each element being a dictionary
-            same as the return of ``self.recent_major_merger``.
+            List of events with each element being a dictionary of the
+            event properties.
         """
         if mtree is None:
             mtree = self.mtree
 
         evlist = []
         for main, sub in mtree.itermain():
+            z, age, M_main = op.itemgetter("z", "age", "mass")(main)
             if sub:
-                evlist.append({
-                    "M_main": main["mass"],
-                    "M_sub": sub["mass"],
-                    "R_mass": main["mass"] / sub["mass"],
-                    "z": main["z"],
-                    "age": main["age"]
-                })
+                # merger
+                M_sub = sub["mass"]
+                R_mass = M_main / M_sub
+            else:
+                # accretion
+                if merger_only:
+                    continue
+                M_sub, R_mass = None, None
+
+            evlist.append({
+                "z": z,
+                "age": age,
+                "M_main": M_main,
+                "M_sub": M_sub,
+                "R_mass": R_mass,
+            })
+
         return evlist
+
+    def mergers(self, mtree=None):
+        """
+        Extract and return all the merger events.
+        """
+        return self.history(mtree=mtree, merger_only=True)
 
     def _trace_main(self):
         """
