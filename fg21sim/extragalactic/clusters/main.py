@@ -84,15 +84,20 @@ class GalaxyClusters:
         self.output_dir = configs.get_path(comp+"/output_dir")
         self.merger_mass_min = configs.getn(comp+"/merger_mass_min")
         self.time_traceback = configs.getn(comp+"/time_traceback")
+        self.kT_out = configs.getn(comp+"/kT_out")
+
         self.frequencies = configs.frequencies
         self.filename_pattern = configs.getn("output/filename_pattern")
         self.clobber = configs.getn("output/clobber")
-        logger.info("Loaded and set up configurations")
+
+        self.eta_b = configs.getn("extragalactic/halos/x_cr")
 
         if self.use_dump_halos_data and (not self.use_dump_catalog_data):
             self.use_dump_catalog_data = True
             logger.warning("Forced to use existing cluster catalog, "
                            "due to 'use_dump_halos_data=True'")
+
+        logger.info("Loaded and set up configurations")
 
     def _simulate_catalog(self):
         """
@@ -191,8 +196,9 @@ class GalaxyClusters:
             Rvir = helper.radius_virial(mass, z)  # [kpc]
             DA = COSMO.DA(z)  # [Mpc]
             theta = Rvir / (DA*1e3) * AUC.rad2arcsec  # [arcsec]
-            kT = helper.kT_cluster(mass, z, configs=self.configs)  # [keV]
-            B = helper.magnetic_field(mass, z, configs=self.configs)  # [uG]
+            kT = helper.kT_cluster(mass, z, kT_out=self.kT_out)  # [keV]
+            B = helper.magnetic_field(mass, z, eta_b=self.eta_b,
+                                      kT_out=self.kT_out)  # [uG]
             cdict.update([
                 ("DA", DA),  # [Mpc]
                 ("Rvir", Rvir),  # [kpc]
