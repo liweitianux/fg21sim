@@ -348,7 +348,7 @@ class GalaxyClusters:
             ii = i + 1
             if ii % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
-            haloem = HaloEmission(gamma=hdict["gamma"], n_e=hdict["n_e"],
+            haloem = HaloEmission(gamma=hdict["gamma"], n_e=hdict["spectrum"],
                                   B=hdict["B"], radius=hdict["Rhalo"],
                                   redshift=hdict["z"])
             emissivity = haloem.calc_emissivity(frequencies=self.frequencies)
@@ -496,8 +496,7 @@ class GalaxyClusters:
 
         logger.info("Converting halos data into a Pandas DataFrame ...")
         keys = list(self.halos[0].keys())
-        # Ignore these items: gamma, n_e, template
-        for k in ["gamma", "n_e", "template"]:
+        for k in ["gamma", "spectrum", "spectrum_fiducial", "template"]:
             keys.remove(k)
         halos_df = dictlist_to_dataframe(self.halos, keys=keys)
         dataframe_to_csv(halos_df, outfile, clobber=clobber)
