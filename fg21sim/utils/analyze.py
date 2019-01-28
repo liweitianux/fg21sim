@@ -1,5 +1,5 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2017,2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Utilities to help analyze the simulation results.
@@ -77,3 +77,28 @@ def countdist_integrated(x, nbin, log=True, xmin=None, xmax=None):
         binedges = np.exp(binedges)
 
     return (counts, bins, binedges)
+
+
+def logfit(x, y):
+    """
+    Fit the data points with: y = a * x^b
+
+    Parameters
+    ----------
+    x, y : list[float]
+        The data points.
+
+    Returns
+    -------
+    coef : (a, b)
+        The fitted coefficients.
+    fp : function
+        The function with fitted coefficients to calculate the fitted
+        values: fp(x).
+    """
+    logx = np.log(x)
+    logy = np.log(y)
+    fit = np.polyfit(logx, logy, deg=1)
+    coef = (np.exp(fit[1]), fit[0])
+    fp = lambda x: np.exp(np.polyval(fit, np.log(x)))
+    return coef, fp
