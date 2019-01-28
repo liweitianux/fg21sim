@@ -1,5 +1,5 @@
-# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2016-2017,2019 Weitian LI <wt@liwt.net>
+# MIT License
 #
 # References:
 # [1] https://configobj.readthedocs.io/en/latest/configobj.html
@@ -60,24 +60,20 @@ def _flatten_dict(d, sep="/", parent_key=""):
 
     Examples
     --------
-    FIXME: fix the style
-    - input nested dictionary:
+    - Input nested dictionary:
       {'a': 1,
        'c': {'a': 2,
              'b': {'x': 5,
                    'y': 10}},
        'd': [1, 2, 3]}
-    - output flatten dictionary:
+    - Output flatten dictionary:
       {'a': 1,
        'c/a': 2,
        'c/b/x': 5,
        'c/b/y': 10,
        'd': [1, 2, 3]}
 
-    References
-    ----------
-    - Stackoverflow: Flatten nested Python dictionaries, compressing keys
-      http://stackoverflow.com/a/6027615
+    Credit: http://stackoverflow.com/a/6027615
     """
     items = []
     for k, v in d.items():
@@ -140,7 +136,7 @@ class ConfigManager:
                                     encoding="utf-8")
         # Keep a copy of the default configurations
         self._config_default = self._validate(configs_default)
-        # NOTE: use ``copy.deepcopy``; see ``self.reset()`` for more details
+        # NOTE: use ``copy.deepcopy``; see also ``self.reset()``.
         self._config = copy.deepcopy(self._config_default)
         if userconfig:
             self.read_userconfig(userconfig)
@@ -227,13 +223,13 @@ class ConfigManager:
     def reset(self):
         """
         Reset the current configurations to the copy of defaults from
-        the specifications.
+        the specification.  The ``self.userconfig`` is also cleared.
 
-        NOTE: Also reset ``self.userconfig`` to ``None``.
+        NOTE
+        ----
+        * ``_config_default.copy()`` only returns a *shallow* copy.
+        * ``ConfigObj(_config_default)`` will lost all comments.
         """
-        # NOTE:
-        # * ``_config_default.copy()`` only returns a *shallow* copy.
-        # * ``ConfigObj(_config_default)`` will lost all comments
         self._config = copy.deepcopy(self._config_default)
         self.userconfig = None
         logger.warning("Reset the configurations to the copy of defaults!")
@@ -338,12 +334,10 @@ class ConfigManager:
         """
         if isinstance(key, str):
             key = key.split("/")
-        #
         if from_default:
             config = self._config_default
         else:
             config = self._config
-        #
         try:
             return reduce(operator.getitem, key, config)
         except (KeyError, TypeError):
@@ -461,7 +455,7 @@ class ConfigManager:
             msg = "Specified config '%s' is non-string: %s" % (key, value)
             logger.error(msg)
             raise ValueError(msg)
-        #
+
         path = os.path.expanduser(value)
         if not os.path.isabs(path):
             # Got a relative path, try to convert to the absolute path
@@ -566,7 +560,7 @@ class ConfigManager:
 
     def dump(self, from_default=False, flatten=False):
         """
-        Dump the configurations as plain Python dictionary.
+        Dump the configurations as a plain Python dictionary.
 
         Parameters
         ----------
@@ -582,18 +576,16 @@ class ConfigManager:
         NOTE
         ----
         * The original option orders are missing.
-        * The ``self.userconfig`` is also dumped.
+        * The ``self.userconfig`` property is included.
         """
         if from_default:
             data = self._config_default.dict()
         else:
             data = self._config.dict()
-        # Also dump the "userconfig" value
         data["userconfig"] = self.userconfig
-        #
+
         if flatten:
             data = _flatten_dict(data)
-        #
         return data
 
     def save(self, outfile=None, clobber=False, backup=True):
