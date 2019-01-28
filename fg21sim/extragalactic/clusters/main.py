@@ -444,21 +444,19 @@ class GalaxyClusters:
             os.rename(outfile, outfile+".old")
 
         logger.info("Converting cluster catalog into a Pandas DataFrame ...")
+
         # Pad the merger events to be same length
         nmax = max([cdict["merger_num"] for cdict in self.catalog])
         for cdict in self.catalog:
-            num = len(cdict["merger_z"])
-            if num == nmax:
+            n = len(cdict["merger_z"])
+            if n == nmax:
                 continue
+            npad = nmax - n
             cdict.update([
-                ("merger_mass1",
-                 list(cdict["merger_mass1"]) + [None]*(nmax-num)),
-                ("merger_mass2",
-                 list(cdict["merger_mass2"]) + [None]*(nmax-num)),
-                ("merger_z",
-                 list(cdict["merger_z"]) + [None]*(nmax-num)),
-                ("merger_t",
-                 list(cdict["merger_t"]) + [None]*(nmax-num)),
+                ("merger_mass1", cdict["merger_mass1"] + [None]*npad),
+                ("merger_mass2", cdict["merger_mass2"] + [None]*npad),
+                ("merger_z",     cdict["merger_z"] + [None]*npad),
+                ("merger_t",     cdict["merger_t"] + [None]*npad),
             ])
 
         keys = list(self.catalog[0].keys())
@@ -478,7 +476,9 @@ class GalaxyClusters:
     def _save_halos_data(self, outfile=None, dump=None, clobber=None):
         """
         Save the simulated halo data (``self.halos``) by converting it
-        into a Pandas DataFrame and writing into a CSV file.
+        into a Pandas DataFrame and writing into a CSV file.  Note that
+        excessive properties (e.g., ``gamma``, ``spectrum``) are excluded
+        to keep the CSV file reasonable.
 
         If ``dump=True``, then the raw data (``self.halos``) is dumped
         into a Python pickle file, making it possible to be loaded back
