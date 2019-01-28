@@ -488,7 +488,7 @@ class RadioHalo1M:
 
         return n_e
 
-    def calc_acc_factor(self, n_e):
+    def calc_acc_factor(self, n_e, n_e_fiducial=None):
         """
         Calculate the turbulence acceleration factor, which is estimated
         as the ratio of the bolometric emissivity between the accelerated
@@ -500,6 +500,9 @@ class RadioHalo1M:
         n_e : float 1D `~numpy.ndarray`
             The derived (accelerated) electron spectrum.
             Unit: [cm^-3]
+        n_e_fiducial : float 1D `~numpy.ndarray`, optional
+            The fiducial electron spectrum.
+            Unit: [cm^-3]
 
         Returns
         -------
@@ -509,8 +512,9 @@ class RadioHalo1M:
         haloem = HaloEmission(gamma=self.gamma, n_e=n_e, B=1)
         em = haloem.calc_emissivity_bolo()
 
-        ne_fiducial = self.calc_electron_spectrum(fiducial=True)
-        haloem.n_e = ne_fiducial
+        if n_e_fiducial is None:
+            n_e_fiducial = self.calc_electron_spectrum(fiducial=True)
+        haloem.n_e = n_e_fiducial
         em_fiducial = haloem.calc_emissivity_bolo()
 
         return em / em_fiducial
