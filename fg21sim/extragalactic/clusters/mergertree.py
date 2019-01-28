@@ -1,5 +1,5 @@
-# Copyright (c) 2017-2018 Weitian LI <liweitianux@live.com>
-# MIT license
+# Copyright (c) 2017-2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Merger tree that represents the merging history of a cluster using
@@ -21,9 +21,10 @@ class MergerTree:
     -----------
                    Merged (M0, z0, age0)
                    ~~~~~~~~~~~~~~~~~~~~~
-                   /                   \
+                   |                   |
         Main (M1, z1, age1)    Sub (M2, z2, age2)
         ~~~~~~~~~~~~~~~~~~~    ~~~~~~~~~~~~~~~~~~
+
     * "Merged" is the merged cluster from "Main" and "Sub" at redshift
       z1 (=z2) or cosmic time age1 (=age2).
       M0 = M1 + M2, M1 > M2
@@ -31,7 +32,7 @@ class MergerTree:
 
     Parameters
     ----------
-    data : dict
+    data : any (e.g., a dictionary)
         Data (e.g., mass, redshift, age) associated with this tree node.
     main, sub : `~MergerTree`
         Links to the main and sub (optional) clusters between which the
@@ -137,7 +138,7 @@ def plot_mtree(mtree, outfile, figsize=(12, 8)):
     """
     Plot the cluster merger tree.
 
-    TODO/XXX: This function needs significant speed optimization!
+    XXX: Need to speed up this function.
 
     Parameters
     ----------
@@ -158,6 +159,7 @@ def plot_mtree(mtree, outfile, figsize=(12, 8)):
             ax.plot(x, y, marker="o", markersize=1.5, color="black",
                     linestyle=None)
             return
+
         # Plot a point for current tree node
         x = [tree.data["age"]]
         y = [tree.data["mass"]]
@@ -172,18 +174,18 @@ def plot_mtree(mtree, outfile, figsize=(12, 8)):
             x = [tree.main.data["age"], tree.sub.data["age"]]
             y = [tree.main.data["mass"], tree.sub.data["mass"]]
             ax.plot(x, y, color="green", linewidth=1, alpha=0.8)
+
         # Recursively plot the descendant nodes
         _plot(tree.main, ax)
         _plot(tree.sub, ax)
 
-    # Import matplotlib when needed
     from matplotlib.figure import Figure
     from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
     fig = Figure(figsize=figsize)
     canvas = FigureCanvas(fig)
     ax = fig.add_subplot(1, 1, 1)
-    print("Plotting merger tree, may take a while ...")
+    print("Plotting the merger tree, may take a while ...")
     _plot(mtree, ax=ax)
     ax.set_xlabel("Cosmic time [Gyr]")
     ax.set_ylabel("Mass [Msun]")
