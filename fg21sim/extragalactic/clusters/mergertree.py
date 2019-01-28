@@ -114,17 +114,17 @@ def show_mtree(mtree):
         info = "%2d: " % i
         z = main["z"]
         age = main["age"]
-        info += "<z=%.3f/t=%05.2f> " % (z, age)
+        info += "<z=%.3f; t=%5.2f> " % (z, age)
         mass = main["mass"]
         if sub:
             # merger event
             Msub = sub["mass"]
             Rmass = mass / Msub
-            info += "[%.3e @@@ %.3e] (Rm=%04.1f)" % (mass, Msub, Rmass)
+            info += "[%.3e @@@ %.3e] (Rm=%5.1f)" % (mass, Msub, Rmass)
         elif parent:
             # accretion event
             dM = parent["mass"] - mass
-            info += " %.3e  +  %.3e           " % (mass, dM)
+            info += " %.3e  +  %.3e            " % (mass, dM)
         else:
             # root cluster
             info += " %.3e" % mass
