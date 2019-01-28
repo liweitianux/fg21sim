@@ -951,11 +951,6 @@ class RadioHaloAM(RadioHalo1M):
         idx = spec_diff > 0
         spec = np.array(spec_ref)
         spec[idx] += spec_diff[idx] * (r/r_max)**3
-
-        d = helper.density_number_electron(spec, self.gamma)
-        d_in = helper.density_number_electron(spec_in, self.gamma)
-        spec *= d_in / d
-
         return spec
 
     def calc_electron_spectrum(self, tstart=None, tstop=None, n0_e=None,
