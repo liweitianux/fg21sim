@@ -305,7 +305,7 @@ class HaloEmission:
         emissivity = syncem.emissivity(frequencies)
         return emissivity
 
-    def calc_emissivity_bolo(self, freq_min=100, freq_max=1e5, freq_num=256):
+    def calc_emissivity_bolo(self, freq_min=10, freq_max=1e5, freq_num=256):
         """
         Calculate the bolometric emissivity, which is approximated as the
         integration over a finite but broad enough frequency band.

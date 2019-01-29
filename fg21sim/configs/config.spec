@@ -437,3 +437,11 @@ stream = option("stderr", "stdout", "", default="stderr")
   f_rc = float(default=0.1)
   # The slope parameter (i.e., beta).
   beta = float(default=0.8)
+
+  # The minimum and maximum frequencies as well as the number of frequency
+  # points for calculating the total radio emissivity, which is used to
+  # approximate the bolometric emissivity.
+  # Unit: [MHz]
+  bolo_freq_min = float(default=10)
+  bolo_freq_max = float(default=1e5)
+  bolo_freq_num = integer(default=256)

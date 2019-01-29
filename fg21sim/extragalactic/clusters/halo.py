@@ -166,6 +166,9 @@ class RadioHalo1M:
         self.injection_index = configs.getn(comp+"/injection_index")
         self.f_rc = configs.getn(comp+"/f_rc")
         self.beta = configs.getn(comp+"/beta")
+        self.bolo_freq_min = configs.getn(comp+"/bolo_freq_min")
+        self.bolo_freq_max = configs.getn(comp+"/bolo_freq_max")
+        self.bolo_freq_num = configs.getn(comp+"/bolo_freq_num")
 
     def _set_solver(self):
         self.fpsolver = FokkerPlanckSolver(
@@ -510,12 +513,16 @@ class RadioHalo1M:
             Acceleration factor of the bolometric emissivity.
         """
         haloem = HaloEmission(gamma=self.gamma, n_e=n_e, B=1)
-        em = haloem.calc_emissivity_bolo()
+        em = haloem.calc_emissivity_bolo(freq_min=self.bolo_freq_min,
+                                         freq_max=self.bolo_freq_max,
+                                         freq_num=self.bolo_freq_num)
 
         if n_e_fiducial is None:
             n_e_fiducial = self.calc_electron_spectrum(fiducial=True)
         haloem.n_e = n_e_fiducial
-        em_fiducial = haloem.calc_emissivity_bolo()
+        em_fiducial = haloem.calc_emissivity_bolo(
+                freq_min=self.bolo_freq_min, freq_max=self.bolo_freq_max,
+                freq_num=self.bolo_freq_num)
 
         return em / em_fiducial
 
