@@ -61,7 +61,7 @@ import numpy as np
 from scipy import integrate
 from scipy import optimize
 
-from ...share import CONFIGS, COSMO
+from ...share import COSMO
 from ...utils.units import (Units as AU,
                             Constants as AC,
                             UnitConversions as AUC)
@@ -84,12 +84,7 @@ def beta_model(rho0, rc, beta):
     return func
 
 
-def calc_gas_density_profile(
-        mass,
-        z,
-        f_rc=CONFIGS.getn("extragalactic/halos/f_rc"),
-        beta=CONFIGS.getn("extragalactic/halos/beta"),
-    ):
+def calc_gas_density_profile(mass, z, f_rc=0.1, beta=0.8):
     """
     Calculate the parameters of the β-model that is used to describe the
     gas density profile.
@@ -175,13 +170,7 @@ def radius_virial(mass, z=0.0):
     return radius_overdensity(mass, overdensity=Dc, z=z)
 
 
-def radius_stripping(
-        M_main,
-        M_sub,
-        z,
-        f_rc=CONFIGS.getn("extragalactic/halos/f_rc"),
-        beta=CONFIGS.getn("extragalactic/halos/beta"),
-    ):
+def radius_stripping(M_main, M_sub, z, f_rc=0.1, beta=0.8):
     """
     Calculate the stripping radius of the in-falling sub-cluster, which
     is determined by the equipartition between the static and ram pressure.
@@ -242,12 +231,7 @@ def kT_virial(mass, z=0.0, radius=None):
     return kT
 
 
-def kT_cluster(
-        mass,
-        z=0.0,
-        radius=None,
-        kT_out=CONFIGS.getn("extragalactic/clusters/kT_out"),
-    ):
+def kT_cluster(mass, z=0.0, radius=None, kT_out=0):
     """
     Calculate the temperature of a cluster ICM.
 
@@ -312,11 +296,7 @@ def density_gas(mass, z=0.0):
     return density_number_thermal(mass, z) * AC.mu*AC.u  # [g/cm^3]
 
 
-def density_energy_thermal(
-        mass,
-        z=0.0,
-        kT_out=CONFIGS.getn("extragalactic/clusters/kT_out"),
-    ):
+def density_energy_thermal(mass, z=0.0, kT_out=0):
     """
     Calculate the thermal energy density of the ICM.
 
@@ -362,12 +342,7 @@ def density_number_electron(n_e, gamma):
     return integrate.simps(n_e * gamma, np.log(gamma))  # in log grid
 
 
-def magnetic_field(
-        mass,
-        z=0.0,
-        eta_b=CONFIGS.getn("extragalactic/halos/x_cr"),
-        kT_out=CONFIGS.getn("extragalactic/clusters/kT_out"),
-    ):
+def magnetic_field(mass, z, eta_b, kT_out=0):
     """
     Calculate the mean magnetic field strength within the ICM, which is
     also assumed to be uniform, according to the assumed fraction of the
@@ -397,12 +372,7 @@ def magnetic_field(
     return B
 
 
-def plasma_beta(
-        mass,
-        z=0.0,
-        eta_b=CONFIGS.getn("extragalactic/halos/x_cr"),
-        kT_out=CONFIGS.getn("extragalactic/clusters/kT_out"),
-    ):
+def plasma_beta(mass, z, eta_b, kT_out=0):
     """
     Calculate the β value of the ICM, which is defined as:
         β ≡ P_gas / u_B
