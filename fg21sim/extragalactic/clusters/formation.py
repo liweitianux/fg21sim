@@ -23,7 +23,7 @@ import scipy.integrate
 import scipy.special
 import scipy.optimize
 
-from .mergertree import MergerTree, get_history
+from .mergertree import MergerTree, get_history, show_mtree
 from ...share import COSMO
 
 
@@ -277,6 +277,14 @@ class ClusterFormation:
         Extract and return all the merger events.
         """
         return self.history(mtree=mtree, merger_only=True)
+
+    def show(self, mtree=None):
+        """
+        Print the formation history nicely.
+        """
+        if mtree is None:
+            mtree = self.mtree
+        show_mtree(mtree)
 
     def _trace_main(self):
         """
