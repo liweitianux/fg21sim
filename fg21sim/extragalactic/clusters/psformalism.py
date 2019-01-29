@@ -1,5 +1,5 @@
-# Copyright (c) 2017-2018 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2017-2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Press-Schechter (PS) formalism
@@ -52,7 +52,8 @@ class PSFormalism:
         self.dndlnm_outfile = self.configs.get_path(comp+"/dndlnm_outfile")
 
         comp = "extragalactic/clusters"
-        self.Mmin = self.configs.getn(comp+"/mass_min")  # [Msun]
+        fdm = 1 - COSMO.baryon_fraction
+        self.Mmin = self.configs.getn(comp+"/mass_min") * fdm  # [Msun]
         self.boost = self.configs.getn(comp+"/boost")
 
         self.clobber = self.configs.getn("output/clobber")
@@ -295,7 +296,8 @@ class PSFormalism:
         mass = np.array(mass_list)
         comment = [
             "halo mass function model: %s" % self.hmf_model,
-            "cluster minimum mass: %.2e [Msun]" % self.Mmin,
+            "halo minimum mass (dark matter): %.2e [Msun]" % self.Mmin,
+            "dark matter fraction: %.2f" % (1-COSMO.baryon_fraction),
             "cluster counts: %d" % counts,
             "boost factor for cluster counts: %s" % self.boost,
         ]

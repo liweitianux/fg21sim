@@ -120,10 +120,10 @@ class GalaxyClusters:
         psform.write()
         counts = psform.calc_cluster_counts(coverage=self.sky.area)
         z, mass, self.comments = psform.sample_z_m(counts)
-        dm_frac = 1 - COSMO.baryon_fraction
+        fdm = 1 - COSMO.baryon_fraction
         self.catalog = [OrderedDict([("z", z_),
                                      ("mass_dm", m_),
-                                     ("mass", m_ / dm_frac)])
+                                     ("mass", m_ / fdm)])
                         for z_, m_ in zip(z, mass)]
         self.comments += [
             "",
