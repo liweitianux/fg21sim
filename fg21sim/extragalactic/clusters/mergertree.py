@@ -6,6 +6,7 @@ Merger tree that represents the merging history of a cluster using
 the binary tree data structure.
 """
 
+import operator as op
 import logging
 
 from ...utils.io import pickle_dump, pickle_load
@@ -103,6 +104,48 @@ def read_mtree(infile):
     mtree = pickle_load(infile)
     logger.info("Loaded merger tree from file: {0}".format(infile))
     return mtree
+
+
+def get_history(mtree, merger_only=False):
+    """
+    Extract all the formation history (merger and accretion events).
+
+    Parameters
+    ----------
+    mtree : `~MergerTree`
+        The simulated merger tree from which to extract the history.
+        Default: ``self.mtree``
+    merger_only : bool, optional
+        If ``True``, only extract the merger events.
+
+    Returns
+    -------
+    evlist : list[event]
+        List of events with each element being a dictionary of the
+        event properties.
+    """
+    evlist = []
+    for main, sub in mtree.itermain():
+        z, age, M_main = op.itemgetter("z", "age", "mass")(main)
+        if sub:
+            # merger
+            M_sub = sub["mass"]
+            R_mass = M_main / M_sub
+        else:
+            # accretion
+            if merger_only:
+                continue
+            M_sub, R_mass = None, None
+
+        evlist.append({
+            "z": z,
+            "age": age,
+            "M_main": M_main,
+            "M_sub": M_sub,
+            "R_mass": R_mass,
+        })
+
+    return evlist
 
 
 def show_mtree(mtree):

@@ -17,14 +17,13 @@ References
 """
 
 import logging
-import operator as op
 
 import numpy as np
 import scipy.integrate
 import scipy.special
 import scipy.optimize
 
-from .mergertree import MergerTree
+from .mergertree import MergerTree, get_history
 from ...share import COSMO
 
 
@@ -256,14 +255,10 @@ class ClusterFormation:
 
     def history(self, mtree=None, merger_only=False):
         """
-        Extract and return all the formation events, e.g., merger and
-        accretion.
+        Extract all the formation history (merger and accretion events).
 
         Parameters
         ----------
-        mtree : `~MergerTree`, optional
-            The simulated merger tree from which to extract the history.
-            Default: ``self.mtree``
         merger_only : bool, optional
             If ``True``, only extract the merger events.
 
@@ -275,29 +270,7 @@ class ClusterFormation:
         """
         if mtree is None:
             mtree = self.mtree
-
-        evlist = []
-        for main, sub in mtree.itermain():
-            z, age, M_main = op.itemgetter("z", "age", "mass")(main)
-            if sub:
-                # merger
-                M_sub = sub["mass"]
-                R_mass = M_main / M_sub
-            else:
-                # accretion
-                if merger_only:
-                    continue
-                M_sub, R_mass = None, None
-
-            evlist.append({
-                "z": z,
-                "age": age,
-                "M_main": M_main,
-                "M_sub": M_sub,
-                "R_mass": R_mass,
-            })
-
-        return evlist
+        return get_history(mtree=mtree, merger_only=merger_only)
 
     def mergers(self, mtree=None):
         """
