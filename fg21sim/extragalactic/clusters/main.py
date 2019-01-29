@@ -236,8 +236,8 @@ class GalaxyClusters:
             ii = i + 1
             if ii % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
-            z0, M0, age0 = cdict["z"], cdict["mass"], cdict["age"]
-            zmax = COSMO.redshift(age0 - self.time_traceback)
+            z0, M0 = cdict["z"], cdict["mass"]
+            zmax = COSMO.redshift(COSMO.age(z0) - self.time_traceback)
             clform = ClusterFormation(M0=M0*fdm, z0=z0, zmax=zmax,
                                       merger_mass_min=self.merger_mass_min)
             clform.simulate_mtree(main_only=True)
@@ -287,8 +287,7 @@ class GalaxyClusters:
             The calculated radio halo information.
         """
         merger_num = clinfo["merger_num"]
-        M_obs = clinfo["mass"]
-        z_obs = clinfo["z"]
+        M_obs, z_obs = clinfo["mass"], clinfo["z"]
         M1 = clinfo["merger_mass1"][merger_num-1]
         z1 = clinfo["merger_z"][merger_num-1]
         logger.info("M(%.2e)@z(%.3f) -> M(%.2e)@z(%.3f) with %d merger(s)" %
