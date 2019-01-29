@@ -1,5 +1,5 @@
-# Copyright (c) 2016 Weitian LI <liweitianux@live.com>
-# MIT license
+# Copyright (c) 2016,2019 Weitian LI <wt@liwt.net>
+# MIT License
 #
 # References:
 # [1] K. M. Gorski, et al. 2005, ApJ, 622, 759
@@ -25,7 +25,7 @@ hpx2healpix:
 """
 
 
-from datetime import datetime, timezone
+from datetime import datetime
 import logging
 
 import numpy as np
@@ -301,9 +301,8 @@ def _make_hpx_header(header, append_history=None, append_comment=None):
     header["PV2_1"] = (4, "HPX H parameter (longitude)")
     header["PV2_2"] = (3, "HPX K parameter (latitude)")
     logger.info("Made HPX FITS header")
-    #
-    header["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
-                      "File creation date")
+
+    header["DATE"] = (datetime.utcnow().isoformat()+"Z", "File creation date")
     comments = [
         'The HPX coordinate system is an reorganization of the HEALPix',
         'data without regridding or interpolation, which is described in',
@@ -339,10 +338,8 @@ def _make_healpix_header(header, nside,
     header["FIRSTPIX"] = (0, "First pixel # (0 based)")
     header["LASTPIX"] = (npix-1, "Last pixel # (0 based)")
     logger.info("Made HEALPix FITS header")
-    #
-    header["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
-                      "File creation date")
-    #
+
+    header["DATE"] = (datetime.utcnow().isoformat()+"Z", "File creation date")
     if append_history is not None:
         logger.info("HEALPix FITS header: append history")
         for history in append_history:

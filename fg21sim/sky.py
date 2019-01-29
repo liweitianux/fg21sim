@@ -1,5 +1,5 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2017,2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Generic simulation sky supporting both sky patch and HEALPix all-sky
@@ -13,7 +13,7 @@ References
 
 import logging
 import copy
-from datetime import datetime, timezone
+from datetime import datetime
 
 import numpy as np
 from scipy import ndimage
@@ -253,7 +253,7 @@ class SkyBase:
         hdr["PixSize"] = (self.pixelsize, "Pixel size [arcsec]")
         hdr["CREATOR"] = (self.creator, "Sky Creator")
         hdr["FREQ"] = (self.frequency, "Sky frequency [MHz]")
-        hdr["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
+        hdr["DATE"] = (datetime.utcnow().isoformat()+"Z",
                        "File creation date")
         return hdr
 

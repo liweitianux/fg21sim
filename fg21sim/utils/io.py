@@ -1,5 +1,5 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2017,2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Input/output utilities
@@ -29,7 +29,7 @@ Input/output utilities
 import os
 import logging
 import pickle
-from datetime import datetime, timezone
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -119,7 +119,7 @@ def dataframe_to_csv(df, outfile, comment=None, clobber=False):
     if comment is None:
         comment = [
             "by %s" % __name__,
-            "at %s" % datetime.now(timezone.utc).astimezone().isoformat(),
+            "at %sZ" % datetime.utcnow().isoformat(),
         ]
 
     with open(outfile, "w") as fh:
@@ -240,8 +240,7 @@ def write_fits_image(outfile, image, header=None, float32=False,
 
     hdr = fits.Header()
     hdr["CREATOR"] = (__name__, "File creator")
-    hdr["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
-                   "File creation date")
+    hdr["DATE"] = (datetime.utcnow().isoformat()+"Z", "File creation date")
     if header is not None:
         hdr.extend(header, update=True)
 
@@ -368,8 +367,7 @@ def write_fits_healpix(outfile, hpmap, header=None, float32=False,
     #
     hdr["EXTNAME"] = ("HEALPIX", "Name of the binary table extension")
     hdr["CREATOR"] = (__name__, "File creator")
-    hdr["DATE"] = (datetime.now(timezone.utc).astimezone().isoformat(),
-                   "File creation date")
+    hdr["DATE"] = (datetime.utcnow().isoformat()+"Z", "File creation date")
     # Merge user-provided header
     # NOTE: use the `.extend()` method instead of `.update()` method
     if header is not None:
