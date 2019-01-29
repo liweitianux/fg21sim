@@ -40,7 +40,8 @@ logger = logging.getLogger(__name__)
 
 
 def healpix2hpx(data, append_history=None, append_comment=None):
-    """Reorganize the HEALPix data (1D array as FITS table) into 2D FITS
+    """
+    Reorganize the HEALPix data (1D array as FITS table) into 2D FITS
     image in HPX coordinate system.
 
     Parameters
@@ -83,7 +84,8 @@ def healpix2hpx(data, append_history=None, append_comment=None):
 
 
 def hpx2healpix(data, append_history=None, append_comment=None):
-    """Revert the reorganization and turn the 2D image in HPX format
+    """
+    Revert the reorganization and turn the 2D image in HPX format
     back into HEALPix data as 1D array.
 
     Parameters
@@ -118,13 +120,14 @@ def hpx2healpix(data, append_history=None, append_comment=None):
     if ((hpx_header["CTYPE1"], hpx_header["CTYPE2"]) !=
             ("GLON-HPX", "GLAT-HPX")):
         raise ValueError("only Galactic 'HPX' projection currently supported")
+
     # Calculate Nside
     nside = round(hpx_header["NAXIS1"] / 5)
     nside2 = round(90 / np.sqrt(2) / hpx_header["CDELT2"])
     if nside != nside2:
         raise ValueError("Cannot determine the Nside value")
     logger.info("Determined HEALPix Nside=%d" % nside)
-    #
+
     npix = hp.nside2npix(nside)
     logger.info("Calculating the HPX indexes ...")
     hpx_idx = _calc_hpx_indexes(nside).flatten()
@@ -141,7 +144,8 @@ def hpx2healpix(data, append_history=None, append_comment=None):
 
 @nb.jit(nb.int64[:](nb.int64, nb.int64, nb.int64), nopython=True)
 def _calc_hpx_row_idx(nside, facet, jmap):
-    """Calculate the HEALPix indexes for one row of a facet.
+    """
+    Calculate the HEALPix indexes for one row of a facet.
 
     NOTE
     ----
@@ -153,7 +157,7 @@ def _calc_hpx_row_idx(nside, facet, jmap):
     """
     I0 = [1,  3, -3, -1,  0,  2,  4, -2,  1,  3, -3, -1]
     J0 = [1,  1,  1,  1,  0,  0,  0,  0, -1, -1, -1, -1]
-    #
+
     n2side = 2 * nside
     n8side = 8 * nside
     nside1 = nside - 1
@@ -162,7 +166,7 @@ def _calc_hpx_row_idx(nside, facet, jmap):
     # double-pixelization pixel coordinates of the center of the facet
     i0 = nside * I0[facet]
     j0 = nside * J0[facet]
-    #
+
     row_idx = np.zeros(nside, dtype=np.int64)
     for imap in range(nside):
         # (i, j) are 0-based, double-pixelization pixel coordinates.
@@ -174,7 +178,7 @@ def _calc_hpx_row_idx(nside, facet, jmap):
         if i < 0:
             i += n8side
         i += 1
-        #
+
         if j > nside:
             # north polar regime
             if j == n2side:
@@ -211,7 +215,8 @@ def _calc_hpx_row_idx(nside, facet, jmap):
 
 @nb.jit(nb.int64[:, :](nb.int64), nopython=True)
 def _calc_hpx_indexes(nside):
-    """Calculate HEALPix element indexes for the HPX projection scheme.
+    """
+    Calculate HEALPix element indexes for the HPX projection scheme.
 
     Parameters
     ----------
@@ -234,6 +239,7 @@ def _calc_hpx_indexes(nside):
     """
     # number of horizontal/vertical facet
     nfacet = 5
+
     # Facets layout of the HPX projection scheme.
     # Note that this appears to be upside-down, and the blank facets
     # are marked with "-1".
@@ -248,10 +254,10 @@ def _calc_hpx_indexes(nside):
     FACETS_LAYOUT[2, :] = [-1,  0,  4, 11, -1]
     FACETS_LAYOUT[3, :] = [-1, -1,  3,  7, 10]
     FACETS_LAYOUT[4, :] = [-1, -1, -1,  2,  6]
-    #
+
     shape = (nfacet*nside, nfacet*nside)
     indexes = -np.ones(shape, dtype=np.int64)
-    #
+
     # Loop vertically facet-by-facet
     for jfacet in range(nfacet):
         # Loop row-by-row
@@ -267,12 +273,14 @@ def _calc_hpx_indexes(nside):
                     idx = _calc_hpx_row_idx(nside, facet, j)
                     col = ifacet * nside
                     indexes[row, col:(col+nside)] = idx
-    #
+
     return indexes
 
 
 def _make_hpx_header(header, append_history=None, append_comment=None):
-    """Make the FITS header for the HPX image."""
+    """
+    Make the FITS header for the HPX image.
+    """
     header = header.copy(strip=True)
     nside = header["NSIDE"]
     # set pixel transformation parameters
@@ -312,7 +320,7 @@ def _make_hpx_header(header, append_history=None, append_comment=None):
     ]
     for comment in comments:
         header.add_comment(comment)
-    #
+
     if append_history is not None:
         logger.info("HPX FITS header: append history")
         for history in append_history:
@@ -326,7 +334,9 @@ def _make_hpx_header(header, append_history=None, append_comment=None):
 
 def _make_healpix_header(header, nside,
                          append_history=None, append_comment=None):
-    """Make the FITS header for the HEALPix data."""
+    """
+    Make the FITS header for the HEALPix data.
+    """
     header = header.copy(strip=True)
     # set HEALPix parameters
     header["PIXTYPE"] = ("HEALPIX", "HEALPix pixelization")
@@ -353,7 +363,8 @@ def _make_healpix_header(header, nside,
 
 @nb.jit(nb.int64(nb.int64), nopython=True)
 def nside2npix(nside):
-    """Calculate the number of pixels for the given Nside resolution.
+    """
+    Calculate the number of pixels for the given Nside resolution.
 
     NOTE
     ----
@@ -364,7 +375,8 @@ def nside2npix(nside):
 
 @nb.jit(nb.int64(nb.int64, nb.float64, nb.float64), nopython=True)
 def ang2pix_ring_single(nside, theta, phi):
-    """Calculate the pixel indexes in RING ordering scheme for one single
+    """
+    Calculate the pixel indexes in RING ordering scheme for one single
     pair of angular coordinate on the sphere.
 
     Parameters
@@ -415,18 +427,18 @@ def ang2pix_ring_single(nside, theta, phi):
         iring = jp + jm + 1
         ip = int(tt * iring)
         ip = np.remainder(ip, 4*iring)
-        #
         if z > 0:
             ipix = 2 * iring * (iring-1) + ip
         else:
             ipix = 12 * nside * nside - 2 * iring * (iring+1) + ip
-    #
+
     return ipix
 
 
 @nb.jit(nb.types.UniTuple(nb.float64, 2)(nb.int64, nb.int64), nopython=True)
 def pix2ang_ring_single(nside, ipix):
-    """Calculate the angular coordinate on the sphere for one pixel index
+    """
+    Calculate the angular coordinate on the sphere for one pixel index
     in the RING ordering scheme.
 
     Parameters
@@ -485,7 +497,7 @@ def pix2ang_ring_single(nside, ipix):
         iphi = 4 * iring + 1 - (ip - 2 * iring * (iring-1))
         z = iring * iring * fact2 - 1.0
         phi = (iphi - 0.5) * np.pi / (2 * iring)
-    #
+
     theta = np.arccos(z)
     return (theta, phi)
 
@@ -494,7 +506,8 @@ def pix2ang_ring_single(nside, ipix):
          nb.int64[:, :](nb.int64, nb.float64[:, :], nb.float64[:, :])],
         nopython=True)
 def ang2pix_ring(nside, theta, phi):
-    """Calculate the pixel indexes in RING ordering scheme for each
+    """
+    Calculate the pixel indexes in RING ordering scheme for each
     pair of angular coordinates on the sphere.
 
     Parameters
@@ -530,7 +543,8 @@ def ang2pix_ring(nside, theta, phi):
          nb.types.UniTuple(nb.float64[:, :], 2)(nb.int64, nb.int64[:, :])],
         nopython=True)
 def pix2ang_ring(nside, ipix):
-    """Calculate the angular coordinates on the sphere for each pixel
+    """
+    Calculate the angular coordinates on the sphere for each pixel
     index in the RING ordering scheme.
 
     Parameters
