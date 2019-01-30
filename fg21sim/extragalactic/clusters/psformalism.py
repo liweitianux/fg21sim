@@ -41,20 +41,20 @@ class PSFormalism:
         """
         Load the required configurations and set them.
         """
-        comp = "extragalactic/psformalism"
-        self.model = self.configs.getn(comp+"/model")
-        self.M_min = self.configs.getn(comp+"/M_min")
-        self.M_max = self.configs.getn(comp+"/M_max")
-        self.M_step = self.configs.getn(comp+"/M_step")
-        self.z_min = self.configs.getn(comp+"/z_min")
-        self.z_max = self.configs.getn(comp+"/z_max")
-        self.z_step = self.configs.getn(comp+"/z_step")
-        self.dndlnm_outfile = self.configs.get_path(comp+"/dndlnm_outfile")
+        sec = "extragalactic/psformalism"
+        self.model = self.configs.getn(sec+"/model")
+        self.M_min = self.configs.getn(sec+"/M_min")
+        self.M_max = self.configs.getn(sec+"/M_max")
+        self.M_step = self.configs.getn(sec+"/M_step")
+        self.z_min = self.configs.getn(sec+"/z_min")
+        self.z_max = self.configs.getn(sec+"/z_max")
+        self.z_step = self.configs.getn(sec+"/z_step")
+        self.dndlnm_outfile = self.configs.get_path(sec+"/dndlnm_outfile")
 
-        comp = "extragalactic/clusters"
+        sec = "extragalactic/clusters"
         fdm = 1 - COSMO.baryon_fraction
-        self.Mmin = self.configs.getn(comp+"/mass_min") * fdm  # [Msun]
-        self.boost = self.configs.getn(comp+"/boost")
+        self.Mmin = self.configs.getn(sec+"/mass_min") * fdm  # [Msun]
+        self.boost = self.configs.getn(sec+"/boost")
 
         self.clobber = self.configs.getn("output/clobber")
 

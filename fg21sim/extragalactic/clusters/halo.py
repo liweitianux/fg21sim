@@ -147,28 +147,28 @@ class RadioHalo1M:
         self._set_solver()
 
     def _set_configs(self, configs):
-        comp = self.compID
+        sec = self.compID
         self.configs = configs
-        self.f_acc = configs.getn(comp+"/f_acc")
-        self.f_radius = configs.getn(comp+"/f_radius")
-        self.eta_turb = configs.getn(comp+"/eta_turb")
-        self.eta_e = configs.getn(comp+"/eta_e")
-        self.x_cr = configs.getn(comp+"/x_cr")
-        self.mass_index = configs.getn(comp+"/mass_index")
-        self.gamma_min = configs.getn(comp+"/gamma_min")
-        self.gamma_max = configs.getn(comp+"/gamma_max")
-        self.gamma_np = configs.getn(comp+"/gamma_np")
-        self.buffer_np = configs.getn(comp+"/buffer_np")
+        self.f_acc = configs.getn(sec+"/f_acc")
+        self.f_radius = configs.getn(sec+"/f_radius")
+        self.eta_turb = configs.getn(sec+"/eta_turb")
+        self.eta_e = configs.getn(sec+"/eta_e")
+        self.x_cr = configs.getn(sec+"/x_cr")
+        self.mass_index = configs.getn(sec+"/mass_index")
+        self.gamma_min = configs.getn(sec+"/gamma_min")
+        self.gamma_max = configs.getn(sec+"/gamma_max")
+        self.gamma_np = configs.getn(sec+"/gamma_np")
+        self.buffer_np = configs.getn(sec+"/buffer_np")
         if self.buffer_np == 0:
             self.buffer_np = None
-        self.time_step = configs.getn(comp+"/time_step")
-        self.time_init = configs.getn(comp+"/time_init")
-        self.injection_index = configs.getn(comp+"/injection_index")
-        self.f_rc = configs.getn(comp+"/f_rc")
-        self.beta = configs.getn(comp+"/beta")
-        self.bolo_freq_min = configs.getn(comp+"/bolo_freq_min")
-        self.bolo_freq_max = configs.getn(comp+"/bolo_freq_max")
-        self.bolo_freq_num = configs.getn(comp+"/bolo_freq_num")
+        self.time_step = configs.getn(sec+"/time_step")
+        self.time_init = configs.getn(sec+"/time_init")
+        self.injection_index = configs.getn(sec+"/injection_index")
+        self.f_rc = configs.getn(sec+"/f_rc")
+        self.beta = configs.getn(sec+"/beta")
+        self.bolo_freq_min = configs.getn(sec+"/bolo_freq_min")
+        self.bolo_freq_max = configs.getn(sec+"/bolo_freq_max")
+        self.bolo_freq_num = configs.getn(sec+"/bolo_freq_num")
 
     def _set_solver(self):
         self.fpsolver = FokkerPlanckSolver(

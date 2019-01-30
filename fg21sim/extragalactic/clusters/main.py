@@ -67,30 +67,31 @@ class GalaxyClusters:
         """
         Load the configs and set the corresponding class attributes.
         """
-        comp = self.compID
+        sec = self.compID
         self.configs = configs
-        self.catalog_outfile = configs.get_path(comp+"/catalog_outfile")
-        self.dump_catalog_data = configs.getn(comp+"/dump_catalog_data")
+        self.catalog_outfile = configs.get_path(sec+"/catalog_outfile")
+        self.dump_catalog_data = configs.getn(sec+"/dump_catalog_data")
         self.use_dump_catalog_data = configs.getn(
-            comp+"/use_dump_catalog_data")
+            sec+"/use_dump_catalog_data")
         self.halos_catalog_outfile = configs.get_path(
-            comp+"/halos_catalog_outfile")
-        self.dump_halos_data = configs.getn(comp+"/dump_halos_data")
+            sec+"/halos_catalog_outfile")
+        self.dump_halos_data = configs.getn(sec+"/dump_halos_data")
         self.use_dump_halos_data = configs.getn(
-            comp+"/use_dump_halos_data")
-        self.felong_min = configs.getn(comp+"/felong_min")
-        self.halo_dropout = configs.getn(comp+"/halo_dropout")
-        self.prefix = configs.getn(comp+"/prefix")
-        self.output_dir = configs.get_path(comp+"/output_dir")
-        self.merger_mass_min = configs.getn(comp+"/merger_mass_min")
-        self.time_traceback = configs.getn(comp+"/time_traceback")
-        self.kT_out = configs.getn(comp+"/kT_out")
+            sec+"/use_dump_halos_data")
+        self.felong_min = configs.getn(sec+"/felong_min")
+        self.halo_dropout = configs.getn(sec+"/halo_dropout")
+        self.prefix = configs.getn(sec+"/prefix")
+        self.output_dir = configs.get_path(sec+"/output_dir")
+        self.merger_mass_min = configs.getn(sec+"/merger_mass_min")
+        self.time_traceback = configs.getn(sec+"/time_traceback")
+        self.kT_out = configs.getn(sec+"/kT_out")
 
         self.frequencies = configs.frequencies
         self.filename_pattern = configs.getn("output/filename_pattern")
         self.clobber = configs.getn("output/clobber")
 
-        self.eta_b = configs.getn("extragalactic/halos/x_cr")
+        sec = "extragalactic/halos"
+        self.eta_b = configs.getn(sec+"/x_cr")
 
         if self.use_dump_halos_data and (not self.use_dump_catalog_data):
             self.use_dump_catalog_data = True
@@ -107,6 +108,7 @@ class GalaxyClusters:
         Catalog Items
         -------------
         z : redshifts
+        mass_dm : [Msun] dark matter halo mass
         mass : [Msun] cluster total mass
 
         Attributes
