@@ -357,22 +357,37 @@ class GalaxyClusters:
             ii = i + 1
             if ii % 100 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
+
             haloem = HaloEmission(gamma=hdict["gamma"], n_e=hdict["spectrum"],
                                   B=hdict["B"], radius=hdict["Rhalo"],
                                   redshift=hdict["z"])
-            emissivity = haloem.calc_emissivity(frequencies=self.frequencies)
-            power = haloem.calc_power(self.frequencies, emissivity=emissivity)
-            flux = haloem.calc_flux(self.frequencies)
-            Tb_mean = haloem.calc_brightness_mean(self.frequencies, flux=flux,
-                                                  pixelsize=self.sky.pixelsize)
+            freq = self.frequencies
+            em = haloem.calc_emissivity(freq)
+            power = haloem.calc_power(freq, emissivity=em)
+            flux = haloem.calc_flux(freq)
+            Tb_mean = haloem.calc_brightness_mean(
+                    freq, flux=flux, pixelsize=self.sky.pixelsize)
+
+            # Calculate spectral index with a narrow (10 MHz) band
+            freq2 = freq + 10
+            em2 = haloem.calc_emissivity(freq2)
+            index = -(np.log(em2)-np.log(em)) / (np.log(freq2)-np.log(freq))
+
+            haloem.n_e = hdict["spectrum_fiducial"]
+            em_fiducial = haloem.calc_emissivity(freq)
+            em_facc = em / em_fiducial
+
             # Update or add new items
             hdict.update([
-                ("frequency", self.frequencies),  # [MHz]
-                ("emissivity", emissivity),  # [erg/s/cm^3/Hz]
+                ("frequency", freq),  # [MHz]
+                ("spec_index", index),
+                ("emissivity", em),  # [erg/s/cm^3/Hz]
+                ("emissivity_facc", em_facc),
                 ("power", power),  # [W/Hz]
                 ("flux", flux),  # [Jy]
                 ("Tb_mean", Tb_mean),  # [K]
             ])
+
         logger.info("Calculated the radio emissions.")
 
     def _dropout_halos(self):
