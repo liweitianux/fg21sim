@@ -494,9 +494,8 @@ class GalaxyClusters:
             os.rename(outfile, outfile+".old")
 
         logger.info("Converting halos data into a Pandas DataFrame ...")
-        keys = list(self.halos[0].keys())
-        for k in ["gamma", "spectrum", "spectrum_fiducial", "template"]:
-            keys.remove(k)
+        keys_ignored = ["gamma", "spectrum", "spectrum_fiducial", "template"]
+        keys = [k for k in self.halos[0].keys() if k not in keys_ignored]
         halos_df = dictlist_to_dataframe(self.halos, keys=keys)
         dataframe_to_csv(halos_df, outfile, clobber=clobber)
         logger.info("Saved halos data to CSV file: %s" % outfile)
