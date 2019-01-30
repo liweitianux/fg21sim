@@ -433,7 +433,7 @@ class GalaxyClusters:
         The templates are normalized to have *mean* value of 1.
         """
         idx_kept = [idx for idx, cdict in enumerate(self.halos)
-                    if not cdict.get("drop", False)]
+                    if cdit["genuine"] and not cdict.get("drop", False)]
         num = len(idx_kept)
         logger.info("Draw template images for %d halos ..." % num)
         for i, idx in enumerate(idx_kept):
@@ -620,14 +620,14 @@ class GalaxyClusters:
         JyPP2K = JyPerPix_to_K(freq, sky.pixelsize)
 
         for hdict in self.halos:
-            if hdict.get("drop", False):
+            if "template" not in hdict:
                 continue
-            center = (hdict["lon"], hdict["lat"])
             template = hdict["template"]  # normalized to have mean of 1
             Npix = template.size
             flux = hdict["flux"][freqidx]  # [Jy]
             Tmean = (flux/Npix) * JyPP2K  # [K]
             Timg = Tmean * template  # [K]
+            center = (hdict["lon"], hdict["lat"])
             sky.add(Timg, center=center)
 
         logger.info("Done simulate map at %.2f [MHz]." % freq)
