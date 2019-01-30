@@ -445,3 +445,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   bolo_freq_min = float(default=10)
   bolo_freq_max = float(default=1e5)
   bolo_freq_num = integer(default=256)
+
+  # The threshold for the bolometric emissivity acceleration factor to
+  # determine whether the halo is genuine/formed.
+  genuine_threshold = float(default=10)
