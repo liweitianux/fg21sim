@@ -23,11 +23,9 @@ def inverse_cumsum(x):
     return x[::-1].cumsum()[::-1]
 
 
-def countdist_integrated(x, nbin, log=True, xmin=None, xmax=None):
+def countdist(x, nbin, log=True, xmin=None, xmax=None):
     """
-    Calculate the integrated counts distribution (i.e., luminosity
-    function), representing the counts (number of objects) with a
-    greater value.
+    Calculate the counts distribution, i.e., a histogram.
 
     Parameters
     ----------
@@ -47,7 +45,7 @@ def countdist_integrated(x, nbin, log=True, xmin=None, xmax=None):
     Returns
     -------
     counts : 1D `~numpy.ndarray`
-        The integrated counts for each bin, of length ``nbin``.
+        The counts in each bin, of length ``nbin``.
     bins : 1D `~numpy.ndarray`
         The central positions of every bin, of length ``nbin``.
     binedges : 1D `~numpy.ndarray`
@@ -69,14 +67,24 @@ def countdist_integrated(x, nbin, log=True, xmin=None, xmax=None):
     binedges = np.linspace(xmin, xmax, num=nbin+1)
     bins = (binedges[1:] + binedges[:-1]) / 2
     counts, __ = np.histogram(x, bins=binedges)
-    # Convert to the integrated counts distribution
-    counts = inverse_cumsum(counts)
 
     if log is True:
         bins = np.exp(bins)
         binedges = np.exp(binedges)
 
-    return (counts, bins, binedges)
+    return counts, bins, binedges
+
+
+def countdist_integrated(x, nbin, log=True, xmin=None, xmax=None):
+    """
+    Calculate the integrated counts distribution (e.g., luminosity
+    function, mass function), representing the counts with a greater
+    value, e.g., N(>flux), N(>mass).
+    """
+    counts, bins, binedges = countdist(x=x, nbin=nbin, log=log,
+                                       xmin=xmin, xmax=xmax)
+    counts = inverse_cumsum(counts)
+    return counts, bins, binedges
 
 
 def logfit(x, y):
