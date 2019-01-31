@@ -232,7 +232,7 @@ class RadioHalo1M:
         z = COSMO.redshift(t_merger)
         M_main = self.mass_main(t_merger)
         r_s = self.radius_strip(t_merger)
-        r_c = self.f_rc * helper.radius_virial(M_main, z)
+        r_c = self.f_rc * helper.radius_cluster(M_main, z)
         return r_s + r_c
 
     @lru_cache()
@@ -303,7 +303,7 @@ class RadioHalo1M:
         v_i = helper.velocity_impact(M_main, M_sub, z)  # [km/s]
         rho_main = helper.density_number_thermal(M_main, z)  # [cm^-3]
         rho_main *= AC.mu*AC.u * AUC.g2Msun * AUC.kpc2cm**3  # [Msun/kpc^3]
-        R_vir = helper.radius_virial(M_main, z)  # [kpc]
+        R_vir = helper.radius_cluster(M_main, z)  # [kpc]
 
         V_turb = np.pi * r_s**2 * R_vir  # [kpc^3]
         E_turb = self.eta_turb * rho_main * v_i**2 * V_turb

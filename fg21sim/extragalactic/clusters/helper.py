@@ -99,7 +99,7 @@ def calc_gas_density_profile(mass, z, f_rc=0.1, beta=0.8):
     Parameters
     ----------
     f_rc : float
-        The fraction of the core radius to the virial radius.
+        The fraction of the core radius to the cluster radius.
         Default: 0.1
     beta : float
         The slope parameter of the β-model.
@@ -111,11 +111,10 @@ def calc_gas_density_profile(mass, z, f_rc=0.1, beta=0.8):
         A function of the β-model.
         Unit: [Msun/kpc^3]
     """
-    r_vir = radius_virial(mass, z)  # [kpc]
+    r_vir = radius_cluster(mass, z)  # [kpc]
     rc = f_rc * r_vir
     fint = beta_model(1, rc, beta)
-    v = integrate.quad(lambda r: fint(r) * r**2,
-                       a=0, b=r_vir)[0]  # [kpc^3]
+    v = integrate.quad(lambda r: fint(r) * r**2, a=0, b=r_vir)[0]  # [kpc^3]
     rho0 = mass * COSMO.baryon_fraction / (4*np.pi * v)  # [Msun/kpc^3]
     return beta_model(rho0, rc, beta)
 
@@ -202,7 +201,7 @@ def radius_stripping(M_main, M_sub, z, f_rc=0.1, beta=0.8):
         The stripping radius of the sub-cluster.
         Unit: [kpc]
     """
-    r_vir = radius_virial(M_sub, z)  # [kpc]
+    r_vir = radius_cluster(M_sub, z)  # [kpc]
     rho_main = density_number_thermal(M_main, z) * AC.mu*AC.u  # [g/cm^3]
     f_rho_sub = calc_gas_density_profile(M_sub, z, f_rc, beta)  # [Msun/kpc^3]
     vi = velocity_impact(M_main, M_sub, z)  # [km/s]
@@ -212,7 +211,7 @@ def radius_stripping(M_main, M_sub, z, f_rc=0.1, beta=0.8):
     rhs *= AUC.g2Msun / AUC.cm2kpc**3  # [Msun/kpc^3]
     try:
         rs = optimize.brentq(lambda r: f_rho_sub(r) - rhs,
-                             a=0.1*r_vir, b=r_vir, xtol=1e-1)
+                             a=f_rc*r_vir, b=r_vir, xtol=1e-1)
     except ValueError:
         rs = 2*f_rc * r_vir
     return rs  # [kpc]
@@ -225,14 +224,12 @@ def kT_virial(mass, z=0.0, radius=None):
     Parameters
     ----------
     mass : float
-        The virial mass of the cluster.
+        The total mass of the cluster.
         Unit: [Msun]
     z : float, optional
         The redshift of the cluster.
     radius : float, optional
-        The virial radius of the cluster.
-        If no provided, then invoke the above ``radius_virial()``
-        function to calculate it.
+        The radius of the cluster.
         Unit: [kpc]
 
     Returns
@@ -244,7 +241,7 @@ def kT_virial(mass, z=0.0, radius=None):
     Reference: Ref.[fujita2003],Eq.(48)
     """
     if radius is None:
-        radius = radius_virial(mass=mass, z=z)  # [kpc]
+        radius = radius_cluster(mass=mass, z=z)  # [kpc]
     kT = AC.mu*AC.u * AC.G * mass*AUC.Msun2g / (2*radius*AUC.kpc2cm)  # [erg]
     kT *= AUC.erg2keV  # [keV]
     return kT
@@ -301,7 +298,7 @@ def density_number_thermal(mass, z=0.0):
         Unit: [cm^-3]
     """
     N = mass * AUC.Msun2g * COSMO.baryon_fraction / (AC.mu * AC.u)
-    R_vir = radius_virial(mass, z) * AUC.kpc2cm  # [cm]
+    R_vir = radius_cluster(mass, z) * AUC.kpc2cm  # [cm]
     volume = (4*np.pi / 3) * R_vir**3  # [cm^3]
     n_th = N / volume  # [cm^-3]
     return n_th
@@ -438,7 +435,7 @@ def velocity_virial(mass, z=0.0):
 
     Unit: [km/s]
     """
-    R_vir = radius_virial(mass, z) * AUC.kpc2cm  # [cm]
+    R_vir = radius_cluster(mass, z) * AUC.kpc2cm  # [cm]
     vv = np.sqrt(AC.G * mass*AUC.Msun2g / R_vir)  # [cm/s]
     return vv / AUC.km2cm  # [km/s]
 
@@ -467,7 +464,7 @@ def velocity_impact(M_main, M_sub, z=0.0):
     Ref.[cassano2005],Eq.(9)
     """
     eta_v = 4 * (1 + M_main/M_sub) ** (1/3)
-    R_vir = radius_virial(M_main, z) * AUC.kpc2cm  # [cm]
+    R_vir = radius_cluster(M_main, z) * AUC.kpc2cm  # [cm]
     vi = np.sqrt(2*AC.G * (1-1/eta_v) *
                  (M_main+M_sub)*AUC.Msun2g / R_vir)  # [cm/s]
     return vi / AUC.km2cm  # [km/s]

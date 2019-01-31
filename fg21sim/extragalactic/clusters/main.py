@@ -196,7 +196,7 @@ class GalaxyClusters:
         logger.info("Calculating basic information for each cluster ...")
         for cdict in self.catalog:
             z, mass = cdict["z"], cdict["mass"]
-            Rvir = helper.radius_virial(mass, z)  # [kpc]
+            Rvir = helper.radius_cluster(mass, z)  # [kpc]
             DA = COSMO.DA(z)  # [Mpc]
             theta = Rvir / (DA*1e3) * AUC.rad2arcsec  # [arcsec]
             kT = helper.kT_cluster(mass, z, kT_out=self.kT_out)  # [keV]
