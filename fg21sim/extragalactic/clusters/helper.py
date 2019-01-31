@@ -473,37 +473,6 @@ def velocity_impact(M_main, M_sub, z=0.0):
     return vi / AUC.km2cm  # [km/s]
 
 
-def time_crossing(M_main, M_sub, z=0.0):
-    """
-    Estimate the crossing time of the sub cluster during a merger.
-
-    NOTE: The crossing time is estimated to be τ ~ R_vir / v_impact.
-
-    Parameters
-    ----------
-    M_main, M_sub : float
-        Total (virial) masses of the main and sub clusters
-        Unit: [Msun]
-    z : float, optional
-        Redshift
-
-    Returns
-    -------
-    time : float
-        Crossing time
-        Unit: [Gyr]
-
-    References
-    ----------
-    Ref.[cassano2005],Sec.(4.1)
-    """
-    R_vir = radius_virial(M_main, z)  # [kpc]
-    vi = velocity_impact(M_main, M_sub, z)  # [km/s]
-    uconv = AUC.kpc2km * AUC.s2Gyr  # [s kpc/km] => [Gyr]
-    time = uconv * R_vir / vi  # [Gyr]
-    return time
-
-
 def draw_halo(radius, nr=2.0, felong=None, rotation=None):
     """
     Draw the template image of one halo, which is used to simulate
