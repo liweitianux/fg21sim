@@ -170,6 +170,25 @@ def radius_virial(mass, z=0.0):
     return radius_overdensity(mass, overdensity=Dc, z=z)
 
 
+def radius_cluster(mass, z=0):
+    """
+    Calculate the radius of the cluster.
+
+    NOTE/XXX
+    --------
+    The cosmic evolution makes the whole thing too complicated, e.g.,
+    the thermal energy density becomes more sensitive to the redshifts
+    rather than cluster mass, therefore, the magnetic field, which is
+    assumed to be correlated with the thermal energy density, increases
+    more rapidly with increasing redshifts rather than cluster mass.
+    This is not expected.  So ignore the cosmic evolution for modeling
+    radio halos, keeping the things simple.
+
+    Unit: [kpc]
+    """
+    return radius_virial(mass, z=0)
+
+
 def radius_stripping(M_main, M_sub, z, f_rc=0.1, beta=0.8):
     """
     Calculate the stripping radius of the in-falling sub-cluster, which
