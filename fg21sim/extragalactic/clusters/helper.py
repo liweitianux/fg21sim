@@ -119,7 +119,7 @@ def calc_gas_density_profile(mass, z, f_rc=0.1, beta=0.8):
     return beta_model(rho0, rc, beta)
 
 
-def radius_overdensity(mass, overdensity, z=0.0):
+def radius_overdensity(mass, overdensity, z=0):
     """
     Calculate the radius within which the mean density is ``overdensity``
     times of the cosmological critical density.
@@ -134,7 +134,7 @@ def radius_overdensity(mass, overdensity, z=0.0):
         e.g., 200, 500.
     z : float, `~numpy.ndarray`, optional
         Redshift
-        Default: 0.0 (i.e., present day)
+        Default: 0 (i.e., present day)
 
     Returns
     -------
@@ -146,7 +146,7 @@ def radius_overdensity(mass, overdensity, z=0.0):
     return r * AUC.cm2kpc  # [kpc]
 
 
-def radius_virial(mass, z=0.0):
+def radius_virial(mass, z=0):
     """
     Calculate the virial radius of a cluster at a given redshift.
 
@@ -157,7 +157,7 @@ def radius_virial(mass, z=0.0):
         Unit: [Msun]
     z : float, `~numpy.ndarray`, optional
         Redshift
-        Default: 0.0 (i.e., present day)
+        Default: 0 (i.e., present day)
 
     Returns
     -------
@@ -217,7 +217,7 @@ def radius_stripping(M_main, M_sub, z, f_rc=0.1, beta=0.8):
     return rs  # [kpc]
 
 
-def kT_virial(mass, z=0.0, radius=None):
+def kT_virial(mass, z=0, radius=None):
     """
     Calculate the virial temperature of a cluster.
 
@@ -247,7 +247,7 @@ def kT_virial(mass, z=0.0, radius=None):
     return kT
 
 
-def kT_cluster(mass, z=0.0, radius=None, kT_out=0):
+def kT_cluster(mass, z=0, radius=None, kT_out=0):
     """
     Calculate the temperature of a cluster ICM.
 
@@ -274,14 +274,9 @@ def kT_cluster(mass, z=0.0, radius=None, kT_out=0):
     return kT_icm
 
 
-def density_number_thermal(mass, z=0.0):
+def density_number_thermal(mass, z=0):
     """
     Calculate the number density of the ICM thermal plasma.
-
-    NOTE
-    ----
-    This number density is independent of cluster (virial) mass,
-    but (mostly) increases with redshifts.
 
     Parameters
     ----------
@@ -304,7 +299,7 @@ def density_number_thermal(mass, z=0.0):
     return n_th
 
 
-def density_gas(mass, z=0.0):
+def density_gas(mass, z=0):
     """
     Calculate the mean gas density.
     Unit: [g/cm^3]
@@ -312,7 +307,7 @@ def density_gas(mass, z=0.0):
     return density_number_thermal(mass, z) * AC.mu*AC.u  # [g/cm^3]
 
 
-def density_energy_thermal(mass, z=0.0, kT_out=0):
+def density_energy_thermal(mass, z=0, kT_out=0):
     """
     Calculate the thermal energy density of the ICM.
 
@@ -428,7 +423,7 @@ def speed_sound(kT):
     return cs * AUC.cm2km  # [km/s]
 
 
-def velocity_virial(mass, z=0.0):
+def velocity_virial(mass, z=0):
     """
     Calculate the virial velocity, i.e., circular velocity at the
     virial radius.
@@ -440,28 +435,14 @@ def velocity_virial(mass, z=0.0):
     return vv / AUC.km2cm  # [km/s]
 
 
-def velocity_impact(M_main, M_sub, z=0.0):
+def velocity_impact(M_main, M_sub, z=0):
     """
     Estimate the relative impact velocity between the two merging
     clusters when they are at a distance of the virial radius.
 
-    Parameters
-    ----------
-    M_main, M_sub : float
-        Total (virial) masses of the main and sub clusters
-        Unit: [Msun]
-    z : float, optional
-        Redshift
+    Reference: Ref.[cassano2005],Eq.(9)
 
-    Returns
-    -------
-    vi : float
-        Relative impact velocity
-        Unit: [km/s]
-
-    References
-    ----------
-    Ref.[cassano2005],Eq.(9)
+    Unit: [km/s]
     """
     eta_v = 4 * (1 + M_main/M_sub) ** (1/3)
     R_vir = radius_cluster(M_main, z) * AUC.kpc2cm  # [cm]
