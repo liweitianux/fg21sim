@@ -192,6 +192,14 @@ class GalaxyClusters:
     def _calc_cluster_info(self):
         """
         Calculate some basic information for each cluster.
+
+        Catalog Items
+        -------------
+        DA : [Mpc] angular diameter distance
+        Rvir : [kpc] virial radius
+        Rvir_angular : [arcsec] angular virial radius
+        kT : [keV] ICM mean temperature
+        B : [uG] magnetic field
         """
         logger.info("Calculating basic information for each cluster ...")
         for cdict in self.catalog:
@@ -272,8 +280,6 @@ class GalaxyClusters:
         ]
         logger.info("%d (%.1f%%) clusters experienced recent mergers." %
                     (num_hasmerger, 100*num_hasmerger/num))
-        nmax = max([cdict["merger_num"] for cdict in self.catalog])
-        logger.info("Maximum number of merger events: %d" % nmax)
 
     def _simulate_halo1(self, clinfo):
         """
