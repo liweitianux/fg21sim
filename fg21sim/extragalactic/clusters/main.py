@@ -299,8 +299,8 @@ class GalaxyClusters:
         M_obs, z_obs = clinfo["mass"], clinfo["z"]
         M1 = clinfo["merger_mass1"][merger_num-1]
         z1 = clinfo["merger_z"][merger_num-1]
-        logger.info("M(%.2e)@z(%.3f) -> M(%.2e)@z(%.3f) with %d merger(s)" %
-                    (M1, z1, M_obs, z_obs, merger_num))
+        logger.debug("M(%.2e)@z(%.3f) -> M(%.2e)@z(%.3f) with %d merger(s)" %
+                     (M1, z1, M_obs, z_obs, merger_num))
         halo = RadioHaloAM(M_obs=M_obs, z_obs=z_obs,
                            M_main=clinfo["merger_mass1"],
                            M_sub=clinfo["merger_mass2"],
