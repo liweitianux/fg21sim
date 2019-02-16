@@ -154,6 +154,7 @@ class RadioHalo1M:
         self.eta_turb = configs.getn(sec+"/eta_turb")
         self.eta_e = configs.getn(sec+"/eta_e")
         self.x_cr = configs.getn(sec+"/x_cr")
+        self.eta_b = self.x_cr  # Equipartition between magnetic field and CR
         self.mass_index = configs.getn(sec+"/mass_index")
         self.gamma_min = configs.getn(sec+"/gamma_min")
         self.gamma_max = configs.getn(sec+"/gamma_max")
@@ -169,6 +170,8 @@ class RadioHalo1M:
         self.bolo_freq_min = configs.getn(sec+"/bolo_freq_min")
         self.bolo_freq_max = configs.getn(sec+"/bolo_freq_max")
         self.bolo_freq_num = configs.getn(sec+"/bolo_freq_num")
+
+        self.kT_out = configs.getn("extragalactic/clusters/kT_out")
 
     def _set_solver(self):
         self.fpsolver = FokkerPlanckSolver(
@@ -681,12 +684,10 @@ class RadioHalo1M:
 
         Unit: [uG]
         """
-        eta_b = self.x_cr  # Equipartition between magnetic field and CR
-        kT_out = self.configs.getn("extragalactic/clusters/kT_out")
         z = COSMO.redshift(t)
         mass = self.mass_main(t)  # [Msun]
         return helper.magnetic_field(mass=mass, z=z,
-                                     eta_b=eta_b, kT_out=kT_out)
+                                     eta_b=self.eta_b, kT_out=self.kT_out)
 
     def _is_turb_active(self, t):
         """
