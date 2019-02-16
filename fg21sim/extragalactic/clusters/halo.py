@@ -26,6 +26,10 @@ References
    Cassano, Brunetti & Setti, 2006, MNRAS, 369, 1577
    http://adsabs.harvard.edu/abs/2006MNRAS.369.1577C
 
+.. [cassano2007]
+   Cassano et al. 2007, MNRAS, 378, 1565
+   http://adsabs.harvard.edu/abs/2007MNRAS.378.1565C
+
 .. [cassano2012]
    Cassano et al. 2012, A&A, 548, A100
    http://adsabs.harvard.edu/abs/2012A%26A...548A.100C
@@ -205,9 +209,22 @@ class RadioHalo1M:
     def radius(self):
         """
         The estimated radius of the simulated radio halo.
+
+        It is known that the halo radius scales non-linearly as the hosting
+        cluster, breaking the self-similiarity, which may be caused by the
+        magnetic field and the releativistic electron distributions.  So
+        make the halo radius scales with the magnetic field.
+
+        Reference: Ref.[cassano2007],Sec.4
+
         Unit: [kpc]
         """
-        return self.f_radius * self.radius_turb(self.t_merger)
+        r = self.radius_turb(self.t_merger)
+        B = helper.magnetic_field(mass=self.M_obs, z=self.z_obs,
+                                  eta_b=self.eta_b, kT_out=self.kT_out)
+        B0 = helper.magnetic_field(mass=1e15, z=0,
+                                   eta_b=self.eta_b, kT_out=self.kT_out)
+        return r * self.f_radius * (B/B0)
 
     @lru_cache()
     def radius_strip(self, t_merger):
@@ -771,7 +788,11 @@ class RadioHaloAM(RadioHalo1M):
         The halo radius estimated by using the maximum turbulence radius.
         Unit: [kpc]
         """
-        return self.f_radius * self.radius_turb_max
+        B = helper.magnetic_field(mass=self.M_obs, z=self.z_obs,
+                                  eta_b=self.eta_b, kT_out=self.kT_out)
+        B0 = helper.magnetic_field(mass=1e15, z=0,
+                                   eta_b=self.eta_b, kT_out=self.kT_out)
+        return self.f_radius * self.radius_turb_max * (B/B0)
 
     @property
     @lru_cache()
