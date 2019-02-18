@@ -397,8 +397,12 @@ stream = option("stderr", "stdout", "", default="stderr")
   x_cr = float(default=0.015, min=0.001, max=0.1)
 
   # The scaling index of the diffusion coefficient (D_γγ) w.r.t. the
-  # mass of the main cluster.
+  # mass of the cluster.
   mass_index = float(default=0, min=0, max=2)
+
+  # The scaling index of the halo radius (R_halo) w.r.t. the virial
+  # radius of the cluster.
+  radius_index = float(default=0, min=0, max=3)
 
   # The spectral index of the injected primary electrons.
   injection_index = float(default=2.3, min=2.1, max=3.0)

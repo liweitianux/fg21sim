@@ -160,6 +160,7 @@ class RadioHalo1M:
         self.x_cr = configs.getn(sec+"/x_cr")
         self.eta_b = self.x_cr  # Equipartition between magnetic field and CR
         self.mass_index = configs.getn(sec+"/mass_index")
+        self.radius_index = configs.getn(sec+"/radius_index")
         self.gamma_min = configs.getn(sec+"/gamma_min")
         self.gamma_max = configs.getn(sec+"/gamma_max")
         self.gamma_np = configs.getn(sec+"/gamma_np")
@@ -212,19 +213,16 @@ class RadioHalo1M:
 
         It is known that the halo radius scales non-linearly as the hosting
         cluster, breaking the self-similiarity, which may be caused by the
-        magnetic field and the releativistic electron distributions.  So
-        make the halo radius scales with the magnetic field.
+        magnetic field and the releativistic electron distributions.
 
         Reference: Ref.[cassano2007],Sec.4
 
         Unit: [kpc]
         """
-        r = self.radius_turb(self.t_merger)
-        B = helper.magnetic_field(mass=self.M_obs, z=self.z_obs,
-                                  eta_b=self.eta_b, kT_out=self.kT_out)
-        B0 = helper.magnetic_field(mass=1e15, z=0,
-                                   eta_b=self.eta_b, kT_out=self.kT_out)
-        return r * self.f_radius * (B/B0)
+        r_turb = self.radius_turb(self.t_merger)
+        r_cl = helper.radius_cluster(mass=self.M_obs, z=self.z_obs)
+        r0_cl = helper.radius_cluster(mass=1e15, z=0)
+        return r_turb * self.f_radius * (r_cl/r0_cl)**self.radius_index
 
     @lru_cache()
     def radius_strip(self, t_merger):
@@ -788,11 +786,10 @@ class RadioHaloAM(RadioHalo1M):
         The halo radius estimated by using the maximum turbulence radius.
         Unit: [kpc]
         """
-        B = helper.magnetic_field(mass=self.M_obs, z=self.z_obs,
-                                  eta_b=self.eta_b, kT_out=self.kT_out)
-        B0 = helper.magnetic_field(mass=1e15, z=0,
-                                   eta_b=self.eta_b, kT_out=self.kT_out)
-        return self.f_radius * self.radius_turb_max * (B/B0)
+        r_turb = self.radius_turb_max
+        r_cl = helper.radius_cluster(mass=self.M_obs, z=self.z_obs)
+        r0_cl = helper.radius_cluster(mass=1e15, z=0)
+        return r_turb * self.f_radius * (r_cl/r0_cl)**self.radius_index
 
     @property
     @lru_cache()
