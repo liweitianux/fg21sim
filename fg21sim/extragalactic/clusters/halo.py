@@ -134,8 +134,9 @@ class RadioHalo1M:
     gamma : 1D float `~numpy.ndarray`
         The Lorentz factors of the adopted logarithmic grid to solve the
         equation.
-    _acceleration_disabled : bool
-        Whether the turbulence acceleration is intentionally disabled?
+    _merger_disabled : bool
+        Whether the *merger-induced* turbulence acceleration is
+        intentionally disabled (in order to derive the fiducial results)?
     """
     compID = "extragalactic/halos"
     name = "giant radio halos"
@@ -150,7 +151,7 @@ class RadioHalo1M:
         self.z_merger = z_merger
         self.t_merger = COSMO.age(z_merger)
 
-        self._acceleration_disabled = False
+        self._merger_disabled = False
         self._set_configs(configs)
         self._set_solver()
 
@@ -513,13 +514,13 @@ class RadioHalo1M:
         n0_e = n_inj * (self.t_begin - self.time_init)
 
         logger.debug("Deriving the initial electron spectrum ...")
-        self._acceleration_disabled = True
+        self._merger_disabled = True
         tstart = self.t_begin
         tstop = self.t_begin + self.time_init
         self.fpsolver.tstep = self.time_step * 3  # To save time
 
         n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
-        self._acceleration_disabled = False
+        self._merger_disabled = False
         self.fpsolver.tstep = self.time_step
 
         return n_e
@@ -547,8 +548,8 @@ class RadioHalo1M:
             Default: ``self.electron_spec_init``
             Unit: [cm^-3]
         fiducial : bool
-            Whether to disable the turbulent acceleration and derive the
-            fiducial electron spectrum?
+            Whether to disable the merger-induced turbulent acceleration
+            and derive the fiducial electron spectrum?
             Default: ``False``
 
         Returns
@@ -564,13 +565,13 @@ class RadioHalo1M:
         if n0_e is None:
             n0_e = self.electron_spec_init
         if fiducial:
-            self._acceleration_disabled = True
+            self._merger_disabled = True
             self.fpsolver.tstep = self.time_step * 2  # To save time
 
         logger.debug("Calculating the %s electron spectrum ..." %
                      ("[fiducial]" if fiducial else ""))
         n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
-        self._acceleration_disabled = False
+        self._merger_disabled = False
         self.fpsolver.tstep = self.time_step
 
         return n_e
@@ -1089,11 +1090,11 @@ class RadioHaloAM(RadioHalo1M):
             n0_e = self.electron_spec_init
 
         if fiducial:
-            self._acceleration_disabled = True
+            self._merger_disabled = True
             self.fpsolver.tstep = self.time_step * 2  # To save time
             logger.debug("Calculating the [fiducial] electron spectrum ...")
             n_e = self.fpsolver.solve(u0=n0_e, tstart=tstart, tstop=tstop)
-            self._acceleration_disabled = False
+            self._merger_disabled = False
             self.fpsolver.tstep = self.time_step
             return n_e
 
