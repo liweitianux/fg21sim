@@ -210,11 +210,10 @@ class RadioHalo1M:
     @lru_cache()
     def t_merger_end(self):
         """
-        The time when the merger/turbulence ends.
+        The time when the merger (i.e., turbulence) ends.
         Unit: [Gyr]
         """
-        tau_turb = self.duration_turb(self.t_merger)
-        return self.t_merger + tau_turb
+        return self.t_merger + self.duration_turb(self.t_merger)
 
     @property
     def radius(self):
@@ -847,7 +846,7 @@ class RadioHaloAM(RadioHalo1M):
         Return the most recent merger event happend before the given time,
         i.e., the merger event that the given time locates in.
         """
-        idx = (self.t_merger > t).sum()
+        idx = (self.t_merger > t).sum()  # 't_merger' in decreasing order
         return {
             "idx": idx,
             "M_main": self.M_main[idx],
@@ -908,6 +907,8 @@ class RadioHaloAM(RadioHalo1M):
         (i.e., smallest ``tau_acc``) is chosen and its beginning time is
         returned.  Otherwise, the most recent merger event happened before
         the given time is chosen.
+
+        Unit: [Gyr]
         """
         mergers = [(tm, tm+self.duration_turb(tm), self.tau_acceleration(tm))
                    for tm in self.t_merger]
