@@ -385,27 +385,27 @@ stream = option("stderr", "stdout", "", default="stderr")
   f_radius = float(default=1, min=0.1, max=10)
 
   # The fraction of merger energy transferred into the turbulence.
-  eta_turb = float(default=0.1, min=0.1, max=0.5)
+  eta_turb = float(default=0.1, min=0, max=1)
 
   # The fraction of the thermal energy injected into the cosmic-ray
   # electrons during the cluster life time.
-  eta_e = float(default=0.003, min=0.001, max=0.1)
+  eta_e = float(default=0.003, min=0, max=1)
 
   # The energy density ratio of cosmic ray to the thermal ICM.
   # NOTE: Equipartition between the magnetic field and cosmic ray is
   #       assumed, i.e., eta_b == x_cr.
-  x_cr = float(default=0.015, min=0.001, max=0.1)
+  x_cr = float(default=0.015, min=0, max=1)
 
   # The scaling index of the diffusion coefficient (D_γγ) w.r.t. the
   # mass of the cluster.
-  mass_index = float(default=0, min=0, max=2)
+  mass_index = float(default=0, min=0, max=3)
 
   # The scaling index of the halo radius (R_halo) w.r.t. the virial
   # radius of the cluster.
   radius_index = float(default=0, min=0, max=3)
 
   # The spectral index of the injected primary electrons.
-  injection_index = float(default=2.3, min=2.1, max=3.0)
+  injection_index = float(default=2.3, min=2, max=3)
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
