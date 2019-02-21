@@ -379,16 +379,6 @@ class RadioHalo1M:
         return np.sqrt(v2_turb)  # [km/s]
 
     @lru_cache()
-    def mach_turb(self, t_merger):
-        """
-        The turbulence Mach number determined from its velocity dispersion.
-        """
-        self._validate_time(t_merger)
-        cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
-        v_turb = self.velocity_turb(t_merger)  # [km/s]
-        return v_turb / cs
-
-    @lru_cache()
     def tau_acceleration(self, t_merger):
         """
         Calculate the electron acceleration timescale due to turbulent
