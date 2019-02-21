@@ -1,14 +1,18 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2017,2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
-Commonly used units and their conversions relations, as well as constants.
+Commonly used units, conversion relations, as well as some constants.
 
 Astropy's units system is very powerful, but also very slow,
 and may even be the speed bottleneck of the program.
 
-This module provides commonly used units conversions by holding
-them directly in a class, thus avoid repeated/unnecessary calculations.
+This module provides the commonly used unit conversions by holding
+them directly in a class, avoiding repeated/unnecessary calculations.
+
+.. [ettori2013]
+   Ettori et al. 2013, Space Science Review, 177, 119-154
+   http://adsabs.harvard.edu/abs/2013SSRv..177..119E
 """
 
 import astropy.units as au
@@ -100,7 +104,7 @@ class Constants:
     k_B = ac.k_B.cgs.value  # [erg/K]
 
     # Mean molecular weight
-    # Ref.: Ettori et al, 2013, Space Science Review, 177, 119-154, Eq.(6)
+    # Reference: [ettori2013],Eq.(6)
     mu = 0.6
 
     # Adiabatic index of ideal monatomic gas
