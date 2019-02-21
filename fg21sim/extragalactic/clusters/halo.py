@@ -755,14 +755,11 @@ class RadioHalo1M:
 
     def _is_turb_active(self, t):
         """
-        Is the turbulence acceleration is active at the given time?
+        Is the turbulence acceleration active at the given time?
         """
-        if self._acceleration_disabled:
-            return False
-
-        t_merger = self._merger_time(t)
-        tau_turb = self.duration_turb(t_merger)
-        return (t >= t_merger) and (t <= t_merger + tau_turb)
+        t_begin = self._merger_time(t)
+        t_end = t_begin + self.duration_turb(t_begin)
+        return (t >= t_begin) and (t <= t_end)
 
     def mass_merged(self, t=None):
         """
