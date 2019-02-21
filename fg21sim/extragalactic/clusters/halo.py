@@ -384,7 +384,7 @@ class RadioHalo1M:
         return np.sqrt(v2_turb)
 
     @lru_cache()
-    def tau_acceleration(self, t, is_end=False):
+    def tau_acceleration(self, t, has_merger=True):
         """
         Calculate the electron acceleration timescale due to turbulent
         waves, which describes the turbulent acceleration efficiency.
@@ -425,11 +425,12 @@ class RadioHalo1M:
         Parameters
         ----------
         t : float
-            The beginning time or ending time (if ``is_end=True``) of the merger.
+            The beginning or ending time of the merger.
             Unit: [Gyr]
-        is_end : bool, optional
-            Whether the given time ``t`` is the ending time of the merger.
-            Default: False
+        has_merger : bool, optional
+            If ``False``, calculate the velocity dispersion of the base
+            turbulence, i.e., without a merger.
+            Default: True
 
         Returns
         -------
@@ -437,12 +438,12 @@ class RadioHalo1M:
             The acceleration timescale of the merger.
             Unit: [Gyr]
         """
-        self._validate_time(t, include_end=is_end)
+        self._validate_time(t)
 
-        if is_end:
-            v_t = self.velocity_turb_base(t)  # [km/s]
-        else:
+        if has_merger:
             v_t = self.velocity_turb(t)  # [km/s]
+        else:
+            v_t = self.velocity_turb_base(t)  # [km/s]
 
         if np.isclose(v_t, 0):
             return np.inf
@@ -674,19 +675,22 @@ class RadioHalo1M:
             Diffusion coefficients
             Unit: [Gyr^-1]
         """
-        tau_acc = tau_max = 10.0  # [Gyr]
+        tau_max = 10.0  # [Gyr]
+
         if self._is_turb_active(t):
             tt = self._merger_time(t)
-            is_end = False
+            has_merger = True
         else:
             tt = self._merger_end_time(t)
-            is_end = True
+            has_merger = False
+        if self._merger_disabled:
+            has_merger = False
 
-        tau_acc = self.tau_acceleration(tt, is_end)
-        if tau_acc > tau_max:
-            tau_acc = tau_max
+        tau = self.tau_acceleration(tt, has_merger=has_merger)
+        if tau > tau_max:
+            tau = tau_max
 
-        return np.square(gamma) / (4 * tau_acc)  # [Gyr^-1]
+        return np.square(gamma) / (4 * tau)  # [Gyr^-1]
 
     def fp_advection(self, gamma, t):
         """
