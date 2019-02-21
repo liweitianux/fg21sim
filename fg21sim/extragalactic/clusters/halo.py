@@ -240,7 +240,7 @@ class RadioHalo1M:
         The stripping radius of the in-falling sub-cluster at time t.
         Unit: [kpc]
         """
-        self._validate_t_merger(t_merger)
+        self._validate_time(t_merger)
         z = COSMO.redshift(t_merger)
         M_main = self.mass_main(t_merger)
         M_sub = self.mass_sub(t_merger)
@@ -256,7 +256,7 @@ class RadioHalo1M:
 
         Unit: [kpc]
         """
-        self._validate_t_merger(t_merger)
+        self._validate_time(t_merger)
         z = COSMO.redshift(t_merger)
         M_main = self.mass_main(t_merger)
         r_s = self.radius_strip(t_merger)
@@ -274,7 +274,7 @@ class RadioHalo1M:
 
         Unit: [Gyr]
         """
-        self._validate_t_merger(t_merger)
+        self._validate_time(t_merger)
         z_merger = COSMO.redshift(t_merger)
         M_main = self.mass_main(t=t_merger)
         M_sub = self.mass_sub(t=t_merger)
@@ -315,7 +315,7 @@ class RadioHalo1M:
             The turbulence velocity dispersion
             Unit: [km/s]
         """
-        self._validate_t_merger(t_merger)
+        self._validate_time(t_merger)
         z = COSMO.redshift(t_merger)
         M_main = self.mass_main(t_merger)
         M_sub = self.mass_sub(t_merger)
@@ -343,7 +343,7 @@ class RadioHalo1M:
         """
         The turbulence Mach number determined from its velocity dispersion.
         """
-        self._validate_t_merger(t_merger)
+        self._validate_time(t_merger)
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
         v_turb = self.velocity_turb(t_merger)  # [km/s]
         return v_turb / cs
@@ -387,7 +387,7 @@ class RadioHalo1M:
         * Ref.[pinzke2017],Eq.(37)
         * Ref.[miniati2015],Eq.(29)
         """
-        self._validate_t_merger(t_merger)
+        self._validate_time(t_merger)
 
         k_L = 2 * np.pi / self.radius_turb(t_merger)  # [kpc^-1]
         cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
@@ -657,13 +657,14 @@ class RadioHalo1M:
         """
         return self.t_merger
 
-    def _validate_t_merger(self, t_merger):
+    def _validate_time(self, t):
         """
-        Validate that the given time ``t_merger`` is the time when the
-        merger begins, otherwise raise an error.
+        Validate that the given time ``t`` is the time when a merger begins
+        or ends, otherwise raise an error.
         """
-        if not np.any(np.isclose(t_merger, self.t_merger)):
-            raise ValueError("Not a merger time: %s" % t_merger)
+        if (not np.any(np.isclose(t, self.t_merger)) and
+                not np.any(np.isclose(t, self.t_merger_end))):
+            raise ValueError("Not a merger begin/end time: %f" % t)
 
     def mass_merged(self, t=None):
         """
