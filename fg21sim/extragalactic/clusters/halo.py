@@ -935,6 +935,8 @@ class RadioHaloAM(RadioHalo1M):
             m = self._merger_event(t)
             return m["t"]
 
+    @property
+    @lru_cache()
     def _time_adjust(self):
         """
         Determine the time points when spectrum adjustment is needed.
@@ -1032,7 +1034,7 @@ class RadioHaloAM(RadioHalo1M):
             return n_e
 
         logger.debug("Calculating the electron spectrum ...")
-        tps = [self.t_begin] + self._time_adjust() + [self.t_obs]
+        tps = [self.t_begin] + self._time_adjust + [self.t_obs]
         n1_e = n0_e
         for t1, t2 in zip(tps, tps[1:]):
             if tstart >= t2 or tstop < t1:
