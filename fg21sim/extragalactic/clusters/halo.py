@@ -57,6 +57,10 @@ References
 .. [sarazin1999]
    Sarazin 1999, ApJ, 520, 529
    http://adsabs.harvard.edu/abs/1999ApJ...520..529S
+
+.. [vazza2011]
+   Vazza et al. 2011, A&A, 529, A17
+   http://adsabs.harvard.edu/abs/2011A%26A...529A..17V
 """
 
 import logging
@@ -155,6 +159,7 @@ class RadioHalo1M:
         self.configs = configs
         self.f_acc = configs.getn(sec+"/f_acc")
         self.f_radius = configs.getn(sec+"/f_radius")
+        self.x_turb = configs.getn(sec+"/x_turb")
         self.eta_turb = configs.getn(sec+"/eta_turb")
         self.eta_e = configs.getn(sec+"/eta_e")
         self.x_cr = configs.getn(sec+"/x_cr")
@@ -281,6 +286,42 @@ class RadioHalo1M:
         v_i = helper.velocity_impact(M_main, M_sub, z_merger)
         uconv = AUC.kpc2km * AUC.s2Gyr  # [kpc]/[km/s] => [Gyr]
         return uconv * d / v_i  # [Gyr]
+
+    @lru_cache()
+    def velocity_turb_base(self, t):
+        """
+        Calculate the velocity dispersion of the base turbulence.
+
+        Without injection by mergers, the ICM can has some turbulence,
+        which can amount ~< 5% of the thermal energy in relaxed systems
+        (Ref.[vazza2011]).
+
+        ε_turb = (1/2) * ρ_gas * <v_turb^2> = x_turb * ε_th
+        ε_th = (3/2) * n_th * kT
+        ρ_gas = μ * m_u * n_th
+        c_s^2 = γ_gas * kT / (μ * m_u)
+        =>
+        v_turb = c_s * sqrt(3 * x_turb / γ_gas)
+
+        Parameters
+        ----------
+        t_merger : float
+            The beginning or ending time of the merger.
+            Unit: [Gyr]
+
+        Returns
+        -------
+        v_turb : float
+            The velocity dispersion of the base turbulence.
+            Unit: [km/s]
+        """
+        self._validate_time(t)
+
+        if np.isclose(self.x_turb, 0):
+            return 0
+
+        c_s = helper.speed_sound(self.kT(t))  # [km/s]
+        return c_s * np.sqrt(3*self.x_turb / AC.gamma)
 
     @lru_cache()
     def velocity_turb(self, t_merger):

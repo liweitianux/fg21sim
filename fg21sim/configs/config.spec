@@ -384,6 +384,11 @@ stream = option("stderr", "stdout", "", default="stderr")
   # to derive the radio halo radius.
   f_radius = float(default=1, min=0.1, max=10)
 
+  # The base energy fraction of the turbulence to the ICM thermal energy
+  # (for a relaxed system).
+  # x_turb ~< 5% [Vazza et al. 2011, A&A, 529, A17]
+  x_turb = float(default=0, min=0, max=0.5)
+
   # The fraction of merger energy transferred into the turbulence.
   eta_turb = float(default=0.1, min=0, max=1)
 
