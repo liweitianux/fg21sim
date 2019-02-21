@@ -274,7 +274,7 @@ class RadioHalo1M:
 
         Unit: [Gyr]
         """
-        self._validate_time(t_merger)
+        self._validate_time(t_merger, include_end=False)
         z_merger = COSMO.redshift(t_merger)
         M_main = self.mass_main(t=t_merger)
         M_sub = self.mass_sub(t=t_merger)
@@ -657,14 +657,16 @@ class RadioHalo1M:
         """
         return self.t_merger
 
-    def _validate_time(self, t):
+    def _validate_time(self, t, include_end=True):
         """
         Validate that the given time ``t`` is the time when a merger begins
-        or ends, otherwise raise an error.
+        or ends (if ``include_end`` is ``True``), otherwise raise an error.
         """
-        if (not np.any(np.isclose(t, self.t_merger)) and
-                not np.any(np.isclose(t, self.t_merger_end))):
-            raise ValueError("Not a merger begin/end time: %f" % t)
+        if np.any(np.isclose(t, self.t_merger)):
+            return
+        if include_end and np.any(np.isclose(t, self.t_merger_end)):
+            return
+        raise ValueError("Not a merger begin/end time: %f" % t)
 
     def mass_merged(self, t=None):
         """
