@@ -672,6 +672,13 @@ class RadioHalo1M:
         """
         return self.t_merger
 
+    def _merger_end_time(self, t=None):
+        """
+        The (cosmic) time when the merger ends.
+        Unit: [Gyr]
+        """
+        return self.t_merger_end
+
     def _validate_time(self, t, include_end=True):
         """
         Validate that the given time ``t`` is the time when a merger begins
@@ -920,6 +927,17 @@ class RadioHaloAM(RadioHalo1M):
         else:
             m = self._merger_event(t)
             return m["t"]
+
+    def _merger_end_time(self, t):
+        """
+        Determine the ending time of the most recent merger happened before
+        the given time.
+
+        Unit: [Gyr]
+        """
+        t_end = np.sort(self.t_merger_end)  # increasing order
+        idx = (t_end <= t).sum() - 1
+        return t_end[idx]
 
     @property
     @lru_cache()
