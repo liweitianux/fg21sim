@@ -207,6 +207,16 @@ class RadioHalo1M:
         return self.t_merger
 
     @property
+    @lru_cache()
+    def t_merger_end(self):
+        """
+        The time when the merger/turbulence ends.
+        Unit: [Gyr]
+        """
+        tau_turb = self.duration_turb(self.t_merger)
+        return self.t_merger + tau_turb
+
+    @property
     def radius(self):
         """
         The estimated radius of the simulated radio halo.
@@ -774,11 +784,30 @@ class RadioHaloAM(RadioHalo1M):
                  merger_num, configs=CONFIGS):
         M_main = np.asarray(M_main[:merger_num])
         M_sub = np.asarray(M_sub[:merger_num])
-        z_merger = np.asarray(z_merger[:merger_num])
+        z_merger = np.asarray(z_merger[:merger_num])  # increasing
         super().__init__(M_obs=M_obs, z_obs=z_obs,
                          M_main=M_main, M_sub=M_sub,
                          z_merger=z_merger, configs=configs)
         self.merger_num = merger_num
+
+    @property
+    def t_begin(self):
+        """
+        The cosmic time when the first merger begins.
+        Unit: [Gyr]
+        """
+        return self.t_merger[-1]
+
+    @property
+    @lru_cache()
+    def t_merger_end(self):
+        """
+        The times when the mergers (i.e., turbulence) end.
+        (NOTE: decreasing order)
+
+        Unit: [Gyr]
+        """
+        return np.array([t+self.duration_turb(t) for t in self.t_merger])
 
     @property
     def radius(self):
@@ -826,14 +855,6 @@ class RadioHaloAM(RadioHalo1M):
                 r_eff = 0
 
         return r_eff
-
-    @property
-    def t_begin(self):
-        """
-        The cosmic time when the merger begins, i.e., the earliest merger.
-        Unit: [Gyr]
-        """
-        return self.t_merger[-1]
 
     def _merger_event(self, t):
         """
