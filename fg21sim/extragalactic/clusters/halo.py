@@ -382,7 +382,7 @@ class RadioHalo1M:
         return np.sqrt(v2_turb)
 
     @lru_cache()
-    def tau_acceleration(self, t_merger):
+    def tau_acceleration(self, t, is_end=False):
         """
         Calculate the electron acceleration timescale due to turbulent
         waves, which describes the turbulent acceleration efficiency.
@@ -419,22 +419,44 @@ class RadioHalo1M:
         ----------
         * Ref.[pinzke2017],Eq.(37)
         * Ref.[miniati2015],Eq.(29)
-        """
-        self._validate_time(t_merger)
 
-        k_L = 2 * np.pi / self.radius_turb(t_merger)  # [kpc^-1]
-        cs = helper.speed_sound(self.kT(t_merger))  # [km/s]
-        v_t = self.velocity_turb(t_merger)  # [km/s]
-        tau = self.x_cr * cs**3 / (8*k_L * v_t**4)
+        Parameters
+        ----------
+        t : float
+            The beginning time or ending time (if ``is_end=True``) of the merger.
+            Unit: [Gyr]
+        is_end : bool, optional
+            Whether the given time ``t`` is the ending time of the merger.
+            Default: False
+
+        Returns
+        -------
+        tau : float
+            The acceleration timescale of the merger.
+            Unit: [Gyr]
+        """
+        self._validate_time(t, include_end=is_end)
+
+        if is_end:
+            v_t = self.velocity_turb_base(t)  # [km/s]
+        else:
+            v_t = self.velocity_turb(t)  # [km/s]
+
+        if np.isclose(v_t, 0):
+            return np.inf
+
+        k_L = 2 * np.pi / self.radius_turb(t)  # [kpc^-1]
+        c_s = helper.speed_sound(self.kT(t))  # [km/s]
+        tau = self.x_cr * c_s**3 / (8*k_L * v_t**4)
         tau *= AUC.s2Gyr * AUC.kpc2km  # [s kpc/km] -> [Gyr]
 
-        # Mass scaling
-        M_main = self.mass_main(t_merger)
+        # Scale by cluster mass
+        M_main = self.mass_main(t)
         f_mass = (M_main / 1e15) ** (-self.mass_index)
         tau *= f_mass
-        tau /= self.f_acc  # tune factor (folded with "zeta_ins")
+        tau /= self.f_acc  # tune factor (folded with ζ "zeta_ins")
 
-        return tau  # [Gyr]
+        return tau
 
     @property
     @lru_cache()
