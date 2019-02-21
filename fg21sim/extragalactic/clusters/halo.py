@@ -645,6 +645,27 @@ class RadioHalo1M:
                      (self.fp_diffusion(gamma, t) * 2 / gamma))
         return advection
 
+    def _energy_loss(self, gamma, t):
+        """
+        Energy loss mechanisms:
+        * inverse Compton scattering off the CMB photons
+        * synchrotron radiation
+        * Coulomb collisions
+
+        Reference: Ref.[sarazin1999],Eqs.(6,7,9)
+
+        Unit: [Gyr^-1]
+        """
+        gamma = np.asarray(gamma)
+        z = COSMO.redshift(t)
+        B = self.magnetic_field(t)  # [uG]
+        mass = self.mass_main(t)
+        n_th = helper.density_number_thermal(mass, z)  # [cm^-3]
+        loss_ic = -4.32e-4 * gamma**2 * (1+z)**4
+        loss_syn = -4.10e-5 * gamma**2 * B**2
+        loss_coul = -3.79e4 * n_th * (1 + np.log(gamma/n_th) / 75)
+        return loss_ic + loss_syn + loss_coul
+
     def _merger_time(self, t=None):
         """
         The (cosmic) time when the merger begins.
@@ -722,39 +743,6 @@ class RadioHalo1M:
         t_merger = self._merger_time(t)
         tau_turb = self.duration_turb(t_merger)
         return (t >= t_merger) and (t <= t_merger + tau_turb)
-
-    def _energy_loss(self, gamma, t):
-        """
-        Energy loss mechanisms:
-        * inverse Compton scattering off the CMB photons
-        * synchrotron radiation
-        * Coulomb collisions
-
-        Reference: Ref.[sarazin1999],Eqs.(6,7,9)
-
-        Parameters
-        ----------
-        gamma : float, or float 1D `~numpy.ndarray`
-            The Lorentz factors of electrons
-        t : float
-            The cosmic time/age
-            Unit: [Gyr]
-
-        Returns
-        -------
-        loss : float, or float 1D `~numpy.ndarray`
-            The energy loss rates
-            Unit: [Gyr^-1]
-        """
-        gamma = np.asarray(gamma)
-        z = COSMO.redshift(t)
-        B = self.magnetic_field(t)  # [uG]
-        mass = self.mass_main(t)
-        n_th = helper.density_number_thermal(mass, z)  # [cm^-3]
-        loss_ic = -4.32e-4 * gamma**2 * (1+z)**4
-        loss_syn = -4.10e-5 * gamma**2 * B**2
-        loss_coul = -3.79e4 * n_th * (1 + np.log(gamma/n_th) / 75)
-        return loss_ic + loss_syn + loss_coul
 
 
 class RadioHaloAM(RadioHalo1M):
