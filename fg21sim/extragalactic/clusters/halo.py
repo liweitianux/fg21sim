@@ -641,13 +641,8 @@ class RadioHalo1M:
             Advection coefficient.
             Unit: [Gyr^-1]
         """
-        if self._is_turb_active(t):
-            # Turbulence acceleration and beyond
-            advection = (abs(self._energy_loss(gamma, t)) -
-                         (self.fp_diffusion(gamma, t) * 2 / gamma))
-        else:
-            # To derive the initial electron spectrum
-            advection = abs(self._energy_loss(gamma, self.t_begin))
+        advection = (abs(self._energy_loss(gamma, t)) -
+                     (self.fp_diffusion(gamma, t) * 2 / gamma))
         return advection
 
     def _merger_time(self, t=None):
