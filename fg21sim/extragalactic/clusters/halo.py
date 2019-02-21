@@ -684,6 +684,17 @@ class RadioHalo1M:
             return
         raise ValueError("Not a merger begin/end time: %f" % t)
 
+    def _is_turb_active(self, t):
+        """
+        Is the turbulence acceleration is active at the given time?
+        """
+        if self._acceleration_disabled:
+            return False
+
+        t_merger = self._merger_time(t)
+        tau_turb = self.duration_turb(t_merger)
+        return (t >= t_merger) and (t <= t_merger + tau_turb)
+
     def mass_merged(self, t=None):
         """
         The mass of the merged cluster.
@@ -732,17 +743,6 @@ class RadioHalo1M:
         mass = self.mass_main(t)  # [Msun]
         return helper.magnetic_field(mass=mass, z=z,
                                      eta_b=self.eta_b, kT_out=self.kT_out)
-
-    def _is_turb_active(self, t):
-        """
-        Is the turbulence acceleration is active at the given time?
-        """
-        if self._acceleration_disabled:
-            return False
-
-        t_merger = self._merger_time(t)
-        tau_turb = self.duration_turb(t_merger)
-        return (t >= t_merger) and (t <= t_merger + tau_turb)
 
 
 class RadioHaloAM(RadioHalo1M):
