@@ -324,7 +324,7 @@ class RadioHalo1M:
         return c_s * np.sqrt(3*self.x_turb / AC.gamma)
 
     @lru_cache()
-    def velocity_turb(self, t_merger):
+    def velocity_turb(self, t):
         """
         Calculate the turbulence velocity dispersion.
 
@@ -338,9 +338,11 @@ class RadioHalo1M:
             E_merger ≅ <ρ_gas> * v_i^2 * V_turb
             V_turb = ᴨ * r_s^2 * (R_vir+r_s)
         Turbulence energy:
-            E_turb ≅ η_turb * E_merger ≅ 0.5 * M_turb * <v_turb^2>
+            E_turb ≅ 0.5 * M_turb * <v_turb^2>
+                   ≅ 0.5 * M_turb * <v_turb_base^2> + η_turb * E_merger
         => Velocity dispersion:
-            <v_turb^2> ≅ 2*η_turb * <ρ_gas> * v_i^2 * V_turb / M_turb
+            <v_turb^2> ≅ <v_turb_base^2> +
+                         2*η_turb * <ρ_gas> * v_i^2 * V_turb / M_turb
             M_turb = int_0^R_turb[ ρ_gas(r)*4ᴨ*r^2 ]dr
         where:
             <ρ_gas>: mean gas density of the main cluster
@@ -355,12 +357,13 @@ class RadioHalo1M:
             The turbulence velocity dispersion
             Unit: [km/s]
         """
-        self._validate_time(t_merger)
-        z = COSMO.redshift(t_merger)
-        M_main = self.mass_main(t_merger)
-        M_sub = self.mass_sub(t_merger)
-        r_s = self.radius_strip(t_merger)  # [kpc]
-        R_turb = self.radius_turb(t_merger)  # [kpc]
+        self._validate_time(t)
+        z = COSMO.redshift(t)
+        M_main = self.mass_main(t)
+        M_sub = self.mass_sub(t)
+        r_s = self.radius_strip(t)  # [kpc]
+        R_turb = self.radius_turb(t)  # [kpc]
+        v_turb_base = self.velocity_turb_base(t)  # [km/s]
 
         rho_gas_f = helper.calc_gas_density_profile(
                 M_main+M_sub, z, f_rc=self.f_rc, beta=self.beta)
@@ -373,10 +376,10 @@ class RadioHalo1M:
         rho_main *= AC.mu*AC.u * AUC.g2Msun * AUC.kpc2cm**3  # [Msun/kpc^3]
         R_vir = helper.radius_cluster(M_main, z)  # [kpc]
 
-        V_turb = np.pi * r_s**2 * R_vir  # [kpc^3]
-        E_turb = self.eta_turb * rho_main * v_i**2 * V_turb
-        v2_turb = 2 * E_turb / M_turb  # [km^2/s^2]
-        return np.sqrt(v2_turb)  # [km/s]
+        volume = np.pi * r_s**2 * R_vir  # [kpc^3]
+        E_add = self.eta_turb * rho_main * v_i**2 * volume
+        v2_turb = v_turb_base**2 + 2 * E_add / M_turb  # [km/s]^2
+        return np.sqrt(v2_turb)
 
     @lru_cache()
     def tau_acceleration(self, t_merger):
