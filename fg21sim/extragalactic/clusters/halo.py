@@ -674,10 +674,16 @@ class RadioHalo1M:
         """
         tau_acc = tau_max = 10.0  # [Gyr]
         if self._is_turb_active(t):
-            t_merger = self._merger_time(t)
-            tau_acc = self.tau_acceleration(t_merger)
+            tt = self._merger_time(t)
+            is_end = False
+        else:
+            tt = self._merger_end_time(t)
+            is_end = True
+
+        tau_acc = self.tau_acceleration(tt, is_end)
         if tau_acc > tau_max:
             tau_acc = tau_max
+
         return np.square(gamma) / (4 * tau_acc)  # [Gyr^-1]
 
     def fp_advection(self, gamma, t):
