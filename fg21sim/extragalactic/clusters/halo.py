@@ -272,7 +272,8 @@ class RadioHalo1M:
         """
         The duration that the turbulence persists strong enough to be able
         to effectively accelerate the electrons, which is estimated as:
-            τ_turb ~ d / v_impact ~ 2*R_turb / v_impact.
+            τ_turb ~ d / v_i ~ 2*R_turb / v_i,
+        where ``v_i`` is the relative impact velocity.
 
         Reference: [miniati2015],Sec.5
 
@@ -280,8 +281,8 @@ class RadioHalo1M:
         """
         self._validate_time(t_merger, include_end=False)
         z_merger = COSMO.redshift(t_merger)
-        M_main = self.mass_main(t=t_merger)
-        M_sub = self.mass_sub(t=t_merger)
+        M_main = self.mass_main(t_merger)
+        M_sub = self.mass_sub(t_merger)
         d = 2 * self.radius_turb(t_merger)
         v_i = helper.velocity_impact(M_main, M_sub, z_merger)
         uconv = AUC.kpc2km * AUC.s2Gyr  # [kpc]/[km/s] => [Gyr]
@@ -305,7 +306,7 @@ class RadioHalo1M:
 
         Parameters
         ----------
-        t_merger : float
+        t : float
             The beginning or ending time of the merger.
             Unit: [Gyr]
 
