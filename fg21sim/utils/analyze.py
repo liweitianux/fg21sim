@@ -8,6 +8,7 @@ Utilities to help analyze the simulation results.
 import logging
 
 import numpy as np
+from scipy import optimize
 
 
 logger = logging.getLogger(__name__)
@@ -87,26 +88,42 @@ def countdist_integrated(x, nbin, log=True, xmin=None, xmax=None):
     return counts, bins, binedges
 
 
-def logfit(x, y):
+def loglinfit(x, y, **kwargs):
     """
-    Fit the data points with: y = a * x^b
+    Fit the data points with a log-linear model: y = a * x^b
 
     Parameters
     ----------
     x, y : list[float]
         The data points.
+    kwargs : dict
+        Extra parameters passed to ``scipy.optimize.least_squares()``.
 
     Returns
     -------
     coef : (a, b)
         The fitted coefficients.
-    fp : function
+    err : (a_err, b_err)
+        The uncertainties of the coefficients.
+    fun : function
         The function with fitted coefficients to calculate the fitted
-        values: fp(x).
+        values: fun(x).
     """
+    def _f_poly1(x, a, b):
+        return a + b * x
+
     logx = np.log(x)
     logy = np.log(y)
-    fit = np.polyfit(logx, logy, deg=1)
-    coef = (np.exp(fit[1]), fit[0])
-    fp = lambda x: np.exp(np.polyval(fit, np.log(x)))
-    return coef, fp
+    f_scale = np.mean(logy)
+    args = {
+        "method": "trf",
+        "loss": "soft_l1",
+        "f_scale": np.mean(logy),
+    }
+    args.update(kwargs)
+    p, pcov = optimize.curve_fit(_f_poly1, logx, logy, p0=(1, 1), **args)
+    coef = (np.exp(p[0]), p[1])
+    perr = np.sqrt(np.diag(pcov))
+    err = (np.exp(perr[0]), perr[1])
+    fun = lambda x: np.exp(_f_poly1(np.log(x), *p))
+    return coef, err, fun
