@@ -88,7 +88,10 @@ def countdist_integrated(x, nbin, log=True, xmin=None, xmax=None):
     return counts, bins, binedges
 
 
-def loglinfit(x, y, coef0=(1, 1), **kwargs):
+def loglinfit(x, y,
+              xlim=(None, None), ylim=(None, None),
+              coef0=(1, 1),
+              **kwargs):
     """
     Fit the data points with a log-linear model: y = a * x^b
 
@@ -96,7 +99,10 @@ def loglinfit(x, y, coef0=(1, 1), **kwargs):
     ----------
     x, y : list[float]
         The data points.
-    coef0 : two-float tuple/list, optional
+    xlim, ylim : float tuple/list of length 2, optional
+        The minimum/maximum limit of x/y for the fitting.
+        Default: (None, None), i.e., use all the data.
+    coef0 : float tuple/list of length 2, optional
         The initial values of the coefficients (a0, b0).
         Default: (1, 1)
     **kwargs :
@@ -115,9 +121,23 @@ def loglinfit(x, y, coef0=(1, 1), **kwargs):
     def _f_poly1(x, a, b):
         return a + b * x
 
-    logx = np.log(x)
-    logy = np.log(y)
-    f_scale = np.mean(logy)
+    x = np.asarray(x)
+    y = np.asarray(y)
+    xmin, xmax = xlim
+    ymin, ymax = ylim
+    if xmin is None:
+        xmin = np.min(x)
+    if xmax is None:
+        xmax = np.max(x)
+    if ymin is None:
+        ymin = np.min(y)
+    if ymax is None:
+        ymax = np.max(y)
+
+    mask = (x >= xmin) & (x <= xmax) & (y >= ymin) & (y <= ymax)
+    logx = np.log(x[mask])
+    logy = np.log(y[mask])
+
     args = {
         "method": "trf",
         "loss": "soft_l1",
@@ -125,8 +145,10 @@ def loglinfit(x, y, coef0=(1, 1), **kwargs):
     }
     args.update(kwargs)
     p, pcov = optimize.curve_fit(_f_poly1, logx, logy, p0=coef0, **args)
+
     coef = (np.exp(p[0]), p[1])
     perr = np.sqrt(np.diag(pcov))
     err = (np.exp(perr[0]), perr[1])
     fun = lambda x: np.exp(_f_poly1(np.log(x), *p))
+
     return coef, err, fun
