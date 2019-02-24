@@ -149,6 +149,6 @@ def loglinfit(x, y,
     coef = (np.exp(p[0]), p[1])
     perr = np.sqrt(np.diag(pcov))
     err = (np.exp(perr[0]), perr[1])
-    fun = lambda x: np.exp(_f_poly1(np.log(x), *p))
+    fun = lambda x: np.exp(_f_poly1(np.log(x), *p))  # noqa: E731
 
     return coef, err, fun
