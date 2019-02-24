@@ -88,7 +88,7 @@ def countdist_integrated(x, nbin, log=True, xmin=None, xmax=None):
     return counts, bins, binedges
 
 
-def loglinfit(x, y, **kwargs):
+def loglinfit(x, y, coef0=(1, 1), **kwargs):
     """
     Fit the data points with a log-linear model: y = a * x^b
 
@@ -96,7 +96,10 @@ def loglinfit(x, y, **kwargs):
     ----------
     x, y : list[float]
         The data points.
-    kwargs : dict
+    coef0 : two-float tuple/list, optional
+        The initial values of the coefficients (a0, b0).
+        Default: (1, 1)
+    **kwargs :
         Extra parameters passed to ``scipy.optimize.least_squares()``.
 
     Returns
@@ -121,7 +124,7 @@ def loglinfit(x, y, **kwargs):
         "f_scale": np.mean(logy),
     }
     args.update(kwargs)
-    p, pcov = optimize.curve_fit(_f_poly1, logx, logy, p0=(1, 1), **args)
+    p, pcov = optimize.curve_fit(_f_poly1, logx, logy, p0=coef0, **args)
     coef = (np.exp(p[0]), p[1])
     perr = np.sqrt(np.diag(pcov))
     err = (np.exp(perr[0]), perr[1])
