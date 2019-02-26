@@ -1,5 +1,5 @@
-# Copyright (c) 2016-2018 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2016-2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Interface to the simulations of various supported foreground components.
@@ -56,7 +56,6 @@ class Foregrounds:
         self.configs = configs
         self._set_configs()
 
-        # Initialize the products manifest
         logger.info("Initialize the products manifest ...")
         self.manifestfile = self.configs.get_path("output/manifest")
         if self.manifestfile:
@@ -76,32 +75,30 @@ class Foregrounds:
             ", ".join(comp_available)))
         logger.info("Enabled components: {0}".format(
             ", ".join(self.componentsID)))
-        #
+
         self.frequencies = self.configs.frequencies
         logger.info("Simulation frequencies: "
                     "{min:.2f} - {max:.2f} [MHz] (#{num:d})".format(
                         min=min(self.frequencies),
                         max=max(self.frequencies),
                         num=len(self.frequencies)))
-        #
+
         self.clobber = self.configs.getn("output/clobber")
 
     def preprocess(self):
         """
-        Perform the (global) preparation procedures for the simulations.
+        Perform the global preparation procedures.
         """
-        logger.info("Perform preprocessing for foreground simulations ...")
-        logger.info("^_^ nothing to do :-)")
+        logger.info("Global preprocessing ... (empty)")
 
     def simulate_component(self, compID):
         """
-        Do simulation for the specified foreground component.
+        Simulate the specified foreground component.
         """
         logger.info("==================================================")
         logger.info(">>> Simulate component: %s <<<" % compID)
         logger.info("==================================================")
-        t1_start = time.perf_counter()
-        t2_start = time.process_time()
+        t_start = time.perf_counter()
 
         comp_cls = COMPONENTS_ALL[compID]
         comp_obj = comp_cls(self.configs)
@@ -111,32 +108,29 @@ class Foregrounds:
             self.products.add_component(compID, skyfiles)
         comp_obj.postprocess()
 
-        t1_cost = time.perf_counter() - t1_start
-        t2_cost = time.process_time() - t2_start
+        t_cost = time.perf_counter() - t_start
         logger.info("--------------------------------------------------")
-        if t1_cost <= 3*60:
-            logger.info("Elapsed time: %.1f [sec]" % t1_cost)
-            logger.info("CPU process time: %.1f [sec]" % t2_cost)
+        if t_cost <= 3*60:
+            logger.info("Elapsed time: %.1f [sec]" % t_cost)
         else:
-            logger.info("Elapsed time: %.1f [min]" % (t1_cost/60))
-            logger.info("CPU process time: %.1f [min]" % (t2_cost/60))
+            logger.info("Elapsed time: %.1f [min]" % (t_cost/60))
         logger.info("--------------------------------------------------")
 
     def simulate(self):
         """
         Do simulation for all enabled components.
         """
-        timers = []
+        times = []
         for compID in self.componentsID:
             t1 = time.perf_counter()
             self.simulate_component(compID)
             t2 = time.perf_counter()
-            timers.append((compID, t1, t2))
+            times.append((compID, t1, t2))
 
         logger.info("==================================================")
         logger.info(">>> Time usage <<<")
         logger.info("==================================================")
-        for compID, t1, t2 in timers:
+        for compID, t1, t2 in times:
             t_cost = t2 - t1
             if t_cost <= 3*60:
                 logger.info("%s : %.1f [sec]" % (compID, t_cost))
@@ -146,9 +140,9 @@ class Foregrounds:
 
     def postprocess(self):
         """
-        Perform the (global) post-simulation operations before the end.
+        Perform the global post-simulation operations.
         """
-        logger.info("Foreground simulation - postprocessing ...")
-        # Save the products manifest
+        logger.info("Global postprocessing ...")
         if self.products:
+            logger.info("Save the products manifest ...")
             self.products.dump(clobber=self.clobber, backup=True)
