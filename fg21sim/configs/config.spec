@@ -147,14 +147,16 @@ stream = option("stderr", "stdout", "", default="stderr")
 
 [galactic]
 
+  #
   # Synchrotron emission component (unpolarized)
+  #
   [[synchrotron]]
   # The template map for the simulation, e.g., Haslam 408 MHz survey.
   # Unit: [K] (Kelvin)
   template = string(default=None)
   # The frequency of the template map.
   # Unit: [MHz]
-  template_freq = float(default=None, min=0)
+  template_freq = float(default=None)
 
   # Spectral index map
   indexmap = string(default=None)
@@ -174,7 +176,10 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Output directory to save the simulated results
   output_dir = string(default=None)
 
+
+  #
   # Free-free bremsstrahlung emission component
+  #
   [[freefree]]
   # The Hα map from which to derive the free-free emission
   # Unit: [Rayleigh]
@@ -185,7 +190,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   dustmap = string(default=None)
 
   # Effective dust fraction in the LoS actually absorbing Halpha
-  dust_fraction = float(default=0.33, min=0.1, max=1)
+  dust_fraction = float(default=0.33, min=0, max=1)
 
   # Halpha absorption threshold:
   # When the dust absorption goes rather large, the true Halpha
@@ -199,14 +204,17 @@ stream = option("stderr", "stdout", "", default="stderr")
   # The electron temperature assumed for the ionized interstellar medium
   # that generating Hα emission.
   # Unit: [K]
-  electron_temperature = float(default=7000, min=1000)
+  electron_temperature = float(default=7000)
 
   # Filename prefix for this component
   prefix = string(default="gfree")
   # Output directory to save the simulated results
   output_dir = string(default=None)
 
+
+  #
   # Supernova remnants emission
+  #
   [[snr]]
   # The Galactic SNRs catalog data (CSV file)
   catalog = string(default=None)
@@ -216,7 +224,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Resolution for simulating each SNR template, which are finally
   # mapped to the all-sky HEALPix map if used.
   # Unit: [arcsec]
-  resolution = float(default=30, min=5)
+  resolution = float(default=30)
 
   # Filename prefix for this component
   prefix = string(default="gsnr")
@@ -269,7 +277,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   #   Shape: (len(z), len(mass))
   #   Differential mass function in terms of natural log of M.
   #   Unit: [Mpc^-3] (the little "h" is folded into the values)
-  dndlnm_outfile = string(default=None)
+  dndlnm_outfile = string(default="dndlnm.npz")
 
 
   #
@@ -280,7 +288,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   [[clusters]]
   # Output CSV file of the cluster catalog containing the simulated
   # mass, redshift, position, shape, recent merger info, etc.
-  catalog_outfile = string(default=None)
+  catalog_outfile = string(default="cluster.catalog.csv")
 
   # Whether to dump the raw data of the simulated cluster catalog in
   # Python native pickle format (i.e., ".pkl") to a file with the same
@@ -306,7 +314,7 @@ stream = option("stderr", "stdout", "", default="stderr")
 
   # Output CSV file of the halos catalog containing the calculated
   # properties of the simulated halos.
-  halos_catalog_outfile = string(default=None)
+  halos_catalog_outfile = string(default="cluster.halos.csv")
 
   # Whether to dump the whole data of the simulated halos in Python
   # native pickle format (i.e., ".pkl") to a file with the same basename
