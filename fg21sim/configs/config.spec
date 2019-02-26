@@ -373,6 +373,10 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Unit: [keV]
   kT_out = float(default=0, min=0)
 
+  # Whether to make the simulated sky maps?  It is useful to disable the
+  # map generation during the parameter tuning.
+  make_maps = boolean(default=True)
+
   # Filename prefix for this component
   prefix = string(default="cluster")
   # Output directory to save the simulated results

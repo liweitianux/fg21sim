@@ -85,6 +85,7 @@ class GalaxyClusters:
         self.merger_mass_min = configs.getn(sec+"/merger_mass_min")
         self.time_traceback = configs.getn(sec+"/time_traceback")
         self.kT_out = configs.getn(sec+"/kT_out")
+        self.make_maps = configs.getn(sec+"/make_maps")
 
         self.frequencies = configs.frequencies
         self.filename_pattern = configs.getn("output/filename_pattern")
@@ -650,11 +651,15 @@ class GalaxyClusters:
         """
         logger.info("Simulating {name} ...".format(name=self.name))
         skyfiles = []
-        for idx, freq in enumerate(self.frequencies):
-            sky = self.simulate_frequency(freqidx=idx)
-            outfile = self._outfilepath(frequency=freq)
-            sky.write(outfile)
-            skyfiles.append(outfile)
+        if self.make_maps:
+            for idx, freq in enumerate(self.frequencies):
+                sky = self.simulate_frequency(freqidx=idx)
+                outfile = self._outfilepath(frequency=freq)
+                sky.write(outfile)
+                skyfiles.append(outfile)
+        else:
+            logger.warning("Map generation disabled!")
+
         logger.info("Done simulate {name}!".format(name=self.name))
         return skyfiles
 
@@ -663,7 +668,6 @@ class GalaxyClusters:
         Do some necessary post-simulation operations.
         """
         logger.info("{name}: postprocessing ...".format(name=self.name))
-        # Save the final resulting clusters catalog
         logger.info("Save the cluster catalog ...")
         self._save_catalog_data()
         logger.info("Saving the simulated halos catalog and raw data ...")
