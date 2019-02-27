@@ -371,7 +371,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # with: kT_out ~ 0.5 [keV]
   # Reference: Fujita et al. 2003, ApJ, 584, 190; Eq.(49)
   # Unit: [keV]
-  kT_out = float(default=0.5, min=0)
+  kT_out = float(default=0, min=0)
 
   # Whether to make the simulated sky maps?  It is useful to disable the
   # map generation during the parameter tuning.
@@ -389,17 +389,17 @@ stream = option("stderr", "stdout", "", default="stderr")
   [[halos]]
   # The fraction of the thermal energy injected into the cosmic-ray
   # electrons during the cluster life time.
-  eta_e = float(default=0.001, min=0, max=1)
+  eta_e = float(default=1e-4, min=0, max=1)
   # The spectral index of the injected primary electrons.
-  injection_index = float(default=2.3, min=2, max=3)
+  injection_index = float(default=2.5, min=2, max=3)
 
   # The fraction of merger energy transferred into the turbulence.
   eta_turb = float(default=0.15, min=0, max=1)
 
   # The base energy fraction of the turbulence to the ICM thermal energy
   # (for a relaxed system).
-  # x_turb ~< 5% [Vazza et al. 2011, A&A, 529, A17]
-  x_turb = float(default=0.01, min=0, max=0.5)
+  # x_turb < 5% [Vazza et al. 2011, A&A, 529, A17]
+  x_turb = float(default=0.015, min=0, max=0.5)
 
   # A custom factor to tune the turbulent acceleration efficiency.
   # NOTE: This parameter incorporates the efficiency factor describing
@@ -459,5 +459,5 @@ stream = option("stderr", "stdout", "", default="stderr")
 
   # The emissivity acceleration factor and spectral index thresholds for
   # determining whether the halo is genuine/formed.
-  genuine_emfacc_th = float(default=100)
-  genuine_index_th = float(default=3.5)
+  genuine_emfacc_th = float(default=1000)
+  genuine_index_th = float(default=3)
