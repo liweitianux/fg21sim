@@ -375,8 +375,7 @@ class GalaxyClusters:
             Tb_mean = haloem.calc_brightness_mean(
                     freq, flux=flux, pixelsize=self.sky.pixelsize)
 
-            # Calculate spectral index with a narrow (10 MHz) band
-            freq2 = freq + 10
+            freq2 = freq - freq*0.1
             em2 = haloem.calc_emissivity(freq2)
             index = -(np.log(em2)-np.log(em)) / (np.log(freq2)-np.log(freq))
 
