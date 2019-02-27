@@ -456,3 +456,8 @@ stream = option("stderr", "stdout", "", default="stderr")
   f_rc = float(default=0.1)
   # The slope parameter (i.e., beta).
   beta = float(default=0.6667)
+
+  # The emissivity acceleration factor and spectral index thresholds for
+  # determining whether the halo is genuine/formed.
+  genuine_emfacc_th = float(default=100)
+  genuine_index_th = float(default=3.5)

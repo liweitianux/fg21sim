@@ -93,6 +93,8 @@ class GalaxyClusters:
 
         sec = "extragalactic/halos"
         self.eta_b = configs.getn(sec+"/x_cr")
+        self.genuine_emfacc_th = configs.getn(sec+"/genuine_emfacc_th")
+        self.genuine_index_th = configs.getn(sec+"/genuine_index_th")
 
         if self.use_dump_halos_data and (not self.use_dump_catalog_data):
             self.use_dump_catalog_data = True
@@ -387,6 +389,28 @@ class GalaxyClusters:
 
         logger.info("Calculated halo emissions.")
 
+    def _identify_halos(self):
+        """
+        Determine the formation/genuineness of each radio halo.
+
+        A halo is genuine if both its emissivity acceleration factor >=
+        genuine_emfacc_th and its spectral index <= genuine_index_th
+        at any frequency.
+        """
+        logger.info("Identify the genuineness of radio halos ...")
+        emfacc_th = self.genuine_emfacc_th
+        index_th = self.genuine_index_th
+        n = 0
+        for hdict in self.halos:
+            emfacc = hdict["emissivity_facc"]
+            index = hdict["spec_index"]
+            genuine = np.any((emfacc >= emfacc_th) & (index <= index_th))
+            hdict["genuine"] = genuine
+            n += genuine
+
+        logger.info("Identified %d (%.1f%%) genuine halos." %
+                    (n, n*100/len(self.halos)))
+
     def _dropout_halos(self):
         """
         Considering that the (very) massive galaxy clusters are very rare,
@@ -588,6 +612,7 @@ class GalaxyClusters:
             self._simulate_halos()
 
         self._calc_halos_emission()
+        self._identify_halos()
         self._dropout_halos()
         self._draw_halos()
 
