@@ -93,7 +93,6 @@ class GalaxyClusters:
 
         sec = "extragalactic/halos"
         self.eta_b = configs.getn(sec+"/x_cr")
-        self.genuine_threshold = configs.getn(sec+"/genuine_threshold")
 
         if self.use_dump_halos_data and (not self.use_dump_catalog_data):
             self.use_dump_catalog_data = True
@@ -310,8 +309,6 @@ class GalaxyClusters:
                            configs=self.configs)
         spectrum = halo.calc_electron_spectrum()
         spectrum_fiducial = halo.calc_electron_spectrum(fiducial=True)
-        factor_acc = halo.calc_acc_factor(spectrum, spectrum_fiducial)
-        genuine = factor_acc >= self.genuine_threshold
         theta = halo.radius / (clinfo["DA"]*1e3) * AUC.rad2arcsec  # [arcsec]
 
         haloinfo = OrderedDict(
@@ -322,8 +319,6 @@ class GalaxyClusters:
             spectrum_fiducial=spectrum_fiducial,  # [cm^-3]
             gamma=halo.gamma,  # Lorentz factors
             Ke=halo.injection_rate,  # [cm^-3 Gyr^-1]
-            factor_acc=factor_acc,
-            genuine=genuine,  # bool
         )
         return haloinfo
 
@@ -341,18 +336,15 @@ class GalaxyClusters:
         num = len(idx_hasmerger)
         logger.info("Simulating halos for %d clusters with mergers ..." % num)
 
-        nhalo = 0
         self.halos = []
         for i, idx in enumerate(idx_hasmerger):
             ii = i + 1
             if ii % 50 == 0:
                 logger.info("[%d/%d] %.1f%% ..." % (ii, num, 100*ii/num))
             haloinfo = self._simulate_halo1(self.catalog[idx])
-            nhalo += haloinfo["genuine"]
             self.halos.append(haloinfo)
 
-        logger.info("Simulated radio halos: %d (%.1f%%) genuine." %
-                    (nhalo, 100*nhalo/num))
+        logger.info("Simulated radio halos.")
 
     def _calc_halos_emission(self):
         """
