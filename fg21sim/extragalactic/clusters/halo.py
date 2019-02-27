@@ -178,9 +178,6 @@ class RadioHalo1M:
         self.injection_index = configs.getn(sec+"/injection_index")
         self.f_rc = configs.getn(sec+"/f_rc")
         self.beta = configs.getn(sec+"/beta")
-        self.bolo_freq_min = configs.getn(sec+"/bolo_freq_min")
-        self.bolo_freq_max = configs.getn(sec+"/bolo_freq_max")
-        self.bolo_freq_num = configs.getn(sec+"/bolo_freq_num")
 
         self.kT_out = configs.getn("extragalactic/clusters/kT_out")
 
@@ -576,41 +573,6 @@ class RadioHalo1M:
         self.fpsolver.tstep = self.time_step
 
         return n_e
-
-    def calc_acc_factor(self, n_e, n_e_fiducial=None):
-        """
-        Calculate the turbulence acceleration factor, which is estimated
-        as the ratio of the bolometric emissivity between the accelerated
-        electron spectrum and the fiducial electron spectrum derived with
-        turbulent acceleration turned off.
-
-        Parameters
-        ----------
-        n_e : float 1D `~numpy.ndarray`
-            The derived (accelerated) electron spectrum.
-            Unit: [cm^-3]
-        n_e_fiducial : float 1D `~numpy.ndarray`, optional
-            The fiducial electron spectrum.
-            Unit: [cm^-3]
-
-        Returns
-        -------
-        factor : float
-            Acceleration factor of the bolometric emissivity.
-        """
-        haloem = HaloEmission(gamma=self.gamma, n_e=n_e, B=1)
-        em = haloem.calc_emissivity_bolo(freq_min=self.bolo_freq_min,
-                                         freq_max=self.bolo_freq_max,
-                                         freq_num=self.bolo_freq_num)
-
-        if n_e_fiducial is None:
-            n_e_fiducial = self.calc_electron_spectrum(fiducial=True)
-        haloem.n_e = n_e_fiducial
-        em_fiducial = haloem.calc_emissivity_bolo(
-                freq_min=self.bolo_freq_min, freq_max=self.bolo_freq_max,
-                freq_num=self.bolo_freq_num)
-
-        return em / em_fiducial
 
     def fp_injection(self, gamma, t=None):
         """
