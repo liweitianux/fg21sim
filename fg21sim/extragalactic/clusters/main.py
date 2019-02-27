@@ -356,9 +356,9 @@ class GalaxyClusters:
 
     def _calc_halos_emission(self):
         """
-        Calculate the radio emissions at configured frequencies.
+        Calculate radio emissions at needed frequencies.
         """
-        logger.info("Calculating the radio halo emissions ...")
+        logger.info("Calculating the emission of radio halos ...")
         num = len(self.halos)
         for i, hdict in enumerate(self.halos):
             ii = i + 1
@@ -383,7 +383,6 @@ class GalaxyClusters:
             em_fiducial = haloem.calc_emissivity(freq)
             em_facc = em / em_fiducial
 
-            # Update or add new items
             hdict.update([
                 ("frequency", freq),  # [MHz]
                 ("spec_index", index),
@@ -394,7 +393,7 @@ class GalaxyClusters:
                 ("Tb_mean", Tb_mean),  # [K]
             ])
 
-        logger.info("Calculated the radio emissions.")
+        logger.info("Calculated halo emissions.")
 
     def _dropout_halos(self):
         """
@@ -619,16 +618,15 @@ class GalaxyClusters:
             The simulated sky image of radio halos as a new sky instance.
         """
         freq = self.frequencies[freqidx]
-        logger.info("Simulating radio halo map at %.2f [MHz] ..." % freq)
         sky = self.sky.copy()
         sky.frequency = freq
-        # Conversion factor for [Jy/pixel] to [K]
         JyPP2K = JyPerPix_to_K(freq, sky.pixelsize)
 
+        logger.info("Simulating radio halo map at %.2f [MHz] ..." % freq)
         for hdict in self.halos:
             if "template" not in hdict:
                 continue
-            template = hdict["template"]  # normalized to have mean of 1
+            template = hdict["template"]  # normalized to mean of 1
             Npix = template.size
             flux = hdict["flux"][freqidx]  # [Jy]
             Tmean = (flux/Npix) * JyPP2K  # [K]
