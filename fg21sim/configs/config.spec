@@ -371,7 +371,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # with: kT_out ~ 0.5 [keV]
   # Reference: Fujita et al. 2003, ApJ, 584, 190; Eq.(49)
   # Unit: [keV]
-  kT_out = float(default=0, min=0)
+  kT_out = float(default=0.5, min=0)
 
   # Whether to make the simulated sky maps?  It is useful to disable the
   # map generation during the parameter tuning.
@@ -390,23 +390,23 @@ stream = option("stderr", "stdout", "", default="stderr")
   # A custom factor to tune the turbulent acceleration efficiency.
   # NOTE: This parameter incorporates the efficiency factor describing
   #       the effectiveness of the ICM plasma instabilities.
-  f_acc = float(default=1, min=0.1, max=10)
+  f_acc = float(default=0.1, min=0.1, max=10)
 
   # The factor that is multiplied to the turbulence injection radius
   # to derive the radio halo radius.
-  f_radius = float(default=1, min=0.1, max=10)
+  f_radius = float(default=0.7, min=0.1, max=10)
 
   # The base energy fraction of the turbulence to the ICM thermal energy
   # (for a relaxed system).
   # x_turb ~< 5% [Vazza et al. 2011, A&A, 529, A17]
-  x_turb = float(default=0, min=0, max=0.5)
+  x_turb = float(default=0.01, min=0, max=0.5)
 
   # The fraction of merger energy transferred into the turbulence.
-  eta_turb = float(default=0.1, min=0, max=1)
+  eta_turb = float(default=0.15, min=0, max=1)
 
   # The fraction of the thermal energy injected into the cosmic-ray
   # electrons during the cluster life time.
-  eta_e = float(default=0.003, min=0, max=1)
+  eta_e = float(default=0.001, min=0, max=1)
 
   # The energy density ratio of cosmic ray to the thermal ICM.
   # NOTE: Equipartition between the magnetic field and cosmic ray is
@@ -419,7 +419,7 @@ stream = option("stderr", "stdout", "", default="stderr")
 
   # The scaling index of the halo radius (R_halo) w.r.t. the virial
   # radius of the cluster.
-  radius_index = float(default=0, min=0, max=3)
+  radius_index = float(default=1.7, min=0, max=3)
 
   # The spectral index of the injected primary electrons.
   injection_index = float(default=2.3, min=2, max=3)
@@ -457,7 +457,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # The fraction of the core radius to cluster's virial radius.
   f_rc = float(default=0.1)
   # The slope parameter (i.e., beta).
-  beta = float(default=0.8)
+  beta = float(default=0.6667)
 
   # The minimum and maximum frequencies as well as the number of frequency
   # points for calculating the total radio emissivity, which is used to
