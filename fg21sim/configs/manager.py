@@ -588,7 +588,7 @@ class ConfigManager:
             data = _flatten_dict(data)
         return data
 
-    def save(self, outfile=None, clobber=False, backup=True):
+    def save(self, outfile=None, clobber=False):
         """
         Save the configurations to file.
 
@@ -598,13 +598,9 @@ class ConfigManager:
             The path to the output configuration file.
             If not provided, then use ``self.userconfig``, however, set
             ``clobber=True`` may be required.
-            NOTE:
-            This must be an *absolute path*.
-            Prefix ``~`` (tilde) is allowed and will be expanded.
+            NOTE: Must be an *absolute path*.
         clobber : bool, optional
-            Overwrite the output file if already exists.
-        backup : bool, optional
-            Backup the output file with suffix ``.old`` if already exists.
+            Whether to backup existing output file and overwrite it?
 
         Raises
         ------
@@ -621,19 +617,19 @@ class ConfigManager:
                 outfile = self.userconfig
                 logger.warning("outfile not provided, " +
                                "use self.userconfig: {0}".format(outfile))
+
         outfile = os.path.expanduser(outfile)
         if not os.path.isabs(outfile):
             raise ValueError("not an absolute path: {0}".format(outfile))
+
         if os.path.exists(outfile):
             if clobber:
-                # Make a backup with suffix ``.old``
                 backfile = outfile + ".old"
                 shutil.copyfile(outfile, backfile)
                 logger.info("Backed up old configuration file as: " + backfile)
             else:
                 raise OSError("outfile already exists: {0}".format(outfile))
-        # Write out the configurations
-        # NOTE: need open the output file in *binary* mode
-        with open(outfile, "wb") as f:
+
+        with open(outfile, "wb") as f:  # binary mode required
             self._config.indent_type = "  "
             self._config.write(f)
