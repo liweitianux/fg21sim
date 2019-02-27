@@ -408,6 +408,10 @@ class ConfigManager:
         logger.info("Set config: {key}: {val_old} -> {val_new}".format(
             key="/".join(key), val_new=val_new, val_old=val_old))
 
+    def update(self, **kwargs):
+        for key, value in kwargs.items():
+            self.setn(key, value)
+
     def __setitem__(self, key, value):
         self.setn(key, value)
 
