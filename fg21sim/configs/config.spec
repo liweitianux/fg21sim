@@ -254,7 +254,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Unit: [Msun]
   M_min = float(default=1e12, min=1e10, max=1e14)
   M_max = float(default=1e16, min=1e14, max=1e18)
-  # The logarithmic (base 10) step size for the halo masses; therefore
+  # The 10-based logarithmic step size for the halo masses; therefore
   # the number of intervals is: (log10(M_max) - log10(M_min)) / M_step
   M_step = float(default=0.01, min=0.001, max=0.1)
 
@@ -272,11 +272,11 @@ stream = option("stderr", "stdout", "", default="stderr")
   #   Redshifts where the halo mass distribution is calculated.
   # * ``mass``:
   #   (Logarithmic-distributed) mass points.
-  #   Unit: [Msun] (the little "h" is folded into the values)
+  #   Unit: [Msun] (NOTE: the little "h" is folded into the values)
   # * ``dndlnm``:
   #   Shape: (len(z), len(mass))
-  #   Differential mass function in terms of natural log of M.
-  #   Unit: [Mpc^-3] (the little "h" is folded into the values)
+  #   Differential mass function in terms of ln(M).
+  #   Unit: [Mpc^-3] (NOTE: the little "h" is folded into the values)
   dndlnm_outfile = string(default="dndlnm.npz")
 
 
