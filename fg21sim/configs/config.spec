@@ -387,26 +387,24 @@ stream = option("stderr", "stdout", "", default="stderr")
   # Giant radio halos
   #
   [[halos]]
-  # A custom factor to tune the turbulent acceleration efficiency.
-  # NOTE: This parameter incorporates the efficiency factor describing
-  #       the effectiveness of the ICM plasma instabilities.
-  f_acc = float(default=0.1, min=0.1, max=10)
+  # The fraction of the thermal energy injected into the cosmic-ray
+  # electrons during the cluster life time.
+  eta_e = float(default=0.001, min=0, max=1)
+  # The spectral index of the injected primary electrons.
+  injection_index = float(default=2.3, min=2, max=3)
 
-  # The factor that is multiplied to the turbulence injection radius
-  # to derive the radio halo radius.
-  f_radius = float(default=0.7, min=0.1, max=10)
+  # The fraction of merger energy transferred into the turbulence.
+  eta_turb = float(default=0.15, min=0, max=1)
 
   # The base energy fraction of the turbulence to the ICM thermal energy
   # (for a relaxed system).
   # x_turb ~< 5% [Vazza et al. 2011, A&A, 529, A17]
   x_turb = float(default=0.01, min=0, max=0.5)
 
-  # The fraction of merger energy transferred into the turbulence.
-  eta_turb = float(default=0.15, min=0, max=1)
-
-  # The fraction of the thermal energy injected into the cosmic-ray
-  # electrons during the cluster life time.
-  eta_e = float(default=0.001, min=0, max=1)
+  # A custom factor to tune the turbulent acceleration efficiency.
+  # NOTE: This parameter incorporates the efficiency factor describing
+  #       the effectiveness of the ICM plasma instabilities.
+  f_acc = float(default=0.1, min=0.1, max=10)
 
   # The energy density ratio of cosmic ray to the thermal ICM.
   # NOTE: Equipartition between the magnetic field and cosmic ray is
@@ -417,12 +415,12 @@ stream = option("stderr", "stdout", "", default="stderr")
   # mass of the cluster.
   mass_index = float(default=0, min=0, max=3)
 
+  # The factor that is multiplied to the turbulence injection radius
+  # to derive the radio halo radius.
+  f_radius = float(default=0.7, min=0.1, max=10)
   # The scaling index of the halo radius (R_halo) w.r.t. the virial
   # radius of the cluster.
   radius_index = float(default=1.7, min=0, max=3)
-
-  # The spectral index of the injected primary electrons.
-  injection_index = float(default=2.3, min=2, max=3)
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
