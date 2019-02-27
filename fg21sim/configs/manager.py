@@ -343,6 +343,9 @@ class ConfigManager:
         except (KeyError, TypeError):
             raise KeyError("%s: invalid key" % "/".join(key))
 
+    def __getitem__(self, key):
+        return self.getn(key)
+
     def setn(self, key, value):
         """
         Set the value of config option specified by a list of keys or a
@@ -380,12 +383,10 @@ class ConfigManager:
         ConfigError :
             The value fails to pass the validation against specifications.
         """
-        # NOTE:
-        # May raise ``KeyError`` if the key does not exists
         val_old = self.getn(key)
         if val_old == value:
-            # No need to set this option value
             return
+
         # Create a nested dictionary from the input key-value pair
         # Credit:
         # * Stackoverflow: Convert a list into a nested dictionary
@@ -393,27 +394,22 @@ class ConfigManager:
         if isinstance(key, str):
             key = key.split("/")
         d = reduce(lambda x, y: {y: x}, reversed(key), value)
+
         # Create the temporary ``ConfigObj`` instance and validate it
         config_new = ConfigObj(d, interpolation=False,
                                configspec=self._configspec,
                                encoding="utf-8")
-        # NOTE:
-        # May raise ``ConfigError`` if fails to pass the validation
+        # NOTE: May raise ``ConfigError`` if fails to pass the validation
         config_new = self._validate(config_new)
-        # NOTE:
-        # The validated ``config_new`` is populated with all other options
-        # from the specifications.
+
         val_new = reduce(operator.getitem, key, config_new)
         d2 = reduce(lambda x, y: {y: x}, reversed(key), val_new)
         self.merge(d2)
         logger.info("Set config: {key}: {val_old} -> {val_new}".format(
             key="/".join(key), val_new=val_new, val_old=val_old))
 
-    def __getitem__(self, key):
-        return self.getn(key=key)
-
     def __setitem__(self, key, value):
-        self.setn(key=key, value=value)
+        self.setn(key, value)
 
     def get_path(self, key):
         """
@@ -458,9 +454,7 @@ class ConfigManager:
 
         path = os.path.expanduser(value)
         if not os.path.isabs(path):
-            # Got a relative path, try to convert to the absolute path
             if self.userconfig is not None:
-                # User configuration loaded
                 path = os.path.join(os.path.dirname(self.userconfig), path)
             else:
                 logger.warning("Cannot convert to absolute path: %s" % path)
@@ -496,10 +490,8 @@ class ConfigManager:
             Unit: [MHz]
         """
         if self.getn("frequency/type") == "custom":
-            # The value is validated to be a float list
             frequencies = np.array(self.getn("frequency/frequencies"))
         else:
-            # Calculate the frequency values, including the stop frequency
             start = self.getn("frequency/start")
             stop = self.getn("frequency/stop")
             step = self.getn("frequency/step")
@@ -518,7 +510,6 @@ class ConfigManager:
             print("DEBUG: Force 'DEBUG' logging level", file=sys.stderr)
             level = "DEBUG"
 
-        # logging handlers
         handlers = []
         stream = conf["stream"]
         if stream:
@@ -527,7 +518,6 @@ class ConfigManager:
         if logfile:
             handlers.append(FileHandler(logfile))
 
-        # Explicitly add the formatter to each handler
         formatter = logging.Formatter(fmt=conf["format"],
                                       datefmt=conf["datefmt"])
         for handler in handlers:
@@ -545,10 +535,10 @@ class ConfigManager:
     def cosmology(self):
         """
         Get the cosmological parameters and organize them as an dictionary
-        for ``Cosmology`` initialization.
+        for initializing a ``Cosmology`` object.
         """
         conf = self.get("cosmology")
-        cosmoconf = {
+        parameters = {
             "H0": conf["H0"],
             "Om0": conf["OmegaM0"],
             "Ob0": conf["Omegab0"],
@@ -556,7 +546,7 @@ class ConfigManager:
             "ns": conf["ns"],
             "sigma8": conf["sigma8"],
         }
-        return cosmoconf
+        return parameters
 
     def dump(self, from_default=False, flatten=False):
         """
