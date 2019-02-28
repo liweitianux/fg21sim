@@ -22,14 +22,13 @@ Features
   + ``extragalactic/clusters``:
     Emission from extragalactic galaxy clusters
     (*Note:* only giant radio halos)
-    [**WARNING:** undergoing major changes]
 
 * All-sky simulation by utilizing HEALPix
   (*Note:* not all components are currently supported)
 * High-resolution simulation within sky patches
-* Fine-grained control via a configuration file
-* Well organized and commented
+* Fine-grained control with various configuration options
 * Modular and extensible
+* Clean code
 * Command line utilities
 
 
@@ -71,15 +70,14 @@ Installation
 
 Development
 -----------
-To ease the development and tests, you may want to install this package
-in the **editable state**::
+To ease the development, install this package in the **editable state**::
 
     $ cd fg21sim/
     $ pip3 install --user -r requirements.txt
     $ pip3 install --editable .
 
 In addition, setting the environment variable ``DEBUG_FG21SIM`` forces
-this software running at the ``DEBUG`` logging level.
+this software to run at the ``DEBUG`` logging level.
 
 
 Documentations
