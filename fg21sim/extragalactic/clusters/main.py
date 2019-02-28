@@ -454,7 +454,7 @@ class GalaxyClusters:
         The templates are normalized to have *mean* value of 1.
         """
         idx_kept = [idx for idx, hdict in enumerate(self.halos)
-                    if hdit["genuine"] and not hdict.get("drop", False)]
+                    if hdict["genuine"] and not hdict.get("drop", False)]
         num = len(idx_kept)
         logger.info("Draw template images for %d halos ..." % num)
         for i, idx in enumerate(idx_kept):
