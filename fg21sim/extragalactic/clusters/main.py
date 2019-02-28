@@ -29,7 +29,7 @@ from .emission import HaloEmission
 from ...sky import get_sky
 from ...share import CONFIGS, COSMO
 from ...utils.io import dataframe_to_csv, pickle_dump, pickle_load
-from ...utils.ds import dictlist_to_dataframe
+from ...utils.ds import dictlist_to_dataframe, pad_dict_list
 from ...utils.convert import JyPerPix_to_K
 from ...utils.units import UnitConversions as AUC
 
@@ -491,18 +491,10 @@ class GalaxyClusters:
         logger.info("Converting cluster catalog into a Pandas DataFrame ...")
 
         # Pad the merger events to be same length
-        nmax = max([cdict["merger_num"] for cdict in self.catalog])
-        for cdict in self.catalog:
-            n = len(cdict["merger_z"])
-            if n == nmax:
-                continue
-            npad = nmax - n
-            cdict.update([
-                ("merger_mass1", cdict["merger_mass1"] + [None]*npad),
-                ("merger_mass2", cdict["merger_mass2"] + [None]*npad),
-                ("merger_z",     cdict["merger_z"] + [None]*npad),
-                ("merger_t",     cdict["merger_t"] + [None]*npad),
-            ])
+        nmax = max([d["merger_num"] for d in self.catalog])
+        padkeys = ["merger_mass1", "merger_mass2", "merger_z", "merger_t"]
+        for d in self.catalog:
+            pad_dict_list(d, padkeys, length=nmax)
 
         keys = list(self.catalog[0].keys())
         catalog_df = dictlist_to_dataframe(self.catalog, keys=keys)
