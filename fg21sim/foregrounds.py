@@ -104,7 +104,7 @@ class Foregrounds:
         comp_obj = comp_cls(self.configs)
         comp_obj.preprocess()
         skyfiles = comp_obj.simulate()
-        if self.products:
+        if self.products and skyfiles:
             self.products.add_component(compID, skyfiles)
         comp_obj.postprocess()
 
