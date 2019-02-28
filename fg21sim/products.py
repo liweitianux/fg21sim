@@ -1,10 +1,8 @@
-# Copyright (c) 2016-2017 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2016-2017,2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Manage and manipulate the simulation products.
-
-XXX/TODO: update with HEALPix and sky patch, according to ``sky.py``.
 """
 
 import os
@@ -166,20 +164,18 @@ class Products:
         """
         if self.manifestfile is None:
             raise ManifestError("'self.manifestfile' is not set")
-        #
+
         frequencies = self.frequencies["frequencies"]
         if comp_id not in self.manifest.keys():
-            # Initialize the manifest array for this component
             self.manifest[comp_id] = [{} for i in range(len(frequencies))]
-        #
+
         root_dir = self.get_root_dir()
         self.manifest[comp_id][freq_id] = {
             "frequency": frequencies[freq_id],
             "healpix": {
                 # Relative path to the HEALPix map file from this manifest
                 "path": os.path.relpath(filepath, root_dir),
-                # File size in bytes
-                "size": os.path.getsize(filepath),
+                "size": os.path.getsize(filepath),  # [byte]
                 "md5": calc_md5(filepath),
             }
         }
@@ -198,7 +194,6 @@ class Products:
             ID of the component to be added.
         paths : list[str]
             List of the file paths of the component products (HEALPix maps).
-            The number of the paths must equal to the number of frequencies.
 
         Raises
         ------
@@ -208,12 +203,12 @@ class Products:
         """
         if self.manifestfile is None:
             raise ManifestError("'self.manifestfile' is not set")
-        #
+
         frequencies = self.frequencies["frequencies"]
         if len(paths) != len(frequencies):
             raise ManifestError("Number of paths (%d) != " % len(paths) +
                                 "number of frequencies")
-        #
+
         for freq_id, filepath in enumerate(paths):
             self.add_product(comp_id, freq_id, filepath)
         logger.info("Added component '{0}' to the manifest".format(comp_id))
@@ -243,11 +238,7 @@ class Products:
         filepath = os.path.join(root_dir, metadata["healpix"]["path"])
         hash_true = metadata["healpix"]["md5"]
         hash_ondisk = calc_md5(filepath)
-        if hash_ondisk == hash_true:
-            match = True
-        else:
-            match = False
-        return (match, hash_ondisk)
+        return (hash_ondisk == hash_true, hash_ondisk)
 
     def get_root_dir(self):
         """
@@ -302,6 +293,7 @@ class Products:
         """
         if ptype not in ["healpix", "hpx"]:
             raise ValueError("Invalid ptype: {0}".format(ptype))
+
         root_dir = self.get_root_dir()
         metadata = self.get_product(comp_id, freq_id)
         abspath = os.path.join(root_dir, metadata[ptype]["path"])
@@ -319,7 +311,7 @@ class Products:
         """
         from astropy.io import fits
         from .utils.healpix import healpix2hpx
-        #
+
         root_dir = self.get_root_dir()
         metadata = self.get_product(comp_id, freq_id)
         infile = os.path.join(root_dir, metadata["healpix"]["path"])
@@ -330,13 +322,14 @@ class Products:
                 logger.warning("Removed existing HPX image: %s" % outfile)
             else:
                 raise IOError("Output HPX image already exists: %s" % outfile)
+
         # Convert HEALPix map to HPX projected FITS image
         logger.info("Converting HEALPix map to HPX image: %s" % infile)
         hpx_data, hpx_header = healpix2hpx(infile)
         hdu = fits.PrimaryHDU(data=hpx_data, header=hpx_header)
         hdu.writeto(outfile)
         logger.info("Converted HEALPix map to HPX image: %s" % outfile)
-        #
+
         size = os.path.getsize(outfile)
         md5 = calc_md5(outfile)
         metadata["hpx"] = {
@@ -395,7 +388,7 @@ class Products:
                 logger.info("Backed up old manifest file as: " + backfile)
             else:
                 raise OSError("File already exists: {0}".format(outfile))
-        #
+
         with open(outfile, "w") as fp:
             json.dump(self.manifest, fp, indent=4)
             fp.write("\n")
@@ -423,9 +416,8 @@ class Products:
         infile = os.path.expanduser(infile)
         if not os.path.isabs(infile):
             raise ValueError("Not an absolute path: {0}".format(infile))
-        # Reset existing manifest
+
         self.reset()
-        # Keep the order of keys
         self.manifest = json.load(open(infile), object_pairs_hook=OrderedDict)
         self.manifestfile = infile
         logger.info("Loaded manifest from file: {0}".format(infile))
