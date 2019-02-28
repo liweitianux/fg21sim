@@ -532,6 +532,13 @@ class GalaxyClusters:
             os.rename(outfile, outfile+".old")
 
         logger.info("Converting halos data into a Pandas DataFrame ...")
+
+        # Pad the merger events to be same length
+        nmax = max([d["merger_num"] for d in self.halos])
+        padkeys = ["merger_mass1", "merger_mass2", "merger_z", "merger_t"]
+        for d in self.halos:
+            pad_dict_list(d, padkeys, length=nmax)
+
         keys_ignored = ["gamma", "spectrum", "spectrum_fiducial", "template"]
         keys = [k for k in self.halos[0].keys() if k not in keys_ignored]
         halos_df = dictlist_to_dataframe(self.halos, keys=keys)
