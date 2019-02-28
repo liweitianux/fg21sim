@@ -1,5 +1,5 @@
-# Copyright (c) 2017 Weitian LI <weitian@aaronly.me>
-# MIT license
+# Copyright (c) 2017,2019 Weitian LI <wt@liwt.net>
+# MIT License
 
 """
 Data structure/set utilities.
@@ -78,5 +78,27 @@ def dictlist_to_dataframe(dictlist, keys=None):
         dv = [d[k] for k in keys]
         dv2 = list(_flatten_list(dv))
         data.append(dv2)
-    dataframe = pd.DataFrame(data, columns=columns)
-    return dataframe
+
+    return pd.DataFrame(data, columns=columns)
+
+
+def pad_dict_list(d, keys, length, fill=None):
+    """
+    Pad the lists specified by ``keys`` to the given ``length``.
+
+    Parameters
+    ----------
+    d : dict
+        The dictionary to be updated.
+    keys : list[str]
+        The keys of the lists in the dictionary to be padded.
+    length : int
+        The expected length.
+    fill : optional
+        The value filled to the padded list.
+    """
+    for k in keys:
+        v = d[k]
+        n = len(v)
+        if n < length:
+            d[k] = v + [fill] * (length - n)
