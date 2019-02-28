@@ -62,7 +62,7 @@ def main():
 
     # Save/backup current configurations
     configfile_dump = os.path.splitext(CONFIGS.userconfig)[0] + "_dump.conf"
-    CONFIGS.save(configfile_dump, clobber=True, backup=True)
+    CONFIGS.save(configfile_dump, clobber=True)
     logger.info("Saved current configurations to file: %s" % configfile_dump)
 
     # Setup cosmology model
