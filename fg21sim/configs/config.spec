@@ -371,7 +371,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   # with: kT_out ~ 0.5 [keV]
   # Reference: Fujita et al. 2003, ApJ, 584, 190; Eq.(49)
   # Unit: [keV]
-  kT_out = float(default=0, min=0)
+  kT_out = float(default=0.5, min=0)
 
   # Whether to make the simulated sky maps?  It is useful to disable the
   # map generation during the parameter tuning.
@@ -420,7 +420,7 @@ stream = option("stderr", "stdout", "", default="stderr")
   f_radius = float(default=0.7, min=0.1, max=10)
   # The scaling index of the halo radius (R_halo) w.r.t. the virial
   # radius of the cluster.
-  radius_index = float(default=1.7, min=0, max=3)
+  radius_index = float(default=1.8, min=0, max=3)
 
   # Minimum and maximum Lorentz factor (i.e., energy) of the relativistic
   # electron spectrum.
