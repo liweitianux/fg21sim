@@ -1,6 +1,6 @@
 __pkgname__ = "FG21sim"
-__version__ = "0.7.2"
-__date__ = "2018-05-22"
+__version__ = "0.9.0"
+__date__ = "2019-03-04"
 __author__ = "Weitian LI"
 __author_email__ = "wt@liwt.net"
 __license__ = "MIT"
