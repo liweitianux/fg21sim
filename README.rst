@@ -21,10 +21,9 @@ Features
     Emission from Galactic supernovae remnants (SNRs)
   + ``extragalactic/clusters``:
     Emission from extragalactic galaxy clusters
-    (*Note:* only giant radio halos)
+    (*Note:* only giant radio halos, the modeling of which is elaborated
+    in our paper `arXiv:1905.05399 <https://arxiv.org/abs/1905.05399>`_)
 
-* All-sky simulation by utilizing HEALPix
-  (*Note:* not all components are currently supported)
 * High-resolution simulation within sky patches
 * Fine-grained control with various configuration options
 * Modular and extensible
