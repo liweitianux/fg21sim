@@ -94,13 +94,7 @@ def main():
     logger.info("Read HEALPix map from file: %s" % args.infile)
     hpdata, hpheader = read_fits_healpix(args.infile)
     nside = hpheader["NSIDE"]
-    try:
-        ordering = hpheader["ORDERING"]
-    except KeyError:
-        logger.warning("No 'ORDERING' keyword for file: %s" % args.infile)
-        logger.warning("Assume the 'NESTED' ordering")
-        ordering = "NESTED"
-    nested = ordering.upper() == "NESTED"
+    nested = hpheader["ORDERING"].upper() == "NESTED"
     try:
         coordsys = hpheader["COORDSYS"]
     except KeyError:
