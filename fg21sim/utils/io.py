@@ -253,8 +253,7 @@ def write_fits_image(outfile, image, header=None, float32=False,
 
 def read_fits_healpix(filename):
     """
-    Read the HEALPix map from a FITS file or a BinTableHDU to 1D array
-    in *RING* ordering.
+    Read the HEALPix map from a FITS file or a BinTableHDU to 1D array.
 
     Parameters
     ----------
@@ -282,9 +281,16 @@ def read_fits_healpix(filename):
         hdu = fits.open(filename)[1]
     # Hack to ignore the dtype byteorder, use native endianness
     dtype = np.dtype(hdu.data.field(0).dtype.type)
-    header = hdu.header
-    data = hp.read_map(hdu, nest=False, verbose=False)
-    return (data.astype(dtype), header)
+    try:
+        ordering = hdu.header["ORDERING"]
+    except KeyError:
+        logger.warning("No 'ORDERING' keyword for file: %s" % filename)
+        logger.warning("Assume the 'NESTED' ordering")
+        ordering = "NESTED"
+        hdu.header["ORDERING"] = ordering
+    nest = ordering.upper() == "NESTED"
+    data = hp.read_map(hdu, nest=nest, verbose=False)
+    return (data.astype(dtype), hdu.header)
 
 
 def write_fits_healpix(outfile, hpmap, header=None, float32=False,
