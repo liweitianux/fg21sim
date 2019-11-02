@@ -22,7 +22,10 @@ Features
   + ``extragalactic/clusters``:
     Emission from extragalactic galaxy clusters
     (*Note:* only giant radio halos, the modeling of which is elaborated
-    in our paper `arXiv:1905.05399 <https://arxiv.org/abs/1905.05399>`_)
+    in our paper:
+    `2019, ApJ, 879, 104 <https://iopscience.iop.org/article/10.3847/1538-4357/ab21bc>`_;
+    `ADS:2019ApJ...879..104L <https://ui.adsabs.harvard.edu/abs/2019ApJ...879..104L>`_;
+    `arXiv:1905.05399 <https://arxiv.org/abs/1905.05399>`_)
 
 * High-resolution simulation within sky patches
 * Fine-grained control with various configuration options
